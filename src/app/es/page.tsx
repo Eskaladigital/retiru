@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { homeES } from '@/lib/seo/page-metadata';
 
 export const metadata: Metadata = homeES;
+import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
 import { ImageWithFallback } from '@/components/ui/image-with-fallback';
 import HeroSearch from '@/components/home/HeroSearch';
 
@@ -71,6 +73,7 @@ const IconHeartsm = () => <svg className="w-[18px] h-[18px] text-sage-600" viewB
 export default function HomePage() {
   return (
     <>
+      <Header locale="es" />
       <main>
 
         {/* ═══════════════════════════════════════════════════════
@@ -467,6 +470,7 @@ export default function HomePage() {
         </section>
 
       </main>
+      <Footer locale="es" />
     </>
   );
 }

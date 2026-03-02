@@ -5,6 +5,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { homeEN } from '@/lib/seo/page-metadata';
+import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
 
 export const metadata: Metadata = homeEN;
 const CATEGORIES = [
@@ -51,6 +53,7 @@ const IconHeartsm = () => <svg className="w-[18px] h-[18px] text-sage-600" viewB
 export default function HomePageEN() {
   return (
     <>
+      <Header locale="en" />
       <main>
         {/* HERO */}
         <section className="relative min-h-[100vh] flex items-center overflow-hidden">
@@ -295,6 +298,7 @@ export default function HomePageEN() {
           </div>
         </section>
       </main>
+      <Footer locale="en" />
     </>
   );
 }
