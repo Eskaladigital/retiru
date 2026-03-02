@@ -61,19 +61,22 @@ export default function HomePageEN() {
             <img src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1920&q=80" alt="Person meditating at sunrise" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-r from-[rgba(254,253,251,0.95)] via-[rgba(254,253,251,0.85)] to-[rgba(254,253,251,0.2)] max-md:bg-gradient-to-b max-md:from-[rgba(254,253,251,0.93)] max-md:via-[rgba(254,253,251,0.8)] max-md:to-[rgba(254,253,251,0.4)]" />
           </div>
-          <div className="container-wide relative z-10 py-16 md:py-20">
+          <div className="container-wide relative z-10 pt-24 pb-12 md:py-20">
             <div className="max-w-[620px] md:max-w-[900px]">
               <div className="inline-flex items-center gap-2 bg-sage-50 border border-sage-200 text-sage-700 text-[13px] font-semibold px-4 py-1.5 rounded-full mb-6 animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)_forwards]">
                 <span className="w-1.5 h-1.5 bg-sage-400 rounded-full animate-[float_2s_ease-in-out_infinite]" />
                 500+ retreats in Spain
               </div>
-              <h1 className="font-serif text-[clamp(36px,6vw,60px)] leading-[1.2] tracking-[-0.01em] text-foreground mb-5 max-w-[560px] animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)_0.1s_forwards] opacity-0">
+              <h1 className="font-serif text-[clamp(36px,6vw,60px)] leading-[1.2] tracking-[-0.01em] text-foreground mb-2 max-w-[560px] animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)_0.1s_forwards] opacity-0">
                 Find your{' '}
                 <span className="inline-flex items-baseline gap-[3px]">
                   <span className="text-terracotta-700 tracking-[-0.02em]">retiru</span>
                   <span className="w-[0.35em] h-[0.35em] bg-terracotta-600 rounded-full animate-[float_3s_ease-in-out_infinite] -mb-0.5" />
                 </span>
               </h1>
+              <p className="font-serif text-[clamp(18px,3vw,28px)] text-terracotta-600 tracking-wide mb-5 animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)_0.15s_forwards] opacity-0">
+                Retreats &amp; wellness centers
+              </p>
               <p className="text-lg text-[#7a6b5d] leading-[1.7] mb-9 max-w-[480px] animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)_0.2s_forwards] opacity-0">
                 Discover yoga, meditation, nature and wellness experiences in the most special corners of Spain.
               </p>

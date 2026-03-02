@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Menu, X, Globe, User, ChevronDown, MapPin, Compass, ShoppingBag, Heart, BookOpen, FileText } from 'lucide-react';
+import { Menu, X, Globe, User, ChevronDown, MapPin, Compass, ShoppingBag, Heart, BookOpen } from 'lucide-react';
 import type { Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n';
 
@@ -81,9 +81,6 @@ export default function Header({ locale, user }: HeaderProps) {
           </Link>
           <Link href={`${prefix}/blog`} className="btn-ghost text-sm">
             Blog
-          </Link>
-          <Link href={`${prefix}/condiciones`} className="btn-ghost text-sm text-foreground hover:text-terracotta-600 whitespace-nowrap">
-            {t.nav.conditions}
           </Link>
         </div>
 
@@ -178,10 +175,6 @@ export default function Header({ locale, user }: HeaderProps) {
               <Link href={`${prefix}/blog`} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]" onClick={closeMenu}>
                 <span className="w-9 h-9 rounded-xl bg-sand-100 flex items-center justify-center"><BookOpen size={17} className="text-sand-600" /></span>
                 Blog
-              </Link>
-              <Link href={`${prefix}/condiciones`} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]" onClick={closeMenu}>
-                <span className="w-9 h-9 rounded-xl bg-sand-100 flex items-center justify-center"><FileText size={17} className="text-sand-500" /></span>
-                {t.nav.conditions}
               </Link>
             </div>
 
