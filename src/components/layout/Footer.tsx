@@ -25,7 +25,7 @@ export default function Footer({ locale }: FooterProps) {
 
   return (
     <footer className="bg-[#2d2319] text-white/70">
-      <div className="container-wide py-16">
+      <div className="container-wide pt-16 pb-6">
         <div className="grid gap-12 md:grid-cols-4">
           {/* Brand */}
           <div className="md:col-span-1">
@@ -90,6 +90,15 @@ export default function Footer({ locale }: FooterProps) {
               {locale === 'es' ? 'English' : 'Español'}
             </Link>
           </div>
+        </div>
+        <div className="text-center text-white/40 text-xs md:text-sm leading-relaxed pt-4">
+          <span className="block sm:inline">Hecho con <span className="text-red-500 inline-block animate-pulse">❤️</span> en Murcia</span>
+          <span className="hidden sm:inline"> · </span>
+          <span className="block sm:inline mt-1 sm:mt-0">Web desarrollada por{' '}
+            <a href="https://www.eskaladigital.com" target="_blank" rel="noopener noreferrer" className="text-terracotta-400 hover:text-terracotta-300 transition-colors font-medium whitespace-nowrap">
+              ESKALA Agencia de Marketing Digital
+            </a>
+          </span>
         </div>
       </div>
     </footer>
