@@ -7,8 +7,6 @@ import Link from 'next/link';
 import { homeES } from '@/lib/seo/page-metadata';
 
 export const metadata: Metadata = homeES;
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
 import { ImageWithFallback } from '@/components/ui/image-with-fallback';
 import HeroSearch from '@/components/home/HeroSearch';
 
@@ -73,13 +71,12 @@ const IconHeartsm = () => <svg className="w-[18px] h-[18px] text-sage-600" viewB
 export default function HomePage() {
   return (
     <>
-      <Header locale="es" />
       <main>
 
         {/* ═══════════════════════════════════════════════════════
             HERO — imagen fondo + overlay lateral
             ═══════════════════════════════════════════════════════ */}
-        <section className="relative min-h-[85vh] flex items-center pt-[72px] overflow-hidden">
+        <section className="relative min-h-[100vh] flex items-center overflow-hidden">
           {/* Background image */}
           <div className="absolute inset-0 z-0">
             <img
@@ -470,7 +467,6 @@ export default function HomePage() {
         </section>
 
       </main>
-      <Footer locale="es" />
     </>
   );
 }

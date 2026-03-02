@@ -1,12 +1,12 @@
 'use client';
 
 // ============================================================================
-// RETIRU · Header / Navbar
+// RETIRU · Header / Navbar — glass overlay + off-canvas mobile
 // ============================================================================
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Menu, X, Globe, User, ChevronDown } from 'lucide-react';
+import { Menu, X, Globe, User, ChevronDown, MapPin, Compass, ShoppingBag, Heart, BookOpen, FileText } from 'lucide-react';
 import type { Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n';
 
@@ -18,6 +18,7 @@ interface HeaderProps {
 export default function Header({ locale, user }: HeaderProps) {
   const t = getDictionary(locale);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const altLocale = locale === 'es' ? 'en' : 'es';
 
   const prefix = `/${locale}`;
@@ -28,7 +29,16 @@ export default function Header({ locale, user }: HeaderProps) {
   const loginPath = `${prefix}/login`;
   const registerPath = locale === 'es' ? `${prefix}/registro` : `${prefix}/register`;
 
-  // Bloquear scroll del body cuando el menú móvil está abierto
+  const handleScroll = useCallback(() => {
+    setScrolled(window.scrollY > 20);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
+
   useEffect(() => {
     if (mobileOpen) {
       document.body.style.overflow = 'hidden';
@@ -41,8 +51,14 @@ export default function Header({ locale, user }: HeaderProps) {
   const closeMenu = () => setMobileOpen(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-sand-200 bg-white/95 backdrop-blur-sm">
-      <nav className="container-wide flex h-16 items-center justify-between md:h-18">
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? 'bg-white/95 backdrop-blur-md border-b border-sand-200 shadow-sm'
+          : 'bg-transparent'
+      }`}
+    >
+      <nav className="container-wide flex h-16 items-center justify-between md:h-[72px]">
         {/* Logo */}
         <Link href={prefix} className="flex items-center gap-[3px]">
           <span className="font-serif text-[28px] text-terracotta-700 tracking-[-0.02em]">retiru</span>
@@ -96,11 +112,13 @@ export default function Header({ locale, user }: HeaderProps) {
         {/* Mobile hamburger */}
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="btn-ghost md:hidden p-2 -mr-2"
+          className={`md:hidden flex items-center justify-center w-10 h-10 rounded-xl transition-colors ${
+            scrolled ? 'hover:bg-sand-100' : 'hover:bg-white/20'
+          }`}
           aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
           aria-expanded={mobileOpen}
         >
-          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+          {mobileOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
       </nav>
 
@@ -113,75 +131,99 @@ export default function Header({ locale, user }: HeaderProps) {
       >
         {/* Backdrop */}
         <div
-          className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+          className="absolute inset-0 bg-black/40 backdrop-blur-sm"
           onClick={closeMenu}
           aria-hidden
         />
         {/* Panel lateral */}
         <div
-          className={`absolute top-0 right-0 h-full w-[min(320px,85vw)] max-w-full bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
+          className={`absolute top-0 right-0 h-full w-[min(320px,85vw)] bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
             mobileOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
         >
-          <div className="flex items-center justify-between px-4 py-4 border-b border-sand-200">
-            <span className="font-serif text-xl text-terracotta-700">Menú</span>
+          {/* Header del panel */}
+          <div className="flex items-center justify-between px-5 h-16 border-b border-sand-100 shrink-0">
+            <Link href={prefix} className="flex items-center gap-[3px]" onClick={closeMenu}>
+              <span className="font-serif text-[22px] text-terracotta-700 tracking-[-0.02em]">retiru</span>
+              <span className="w-1.5 h-1.5 bg-terracotta-600 rounded-full -mb-0.5" />
+            </Link>
             <button
               onClick={closeMenu}
-              className="btn-ghost p-2 -mr-2"
+              className="flex items-center justify-center w-9 h-9 rounded-xl hover:bg-sand-100 transition-colors"
               aria-label="Cerrar menú"
             >
-              <X size={24} />
+              <X size={20} />
             </button>
           </div>
-          <nav className="flex-1 overflow-y-auto py-4 px-4">
-            <div className="flex flex-col gap-1">
-              <Link href={centersPath} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sand-50 transition-colors" onClick={closeMenu}>
-                <span className="w-8 h-8 rounded-lg bg-sage-100 flex items-center justify-center text-sage-600 text-sm font-bold">C</span>
+
+          {/* Navigation */}
+          <nav className="flex-1 overflow-y-auto py-3 px-3">
+            <div className="flex flex-col gap-0.5">
+              <Link href={centersPath} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]" onClick={closeMenu}>
+                <span className="w-9 h-9 rounded-xl bg-sage-50 flex items-center justify-center"><MapPin size={17} className="text-sage-600" /></span>
                 {locale === 'es' ? 'Centros' : 'Centers'}
               </Link>
-              <Link href={eventosPath} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sand-50 transition-colors" onClick={closeMenu}>
-                <span className="w-8 h-8 rounded-lg bg-terracotta-100 flex items-center justify-center text-terracotta-600 text-sm font-bold">E</span>
+              <Link href={eventosPath} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]" onClick={closeMenu}>
+                <span className="w-9 h-9 rounded-xl bg-terracotta-50 flex items-center justify-center"><Compass size={17} className="text-terracotta-600" /></span>
                 {t.nav.retreats}
               </Link>
-              <Link href={shopPath} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sand-50 transition-colors" onClick={closeMenu}>
+              <Link href={shopPath} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]" onClick={closeMenu}>
+                <span className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center"><ShoppingBag size={17} className="text-amber-600" /></span>
                 {locale === 'es' ? 'Tienda' : 'Shop'}
               </Link>
-              <Link href={forOrgPath} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sage-50 text-sage-700 transition-colors" onClick={closeMenu}>
+              <Link href={forOrgPath} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sage-50 transition-colors text-[15px]" onClick={closeMenu}>
+                <span className="w-9 h-9 rounded-xl bg-sage-50 flex items-center justify-center"><Heart size={17} className="text-sage-600" /></span>
                 {t.nav.forOrganizers}
               </Link>
-              <Link href={`${prefix}/blog`} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sand-50 transition-colors" onClick={closeMenu}>
+              <Link href={`${prefix}/blog`} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]" onClick={closeMenu}>
+                <span className="w-9 h-9 rounded-xl bg-sand-100 flex items-center justify-center"><BookOpen size={17} className="text-sand-600" /></span>
                 Blog
               </Link>
-              <Link href={`${prefix}/condiciones`} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sand-50 transition-colors" onClick={closeMenu}>
+              <Link href={`${prefix}/condiciones`} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]" onClick={closeMenu}>
+                <span className="w-9 h-9 rounded-xl bg-sand-100 flex items-center justify-center"><FileText size={17} className="text-sand-500" /></span>
                 {t.nav.conditions}
               </Link>
             </div>
-            <hr className="my-4 border-sand-200" />
-            <div className="flex flex-col gap-1">
-              <Link href={`/${altLocale}`} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sand-50 transition-colors" onClick={closeMenu}>
-                <Globe size={20} className="text-[#a09383]" /> {altLocale === 'en' ? 'English' : 'Español'}
+
+            <hr className="my-3 border-sand-100" />
+
+            <div className="flex flex-col gap-0.5">
+              <Link href={`/${altLocale}`} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]" onClick={closeMenu}>
+                <span className="w-9 h-9 rounded-xl bg-sand-100 flex items-center justify-center"><Globe size={17} className="text-sand-500" /></span>
+                {altLocale === 'en' ? 'English' : 'Español'}
               </Link>
               {user ? (
                 <>
-                  <Link href={`${prefix}/mis-reservas`} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sand-50 transition-colors" onClick={closeMenu}>
+                  <Link href={`${prefix}/mis-reservas`} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]" onClick={closeMenu}>
                     {t.nav.myBookings}
                   </Link>
-                  <Link href={`${prefix}/perfil`} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sand-50 transition-colors" onClick={closeMenu}>
+                  <Link href={`${prefix}/perfil`} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]" onClick={closeMenu}>
                     {t.nav.profile}
                   </Link>
                 </>
               ) : (
                 <>
-                  <Link href={loginPath} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sand-50 transition-colors" onClick={closeMenu}>
+                  <Link href={loginPath} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]" onClick={closeMenu}>
+                    <span className="w-9 h-9 rounded-xl bg-sand-100 flex items-center justify-center"><User size={17} className="text-sand-500" /></span>
                     {t.nav.login}
-                  </Link>
-                  <Link href={registerPath} className="flex items-center justify-center gap-2 mt-2 px-4 py-3 rounded-xl bg-terracotta-600 text-white font-semibold hover:bg-terracotta-700 transition-colors" onClick={closeMenu}>
-                    {t.nav.register}
                   </Link>
                 </>
               )}
             </div>
           </nav>
+
+          {/* Footer del panel */}
+          {!user && (
+            <div className="shrink-0 p-4 border-t border-sand-100">
+              <Link
+                href={registerPath}
+                className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl bg-terracotta-600 text-white font-semibold hover:bg-terracotta-700 transition-colors text-[15px]"
+                onClick={closeMenu}
+              >
+                {t.nav.register}
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </header>

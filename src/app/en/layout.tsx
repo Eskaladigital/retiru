@@ -5,6 +5,7 @@
 import type { Metadata, Viewport } from 'next';
 import '../globals.css';
 import { jsonLdOrganization, jsonLdWebSite, jsonLdScript } from '@/lib/seo';
+import BackToTop from '@/components/ui/back-to-top';
 
 const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://retiru.com';
 
@@ -70,6 +71,7 @@ export default function EnLayout({ children }: { children: React.ReactNode }) {
       </head>
       <body className="min-h-screen bg-background antialiased">
         {children}
+        <BackToTop />
       </body>
     </html>
   );

@@ -7,9 +7,6 @@ import Link from 'next/link';
 import { homeEN } from '@/lib/seo/page-metadata';
 
 export const metadata: Metadata = homeEN;
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-
 const CATEGORIES = [
   { slug: 'yoga', name: 'Yoga', icon: '🧘', count: 127, img: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&q=80' },
   { slug: 'meditation', name: 'Meditation', icon: '🧠', count: 89, img: 'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=400&q=80' },
@@ -54,10 +51,9 @@ const IconHeartsm = () => <svg className="w-[18px] h-[18px] text-sage-600" viewB
 export default function HomePageEN() {
   return (
     <>
-      <Header locale="en" />
       <main>
         {/* HERO */}
-        <section className="relative min-h-[85vh] flex items-center pt-[72px] overflow-hidden">
+        <section className="relative min-h-[100vh] flex items-center overflow-hidden">
           <div className="absolute inset-0 z-0">
             <img src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1920&q=80" alt="Person meditating at sunrise" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-r from-[rgba(254,253,251,0.95)] via-[rgba(254,253,251,0.85)] to-[rgba(254,253,251,0.2)] max-md:bg-gradient-to-b max-md:from-[rgba(254,253,251,0.93)] max-md:via-[rgba(254,253,251,0.8)] max-md:to-[rgba(254,253,251,0.4)]" />
@@ -299,7 +295,6 @@ export default function HomePageEN() {
           </div>
         </section>
       </main>
-      <Footer locale="en" />
     </>
   );
 }
