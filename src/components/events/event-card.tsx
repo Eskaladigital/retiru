@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { formatPrice, formatDateRange } from "@/lib/utils";
 import type { Retreat, Locale } from "@/types";
-import { localized } from "@/types";
+import { getLocalized as localized } from "@/i18n";
 
 interface EventCardProps {
   event: Retreat;

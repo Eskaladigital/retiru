@@ -60,7 +60,7 @@ export function generatePageMetadata({
       description,
       url,
       siteName: SITE_NAME,
-      type: ogType,
+      type: ogType === 'product' ? 'website' : ogType,
       locale: locale === 'es' ? 'es_ES' : 'en_US',
       alternateLocale: locale === 'es' ? 'en_US' : 'es_ES',
       images: [

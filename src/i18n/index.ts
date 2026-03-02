@@ -17,14 +17,13 @@ export function getDictionary(locale: Locale): TranslationKeys {
  * Get a localized field from an object that has _es and _en variants
  * Example: getLocalized(event, 'title', 'es') → event.title_es
  */
-export function getLocalized<T extends Record<string, unknown>>(
+export function getLocalized<T extends object>(
   obj: T,
   field: string,
   locale: Locale
 ): string {
-  const key = `${field}_${locale}` as keyof T;
-  const fallback = `${field}_es` as keyof T;
-  return (obj[key] as string) || (obj[fallback] as string) || '';
+  const record = obj as Record<string, unknown>;
+  return (record[`${field}_${locale}`] as string) || (record[`${field}_es`] as string) || '';
 }
 
 /**

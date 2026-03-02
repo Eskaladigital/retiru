@@ -314,7 +314,7 @@ const es = {
     cookies: 'Política de cookies',
     allRights: '© {year} Retiru. Todos los derechos reservados.',
   },
-} as const;
+};
 
 export default es;
 export type TranslationKeys = typeof es;

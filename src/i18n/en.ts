@@ -303,6 +303,6 @@ const en: TranslationKeys = {
     cookies: 'Cookie policy',
     allRights: '© {year} Retiru. All rights reserved.',
   },
-} as const;
+};
 
 export default en;
