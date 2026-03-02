@@ -99,7 +99,7 @@ export default function HomePage() {
 
               {/* Title */}
               <h1 className="font-serif text-[clamp(36px,6vw,60px)] leading-[1.2] tracking-[-0.01em] text-foreground mb-5 max-w-[560px] animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)_0.1s_forwards] opacity-0">
-                Encuentra o busca tu{' '}
+                Encuentra tu{' '}
                 <span className="inline-flex items-baseline gap-[3px]">
                   <span className="text-terracotta-700 tracking-[-0.02em]">retiru</span>
                   <span className="w-[0.35em] h-[0.35em] bg-terracotta-600 rounded-full animate-[float_3s_ease-in-out_infinite] -mb-0.5" />
