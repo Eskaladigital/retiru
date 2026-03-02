@@ -4,9 +4,11 @@
 // RETIRU · Header / Navbar — glass overlay + off-canvas mobile
 // ============================================================================
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import { Menu, X, Globe, User, ChevronDown, MapPin, Compass, ShoppingBag, Heart, BookOpen } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Menu, X, Globe, User, ChevronDown, MapPin, Compass, ShoppingBag, Heart, BookOpen, LogOut, Shield } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import type { Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n';
 
@@ -17,9 +19,20 @@ interface HeaderProps {
 
 export default function Header({ locale, user }: HeaderProps) {
   const t = getDictionary(locale);
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   const altLocale = locale === 'es' ? 'en' : 'es';
+
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    setUserMenuOpen(false);
+    closeMenu();
+    router.refresh();
+  }
 
   const prefix = `/${locale}`;
   const centersPath = locale === 'es' ? `${prefix}/centros-retiru` : `${prefix}/centers-retiru`;
@@ -47,6 +60,16 @@ export default function Header({ locale, user }: HeaderProps) {
     }
     return () => { document.body.style.overflow = ''; };
   }, [mobileOpen]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    }
+    if (userMenuOpen) document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [userMenuOpen]);
 
   const closeMenu = () => setMobileOpen(false);
 
@@ -82,6 +105,11 @@ export default function Header({ locale, user }: HeaderProps) {
           <Link href={`${prefix}/blog`} className="btn-ghost text-sm">
             Blog
           </Link>
+          {user?.role === 'admin' && (
+            <Link href="/administrator" className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-terracotta-600 hover:bg-terracotta-50 hover:text-terracotta-700 transition-colors">
+              <Shield size={14} /> Admin
+            </Link>
+          )}
         </div>
 
         {/* Right side */}
@@ -91,12 +119,38 @@ export default function Header({ locale, user }: HeaderProps) {
             {altLocale.toUpperCase()}
           </Link>
           {user ? (
-            <div className="relative">
-              <button className="flex items-center gap-2 rounded-full border border-sand-300 px-4 py-2 text-sm transition-colors hover:bg-sand-50">
+            <div className="relative" ref={userMenuRef}>
+              <button
+                onClick={() => setUserMenuOpen((o) => !o)}
+                className="flex items-center gap-2 rounded-full border border-sand-300 px-4 py-2 text-sm transition-colors hover:bg-sand-50"
+              >
                 <User size={16} />
                 <span className="max-w-[120px] truncate">{user.name}</span>
-                <ChevronDown size={14} />
+                <ChevronDown size={14} className={`transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
               </button>
+              {userMenuOpen && (
+                <div className="absolute right-0 top-full mt-1 w-48 rounded-xl border border-sand-200 bg-white py-1 shadow-lg">
+                  <Link href={`${prefix}/mis-reservas`} className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-sand-50" onClick={() => setUserMenuOpen(false)}>
+                    {t.nav.myBookings}
+                  </Link>
+                  <Link href={`${prefix}/perfil`} className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-sand-50" onClick={() => setUserMenuOpen(false)}>
+                    {t.nav.profile}
+                  </Link>
+                  {user.role === 'admin' && (
+                    <Link href="/administrator" className="flex items-center gap-2 px-4 py-2.5 text-sm text-terracotta-600 hover:bg-terracotta-50" onClick={() => setUserMenuOpen(false)}>
+                      <Shield size={14} /> Admin
+                    </Link>
+                  )}
+                  {user.role === 'organizer' && (
+                    <Link href="/es/panel" className="flex items-center gap-2 px-4 py-2.5 text-sm text-sage-600 hover:bg-sage-50" onClick={() => setUserMenuOpen(false)}>
+                      Panel
+                    </Link>
+                  )}
+                  <button onClick={handleLogout} className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">
+                    <LogOut size={14} /> {t.nav.logout}
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <>
@@ -176,6 +230,12 @@ export default function Header({ locale, user }: HeaderProps) {
                 <span className="w-9 h-9 rounded-xl bg-sand-100 flex items-center justify-center"><BookOpen size={17} className="text-sand-600" /></span>
                 Blog
               </Link>
+              {user?.role === 'admin' && (
+                <Link href="/administrator" className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-terracotta-50 text-terracotta-600 font-semibold transition-colors text-[15px]" onClick={closeMenu}>
+                  <span className="w-9 h-9 rounded-xl bg-terracotta-50 flex items-center justify-center"><Shield size={17} className="text-terracotta-600" /></span>
+                  Admin
+                </Link>
+              )}
             </div>
 
             <hr className="my-3 border-sand-100" />
@@ -193,6 +253,19 @@ export default function Header({ locale, user }: HeaderProps) {
                   <Link href={`${prefix}/perfil`} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]" onClick={closeMenu}>
                     {t.nav.profile}
                   </Link>
+                  {user.role === 'admin' && (
+                    <Link href="/administrator" className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-terracotta-50 text-terracotta-600 transition-colors text-[15px]" onClick={closeMenu}>
+                      <Shield size={17} /> Admin
+                    </Link>
+                  )}
+                  {user.role === 'organizer' && (
+                    <Link href="/es/panel" className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sage-50 text-sage-600 transition-colors text-[15px]" onClick={closeMenu}>
+                      Panel
+                    </Link>
+                  )}
+                  <button onClick={handleLogout} className="flex w-full items-center gap-3 px-3 py-3 rounded-xl hover:bg-red-50 text-red-600 text-[15px] text-left">
+                    <LogOut size={17} /> {t.nav.logout}
+                  </button>
                 </>
               ) : (
                 <>

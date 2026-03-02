@@ -22,10 +22,18 @@ function LoginFormEN() {
     setLoading(true);
     try {
       const supabase = createClient();
-      const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
       if (err) {
         setError(err.message === 'Invalid login credentials' ? 'Invalid email or password' : err.message);
         return;
+      }
+      if (data.user) {
+        const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).single();
+        if (profile?.role === 'admin') {
+          router.push('/administrator');
+          router.refresh();
+          return;
+        }
       }
       router.push(redirect);
       router.refresh();

@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       }
     );
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error) {
       console.error('[auth/callback]', error.message);
@@ -51,6 +51,17 @@ export async function GET(request: NextRequest) {
       const url = new URL(loginPath, request.url);
       url.searchParams.set('error', 'auth_failed');
       return NextResponse.redirect(url);
+    }
+
+    if (data?.user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single();
+      if (profile?.role === 'admin') {
+        return NextResponse.redirect(new URL('/administrator', request.url));
+      }
     }
   }
 

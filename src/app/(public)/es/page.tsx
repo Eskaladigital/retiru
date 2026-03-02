@@ -7,8 +7,6 @@ import Link from 'next/link';
 import { homeES } from '@/lib/seo/page-metadata';
 
 export const metadata: Metadata = homeES;
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
 import { ImageWithFallback } from '@/components/ui/image-with-fallback';
 import HeroSearch from '@/components/home/HeroSearch';
 import { getCategories, getDestinations, getPublishedRetreats } from '@/lib/data';
@@ -76,9 +74,6 @@ export default async function HomePage() {
 
   return (
     <>
-      <Header locale="es" />
-      <main>
-
         {/* ═══════════════════════════════════════════════════════
             HERO — imagen fondo + overlay lateral
             ═══════════════════════════════════════════════════════ */}
@@ -482,8 +477,6 @@ export default async function HomePage() {
           </div>
         </section>
 
-      </main>
-      <Footer locale="es" />
     </>
   );
 }

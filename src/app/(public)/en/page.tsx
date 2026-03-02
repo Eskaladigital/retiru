@@ -5,8 +5,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { homeEN } from '@/lib/seo/page-metadata';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
 import { ImageWithFallback } from '@/components/ui/image-with-fallback';
 import { getCategories, getDestinations, getPublishedRetreats } from '@/lib/data';
 
@@ -75,8 +73,6 @@ export default async function HomePageEN() {
 
   return (
     <>
-      <Header locale="en" />
-      <main>
         {/* HERO */}
         <section className="relative min-h-[100vh] flex items-center overflow-hidden">
           <div className="absolute inset-0 z-0">
@@ -364,8 +360,6 @@ export default async function HomePageEN() {
             </div>
           </div>
         </section>
-      </main>
-      <Footer locale="en" />
     </>
   );
 }

@@ -3,7 +3,7 @@
 // ============================================================================
 
 import type { Metadata, Viewport } from 'next';
-import '../globals.css';
+import '../../globals.css';
 import { jsonLdOrganization, jsonLdWebSite, jsonLdScript } from '@/lib/seo';
 import BackToTop from '@/components/ui/back-to-top';
 

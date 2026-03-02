@@ -1,6 +1,5 @@
-// Layout panel organizador
+// Layout panel organizador — Header+Footer desde (public)/layout
 import Link from 'next/link';
-import Header from '@/components/layout/Header';
 
 const NAV = [
   { href: '/es/panel', label: 'Dashboard', icon: '📊' },
@@ -15,9 +14,7 @@ const NAV = [
 
 export default function PanelLayout({ children }: { children: React.ReactNode }) {
   return (
-    <>
-      <Header locale="es" />
-      <div className="flex min-h-[calc(100vh-72px)]">
+    <div className="flex min-h-[calc(100vh-72px)]">
         <aside className="hidden w-60 shrink-0 border-r border-sand-200 bg-white lg:block">
           <div className="sticky top-[72px] py-6 px-4">
             <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#a09383] px-3 mb-3">Panel organizador</p>
@@ -30,8 +27,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
             </nav>
           </div>
         </aside>
-        <main className="flex-1 bg-cream-100 p-6 md:p-8">{children}</main>
+        <div className="flex-1 bg-cream-100 p-6 md:p-8">{children}</div>
       </div>
-    </>
   );
 }

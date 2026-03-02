@@ -49,6 +49,29 @@ export async function createServerSupabase() {
 }
 
 /**
+ * Obtiene el usuario actual para el Header (name, role).
+ * Retorna null si no hay sesión.
+ */
+export async function getCurrentUserForHeader(): Promise<{ name: string; role: string } | null> {
+  try {
+    const supabase = await createServerSupabase();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name, role')
+      .eq('id', user.id)
+      .single();
+    return {
+      name: profile?.full_name || user.email?.split('@')[0] || 'Usuario',
+      role: profile?.role || 'user',
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Admin client with service role key — use only in server-side code
  * (webhooks, cron jobs, admin operations)
  */
