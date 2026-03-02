@@ -53,7 +53,7 @@ async function fetchContext(center: CenterRow, serpKey: string): Promise<string>
 
   if (mapsData?.local_results?.[0]) {
     const place = mapsData.local_results[0];
-    mapsInfo = `Rating: ${place.rating ?? 'N/A'}, ${place.reviews ?? 0} reseñas. Tipo: ${place.type ?? place.types?.[0] ?? center.type || 'centro de bienestar'}.`;
+    mapsInfo = `Rating: ${place.rating ?? 'N/A'}, ${place.reviews ?? 0} reseñas. Tipo: ${place.type ?? place.types?.[0] ?? center.type ?? 'centro de bienestar'}.`;
     if (place.address) mapsInfo += ` Dirección: ${place.address}.`;
     dataId = place.data_id || null;
   }
