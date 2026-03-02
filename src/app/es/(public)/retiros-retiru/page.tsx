@@ -2,12 +2,20 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { categoriesES } from '@/lib/seo/page-metadata';
+import { getPublishedRetreats, getCategories, getDestinations } from '@/lib/data';
+
 export const metadata: Metadata = categoriesES;
 
 import EventosClient from './EventosClient';
 import EventosSearch from '@/components/home/EventosSearch';
 
-export default function EventosPage() {
+export default async function EventosPage() {
+  const [{ retreats }, categories, destinations] = await Promise.all([
+    getPublishedRetreats({ limit: 50 }),
+    getCategories(),
+    getDestinations(),
+  ]);
+
   return (
     <>
       {/* Hero tipo home con buscador de retiros */}
@@ -24,7 +32,7 @@ export default function EventosPage() {
           <div className="max-w-[620px]">
             <div className="inline-flex items-center gap-2 bg-sage-50 border border-sage-200 text-sage-700 text-[13px] font-semibold px-4 py-1.5 rounded-full mb-6">
               <span className="w-1.5 h-1.5 bg-sage-400 rounded-full" />
-              +500 retiros en España
+              +{retreats.length} retiros en España
             </div>
             <h1 className="font-serif text-[clamp(36px,6vw,56px)] leading-[1.2] tracking-[-0.01em] text-foreground mb-5">
               Retiros y escapadas
@@ -40,7 +48,7 @@ export default function EventosPage() {
       </section>
 
       <Suspense>
-        <EventosClient />
+        <EventosClient retreats={retreats} categories={categories} destinations={destinations} />
       </Suspense>
     </>
   );

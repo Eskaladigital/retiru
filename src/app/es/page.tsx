@@ -11,45 +11,38 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { ImageWithFallback } from '@/components/ui/image-with-fallback';
 import HeroSearch from '@/components/home/HeroSearch';
+import { getCategories, getDestinations, getPublishedRetreats } from '@/lib/data';
 
-/* ── Mock data ─────────────────────────────────────────────────────────── */
-const CATEGORIES = [
-  { slug: 'yoga', name: 'Yoga', icon: '🧘', count: 127, img: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&q=80' },
-  { slug: 'meditacion', name: 'Meditación', icon: '🧠', count: 89, img: 'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=400&q=80' },
-  { slug: 'naturaleza', name: 'Naturaleza', icon: '🌿', count: 94, img: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80' },
-  { slug: 'detox', name: 'Detox', icon: '🍃', count: 52, img: 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=400&q=80' },
-  { slug: 'gastronomia', name: 'Gastronomía', icon: '🍷', count: 38, img: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&q=80' },
-  { slug: 'aventura', name: 'Aventura', icon: '⛰️', count: 61, img: 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=400&q=80' },
-];
+/* ── Fallback images ──────────────────────────────────────────────────── */
+const CAT_IMAGES: Record<string, string> = {
+  yoga: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&q=80',
+  meditacion: 'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=400&q=80',
+  naturaleza: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80',
+  detox: 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=400&q=80',
+  gastronomia: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&q=80',
+  aventura: 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=400&q=80',
+  wellness: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=400&q=80',
+  silencio: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&q=80',
+  'arte-creatividad': 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=400&q=80',
+  'desarrollo-personal': 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=400&q=80',
+};
 
-const EVENTS = [
-  {
-    slug: 'retiro-yoga-ibiza-junio-2026', title: 'Retiro de Yoga y Meditación frente al mar',
-    location: 'Ibiza, Baleares', dates: '15–20 Jun 2026 · 6 días', price: 790,
-    rating: 4.9, reviews: 23, spots: 3, spotsLow: true, instant: true, category: 'Yoga',
-    img: 'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=600&q=80',
-  },
-  {
-    slug: 'escapada-detox-sierra-grazalema', title: 'Escapada Detox y Ayuno en plena naturaleza',
-    location: 'Sierra de Grazalema, Cádiz', dates: '22–25 Jul 2026 · 4 días', price: 450,
-    rating: 4.8, reviews: 15, spots: 8, spotsLow: false, instant: false, category: 'Detox',
-    img: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80',
-  },
-  {
-    slug: 'retiro-gastronomico-priorat', title: 'Escapada gastronómica entre viñedos del Priorat',
-    location: 'Priorat, Tarragona', dates: '5–8 Sep 2026 · 4 días', price: 650,
-    rating: 5.0, reviews: 9, spots: 5, spotsLow: false, instant: true, category: 'Gastronomía',
-    img: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80',
-  },
-];
+const DEST_IMAGES: Record<string, string> = {
+  ibiza: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=80',
+  mallorca: 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=400&q=80',
+  'costa-brava': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=80',
+  'sierra-gredos': 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&q=80',
+  alpujarra: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80',
+  'picos-europa': 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=400&q=80',
+  'valle-jerte': 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&q=80',
+  lanzarote: 'https://images.unsplash.com/photo-1583422409516-2895a77efded?w=400&q=80',
+  pirineos: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80',
+  murcia: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400&q=80',
+};
 
-const DESTINATIONS = [
-  { slug: 'ibiza', name: 'Ibiza', count: 34, img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=80' },
-  { slug: 'mallorca', name: 'Mallorca', count: 28, img: 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=400&q=80' },
-  { slug: 'costa-brava', name: 'Costa Brava', count: 19, img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=80' },
-  { slug: 'sierra-nevada', name: 'Sierra Nevada', count: 15, img: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&q=80' },
-  { slug: 'pais-vasco', name: 'País Vasco', count: 12, img: 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=400&q=80' },
-];
+const DEFAULT_RETREAT_IMG = 'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=600&q=80';
+
+const dateFmt = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short' });
 
 const TESTIMONIALS = [
   { initials: 'MC', name: 'María C.', event: 'Retiro Yoga Ibiza · Jun 2025', text: 'Una experiencia increíble. La reserva fue super fácil y transparente. Sabía exactamente qué estaba pagando en cada momento. El retiro de yoga en Ibiza me cambió la vida.' },
@@ -70,7 +63,17 @@ const IconShield = () => <svg className="w-[18px] h-[18px] text-sage-600" viewBo
 const IconVerified = () => <svg className="w-[18px] h-[18px] text-sage-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
 const IconHeartsm = () => <svg className="w-[18px] h-[18px] text-sage-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>;
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [categories, destinations, { retreats }] = await Promise.all([
+    getCategories('es'),
+    getDestinations('es'),
+    getPublishedRetreats({ limit: 3 }),
+  ]);
+
+  const cats = categories.slice(0, 6);
+  const dests = destinations.slice(0, 5);
+  const popularRetreats = retreats.slice(0, 3);
+
   return (
     <>
       <Header locale="es" />
@@ -156,19 +159,18 @@ export default function HomePage() {
               </Link>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 lg:gap-5">
-              {CATEGORIES.map((c) => (
+              {cats.map((c) => (
                 <Link key={c.slug} href={`/es/retiros-retiru?tipo=${c.slug}`} className="group relative rounded-2xl overflow-hidden aspect-[3/4] cursor-pointer transition-transform duration-[400ms] cubic-bezier(0.16,1,0.3,1) hover:-translate-y-1">
                   <ImageWithFallback
-                    src={c.img}
-                    alt={c.name}
+                    src={c.cover_image_url || CAT_IMAGES[c.slug] || CAT_IMAGES.yoga}
+                    alt={c.name_es}
                     className="w-full h-full object-cover transition-transform duration-[600ms] group-hover:scale-[1.08]"
                     fallbackEmoji="🥤"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[rgba(45,35,25,0.7)] to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-5">
-                    <div className="text-[28px] mb-2 drop-shadow-md">{c.icon}</div>
-                    <h3 className="font-serif text-lg text-white">{c.name}</h3>
-                    <p className="text-[13px] text-white/75 mt-0.5">{c.count} retiros</p>
+                    <div className="text-[28px] mb-2 drop-shadow-md">{c.icon || '✨'}</div>
+                    <h3 className="font-serif text-lg text-white">{c.name_es}</h3>
                   </div>
                 </Link>
               ))}
@@ -191,14 +193,21 @@ export default function HomePage() {
               </Link>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {EVENTS.map((e) => (
-                <Link key={e.slug} href={`/es/retiro/${e.slug}`} className="group bg-white rounded-2xl overflow-hidden border border-sand-200 transition-all duration-[350ms] hover:shadow-elevated hover:-translate-y-1 hover:border-sand-300">
+              {popularRetreats.map((r) => {
+                const img = r.images?.find(i => i.is_cover)?.url || r.images?.[0]?.url || DEFAULT_RETREAT_IMG;
+                const category = r.categories?.[0]?.name_es || 'Retiro';
+                const location = r.destination?.name_es || '';
+                const dates = `${dateFmt.format(new Date(r.start_date))}–${dateFmt.format(new Date(r.end_date))} · ${r.duration_days} días`;
+                const spotsLow = r.available_spots <= 5;
+                const instant = r.confirmation_type === 'automatic';
+                return (
+                <Link key={r.slug} href={`/es/retiro/${r.slug}`} className="group bg-white rounded-2xl overflow-hidden border border-sand-200 transition-all duration-[350ms] hover:shadow-elevated hover:-translate-y-1 hover:border-sand-300">
                   {/* Image */}
                   <div className="relative aspect-[16/10] overflow-hidden">
-                    <img src={e.img} alt={e.title} className="w-full h-full object-cover transition-transform duration-[600ms] group-hover:scale-105" />
+                    <img src={img} alt={r.title_es} className="w-full h-full object-cover transition-transform duration-[600ms] group-hover:scale-105" />
                     <div className="absolute top-3 left-3 flex gap-1.5">
-                      <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground">{e.category}</span>
-                      {e.instant && <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[rgba(92,127,96,0.9)] backdrop-blur-sm text-white">⚡ Confirmación inmediata</span>}
+                      <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground">{category}</span>
+                      {instant && <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[rgba(92,127,96,0.9)] backdrop-blur-sm text-white">⚡ Confirmación inmediata</span>}
                     </div>
                     <div className="absolute top-3 right-3 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:scale-110 transition-transform">
                       <IconHeart />
@@ -207,25 +216,26 @@ export default function HomePage() {
                   {/* Body */}
                   <div className="p-5">
                     <div className="flex items-center justify-between mb-2.5">
-                      <span className="text-[13px] text-[#7a6b5d] flex items-center gap-1"><IconPin /> {e.location}</span>
-                      <span className="text-[13px] font-semibold text-foreground flex items-center gap-1"><IconStar /> {e.rating} <span className="font-normal text-[#7a6b5d]">({e.reviews})</span></span>
+                      <span className="text-[13px] text-[#7a6b5d] flex items-center gap-1"><IconPin /> {location}</span>
+                      <span className="text-[13px] font-semibold text-foreground flex items-center gap-1"><IconStar /> {r.avg_rating.toFixed(1)} <span className="font-normal text-[#7a6b5d]">({r.review_count})</span></span>
                     </div>
-                    <h3 className="font-serif text-xl leading-[1.3] mb-2 line-clamp-2">{e.title}</h3>
+                    <h3 className="font-serif text-xl leading-[1.3] mb-2 line-clamp-2">{r.title_es}</h3>
                     <div className="text-sm text-[#7a6b5d] mb-4 flex items-center gap-1.5">
-                      <IconCal /> {e.dates}
+                      <IconCal /> {dates}
                     </div>
                     <div className="flex items-end justify-between pt-4 border-t border-sand-200">
                       <div className="flex flex-col">
                         <span className="text-xs text-[#a09383] uppercase tracking-wider font-semibold">Desde</span>
-                        <span className="text-2xl font-bold text-foreground leading-none mt-0.5">{e.price}€ <span className="text-sm font-normal text-[#7a6b5d]">/persona</span></span>
+                        <span className="text-2xl font-bold text-foreground leading-none mt-0.5">{r.total_price}€ <span className="text-sm font-normal text-[#7a6b5d]">/persona</span></span>
                       </div>
-                      <span className={`text-[13px] font-medium flex items-center gap-1 ${e.spotsLow ? 'text-terracotta-600' : 'text-sage-600'}`}>
-                        {e.spotsLow ? '🔥' : ''} {e.spots} plazas
+                      <span className={`text-[13px] font-medium flex items-center gap-1 ${spotsLow ? 'text-terracotta-600' : 'text-sage-600'}`}>
+                        {spotsLow ? '🔥' : ''} {r.available_spots} plazas
                       </span>
                     </div>
                   </div>
                 </Link>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>
@@ -311,12 +321,12 @@ export default function HomePage() {
               </Link>
             </div>
             <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 scrollbar-hide">
-              {DESTINATIONS.map((d) => (
+              {dests.map((d) => (
                 <Link key={d.slug} href={`/es/destinos/${d.slug}`} className="shrink-0 w-[260px] snap-start rounded-2xl overflow-hidden relative cursor-pointer hover:-translate-y-1 transition-transform duration-300 group">
                   <div className="relative w-full h-[180px]">
                     <ImageWithFallback
-                      src={d.img}
-                      alt={d.name}
+                      src={d.cover_image_url || DEST_IMAGES[d.slug] || DEST_IMAGES.ibiza}
+                      alt={d.name_es}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
                       fallbackEmoji="🏝️"
                       fallbackSize="md"
@@ -324,8 +334,8 @@ export default function HomePage() {
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-[rgba(45,35,25,0.65)] to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-4 px-5">
-                    <h3 className="font-serif text-xl text-white">{d.name}</h3>
-                    <p className="text-[13px] text-white/80">{d.count} retiros</p>
+                    <h3 className="font-serif text-xl text-white">{d.name_es}</h3>
+                    {d.region && <p className="text-[13px] text-white/80">{d.region}</p>}
                   </div>
                 </Link>
               ))}

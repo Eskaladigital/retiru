@@ -120,10 +120,32 @@ export async function getPublishedRetreats(filters?: {
       ...rest,
       organizer: organizer_profiles ?? undefined,
       destination: destinations ?? undefined,
-      categories: [],
+      categories: [] as Category[],
       images: (retreat_images as Retreat['images']) ?? [],
     } as unknown as Retreat;
   });
+
+  if (retreats.length) {
+    const retreatIds = retreats.map((r) => r.id);
+    const { data: catLinks } = await supabase
+      .from('retreat_categories')
+      .select('retreat_id, category_id')
+      .in('retreat_id', retreatIds);
+    if (catLinks?.length) {
+      const catIds = [...new Set(catLinks.map((c) => c.category_id))];
+      const { data: cats } = await supabase
+        .from('categories')
+        .select('*')
+        .in('id', catIds);
+      const catMap = new Map((cats || []).map((c) => [c.id, c]));
+      for (const r of retreats) {
+        r.categories = catLinks
+          .filter((cl) => cl.retreat_id === r.id)
+          .map((cl) => catMap.get(cl.category_id))
+          .filter(Boolean) as Category[];
+      }
+    }
+  }
 
   return { retreats, total: count ?? 0 };
 }

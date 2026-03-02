@@ -1,40 +1,43 @@
 // /es/tienda/[slug] — Ficha de producto
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { generatePageMetadata } from '@/lib/seo';
+import { createServerSupabase } from '@/lib/supabase/server';
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  // TODO: fetch from Supabase by slug
+  const supabase = await createServerSupabase();
+  const { data: p } = await supabase
+    .from('shop_products')
+    .select('name_es, description_es, slug, meta_title_es, meta_description_es, category')
+    .eq('slug', params.slug)
+    .single();
+
+  if (!p) return {};
+
   return generatePageMetadata({
-    title: 'Esterilla de Yoga Pro 6mm',
-    description: 'Esterilla premium de 6mm en TPE ecológico, antideslizante, con líneas de alineación. Incluye correa de transporte.',
+    title: p.meta_title_es || p.name_es,
+    description: p.meta_description_es || p.description_es?.slice(0, 160) || '',
     locale: 'es',
-    path: `/es/tienda/${params.slug}`,
-    altPath: `/en/shop/${params.slug}`,
+    path: `/es/tienda/${p.slug}`,
+    altPath: `/en/shop/${p.slug}`,
     ogType: 'product',
-    keywords: ['esterilla yoga', 'mat yoga', 'esterilla TPE', 'yoga pro'],
+    keywords: [p.category, p.name_es].filter(Boolean),
   });
 }
 
-const P = {
-  slug: 'esterilla-yoga-pro', name: 'Esterilla de Yoga Pro 6mm', price: 49.90, comparePrice: 69.90,
-  category: 'Yoga', badge: 'Bestseller', rating: 4.8, reviews: 34, stock: 23, sku: 'RET-YOG-001',
-  description: 'Nuestra esterilla premium de 6mm de grosor ofrece la combinación perfecta de amortiguación y estabilidad. Fabricada en TPE ecológico, antideslizante por ambas caras, con líneas de alineación grabadas. Ideal para Hatha, Vinyasa y cualquier estilo de yoga.\n\nDimensiones: 183 x 66 cm · Peso: 1,2 kg · Material: TPE ecológico · Incluye: correa de transporte.',
-  features: ['6mm de grosor extra confort', 'TPE ecológico y libre de PVC', 'Antideslizante por ambas caras', 'Líneas de alineación grabadas', 'Incluye correa de transporte', 'Colores: Terracotta, Sage, Sand'],
-  images: [
-    'https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=800&q=80',
-    'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&q=80',
-    'https://images.unsplash.com/photo-1545389336-cf090694435e?w=800&q=80',
-  ],
-  reviewsList: [
-    { name: 'Laura M.', rating: 5, date: 'Feb 2026', text: 'Calidad increíble. Muy cómoda y no resbala nada.' },
-    { name: 'Carlos R.', rating: 5, date: 'Ene 2026', text: 'Mucho mejor que mi esterilla anterior. El grosor es perfecto.' },
-    { name: 'Ana S.', rating: 4, date: 'Dic 2025', text: 'Muy buena relación calidad-precio. El color terracotta es precioso.' },
-  ],
-};
+export default async function ProductoDetailPage({ params }: { params: { slug: string } }) {
+  const supabase = await createServerSupabase();
+  const { data: p } = await supabase
+    .from('shop_products')
+    .select('*')
+    .eq('slug', params.slug)
+    .single();
 
-export default function ProductoDetailPage({ params }: { params: { slug: string } }) {
-  const discount = P.comparePrice ? Math.round((1 - P.price / P.comparePrice) * 100) : 0;
+  if (!p) notFound();
+
+  const images: string[] = Array.isArray(p.images) ? p.images : [];
+  const discount = p.compare_price ? Math.round((1 - p.price / p.compare_price) * 100) : 0;
 
   return (
     <div className="container-wide py-12">
@@ -46,42 +49,41 @@ export default function ProductoDetailPage({ params }: { params: { slug: string 
       <div className="grid gap-8 lg:grid-cols-2">
         {/* Images */}
         <div>
-          <div className="aspect-square rounded-2xl overflow-hidden bg-sand-50 mb-3">
-            <img src={P.images[0]} alt={P.name} className="w-full h-full object-cover" />
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            {P.images.map((img, i) => (
-              <div key={i} className="aspect-square rounded-xl overflow-hidden bg-sand-50 cursor-pointer hover:opacity-80 transition-opacity">
-                <img src={img} alt="" className="w-full h-full object-cover" />
+          {images.length > 0 && (
+            <>
+              <div className="aspect-square rounded-2xl overflow-hidden bg-sand-50 mb-3">
+                <img src={images[0]} alt={p.name_es} className="w-full h-full object-cover" />
               </div>
-            ))}
-          </div>
+              {images.length > 1 && (
+                <div className="grid grid-cols-3 gap-3">
+                  {images.map((img, i) => (
+                    <div key={i} className="aspect-square rounded-xl overflow-hidden bg-sand-50 cursor-pointer hover:opacity-80 transition-opacity">
+                      <img src={img} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {/* Info */}
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-[11px] text-[#a09383] uppercase tracking-wider font-semibold">{P.category}</span>
-            {P.badge && <span className="text-[10px] font-bold uppercase tracking-wider bg-terracotta-600 text-white px-2 py-0.5 rounded-full">{P.badge}</span>}
+            <span className="text-[11px] text-[#a09383] uppercase tracking-wider font-semibold">{p.category}</span>
           </div>
-          <h1 className="font-serif text-[clamp(24px,3vw,32px)] text-foreground mb-3">{P.name}</h1>
-
-          <div className="flex items-center gap-2 mb-4">
-            <div className="flex gap-0.5">{Array.from({ length: 5 }).map((_, i) => <svg key={i} className={`w-4 h-4 ${i < Math.floor(P.rating) ? 'text-amber-400' : 'text-sand-300'}`} viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>)}</div>
-            <span className="text-sm font-semibold">{P.rating}</span>
-            <span className="text-sm text-[#a09383]">({P.reviews} reseñas)</span>
-          </div>
+          <h1 className="font-serif text-[clamp(24px,3vw,32px)] text-foreground mb-3">{p.name_es}</h1>
 
           <div className="flex items-baseline gap-3 mb-6">
-            <span className="text-3xl font-bold text-foreground">{P.price.toFixed(2).replace('.', ',')}€</span>
-            {P.comparePrice && <>
-              <span className="text-lg text-[#a09383] line-through">{P.comparePrice.toFixed(2).replace('.', ',')}€</span>
+            <span className="text-3xl font-bold text-foreground">{p.price.toFixed(2).replace('.', ',')}€</span>
+            {p.compare_price && <>
+              <span className="text-lg text-[#a09383] line-through">{p.compare_price.toFixed(2).replace('.', ',')}€</span>
               <span className="text-sm font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-full">-{discount}%</span>
             </>}
           </div>
 
           <div className="text-sm text-sage-600 mb-6">
-            {P.stock > 0 ? `✓ En stock (${P.stock} disponibles)` : '✗ Agotado'}
+            {p.stock_count > 0 ? `✓ En stock (${p.stock_count} disponibles)` : '✗ Agotado'}
           </div>
 
           {/* Quantity + Add to cart */}
@@ -103,41 +105,12 @@ export default function ProductoDetailPage({ params }: { params: { slug: string 
           </div>
 
           {/* Description */}
-          <div className="mb-6">
-            <h2 className="font-serif text-xl mb-3">Descripción</h2>
-            <div className="text-sm text-[#7a6b5d] leading-[1.8] whitespace-pre-line">{P.description}</div>
-          </div>
-
-          {/* Features */}
-          <div className="mb-6">
-            <h2 className="font-serif text-xl mb-3">Características</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {P.features.map((f, i) => (
-                <div key={i} className="flex items-start gap-2 text-sm text-[#7a6b5d]">
-                  <span className="text-sage-600 mt-0.5">✓</span> {f}
-                </div>
-              ))}
+          {p.description_es && (
+            <div className="mb-6">
+              <h2 className="font-serif text-xl mb-3">Descripción</h2>
+              <div className="text-sm text-[#7a6b5d] leading-[1.8] whitespace-pre-line">{p.description_es}</div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Reviews */}
-      <div className="mt-12">
-        <h2 className="font-serif text-2xl mb-6">Reseñas ({P.reviews})</h2>
-        <div className="grid gap-4 md:grid-cols-3">
-          {P.reviewsList.map((r, i) => (
-            <div key={i} className="bg-white border border-sand-200 rounded-xl p-5">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-sage-100 rounded-full flex items-center justify-center text-xs font-bold text-sage-700">{r.name[0]}</div>
-                  <div><p className="text-sm font-semibold">{r.name}</p><p className="text-xs text-[#a09383]">{r.date}</p></div>
-                </div>
-                <div className="flex gap-0.5">{Array.from({ length: r.rating }).map((_, j) => <svg key={j} className="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>)}</div>
-              </div>
-              <p className="text-sm text-[#7a6b5d]">{r.text}</p>
-            </div>
-          ))}
+          )}
         </div>
       </div>
     </div>

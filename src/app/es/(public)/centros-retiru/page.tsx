@@ -2,12 +2,15 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { centersES } from '@/lib/seo/page-metadata';
+import { getActiveCenters } from '@/lib/data';
 export const metadata: Metadata = centersES;
 
 import CentrosClient from './CentrosClient';
 import CentrosSearch from '@/components/home/CentrosSearch';
 
-export default function CentrosPage() {
+export default async function CentrosPage() {
+  const { centers } = await getActiveCenters({ limit: 50 });
+
   return (
     <>
       {/* Hero tipo home con buscador de centros */}
@@ -40,7 +43,7 @@ export default function CentrosPage() {
       </section>
 
       <Suspense>
-        <CentrosClient />
+        <CentrosClient centers={centers} />
       </Suspense>
     </>
   );

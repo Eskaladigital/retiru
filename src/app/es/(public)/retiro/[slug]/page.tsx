@@ -4,83 +4,125 @@
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { getRetreatBySlug } from '@/lib/data';
 import { generatePageMetadata, jsonLdEvent, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
-
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const title = params.slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-  return generatePageMetadata({
-    title: `${title} — Retiro en España`,
-    description: `Descubre y reserva ${title}. Retiro de bienestar en España con todo incluido.`,
-    locale: 'es',
-    path: `/es/retiro/${params.slug}`,
-    altPath: `/en/retreat/${params.slug}`,
-    ogType: 'website',
-    keywords: ['retiro', title.toLowerCase(), 'españa', 'bienestar'],
-  });
-}
 import { Star, MapPin, Calendar, Clock, Users, Globe, Shield, Zap, Heart, Share2, ChevronRight, Check, X as XIcon } from 'lucide-react';
 
-// Mock data — en producción se carga de Supabase
-const EVENT = {
-  title: 'Retiro de Yoga y Meditación en Ibiza',
-  summary: '7 días de práctica en una villa con vistas al mar. Incluye alojamiento, comidas orgánicas y excursiones.',
-  description: `Sumérgete en una semana transformadora en una de las villas más exclusivas de Ibiza, rodeada de naturaleza y con vistas al Mediterráneo.
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
-Cada día comenzarás con una sesión de yoga al amanecer frente al mar, seguida de un desayuno orgánico preparado por nuestro chef. Las tardes alternan entre talleres de meditación profunda, paseos por calas secretas y tiempo libre para disfrutar de la piscina infinita.
+const dateFmt = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1200&q=80';
 
-Este retiro está diseñado para todos los niveles, desde principiantes hasta practicantes avanzados. Nuestros instructores certificados adaptan cada sesión a tus necesidades.`,
-  price: 890,
-  fee: 178,
-  orgAmount: 712,
-  dates: { start: '15 Jun 2026', end: '21 Jun 2026' },
-  duration: '7 días · 6 noches',
-  location: 'Santa Eulalia, Ibiza',
-  maxAttendees: 16,
-  spotsLeft: 4,
-  rating: 4.9,
-  reviews: 47,
-  confirmation: 'automatic',
-  languages: ['Español', 'Inglés'],
-  images: [
-    'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1200&q=80',
-    'https://images.unsplash.com/photo-1545389336-cf090694435e?w=800&q=80',
-    'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80',
-    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80',
-  ],
-  includes: ['Alojamiento en villa compartida', '3 comidas orgánicas al día', '2 sesiones de yoga diarias', 'Meditación guiada', 'Excursión a calas secretas', 'Materiales de yoga', 'Wifi'],
-  excludes: ['Vuelos', 'Transporte al aeropuerto', 'Tratamientos de spa opcionales'],
-  schedule: [
-    { day: 1, title: 'Llegada y bienvenida', items: ['16:00 Check-in', '18:00 Yoga suave de bienvenida', '20:00 Cena y presentaciones'] },
-    { day: 2, title: 'Conexión', items: ['07:00 Yoga al amanecer', '09:00 Desayuno', '11:00 Taller de meditación', '13:00 Almuerzo', '16:00 Tiempo libre / Playa', '19:00 Yoga restaurativo', '20:30 Cena'] },
-    { day: 7, title: 'Despedida', items: ['07:00 Última sesión de yoga', '09:00 Desayuno de despedida', '11:00 Círculo de cierre', '12:00 Check-out'] },
-  ],
-  cancellation: { type: 'standard', tiers: [{ days: 30, percent: 100 }, { days: 14, percent: 50 }, { days: 7, percent: 0 }] },
-  organizer: { name: 'Ibiza Yoga Retreats', slug: 'ibiza-yoga-retreats', rating: 4.8, reviews: 124, events: 12, image: null, verified: true },
-  reviewsList: [
-    { name: 'Laura M.', date: 'Mayo 2025', rating: 5, text: 'Una experiencia increíble. Las sesiones de yoga al amanecer frente al mar fueron mágicas. Volveré seguro.' },
-    { name: 'Javier P.', date: 'Abril 2025', rating: 5, text: 'Superó todas mis expectativas. El lugar, la comida, los instructores... todo perfecto.' },
-    { name: 'Sarah K.', date: 'Marzo 2025', rating: 4, text: 'Great retreat! The villa is stunning and the yoga sessions were exactly what I needed. Only wish it was longer.' },
-  ],
-};
+function formatDate(iso: string) {
+  return dateFmt.format(new Date(iso));
+}
 
-export default function EventoDetailPage({ params }: { params: { slug: string } }) {
-  const e = EVENT;
+function durationLabel(days: number) {
+  if (days <= 1) return '1 día';
+  return `${days} días · ${days - 1} noches`;
+}
+
+// ─── Metadata ───────────────────────────────────────────────────────────────
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const retreat = await getRetreatBySlug(slug);
+  if (!retreat) return {};
+
+  const coverImg = retreat.images?.find((i) => i.is_cover)?.url
+    ?? retreat.images?.[0]?.url
+    ?? PLACEHOLDER_IMG;
+
+  return generatePageMetadata({
+    title: `${retreat.title_es} — Retiru`,
+    description: retreat.summary_es,
+    locale: 'es',
+    path: `/es/retiro/${retreat.slug}`,
+    altPath: `/en/retreat/${retreat.slug}`,
+    ogImage: coverImg,
+    ogType: 'website',
+    keywords: [
+      'retiro',
+      retreat.title_es.toLowerCase(),
+      retreat.destination?.name_es?.toLowerCase() ?? 'españa',
+      'bienestar',
+      ...(retreat.categories?.map((c) => c.name_es.toLowerCase()) ?? []),
+    ],
+  });
+}
+
+// ─── Page ───────────────────────────────────────────────────────────────────
+
+export default async function RetiroDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const retreat = await getRetreatBySlug(slug);
+  if (!retreat) notFound();
+
+  const r = retreat;
+
+  // Images: cover first, then sorted by sort_order
+  const sortedImages = [...(r.images ?? [])].sort((a, b) => {
+    if (a.is_cover && !b.is_cover) return -1;
+    if (!a.is_cover && b.is_cover) return 1;
+    return a.sort_order - b.sort_order;
+  });
+  const hasImages = sortedImages.length > 0;
+
+  const location = r.destination
+    ? `${r.destination.name_es}${r.destination.region ? `, ${r.destination.region}` : ''}`
+    : r.address ?? '';
+
+  const availability: 'InStock' | 'SoldOut' | 'LimitedAvailability' =
+    r.available_spots === 0 ? 'SoldOut' : r.available_spots <= 3 ? 'LimitedAvailability' : 'InStock';
+
+  // JSON-LD structured data
+  const eventLd = jsonLdEvent({
+    name: r.title_es,
+    description: r.summary_es,
+    startDate: r.start_date,
+    endDate: r.end_date,
+    location,
+    image: sortedImages[0]?.url ?? PLACEHOLDER_IMG,
+    price: r.total_price,
+    currency: r.currency,
+    url: `/es/retiro/${r.slug}`,
+    organizer: r.organizer?.business_name ?? 'Retiru',
+    availability,
+    rating: r.avg_rating > 0 ? r.avg_rating : undefined,
+    reviewCount: r.review_count > 0 ? r.review_count : undefined,
+  });
+
+  const breadcrumbLd = jsonLdBreadcrumb([
+    { name: 'Inicio', url: '/es' },
+    { name: 'Retiros', url: '/es/retiros-retiru' },
+    { name: r.title_es, url: `/es/retiro/${r.slug}` },
+  ]);
 
   return (
     <div>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(eventLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbLd) }} />
+
       {/* ═══ Image Gallery ═══ */}
       <section className="bg-sand-100">
         <div className="container-wide py-4">
-          <div className="grid gap-2 md:grid-cols-4 md:grid-rows-2 rounded-2xl overflow-hidden" style={{ maxHeight: '480px' }}>
-            <div className="md:col-span-2 md:row-span-2 relative">
-              <img src={e.images[0]} alt={e.title} className="h-full w-full object-cover" style={{ minHeight: '300px' }} />
-            </div>
-            {e.images.slice(1, 5).map((img, i) => (
-              <div key={i} className="hidden md:block relative">
-                <img src={img} alt="" className="h-full w-full object-cover" />
+          {hasImages ? (
+            <div className="grid gap-2 md:grid-cols-4 md:grid-rows-2 rounded-2xl overflow-hidden" style={{ maxHeight: '480px' }}>
+              <div className="md:col-span-2 md:row-span-2 relative">
+                <img src={sortedImages[0].url} alt={sortedImages[0].alt_text ?? r.title_es} className="h-full w-full object-cover" style={{ minHeight: '300px' }} />
               </div>
-            ))}
-          </div>
+              {sortedImages.slice(1, 5).map((img, i) => (
+                <div key={img.id ?? i} className="hidden md:block relative">
+                  <img src={img.url} alt={img.alt_text ?? ''} className="h-full w-full object-cover" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center rounded-2xl bg-sand-200 text-muted-foreground" style={{ height: '320px' }}>
+              <span className="text-sm">Sin imágenes disponibles</span>
+            </div>
+          )}
         </div>
       </section>
 
@@ -95,25 +137,28 @@ export default function EventoDetailPage({ params }: { params: { slug: string } 
               <ChevronRight size={12} />
               <Link href="/es/retiros-retiru" className="hover:text-terracotta-600">Retiros</Link>
               <ChevronRight size={12} />
-              <span className="text-foreground">{e.title}</span>
+              <span className="text-foreground">{r.title_es}</span>
             </nav>
 
             {/* Header */}
             <div className="mb-6">
               <div className="mb-2 flex flex-wrap gap-2">
-                <span className="badge-sand">Yoga</span>
-                <span className="badge-sand">Meditación</span>
-                {e.confirmation === 'automatic' && <span className="badge-sage"><Zap size={12} /> Confirmación inmediata</span>}
+                {r.categories?.map((cat) => (
+                  <span key={cat.id} className="badge-sand">{cat.name_es}</span>
+                ))}
+                {r.confirmation_type === 'automatic' && <span className="badge-sage"><Zap size={12} /> Confirmación inmediata</span>}
               </div>
-              <h1 className="font-serif text-3xl font-bold text-foreground md:text-4xl">{e.title}</h1>
+              <h1 className="font-serif text-3xl font-bold text-foreground md:text-4xl">{r.title_es}</h1>
               <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1"><MapPin size={15} /> {e.location}</span>
-                <span className="flex items-center gap-1"><Calendar size={15} /> {e.dates.start} — {e.dates.end}</span>
-                <span className="flex items-center gap-1"><Clock size={15} /> {e.duration}</span>
-                <span className="flex items-center gap-1">
-                  <Star size={15} className="fill-terracotta-500 text-terracotta-500" />
-                  <strong className="text-foreground">{e.rating}</strong> ({e.reviews} reseñas)
-                </span>
+                {location && <span className="flex items-center gap-1"><MapPin size={15} /> {location}</span>}
+                <span className="flex items-center gap-1"><Calendar size={15} /> {formatDate(r.start_date)} — {formatDate(r.end_date)}</span>
+                <span className="flex items-center gap-1"><Clock size={15} /> {durationLabel(r.duration_days)}</span>
+                {r.review_count > 0 && (
+                  <span className="flex items-center gap-1">
+                    <Star size={15} className="fill-terracotta-500 text-terracotta-500" />
+                    <strong className="text-foreground">{r.avg_rating.toFixed(1)}</strong> ({r.review_count} reseñas)
+                  </span>
+                )}
               </div>
               {/* Actions */}
               <div className="mt-4 flex gap-3">
@@ -126,7 +171,7 @@ export default function EventoDetailPage({ params }: { params: { slug: string } 
             <section className="mb-10">
               <h2 className="mb-4 font-serif text-2xl font-semibold">Sobre este retiro</h2>
               <div className="prose prose-sand text-muted-foreground leading-relaxed whitespace-pre-line text-sm">
-                {e.description}
+                {r.description_es}
               </div>
             </section>
 
@@ -135,7 +180,7 @@ export default function EventoDetailPage({ params }: { params: { slug: string } 
               <div>
                 <h3 className="mb-3 font-serif text-xl font-semibold">Qué incluye</h3>
                 <ul className="space-y-2">
-                  {e.includes.map((item, i) => (
+                  {(r.includes_es ?? []).map((item, i) => (
                     <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
                       <Check size={16} className="mt-0.5 shrink-0 text-sage-600" /> {item}
                     </li>
@@ -145,7 +190,7 @@ export default function EventoDetailPage({ params }: { params: { slug: string } 
               <div>
                 <h3 className="mb-3 font-serif text-xl font-semibold">Qué no incluye</h3>
                 <ul className="space-y-2">
-                  {e.excludes.map((item, i) => (
+                  {(r.excludes_es ?? []).map((item, i) => (
                     <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
                       <XIcon size={16} className="mt-0.5 shrink-0 text-sand-400" /> {item}
                     </li>
@@ -155,91 +200,106 @@ export default function EventoDetailPage({ params }: { params: { slug: string } 
             </section>
 
             {/* Schedule */}
-            <section className="mb-10">
-              <h2 className="mb-4 font-serif text-2xl font-semibold">Programa</h2>
-              <div className="space-y-4">
-                {e.schedule.map((day) => (
-                  <div key={day.day} className="rounded-xl border border-sand-200 p-5">
-                    <h4 className="mb-2 font-semibold text-foreground">Día {day.day}: {day.title}</h4>
-                    <ul className="space-y-1">
-                      {day.items.map((item, i) => (
-                        <li key={i} className="text-sm text-muted-foreground">{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            </section>
+            {r.schedule?.length > 0 && (
+              <section className="mb-10">
+                <h2 className="mb-4 font-serif text-2xl font-semibold">Programa</h2>
+                <div className="space-y-4">
+                  {r.schedule.map((day) => (
+                    <div key={day.day} className="rounded-xl border border-sand-200 p-5">
+                      <h4 className="mb-2 font-semibold text-foreground">Día {day.day}: {day.title_es}</h4>
+                      <ul className="space-y-1">
+                        {day.items.map((item, i) => (
+                          <li key={i} className="text-sm text-muted-foreground">{item.time} {item.title_es}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* Organizer */}
-            <section className="mb-10 rounded-2xl border border-sand-200 p-6">
-              <h2 className="mb-4 font-serif text-2xl font-semibold">Organizador</h2>
-              <div className="flex items-center gap-4">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-sage-100 text-xl font-bold text-sage-700">
-                  {e.organizer.name[0]}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-foreground">{e.organizer.name}</h3>
-                    {e.organizer.verified && <Shield size={16} className="text-sage-600" />}
+            {r.organizer && (
+              <section className="mb-10 rounded-2xl border border-sand-200 p-6">
+                <h2 className="mb-4 font-serif text-2xl font-semibold">Organizador</h2>
+                <div className="flex items-center gap-4">
+                  {r.organizer.logo_url ? (
+                    <img src={r.organizer.logo_url} alt={r.organizer.business_name} className="h-16 w-16 rounded-full object-cover" />
+                  ) : (
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-sage-100 text-xl font-bold text-sage-700">
+                      {r.organizer.business_name[0]}
+                    </div>
+                  )}
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-foreground">{r.organizer.business_name}</h3>
+                      {r.organizer.status === 'verified' && <Shield size={16} className="text-sage-600" />}
+                    </div>
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                      {r.organizer.review_count > 0 && (
+                        <span className="flex items-center gap-1">
+                          <Star size={13} className="fill-terracotta-500 text-terracotta-500" /> {r.organizer.avg_rating.toFixed(1)} ({r.organizer.review_count} reseñas)
+                        </span>
+                      )}
+                      <span>{r.organizer.total_retreats} retiros</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1"><Star size={13} className="fill-terracotta-500 text-terracotta-500" /> {e.organizer.rating} ({e.organizer.reviews} reseñas)</span>
-                    <span>{e.organizer.events} retiros</span>
-                  </div>
                 </div>
-              </div>
-              <Link href={`/es/organizador/${e.organizer.slug}`} className="btn-outline mt-4 text-sm">
-                Ver perfil completo
-              </Link>
-            </section>
+                <Link href={`/es/organizador/${r.organizer.slug}`} className="btn-outline mt-4 text-sm">
+                  Ver perfil completo
+                </Link>
+              </section>
+            )}
 
             {/* Cancellation */}
-            <section className="mb-10">
-              <h2 className="mb-4 font-serif text-2xl font-semibold">Política de cancelación</h2>
-              <div className="rounded-xl bg-cream-100 p-5">
-                <p className="mb-3 text-sm font-medium text-foreground">Cancelación estándar</p>
-                <ul className="space-y-2">
-                  {e.cancellation.tiers.map((tier, i) => (
-                    <li key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <div className={`h-2 w-2 rounded-full ${tier.percent === 100 ? 'bg-sage-500' : tier.percent > 0 ? 'bg-yellow-500' : 'bg-red-400'}`} />
-                      Más de {tier.days} días antes: reembolso del {tier.percent}%
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-3 text-xs text-muted-foreground">La cuota de gestión de Retiru (20%) no es reembolsable.</p>
-              </div>
-            </section>
+            {r.cancellation_policy?.refund_tiers?.length > 0 && (
+              <section className="mb-10">
+                <h2 className="mb-4 font-serif text-2xl font-semibold">Política de cancelación</h2>
+                <div className="rounded-xl bg-cream-100 p-5">
+                  <p className="mb-3 text-sm font-medium text-foreground">Cancelación {r.cancellation_policy.type}</p>
+                  <ul className="space-y-2">
+                    {r.cancellation_policy.refund_tiers.map((tier, i) => (
+                      <li key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <div className={`h-2 w-2 rounded-full ${tier.refund_percent === 100 ? 'bg-sage-500' : tier.refund_percent > 0 ? 'bg-yellow-500' : 'bg-red-400'}`} />
+                        Más de {tier.days_before} días antes: reembolso del {tier.refund_percent}%
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    {r.cancellation_policy.platform_fee_refundable
+                      ? 'La cuota de gestión de Retiru (20%) es reembolsable.'
+                      : 'La cuota de gestión de Retiru (20%) no es reembolsable.'}
+                  </p>
+                </div>
+              </section>
+            )}
 
             {/* Reviews */}
             <section className="mb-10">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="font-serif text-2xl font-semibold">Reseñas</h2>
-                <div className="flex items-center gap-2">
-                  <Star size={20} className="fill-terracotta-500 text-terracotta-500" />
-                  <span className="text-xl font-bold">{e.rating}</span>
-                  <span className="text-sm text-muted-foreground">· {e.reviews} reseñas</span>
-                </div>
-              </div>
-              <div className="space-y-4">
-                {e.reviewsList.map((r, i) => (
-                  <div key={i} className="rounded-xl border border-sand-200 p-5">
-                    <div className="mb-2 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sage-100 text-xs font-bold text-sage-700">{r.name[0]}</div>
-                        <span className="text-sm font-semibold">{r.name}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {Array.from({ length: r.rating }).map((_, j) => (
-                          <Star key={j} size={13} className="fill-terracotta-500 text-terracotta-500" />
-                        ))}
-                        <span className="ml-2 text-xs text-muted-foreground">{r.date}</span>
-                      </div>
-                    </div>
-                    <p className="text-sm leading-relaxed text-muted-foreground">{r.text}</p>
+                {r.review_count > 0 && (
+                  <div className="flex items-center gap-2">
+                    <Star size={20} className="fill-terracotta-500 text-terracotta-500" />
+                    <span className="text-xl font-bold">{r.avg_rating.toFixed(1)}</span>
+                    <span className="text-sm text-muted-foreground">· {r.review_count} reseñas</span>
                   </div>
-                ))}
+                )}
               </div>
+              {r.review_count === 0 ? (
+                <div className="rounded-xl border border-sand-200 p-8 text-center">
+                  <p className="text-sm text-muted-foreground">Aún no hay reseñas para este retiro. ¡Sé el primero en compartir tu experiencia!</p>
+                </div>
+              ) : (
+                <div className="rounded-xl border border-sand-200 p-5 text-center">
+                  <div className="flex items-center justify-center gap-1 mb-2">
+                    {Array.from({ length: 5 }).map((_, j) => (
+                      <Star key={j} size={20} className={j < Math.round(r.avg_rating) ? 'fill-terracotta-500 text-terracotta-500' : 'text-sand-300'} />
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground">{r.review_count} reseñas · Valoración media {r.avg_rating.toFixed(1)}/5</p>
+                </div>
+              )}
             </section>
           </div>
 
@@ -250,43 +310,49 @@ export default function EventoDetailPage({ params }: { params: { slug: string } 
                 {/* Price */}
                 <div className="mb-4 text-center">
                   <span className="text-sm text-muted-foreground">Precio total</span>
-                  <p className="text-3xl font-bold text-foreground">{e.price}€ <span className="text-base font-normal text-muted-foreground">/ persona</span></p>
+                  <p className="text-3xl font-bold text-foreground">{r.total_price}€ <span className="text-base font-normal text-muted-foreground">/ persona</span></p>
                 </div>
 
                 {/* Price breakdown */}
                 <div className="mb-6 rounded-xl bg-cream-100 p-4 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Cuota Retiru (20%)</span>
-                    <span className="font-semibold text-terracotta-600">{e.fee}€</span>
+                    <span className="font-semibold text-terracotta-600">{r.platform_fee}€</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Al organizador (80%)</span>
-                    <span className="font-semibold">{e.orgAmount}€</span>
+                    <span className="font-semibold">{r.organizer_amount}€</span>
                   </div>
                   <hr className="border-sand-300" />
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Pagas hoy <strong>{e.fee}€</strong> a Retiru · El resto ({e.orgAmount}€) lo pagas al organizador antes del retiro.
+                    Pagas hoy <strong>{r.platform_fee}€</strong> a Retiru · El resto ({r.organizer_amount}€) lo pagas al organizador antes del retiro.
                   </p>
                 </div>
 
                 {/* Info */}
                 <div className="mb-6 space-y-3 text-sm">
                   <div className="flex items-center gap-2 text-muted-foreground">
-                    <Calendar size={16} /> {e.dates.start} — {e.dates.end}
+                    <Calendar size={16} /> {formatDate(r.start_date)} — {formatDate(r.end_date)}
                   </div>
                   <div className="flex items-center gap-2 text-muted-foreground">
-                    <Clock size={16} /> {e.duration}
+                    <Clock size={16} /> {durationLabel(r.duration_days)}
                   </div>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Users size={16} />
-                    <span className={e.spotsLeft <= 3 ? 'text-terracotta-600 font-semibold' : ''}>
-                      {e.spotsLeft <= 3 ? `¡Solo ${e.spotsLeft} plazas!` : `${e.spotsLeft} plazas disponibles`}
+                    <span className={r.available_spots <= 3 ? 'text-terracotta-600 font-semibold' : ''}>
+                      {r.available_spots === 0
+                        ? 'Sin plazas disponibles'
+                        : r.available_spots <= 3
+                          ? `¡Solo ${r.available_spots} plazas!`
+                          : `${r.available_spots} plazas disponibles`}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Globe size={16} /> {e.languages.join(', ')}
-                  </div>
-                  {e.confirmation === 'automatic' && (
+                  {r.languages?.length > 0 && (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Globe size={16} /> {r.languages.join(', ')}
+                    </div>
+                  )}
+                  {r.confirmation_type === 'automatic' && (
                     <div className="flex items-center gap-2 text-sage-600 font-medium">
                       <Zap size={16} /> Confirmación inmediata
                     </div>
@@ -294,8 +360,8 @@ export default function EventoDetailPage({ params }: { params: { slug: string } 
                 </div>
 
                 {/* CTA */}
-                <button className="btn-primary w-full py-4 text-base">
-                  Reservar plaza · {e.fee}€
+                <button className="btn-primary w-full py-4 text-base" disabled={r.available_spots === 0}>
+                  {r.available_spots === 0 ? 'Agotado' : `Reservar plaza · ${r.platform_fee}€`}
                 </button>
 
                 <p className="mt-3 text-center text-xs text-muted-foreground">
@@ -312,11 +378,11 @@ export default function EventoDetailPage({ params }: { params: { slug: string } 
       <div className="sticky-cta lg:hidden">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-lg font-bold text-foreground">{e.price}€</p>
-            <p className="text-xs text-muted-foreground">Hoy pagas {e.fee}€</p>
+            <p className="text-lg font-bold text-foreground">{r.total_price}€</p>
+            <p className="text-xs text-muted-foreground">Hoy pagas {r.platform_fee}€</p>
           </div>
-          <button className="btn-primary px-8 py-3">
-            Reservar plaza · {e.fee}€
+          <button className="btn-primary px-8 py-3" disabled={r.available_spots === 0}>
+            {r.available_spots === 0 ? 'Agotado' : `Reservar plaza · ${r.platform_fee}€`}
           </button>
         </div>
       </div>

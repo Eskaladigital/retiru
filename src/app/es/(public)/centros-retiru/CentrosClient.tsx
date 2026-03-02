@@ -5,23 +5,6 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Search, SlidersHorizontal, X, MapPin, Star, ChevronDown, CalendarDays } from 'lucide-react';
 
-const CENTERS = [
-  { slug: 'yoga-sala-madrid', name: 'Yoga Sala Madrid', type: 'Yoga', city: 'Madrid', province: 'Madrid', rating: 4.9, reviews: 87, featured: true, services: ['Hatha Yoga', 'Vinyasa', 'Ashtanga', 'Meditación'], schedule: 'L-V 7:00-21:00 · S 9:00-14:00', priceRange: 'Desde 14€/clase', img: 'https://images.unsplash.com/photo-1545389336-cf090694435e?w=600&q=80', desc: 'Estudio de yoga en el centro de Madrid con profesores certificados internacionalmente.' },
-  { slug: 'espacio-zen-barcelona', name: 'Espacio Zen Barcelona', type: 'Meditación', city: 'Barcelona', province: 'Barcelona', rating: 4.8, reviews: 63, featured: true, services: ['Meditación Zen', 'Mindfulness', 'Talleres de silencio'], schedule: 'L-S 8:00-20:00', priceRange: 'Desde 10€/sesión', img: 'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=600&q=80', desc: 'Centro especializado en meditación y mindfulness con más de 15 años de experiencia.' },
-  { slug: 'bienestar-integral-valencia', name: 'Bienestar Integral', type: 'Wellness', city: 'Valencia', province: 'Valencia', rating: 4.7, reviews: 41, featured: false, services: ['Yoga', 'Pilates', 'Nutrición', 'Masajes'], schedule: 'L-V 8:00-21:00', priceRange: 'Desde 12€/clase', img: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=600&q=80', desc: 'Centro de bienestar integral que combina yoga, pilates, nutrición y terapias corporales.' },
-  { slug: 'om-yoga-sevilla', name: 'Om Yoga Sevilla', type: 'Yoga', city: 'Sevilla', province: 'Sevilla', rating: 4.9, reviews: 112, featured: true, services: ['Kundalini', 'Hatha', 'Yoga restaurativo', 'Formación profesores'], schedule: 'L-S 7:30-21:30', priceRange: 'Desde 15€/clase', img: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=600&q=80', desc: 'El estudio de yoga más grande de Sevilla. Formación certificada por Yoga Alliance.' },
-  { slug: 'spa-termal-murcia', name: 'Spa Termal Murcia', type: 'Spa', city: 'Murcia', province: 'Murcia', rating: 4.6, reviews: 34, featured: false, services: ['Circuito termal', 'Masajes', 'Tratamientos faciales', 'Flotación'], schedule: 'L-D 10:00-22:00', priceRange: 'Desde 25€/circuito', img: 'https://images.unsplash.com/photo-1540555700478-4be289fbec6e?w=600&q=80', desc: 'Spa urbano con aguas termales naturales y amplia carta de tratamientos.' },
-  { slug: 'shala-yoga-malaga', name: 'Shala Yoga Málaga', type: 'Yoga', city: 'Málaga', province: 'Málaga', rating: 4.8, reviews: 58, featured: false, services: ['Ashtanga', 'Yin Yoga', 'Meditación', 'Talleres'], schedule: 'L-V 7:00-20:30 · S 9:00-13:00', priceRange: 'Desde 12€/clase', img: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&q=80', desc: 'Shala íntima dedicada a la práctica de Ashtanga yoga en Málaga centro.' },
-  { slug: 'pilates-studio-bilbao', name: 'Pilates Studio Bilbao', type: 'Pilates', city: 'Bilbao', province: 'Vizcaya', rating: 4.7, reviews: 29, featured: false, services: ['Pilates Mat', 'Pilates Reformer', 'Pilates embarazadas'], schedule: 'L-V 8:00-21:00', priceRange: 'Desde 18€/clase', img: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80', desc: 'Estudio de pilates con máquinas Reformer y clases personalizadas en Bilbao.' },
-  { slug: 'centro-ayurveda-granada', name: 'Centro Ayurveda Granada', type: 'Wellness', city: 'Granada', province: 'Granada', rating: 4.5, reviews: 22, featured: false, services: ['Ayurveda', 'Masaje Abhyanga', 'Consulta nutricional', 'Panchakarma'], schedule: 'L-V 9:00-19:00', priceRange: 'Desde 45€/sesión', img: 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=600&q=80', desc: 'Centro especializado en medicina ayurvédica con terapeutas formados en India.' },
-];
-
-const TYPES = ['Todos', 'Yoga', 'Meditación', 'Pilates', 'Wellness', 'Spa'];
-const PROVINCES = ['Todas', ...Array.from(new Set(CENTERS.map(c => c.province))).sort()];
-const CIUDAD_SLUG_TO_NAME: Record<string, string> = {
-  madrid: 'Madrid', barcelona: 'Barcelona', valencia: 'Valencia', sevilla: 'Sevilla',
-  murcia: 'Murcia', malaga: 'Málaga', bilbao: 'Bilbao', granada: 'Granada',
-};
 const SORT_OPTIONS = [
   { value: 'relevance', label: 'Relevancia' },
   { value: 'rating', label: 'Mejor valorados' },
@@ -35,7 +18,11 @@ const RATING_OPTIONS = [
   { value: 4.8, label: '4.8+ estrellas' },
 ];
 
-export default function CentrosClient() {
+interface CentrosClientProps {
+  centers: any[];
+}
+
+export default function CentrosClient({ centers }: CentrosClientProps) {
   const searchParams = useSearchParams();
   const [query, setQuery] = useState('');
   const [selectedType, setSelectedType] = useState('Todos');
@@ -44,6 +31,27 @@ export default function CentrosClient() {
   const [minRating, setMinRating] = useState(0);
   const [sortBy, setSortBy] = useState('relevance');
   const [showFilters, setShowFilters] = useState(false);
+
+  const TYPES = useMemo(() => {
+    const types = Array.from(new Set(centers.map(c => c.type).filter(Boolean))).sort();
+    return ['Todos', ...types];
+  }, [centers]);
+
+  const PROVINCES = useMemo(() => {
+    const provinces = Array.from(new Set(centers.map(c => c.province).filter(Boolean))).sort();
+    return ['Todas', ...provinces];
+  }, [centers]);
+
+  const CIUDAD_SLUG_TO_NAME: Record<string, string> = useMemo(() => {
+    const map: Record<string, string> = {};
+    centers.forEach(c => {
+      if (c.city) {
+        const slug = c.city.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
+        map[slug] = c.city;
+      }
+    });
+    return map;
+  }, [centers]);
 
   useEffect(() => {
     const qParam = searchParams.get('q');
@@ -66,27 +74,28 @@ export default function CentrosClient() {
       setSelectedCity(null);
     }
     if (qParam || tipoParam || provParam || ciudadParam) setShowFilters(true);
-  }, [searchParams]);
+  }, [searchParams, TYPES, PROVINCES, CIUDAD_SLUG_TO_NAME]);
 
   const filtered = useMemo(() => {
-    let results = CENTERS.filter(c => {
+    let results = centers.filter(c => {
       const q = query.toLowerCase();
-      const matchesQuery = !q || c.name.toLowerCase().includes(q) || c.desc.toLowerCase().includes(q) || c.city.toLowerCase().includes(q) || c.services.some(s => s.toLowerCase().includes(q));
+      const services = Array.isArray(c.services_es) ? c.services_es : [];
+      const matchesQuery = !q || c.name?.toLowerCase().includes(q) || c.description_es?.toLowerCase().includes(q) || c.city?.toLowerCase().includes(q) || services.some((s: string) => s.toLowerCase().includes(q));
       const matchesType = selectedType === 'Todos' || c.type === selectedType;
       const matchesProvince = selectedProvince === 'Todas' || c.province === selectedProvince;
       const matchesCity = !selectedCity || c.city === selectedCity;
-      const matchesRating = c.rating >= minRating;
+      const matchesRating = (c.avg_rating || 0) >= minRating;
       return matchesQuery && matchesType && matchesProvince && matchesCity && matchesRating;
     });
 
     switch (sortBy) {
-      case 'rating': results.sort((a, b) => b.rating - a.rating); break;
-      case 'reviews': results.sort((a, b) => b.reviews - a.reviews); break;
-      case 'name': results.sort((a, b) => a.name.localeCompare(b.name)); break;
-      default: results.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+      case 'rating': results.sort((a: any, b: any) => (b.avg_rating || 0) - (a.avg_rating || 0)); break;
+      case 'reviews': results.sort((a: any, b: any) => (b.review_count || 0) - (a.review_count || 0)); break;
+      case 'name': results.sort((a: any, b: any) => (a.name || '').localeCompare(b.name || '')); break;
+      default: results.sort((a: any, b: any) => (b.avg_rating || 0) - (a.avg_rating || 0));
     }
     return results;
-  }, [query, selectedType, selectedProvince, selectedCity, minRating, sortBy]);
+  }, [centers, query, selectedType, selectedProvince, selectedCity, minRating, sortBy]);
 
   const hasActiveFilters = selectedType !== 'Todos' || selectedProvince !== 'Todas' || selectedCity || minRating > 0 || query;
 
@@ -202,49 +211,56 @@ export default function CentrosClient() {
         </div>
       ) : (
         <div className="space-y-4">
-          {filtered.map(c => (
-            <Link
-              key={c.slug}
-              href={`/es/centro/${c.slug}`}
-              className="group flex flex-col md:flex-row gap-4 bg-white border border-sand-200 rounded-2xl p-4 hover:shadow-soft hover:border-sand-300 transition-all"
-            >
-              <div className="w-full md:w-52 h-40 rounded-xl overflow-hidden shrink-0 relative">
-                <img src={c.img} alt={c.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                {c.featured && (
-                  <span className="absolute top-2 left-2 text-[10px] font-bold uppercase tracking-wider bg-amber-400 text-amber-900 px-2 py-0.5 rounded-full">Destacado</span>
-                )}
-              </div>
-              <div className="flex-1 min-w-0 py-1">
-                <div className="flex items-start justify-between gap-2 mb-1.5">
-                  <div>
-                    <h2 className="font-serif text-lg leading-tight group-hover:text-terracotta-600 transition-colors">{c.name}</h2>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-sage-100 text-sage-700">{c.type}</span>
-                      <span className="text-[13px] text-[#7a6b5d] flex items-center gap-1">
-                        <MapPin size={13} /> {c.city}, {c.province}
-                      </span>
+          {filtered.map((c: any) => {
+            const services: string[] = Array.isArray(c.services_es) ? c.services_es : [];
+            const imgSrc = c.cover_url || (Array.isArray(c.images) && c.images[0]) || '';
+            return (
+              <Link
+                key={c.slug}
+                href={`/es/centro/${c.slug}`}
+                className="group flex flex-col md:flex-row gap-4 bg-white border border-sand-200 rounded-2xl p-4 hover:shadow-soft hover:border-sand-300 transition-all"
+              >
+                <div className="w-full md:w-52 h-40 rounded-xl overflow-hidden shrink-0 relative">
+                  {imgSrc ? (
+                    <img src={imgSrc} alt={c.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  ) : (
+                    <div className="w-full h-full bg-sand-100 flex items-center justify-center text-[#a09383] text-sm">Sin imagen</div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0 py-1">
+                  <div className="flex items-start justify-between gap-2 mb-1.5">
+                    <div>
+                      <h2 className="font-serif text-lg leading-tight group-hover:text-terracotta-600 transition-colors">{c.name}</h2>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        {c.type && <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-sage-100 text-sage-700">{c.type}</span>}
+                        <span className="text-[13px] text-[#7a6b5d] flex items-center gap-1">
+                          <MapPin size={13} /> {c.city}{c.province ? `, ${c.province}` : ''}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Star size={15} className="text-amber-400 fill-amber-400" />
+                      <span className="text-sm font-semibold">{c.avg_rating ?? '–'}</span>
+                      <span className="text-xs text-[#a09383]">({c.review_count ?? 0})</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Star size={15} className="text-amber-400 fill-amber-400" />
-                    <span className="text-sm font-semibold">{c.rating}</span>
-                    <span className="text-xs text-[#a09383]">({c.reviews})</span>
+                  <p className="text-sm text-[#7a6b5d] leading-relaxed mt-2 line-clamp-2">{c.description_es}</p>
+                  {services.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-3">
+                      {services.slice(0, 4).map((s: string) => (
+                        <span key={s} className="text-[11px] px-2 py-0.5 rounded-full bg-sand-100 text-[#7a6b5d]">{s}</span>
+                      ))}
+                      {services.length > 4 && <span className="text-[11px] px-2 py-0.5 rounded-full bg-sand-100 text-[#a09383]">+{services.length - 4}</span>}
+                    </div>
+                  )}
+                  <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-[#a09383]">
+                    {c.schedule_summary_es && <span>🕐 {c.schedule_summary_es}</span>}
+                    {c.price_range_es && <span>💰 {c.price_range_es}</span>}
                   </div>
                 </div>
-                <p className="text-sm text-[#7a6b5d] leading-relaxed mt-2 line-clamp-2">{c.desc}</p>
-                <div className="flex flex-wrap gap-1.5 mt-3">
-                  {c.services.slice(0, 4).map(s => (
-                    <span key={s} className="text-[11px] px-2 py-0.5 rounded-full bg-sand-100 text-[#7a6b5d]">{s}</span>
-                  ))}
-                  {c.services.length > 4 && <span className="text-[11px] px-2 py-0.5 rounded-full bg-sand-100 text-[#a09383]">+{c.services.length - 4}</span>}
-                </div>
-                <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-[#a09383]">
-                  <span>🕐 {c.schedule}</span>
-                  <span>💰 {c.priceRange}</span>
-                </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       )}
 
