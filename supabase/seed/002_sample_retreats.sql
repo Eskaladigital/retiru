@@ -288,7 +288,7 @@ BEGIN
   ) RETURNING id INTO r_id;
   INSERT INTO retreat_categories VALUES (r_id, cat_arte);
   INSERT INTO retreat_categories VALUES (r_id, cat_naturaleza);
-  INSERT INTO retreat_images VALUES (uuid_generate_v4(), r_id, 'https://images.unsplash.com/photo-1462275646964-a0e3c11f18a6?w=800&q=80', 'Cerezos en flor Valle del Jerte', 0, true);
+  INSERT INTO retreat_images VALUES (uuid_generate_v4(), r_id, 'https://images.unsplash.com/photo-1522383225653-ed111181a951?w=800&q=80', 'Cerezos en flor Valle del Jerte', 0, true);
 
   -- ═══════════════════════════════════════════════════════════════
   -- RETIRO 9: Yoga y Senderismo en Pirineos

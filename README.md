@@ -24,7 +24,7 @@ Plataforma web bilingüe (ES/EN) donde las personas descubren y reservan retiros
 ## Requisitos previos
 
 - **Node.js** 18+ y **npm** (o pnpm/yarn)
-- Cuenta en [Supabase](https://supabase.com) (opcional para desarrollo local con datos mock)
+- Cuenta en [Supabase](https://supabase.com) — necesaria para datos (retiros, centros, blog, tienda)
 - Cuenta en [Stripe](https://stripe.com) (opcional — necesario solo para el flujo de pagos)
 - Cuenta en [Resend](https://resend.com) (opcional — necesario solo para el envío de emails)
 
@@ -44,7 +44,14 @@ npm install
 cp .env.example .env.local
 # Editar .env.local con tus credenciales (ver sección siguiente)
 
-# 4. Arrancar en modo desarrollo
+# 4. Ejecutar migraciones y seeds en Supabase
+# En el SQL Editor de Supabase, ejecutar en orden:
+# - supabase/migrations/001_initial.sql
+# - supabase/seed/001_categories_destinations.sql
+# - supabase/seed/002_sample_retreats.sql
+# - supabase/seed/003_sample_blog.sql
+
+# 5. Arrancar en modo desarrollo
 npm run dev
 ```
 
@@ -68,8 +75,10 @@ Copia `.env.example` a `.env.local` y rellena los valores:
 | `RESEND_FROM_EMAIL` | Email remitente (ej: `hola@retiru.com`) |
 | `NEXT_PUBLIC_APP_URL` | URL base de la app |
 | `NEXT_PUBLIC_APP_NAME` | Nombre de la app (`Retiru`) |
+| `OPENAI_API_KEY` | (opcional) Para funcionalidades IA |
+| `SERPAPI_API_KEY` | (opcional) Para búsquedas externas |
 
-> **Nota:** la app funciona en local con datos mock incluso sin credenciales de Supabase configuradas.
+> **Nota:** Supabase es necesario para que la app muestre retiros, centros, blog y tienda. Sin él, las páginas mostrarán listas vacías.
 
 ---
 
@@ -83,6 +92,29 @@ npm run lint         # Linter (ESLint)
 npm run db:types     # Generar tipos TypeScript desde el esquema de Supabase
 npm run stripe:listen # Escuchar webhooks de Stripe en local
 ```
+
+---
+
+## Base de datos (Supabase)
+
+### Migraciones y seeds
+
+Ejecutar en el **SQL Editor** de Supabase (con service_role) en este orden:
+
+1. `supabase/migrations/001_initial.sql` — esquema completo (tablas, RLS, triggers)
+2. `supabase/seed/001_categories_destinations.sql` — categorías y destinos
+3. `supabase/seed/002_sample_retreats.sql` — usuario demo + 10 retiros de ejemplo
+4. `supabase/seed/003_sample_blog.sql` — 3 categorías de blog + 5 artículos
+
+### Capa de datos
+
+Las páginas consumen datos a través de `src/lib/data/index.ts`:
+
+- `getCategories(locale)`, `getDestinations(locale)`
+- `getPublishedRetreats(filters)`, `getRetreatBySlug(slug)`
+- `getOrganizerBySlug(slug)`, `getActiveCenters(filters)`, `getCenterBySlug(slug)`
+
+Las APIs `/api/retreats`, `/api/centers` y `/api/catalog` exponen datos para búsqueda y filtros.
 
 ---
 
@@ -150,19 +182,20 @@ Ejemplos: centros-yoga/murcia, retiros-yoga/madrid.
 src/
 ├── app/
 │   ├── es/
-│   │   ├── (public)/           # Páginas públicas
-│   │   │   ├── retiros-retiru/ # Retiros y escapadas (hero + buscador + lista)
+│   │   ├── (public)/           # Páginas públicas (datos desde Supabase)
+│   │   │   ├── retiros-retiru/ # Retiros (hero + EventosSearch + EventosClient)
 │   │   │   │   ├── page.tsx
 │   │   │   │   ├── EventosClient.tsx
 │   │   │   │   └── [slug]/     # Por ciudad (murcia, barcelona...)
 │   │   │   ├── retiro/[slug]/  # Ficha individual de retiro
-│   │   │   ├── centros-retiru/ # Centros (hero + buscador + lista)
+│   │   │   ├── centros-retiru/ # Centros (hero + CentrosClient)
 │   │   │   │   ├── page.tsx
 │   │   │   │   ├── CentrosClient.tsx
 │   │   │   │   └── [slug]/     # Por ciudad
-│   │   │   ├── centro/[slug]/  # Ficha individual de centro
-│   │   │   ├── buscar/         # Buscador general
+│   │   │   ├── centro/[slug]/   # Ficha individual de centro
+│   │   │   ├── buscar/         # Buscador unificado retiros + centros
 │   │   │   ├── destinos/
+│   │   │   ├── organizador/[slug]/
 │   │   │   ├── para-organizadores/
 │   │   │   ├── tienda/
 │   │   │   ├── blog/
@@ -184,6 +217,9 @@ src/
 │   └── ui/
 ├── i18n/
 ├── lib/
+│   ├── data/           # Capa de datos (getPublishedRetreats, getRetreatBySlug, etc.)
+│   ├── supabase/       # Cliente Supabase (server, client)
+│   └── seo/            # Metadata y JSON-LD
 └── types/
 ```
 
@@ -191,7 +227,7 @@ src/
 
 ## Navegación y menú
 
-- **Header**: enlaces a retiros-retiru, centros-retiru, tienda, para-organizadores, blog, condiciones.
+- **Header**: enlaces a retiros-retiru, centros-retiru, tienda, para-organizadores, blog. (Condiciones solo en footer.)
 - **Menú móvil (off-canvas)**: panel lateral deslizable desde la derecha, backdrop con blur, bloqueo de scroll, cierre al hacer clic fuera o en enlace.
 
 > **Documentación**: [`docs/ROUTES.md`](docs/ROUTES.md) · [`docs/SEO-LANDINGS.md`](docs/SEO-LANDINGS.md) (estructura de contenido y SEO).
@@ -222,16 +258,19 @@ src/
 ## Funcionalidades principales
 
 ### Front público
-- **Homepage** con H1 "Encuentra o busca tu retiru", HeroSearch (toggle Retiros/Centros), categorías y retiros populares
-- **Retiros** (`/retiros-retiru`): hero tipo home + buscador (texto, destino, fechas) + lista con filtros
-- **Retiros por ciudad** (`/retiros-retiru/murcia`): retiros filtrados por destino/ciudad
-- **Ficha de retiro** (`/retiro/[slug]`): galería, desglose de pagos, reseñas, CTA sticky
-- **Centros** (`/centros-retiru`): hero tipo home + CentrosSearch (texto, tipo, ciudad) + directorio con filtros
-- **Centros por ciudad** (`/centros-retiru/murcia`): centros filtrados por ciudad
-- **Ficha de centro** (`/centro/yoga-sala-madrid`): galería, servicios, horarios, contacto
-- **Buscador** (`/buscar`) con filtros: ubicación, fechas, duración, precio, categoría, valoración
+- **Homepage** con H1 "Encuentra tu retiro", HeroSearch (toggle Retiros/Centros), categorías, retiros populares y destinos desde Supabase
+- **Retiros** (`/retiros-retiru`): hero + buscador (texto, destino, fechas) + lista con filtros — datos desde Supabase
+- **Retiros por ciudad** (`/retiros-retiru/[slug]`): retiros filtrados por destino/ciudad
+- **Ficha de retiro** (`/retiro/[slug]`): galería, desglose de pagos, reseñas, CTA sticky — datos desde Supabase
+- **Centros** (`/centros-retiru`): hero + CentrosSearch (texto, tipo, ciudad) + directorio con filtros — datos desde Supabase
+- **Centros por ciudad** (`/centros-retiru/[slug]`): centros filtrados por ciudad
+- **Ficha de centro** (`/centro/[slug]`): galería, servicios, horarios, contacto — datos desde Supabase
+- **Organizador** (`/organizador/[slug]`): perfil público con retiros publicados
+- **Buscador** (`/buscar`): búsqueda unificada retiros + centros con filtros
+- **Blog** (`/blog`, `/blog/[slug]`): artículos desde Supabase
+- **Tienda** (`/tienda`, `/tienda/[slug]`): productos desde Supabase
 - **Para centros y organizadores** (`/para-organizadores`): secciones centros + organizadores
-- **Condiciones** (`/condiciones`): modelo de precios transparente
+- **Condiciones** (`/condiciones`): modelo de precios transparente (en footer)
 
 ### Panel del organizador
 - Dashboard con visión general

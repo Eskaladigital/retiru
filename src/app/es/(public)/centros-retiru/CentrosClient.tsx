@@ -11,6 +11,13 @@ const SORT_OPTIONS = [
   { value: 'reviews', label: 'Más reseñas' },
   { value: 'name', label: 'Nombre A-Z' },
 ];
+const PER_PAGE_OPTIONS = [
+  { value: 10, label: '10' },
+  { value: 20, label: '20' },
+  { value: 50, label: '50' },
+  { value: 100, label: '100' },
+  { value: 0, label: 'Todos' },
+];
 const RATING_OPTIONS = [
   { value: 0, label: 'Cualquier valoración' },
   { value: 4, label: '4+ estrellas' },
@@ -31,6 +38,8 @@ export default function CentrosClient({ centers }: CentrosClientProps) {
   const [minRating, setMinRating] = useState(0);
   const [sortBy, setSortBy] = useState('relevance');
   const [showFilters, setShowFilters] = useState(false);
+  const [perPage, setPerPage] = useState(50);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const TYPES = useMemo(() => {
     const types = Array.from(new Set(centers.map(c => c.type).filter(Boolean))).sort();
@@ -96,6 +105,16 @@ export default function CentrosClient({ centers }: CentrosClientProps) {
     }
     return results;
   }, [centers, query, selectedType, selectedProvince, selectedCity, minRating, sortBy]);
+
+  const totalFiltered = filtered.length;
+  const pageSize = perPage === 0 ? totalFiltered : perPage;
+  const totalPages = perPage === 0 ? 1 : Math.ceil(totalFiltered / perPage);
+  const startIdx = (currentPage - 1) * (perPage || totalFiltered);
+  const paginated = perPage === 0 ? filtered : filtered.slice(startIdx, startIdx + perPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query, selectedType, selectedProvince, selectedCity, minRating, sortBy, perPage]);
 
   const hasActiveFilters = selectedType !== 'Todos' || selectedProvince !== 'Todas' || selectedCity || minRating > 0 || query;
 
@@ -210,8 +229,9 @@ export default function CentrosClient({ centers }: CentrosClientProps) {
           <button onClick={clearFilters} className="text-sm font-semibold text-terracotta-600 hover:text-terracotta-700">Limpiar filtros</button>
         </div>
       ) : (
-        <div className="space-y-4">
-          {filtered.map((c: any) => {
+        <>
+          <div className="space-y-4">
+            {paginated.map((c: any) => {
             const services: string[] = Array.isArray(c.services_es) ? c.services_es : [];
             const imgSrc = c.cover_url || (Array.isArray(c.images) && c.images[0]) || '';
             return (
@@ -261,7 +281,53 @@ export default function CentrosClient({ centers }: CentrosClientProps) {
               </Link>
             );
           })}
-        </div>
+          </div>
+
+          {/* Pagination */}
+          {perPage > 0 && totalPages > 1 && (
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-8">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 rounded-lg border border-sand-200 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-sand-50 transition-colors"
+              >
+                Anterior
+              </button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
+                  let pageNum: number;
+                  if (totalPages <= 7) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 4) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 3) {
+                    pageNum = totalPages - 6 + i;
+                  } else {
+                    pageNum = currentPage - 3 + i;
+                  }
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`min-w-[36px] h-9 rounded-lg text-sm font-medium transition-colors ${
+                        currentPage === pageNum ? 'bg-terracotta-600 text-white' : 'border border-sand-200 hover:bg-sand-50'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 rounded-lg border border-sand-200 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-sand-50 transition-colors"
+              >
+                Siguiente
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {/* Cross-sell → Eventos */}

@@ -9,7 +9,7 @@ import CentrosClient from './CentrosClient';
 import CentrosSearch from '@/components/home/CentrosSearch';
 
 export default async function CentrosPage() {
-  const { centers } = await getActiveCenters({ limit: 50 });
+  const { centers } = await getActiveCenters({ limit: 2000 });
 
   return (
     <>

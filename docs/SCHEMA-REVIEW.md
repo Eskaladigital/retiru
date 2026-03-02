@@ -69,11 +69,11 @@ export interface Invoice {
 
 ---
 
-### 1.2 Blog (Article + BlogCategory) — CRÍTICA
+### 1.2 Blog (Article + BlogCategory) — ✅ IMPLEMENTADO
 
 **Páginas afectadas:** `/es/blog`, `/es/blog/[slug]`
 
-Actualmente usa datos mock hardcodeados. Necesita:
+Las tablas `blog_categories` y `blog_articles` existen en la migración inicial. Seed en `003_sample_blog.sql`. Conectado a Supabase.
 
 ```
 Tabla propuesta: blog_categories
@@ -451,9 +451,9 @@ Nota: `Order.items` está definido como `OrderItem[]` en el tipo, lo que sugiere
 
 ### Fase 1 — Críticos (antes de producción)
 1. Crear tabla `invoices` + tipo `Invoice`
-2. Crear tablas `blog_categories` + `blog_articles` + tipos
+2. ~~Crear tablas `blog_categories` + `blog_articles`~~ ✅ Hecho
 3. Crear tabla `product_reviews` + tipo `ProductReview`
-4. Añadir campos a `organizer_profiles`: `location`, `languages`, `iban`, `instagram`, `phone`
+4. Añadir campos a `organizer_profiles`: `location`, `languages`, `iban`, `instagram`, `phone` (parcialmente en schema)
 
 ### Fase 2 — Altos (antes de beta)
 5. Crear tabla `refunds` + tipo `Refund`

@@ -8,10 +8,10 @@ Documento de referencia sobre la estructura de contenido único de las landings 
 
 | Tipo | Ruta | Slug = | Contenido único |
 |------|------|--------|-----------------|
-| **Eventos por ciudad** | `/es/eventos-retiru/[slug]` | Ciudad/destino (murcia, ibiza, barcelona) | Hero + H1 + lista filtrada |
+| **Retiros por ciudad** | `/es/retiros-retiru/[slug]` | Ciudad/destino (murcia, ibiza, barcelona) | Hero + H1 + lista filtrada |
 | **Centros por ciudad** | `/es/centros-retiru/[slug]` | Ciudad (madrid, barcelona, murcia) | Hero + H1 + lista filtrada |
 | **Destinos** | `/es/destinos/[slug]` | Destino (ibiza, mallorca) | H1 + lista filtrada |
-| **Ficha retiro** | `/es/retiros/[slug]` | Evento individual | Galería, descripción, programa, reseñas, CTA |
+| **Ficha retiro** | `/es/retiro/[slug]` | Retiro individual | Galería, descripción, programa, reseñas, CTA |
 | **Ficha centro** | `/es/centro/[slug]` | Centro individual | Galería, descripción, servicios, reseñas |
 | **Ficha producto** | `/es/tienda/[slug]` | Producto | Detalle de producto |
 | **Perfil organizador** | `/es/organizador/[slug]` | Organizador | Perfil público |
@@ -23,19 +23,19 @@ Documento de referencia sobre la estructura de contenido único de las landings 
 
 | Landing | Metadata | JSON-LD | Breadcrumb | OG image |
 |---------|----------|---------|------------|----------|
-| eventos-retiru/[slug] | ✅ title, description | ❌ | ❌ | ❌ |
+| retiros-retiru/[slug] | ✅ title, description | ❌ | ❌ | ❌ |
 | centros-retiru/[slug] | ✅ title, description | ❌ | ❌ | ❌ |
-| destinos/[slug] | ❌ **No tiene** | ❌ | ❌ | ❌ |
-| retiros/[slug] | ✅ title, description, keywords | ✅ Event, Breadcrumb (importados pero no usados) | ✅ visual | ❌ |
+| destinos/[slug] | ✅ | ❌ | ❌ | ❌ |
+| retiro/[slug] | ✅ title, description, keywords | ✅ Event, BreadcrumbList | ✅ visual | Dinámica |
 | centro/[slug] | ✅ title, description, keywords | ❌ | ❌ | ❌ |
-| tienda/[slug] | ✅ | ❌ | ❌ | ❌ |
-| blog/[slug] | ❌ | ❌ | ❌ | ❌ |
+| tienda/[slug] | ✅ dinámica | ❌ | ❌ | ❌ |
+| blog/[slug] | ✅ dinámica | ❌ | ❌ | ❌ |
 
 ---
 
 ## 3. Contenido único por tipo de landing
 
-### Para listas (eventos-retiru/slug, centros-retiru/slug, destinos/slug)
+### Para listas (retiros-retiru/slug, centros-retiru/slug, destinos/slug)
 
 Las listas filtran por BD pero **no tienen contenido editorial único**. Para SEO:
 
@@ -81,15 +81,15 @@ Las listas filtran por BD pero **no tienen contenido editorial único**. Para SE
 
 ### B. Schema.org (JSON-LD)
 
-| Landing | Schema recomendado |
-|---------|---------------------|
-| eventos-retiru/[slug] | `ItemList` (lista de eventos) + `CollectionPage` |
-| centros-retiru/[slug] | `ItemList` (lista de centros) + `CollectionPage` |
-| destinos/[slug] | `ItemList` + `Place` (si el destino es un lugar) |
-| retiros/[slug] | `Event` (ya existe) + `BreadcrumbList` |
-| centro/[slug] | `LocalBusiness` / `HealthAndBeautyBusiness` |
-| tienda/[slug] | `Product` |
-| blog/[slug] | `Article` |
+| Landing | Schema recomendado | Estado |
+|---------|---------------------|--------|
+| retiros-retiru/[slug] | `ItemList` (lista de retiros) + `CollectionPage` | Pendiente |
+| centros-retiru/[slug] | `ItemList` (lista de centros) + `CollectionPage` | Pendiente |
+| destinos/[slug] | `ItemList` + `Place` (si el destino es un lugar) | Pendiente |
+| retiro/[slug] | `Event` + `BreadcrumbList` | ✅ Implementado |
+| centro/[slug] | `LocalBusiness` / `HealthAndBeautyBusiness` | Pendiente |
+| tienda/[slug] | `Product` | Pendiente |
+| blog/[slug] | `Article` | Pendiente |
 
 ### C. Rich snippets
 
@@ -120,13 +120,13 @@ Las listas filtran por BD pero **no tienen contenido editorial único**. Para SE
 
 ## 5. Prioridades de implementación
 
-1. **Crítico**: `generateMetadata` en destinos/[slug] (no tiene).
-2. **Alto**: JSON-LD Event + Breadcrumb en retiros/[slug] (ya importados, falta usarlos).
+1. ~~**Crítico**: `generateMetadata` en destinos/[slug]~~ ✅ Hecho.
+2. ~~**Alto**: JSON-LD Event + Breadcrumb en retiro/[slug]~~ ✅ Hecho.
 3. **Alto**: JSON-LD LocalBusiness en centro/[slug].
-4. **Alto**: Párrafo introductorio por ciudad en eventos-retiru y centros-retiru.
+4. **Alto**: Párrafo introductorio por ciudad en retiros-retiru y centros-retiru.
 5. **Medio**: JSON-LD ItemList en listas por ciudad.
 6. **Medio**: FAQ por destino + schema FAQPage.
-7. **Medio**: OG images dinámicas por retiro/centro.
+7. **Medio**: OG images dinámicas por centro (retiro ya tiene).
 8. **Bajo**: JSON-LD Article en blog.
 
 ---

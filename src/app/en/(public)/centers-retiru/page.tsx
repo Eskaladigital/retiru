@@ -8,7 +8,7 @@ export const metadata: Metadata = centersEN;
 import CentersClientEN from './CentersClient';
 
 export default async function CentersPageEN() {
-  const { centers } = await getActiveCenters({ limit: 50 });
+  const { centers } = await getActiveCenters({ limit: 2000 });
 
   return (
     <>

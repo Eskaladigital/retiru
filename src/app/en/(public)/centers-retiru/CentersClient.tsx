@@ -11,6 +11,13 @@ const SORT_OPTIONS = [
   { value: 'reviews', label: 'Most reviews' },
   { value: 'name', label: 'Name A-Z' },
 ];
+const PER_PAGE_OPTIONS = [
+  { value: 10, label: '10' },
+  { value: 20, label: '20' },
+  { value: 50, label: '50' },
+  { value: 100, label: '100' },
+  { value: 0, label: 'All' },
+];
 const RATING_OPTIONS = [
   { value: 0, label: 'Any rating' },
   { value: 4, label: '4+ stars' },
@@ -31,6 +38,8 @@ export default function CentersClientEN({ centers }: CentersClientProps) {
   const [minRating, setMinRating] = useState(0);
   const [sortBy, setSortBy] = useState('relevance');
   const [showFilters, setShowFilters] = useState(false);
+  const [perPage, setPerPage] = useState(50);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const TYPES = useMemo(() => {
     const types = Array.from(new Set(centers.map(c => c.type).filter(Boolean))).sort();
@@ -97,6 +106,16 @@ export default function CentersClientEN({ centers }: CentersClientProps) {
     }
     return results;
   }, [centers, query, selectedType, selectedProvince, selectedCity, minRating, sortBy]);
+
+  const totalFiltered = filtered.length;
+  const pageSize = perPage === 0 ? totalFiltered : perPage;
+  const totalPages = perPage === 0 ? 1 : Math.ceil(totalFiltered / perPage);
+  const startIdx = (currentPage - 1) * (perPage || totalFiltered);
+  const paginated = perPage === 0 ? filtered : filtered.slice(startIdx, startIdx + perPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query, selectedType, selectedProvince, selectedCity, minRating, sortBy, perPage]);
 
   const hasActiveFilters = selectedType !== 'All' || selectedProvince !== 'All' || selectedCity || minRating > 0 || query;
 
@@ -196,9 +215,36 @@ export default function CentersClientEN({ centers }: CentersClientProps) {
         </div>
       )}
 
-      <p className="text-sm text-[#a09383] mb-6">{filtered.length} center{filtered.length !== 1 ? 's' : ''} found</p>
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <p className="text-sm text-[#a09383]">
+          {totalFiltered} center{totalFiltered !== 1 ? 's' : ''} found
+          {perPage > 0 && totalFiltered > 0 && (
+            <span className="text-[#a09383]">
+              {' '}
+              · Showing {startIdx + 1}–{Math.min(startIdx + pageSize, totalFiltered)}
+            </span>
+          )}
+        </p>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-[#a09383] uppercase tracking-wider">Show</span>
+          <div className="relative">
+            <select
+              value={perPage}
+              onChange={(e) => setPerPage(Number(e.target.value))}
+              className="appearance-none bg-white border border-sand-200 rounded-lg px-3 py-2 text-sm pr-8 focus:outline-none focus:ring-2 focus:ring-terracotta-300"
+            >
+              {PER_PAGE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#a09383] pointer-events-none" />
+          </div>
+        </div>
+      </div>
 
-      {filtered.length === 0 ? (
+      {totalFiltered === 0 ? (
         <div className="text-center py-16">
           <p className="text-4xl mb-4">🔍</p>
           <p className="font-serif text-xl text-foreground mb-2">No centers found</p>
@@ -206,8 +252,9 @@ export default function CentersClientEN({ centers }: CentersClientProps) {
           <button onClick={clearFilters} className="text-sm font-semibold text-terracotta-600 hover:text-terracotta-700">Clear filters</button>
         </div>
       ) : (
-        <div className="space-y-4">
-          {filtered.map((c: any) => {
+        <>
+          <div className="space-y-4">
+            {paginated.map((c: any) => {
             const services: string[] = Array.isArray(c.services_en) ? c.services_en : Array.isArray(c.services_es) ? c.services_es : [];
             const imgSrc = c.cover_url || (Array.isArray(c.images) && c.images[0]) || '';
             const desc = c.description_en || c.description_es || '';
@@ -258,7 +305,52 @@ export default function CentersClientEN({ centers }: CentersClientProps) {
               </Link>
             );
           })}
-        </div>
+          </div>
+
+          {perPage > 0 && totalPages > 1 && (
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-8">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 rounded-lg border border-sand-200 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-sand-50 transition-colors"
+              >
+                Previous
+              </button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
+                  let pageNum: number;
+                  if (totalPages <= 7) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 4) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 3) {
+                    pageNum = totalPages - 6 + i;
+                  } else {
+                    pageNum = currentPage - 3 + i;
+                  }
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`min-w-[36px] h-9 rounded-lg text-sm font-medium transition-colors ${
+                        currentPage === pageNum ? 'bg-terracotta-600 text-white' : 'border border-sand-200 hover:bg-sand-50'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 rounded-lg border border-sand-200 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-sand-50 transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {/* Cross-sell → Events */}
