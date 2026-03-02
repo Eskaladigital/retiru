@@ -1,0 +1,1820 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Retiru — Retiros y Escapadas en España</title>
+  <meta name="description" content="Descubre y reserva los mejores retiros de yoga, meditación, naturaleza y wellness en España. Sin comisiones para organizadores.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ================================================================
+       RETIRU — Design System & Full Homepage
+       Paleta: terracota, verde salvia, arena, crema
+       Tipografía: DM Serif Display (títulos) + DM Sans (cuerpo)
+       ================================================================ */
+
+    :root {
+      /* Terracotta */
+      --terracotta-50: #fdf5f0;
+      --terracotta-100: #fae8db;
+      --terracotta-200: #f4cdb6;
+      --terracotta-300: #ecac87;
+      --terracotta-400: #e28a5c;
+      --terracotta-500: #d97040;
+      --terracotta-600: #c85a30;
+      --terracotta-700: #a64728;
+      --terracotta-800: #853a26;
+      --terracotta-900: #6c3222;
+      
+      /* Sage */
+      --sage-50: #f4f7f4;
+      --sage-100: #e4ebe4;
+      --sage-200: #c9d7ca;
+      --sage-300: #a3baa5;
+      --sage-400: #7a9a7d;
+      --sage-500: #5c7f60;
+      --sage-600: #47654b;
+      --sage-700: #3a513e;
+      --sage-800: #314234;
+      --sage-900: #29372c;
+      
+      /* Sand */
+      --sand-50: #fdfcf9;
+      --sand-100: #f9f5ed;
+      --sand-200: #f2e9d6;
+      --sand-300: #e8d7b8;
+      --sand-400: #dbbf93;
+      --sand-500: #d0a876;
+      
+      /* Cream */
+      --cream: #fefdfb;
+      --cream-100: #fcf9f3;
+      --cream-200: #f8f2e6;
+      
+      /* Semantic */
+      --primary: #c85a30;
+      --primary-hover: #a64728;
+      --primary-light: #fdf5f0;
+      --secondary: #5c7f60;
+      --secondary-hover: #47654b;
+      --text: #2d2319;
+      --text-muted: #7a6b5d;
+      --text-light: #a09383;
+      --bg: #fefdfb;
+      --bg-alt: #f9f5ed;
+      --border: #e8d7b8;
+      --border-light: #f2e9d6;
+      --white: #ffffff;
+      --shadow-sm: 0 1px 3px rgba(45,35,25,.06);
+      --shadow-md: 0 4px 20px rgba(45,35,25,.08);
+      --shadow-lg: 0 10px 40px rgba(45,35,25,.12);
+      --radius: 12px;
+      --radius-sm: 8px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    html { 
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: 'DM Serif Display', serif;
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+    button { cursor: pointer; border: none; font-family: inherit; }
+
+    /* ─── Utilities ─────────────────────────────────── */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    @media (min-width: 768px) { .container { padding: 0 40px; } }
+    @media (min-width: 1024px) { .container { padding: 0 64px; } }
+
+    .sr-only {
+      position: absolute; width: 1px; height: 1px;
+      overflow: hidden; clip: rect(0,0,0,0); border: 0;
+    }
+
+    /* ─── Animations ───────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    .animate-fade-up {
+      animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      opacity: 0;
+    }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    .delay-4 { animation-delay: 0.4s; }
+    .delay-5 { animation-delay: 0.5s; }
+    .delay-6 { animation-delay: 0.6s; }
+
+    /* ================================================================
+       HEADER / NAV
+       ================================================================ */
+    .header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(254,253,251, 0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-light);
+      transition: all 0.3s ease;
+    }
+    .header.scrolled {
+      box-shadow: var(--shadow-sm);
+    }
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      font-family: 'DM Serif Display', serif;
+      font-size: 28px;
+      color: var(--terracotta-700);
+      letter-spacing: -0.02em;
+    }
+    .logo-dot {
+      width: 8px; height: 8px;
+      background: var(--primary);
+      border-radius: 50%;
+      display: inline-block;
+      margin-bottom: -2px;
+      animation: float 3s ease-in-out infinite;
+    }
+    .nav-links {
+      display: none;
+      list-style: none;
+      gap: 32px;
+      align-items: center;
+    }
+    @media (min-width: 768px) {
+      .nav-links { display: flex; }
+    }
+    .nav-links a {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-muted);
+      transition: color 0.2s;
+      position: relative;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px; left: 0;
+      width: 0; height: 2px;
+      background: var(--primary);
+      border-radius: 1px;
+      transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .nav-links a:hover::after { width: 100%; }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .lang-toggle {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg-alt);
+      border: 1px solid var(--border-light);
+      padding: 6px 12px;
+      border-radius: 20px;
+      transition: all 0.2s;
+    }
+    .lang-toggle:hover {
+      border-color: var(--border);
+      color: var(--text);
+    }
+    .btn-ghost {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text);
+      background: none;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      transition: background 0.2s;
+    }
+    .btn-ghost:hover { background: var(--bg-alt); }
+    
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--white);
+      background: var(--primary);
+      padding: 10px 24px;
+      border-radius: var(--radius);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 2px 8px rgba(200,90,48, 0.3);
+    }
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(200,90,48, 0.35);
+    }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--secondary);
+      background: var(--white);
+      padding: 10px 24px;
+      border-radius: var(--radius);
+      border: 2px solid var(--sage-200);
+      transition: all 0.25s;
+    }
+    .btn-secondary:hover {
+      border-color: var(--secondary);
+      background: var(--sage-50);
+    }
+
+    .btn-large {
+      padding: 14px 32px;
+      font-size: 16px;
+      border-radius: var(--radius-lg);
+    }
+
+    .mobile-menu-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px; height: 40px;
+      background: none;
+      border-radius: var(--radius-sm);
+    }
+    @media (min-width: 768px) { .mobile-menu-btn { display: none; } }
+    .hamburger {
+      width: 20px; height: 14px;
+      display: flex; flex-direction: column;
+      justify-content: space-between;
+    }
+    .hamburger span {
+      display: block; height: 2px; width: 100%;
+      background: var(--text); border-radius: 1px;
+      transition: all 0.3s;
+    }
+
+    /* ================================================================
+       HERO
+       ================================================================ */
+    .hero {
+      position: relative;
+      min-height: 85vh;
+      display: flex;
+      align-items: center;
+      padding-top: 72px;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+    .hero-bg img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        135deg,
+        rgba(254,253,251, 0.93) 0%,
+        rgba(254,253,251, 0.8) 40%,
+        rgba(254,253,251, 0.4) 100%
+      );
+    }
+    @media (min-width: 768px) {
+      .hero-overlay {
+        background: linear-gradient(
+          90deg,
+          rgba(254,253,251, 0.95) 0%,
+          rgba(254,253,251, 0.85) 45%,
+          rgba(254,253,251, 0.2) 100%
+        );
+      }
+    }
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 620px;
+      padding: 60px 0;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--sage-50);
+      border: 1px solid var(--sage-200);
+      color: var(--sage-700);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 16px;
+      border-radius: 100px;
+      margin-bottom: 24px;
+      letter-spacing: 0.02em;
+    }
+    .hero-badge-dot {
+      width: 6px; height: 6px;
+      background: var(--sage-400);
+      border-radius: 50%;
+      animation: float 2s ease-in-out infinite;
+    }
+    .hero h1 {
+      font-size: clamp(36px, 6vw, 60px);
+      color: var(--text);
+      margin-bottom: 20px;
+      max-width: 560px;
+    }
+    .hero h1 em {
+      font-style: italic;
+      color: var(--primary);
+    }
+    .hero-subtitle {
+      font-size: 18px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin-bottom: 36px;
+      max-width: 480px;
+    }
+
+    /* ─── Search Box (Hero) ────────────────────────── */
+    .search-box {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 8px;
+      box-shadow: var(--shadow-lg);
+      animation: scaleIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+      opacity: 0;
+    }
+    .search-box-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    @media (min-width: 768px) {
+      .search-box-inner {
+        flex-direction: row;
+        align-items: center;
+      }
+    }
+    .search-field {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      transition: background 0.2s;
+    }
+    .search-field:hover { background: var(--bg-alt); }
+    .search-field-icon {
+      width: 20px; height: 20px;
+      color: var(--text-light);
+      flex-shrink: 0;
+    }
+    .search-field input {
+      border: none;
+      background: none;
+      font-size: 15px;
+      color: var(--text);
+      width: 100%;
+      outline: none;
+      font-family: inherit;
+    }
+    .search-field input::placeholder { color: var(--text-light); }
+    .search-divider {
+      display: none;
+      width: 1px;
+      height: 32px;
+      background: var(--border-light);
+    }
+    @media (min-width: 768px) { .search-divider { display: block; } }
+    .search-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--primary);
+      color: var(--white);
+      font-weight: 600;
+      font-size: 15px;
+      padding: 14px 28px;
+      border-radius: var(--radius);
+      transition: all 0.25s;
+      box-shadow: 0 2px 8px rgba(200,90,48, 0.3);
+      white-space: nowrap;
+    }
+    .search-btn:hover {
+      background: var(--primary-hover);
+    }
+    .search-btn svg { width: 18px; height: 18px; }
+
+    /* ─── Trust Bar ────────────────────────────────── */
+    .trust-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border-light);
+    }
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    .trust-icon {
+      width: 36px; height: 36px;
+      background: var(--sage-50);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .trust-icon svg { width: 18px; height: 18px; color: var(--sage-600); }
+
+    /* ================================================================
+       CATEGORIES
+       ================================================================ */
+    .section {
+      padding: 80px 0;
+    }
+    @media (min-width: 768px) {
+      .section { padding: 100px 0; }
+    }
+    .section-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 40px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .section-title {
+      font-size: clamp(28px, 4vw, 40px);
+      color: var(--text);
+    }
+    .section-subtitle {
+      font-size: 16px;
+      color: var(--text-muted);
+      margin-top: 8px;
+      max-width: 480px;
+    }
+    .section-link {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--primary);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: gap 0.2s;
+      white-space: nowrap;
+    }
+    .section-link:hover { gap: 10px; }
+    .section-link svg { width: 16px; height: 16px; }
+
+    .categories-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    @media (min-width: 640px) {
+      .categories-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (min-width: 1024px) {
+      .categories-grid { grid-template-columns: repeat(6, 1fr); gap: 20px; }
+    }
+    .category-card {
+      position: relative;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      aspect-ratio: 3/4;
+      cursor: pointer;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .category-card:hover { transform: translateY(-4px); }
+    .category-card img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .category-card:hover img { transform: scale(1.08); }
+    .category-card-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(45,35,25,0.7) 0%, rgba(45,35,25,0) 60%);
+    }
+    .category-card-content {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 20px;
+    }
+    .category-card-icon {
+      font-size: 28px;
+      margin-bottom: 8px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    }
+    .category-card h3 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 18px;
+      color: var(--white);
+    }
+    .category-card-count {
+      font-size: 13px;
+      color: rgba(255,255,255,0.75);
+      margin-top: 2px;
+    }
+
+    /* ================================================================
+       EVENT CARDS
+       ================================================================ */
+    .events-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+    @media (min-width: 640px) {
+      .events-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (min-width: 1024px) {
+      .events-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    .event-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--border-light);
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .event-card:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-4px);
+      border-color: var(--border);
+    }
+    .event-card-image {
+      position: relative;
+      aspect-ratio: 16/10;
+      overflow: hidden;
+    }
+    .event-card-image img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .event-card:hover .event-card-image img { transform: scale(1.05); }
+    .event-card-badges {
+      position: absolute;
+      top: 12px; left: 12px;
+      display: flex; gap: 6px;
+    }
+    .badge {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 100px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .badge-category {
+      background: rgba(255,255,255,0.9);
+      color: var(--text);
+    }
+    .badge-instant {
+      background: rgba(92,127,96,0.9);
+      color: var(--white);
+    }
+    .event-card-save {
+      position: absolute;
+      top: 12px; right: 12px;
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(10px);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .event-card-save:hover {
+      background: var(--white);
+      transform: scale(1.1);
+    }
+    .event-card-save svg { width: 18px; height: 18px; color: var(--text); }
+
+    .event-card-body { padding: 20px; }
+    .event-card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .event-card-location {
+      font-size: 13px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .event-card-location svg { width: 14px; height: 14px; }
+    .event-card-rating {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .event-card-rating svg { width: 14px; height: 14px; color: #f59e0b; }
+    .event-card h3 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 20px;
+      line-height: 1.3;
+      margin-bottom: 8px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .event-card-dates {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .event-card-dates svg { width: 15px; height: 15px; flex-shrink: 0; }
+    .event-card-footer {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-light);
+    }
+    .event-card-price {
+      display: flex;
+      flex-direction: column;
+    }
+    .event-card-price-label {
+      font-size: 12px;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .event-card-price-amount {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+      margin-top: 2px;
+    }
+    .event-card-price-amount span {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--text-muted);
+    }
+    .event-card-spots {
+      font-size: 13px;
+      color: var(--sage-600);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .event-card-spots.low {
+      color: var(--terracotta-600);
+    }
+
+    /* ================================================================
+       HOW IT WORKS
+       ================================================================ */
+    .how-it-works {
+      background: var(--bg-alt);
+    }
+    .steps-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+    @media (min-width: 768px) {
+      .steps-grid { grid-template-columns: repeat(4, 1fr); gap: 24px; }
+    }
+    .step-card {
+      text-align: center;
+      padding: 32px 20px;
+    }
+    .step-number {
+      width: 48px; height: 48px;
+      background: var(--primary-light);
+      color: var(--primary);
+      border: 2px solid var(--terracotta-200);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Serif Display', serif;
+      font-size: 20px;
+      margin: 0 auto 20px;
+    }
+    .step-card h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+    .step-card p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* ================================================================
+       PAYMENT TRANSPARENCY BOX
+       ================================================================ */
+    .transparency-section {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 40px;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    @media (min-width: 768px) {
+      .transparency-section { padding: 56px; }
+    }
+    .transparency-section h3 {
+      font-size: 28px;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .transparency-section > p {
+      text-align: center;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+    }
+    .price-breakdown {
+      background: var(--bg-alt);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .price-example-title {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-light);
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+    .price-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+    }
+    .price-row + .price-row { border-top: 1px solid var(--border-light); }
+    .price-row-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+    }
+    .price-row-tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 100px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .tag-retiru {
+      background: var(--terracotta-100);
+      color: var(--terracotta-700);
+    }
+    .tag-organizer {
+      background: var(--sage-100);
+      color: var(--sage-700);
+    }
+    .price-row-amount {
+      font-weight: 700;
+      font-size: 18px;
+    }
+    .price-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 0 0;
+      border-top: 2px solid var(--text);
+      margin-top: 8px;
+    }
+    .price-total-label { font-weight: 600; font-size: 16px; }
+    .price-total-amount { font-weight: 700; font-size: 24px; }
+    .transparency-note {
+      text-align: center;
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .transparency-note strong { color: var(--text); }
+
+    /* ================================================================
+       TESTIMONIALS
+       ================================================================ */
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+    @media (min-width: 768px) {
+      .testimonials-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    .testimonial-card {
+      background: var(--white);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      transition: all 0.3s;
+    }
+    .testimonial-card:hover {
+      box-shadow: var(--shadow-md);
+      border-color: var(--border);
+    }
+    .testimonial-stars {
+      display: flex;
+      gap: 2px;
+      margin-bottom: 16px;
+    }
+    .testimonial-stars svg { width: 18px; height: 18px; color: #f59e0b; }
+    .testimonial-text {
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text);
+      margin-bottom: 20px;
+      font-style: italic;
+    }
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .testimonial-avatar {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: var(--sage-100);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--sage-700);
+    }
+    .testimonial-name {
+      font-weight: 600;
+      font-size: 15px;
+    }
+    .testimonial-event {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* ================================================================
+       CTA ORGANIZERS BANNER
+       ================================================================ */
+    .cta-organizers {
+      position: relative;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      background: linear-gradient(135deg, var(--sage-800) 0%, var(--sage-900) 100%);
+      padding: 60px 40px;
+      color: var(--white);
+    }
+    @media (min-width: 768px) {
+      .cta-organizers { padding: 80px 64px; }
+    }
+    .cta-organizers-pattern {
+      position: absolute;
+      inset: 0;
+      opacity: 0.05;
+      background-image: 
+        radial-gradient(circle at 25% 25%, white 1px, transparent 1px),
+        radial-gradient(circle at 75% 75%, white 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .cta-organizers-content {
+      position: relative;
+      z-index: 1;
+      max-width: 600px;
+    }
+    .cta-organizers-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 6px 16px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      letter-spacing: 0.03em;
+    }
+    .cta-organizers h2 {
+      font-size: clamp(28px, 4vw, 42px);
+      margin-bottom: 16px;
+      color: var(--white);
+    }
+    .cta-organizers p {
+      font-size: 17px;
+      color: rgba(255,255,255,0.8);
+      line-height: 1.7;
+      margin-bottom: 32px;
+    }
+    .cta-features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .cta-feature {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .cta-feature-check {
+      width: 24px; height: 24px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .cta-feature-check svg { width: 14px; height: 14px; }
+    .btn-white {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--white);
+      color: var(--sage-800);
+      font-weight: 700;
+      font-size: 16px;
+      padding: 14px 32px;
+      border-radius: var(--radius);
+      transition: all 0.25s;
+    }
+    .btn-white:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+
+    /* ================================================================
+       DESTINATIONS
+       ================================================================ */
+    .destinations-scroll {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 8px;
+      scrollbar-width: none;
+    }
+    .destinations-scroll::-webkit-scrollbar { display: none; }
+    .destination-card {
+      flex-shrink: 0;
+      width: 260px;
+      scroll-snap-align: start;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+    .destination-card:hover { transform: translateY(-4px); }
+    .destination-card img {
+      width: 100%; height: 180px;
+      object-fit: cover;
+      transition: transform 0.5s;
+    }
+    .destination-card:hover img { transform: scale(1.06); }
+    .destination-card-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(45,35,25,0.65) 0%, transparent 50%);
+    }
+    .destination-card-content {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 16px 20px;
+    }
+    .destination-card h3 {
+      font-size: 20px;
+      color: var(--white);
+    }
+    .destination-card-count {
+      font-size: 13px;
+      color: rgba(255,255,255,0.8);
+    }
+
+    /* ================================================================
+       FOOTER
+       ================================================================ */
+    .footer {
+      background: var(--text);
+      color: rgba(255,255,255,0.7);
+      padding: 64px 0 32px;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 40px;
+      margin-bottom: 48px;
+    }
+    @media (min-width: 768px) {
+      .footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr; }
+    }
+    .footer-brand .logo {
+      color: var(--white);
+      margin-bottom: 16px;
+    }
+    .footer-brand p {
+      font-size: 14px;
+      line-height: 1.7;
+      max-width: 280px;
+    }
+    .footer-col h4 {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--white);
+      margin-bottom: 16px;
+    }
+    .footer-col ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .footer-col a {
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+    .footer-col a:hover { color: var(--white); }
+    .footer-bottom {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding-top: 32px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      font-size: 13px;
+    }
+    .footer-bottom-links {
+      display: flex;
+      gap: 24px;
+    }
+    .footer-bottom-links a:hover { color: var(--white); }
+
+    /* ================================================================
+       STICKY CTA (Mobile)
+       ================================================================ */
+    .sticky-cta {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--white);
+      border-top: 1px solid var(--border);
+      padding: 12px 16px;
+      z-index: 90;
+      box-shadow: 0 -4px 20px rgba(45,35,25,0.1);
+    }
+    /* Se mostraría en páginas de evento */
+
+    /* ================================================================
+       SECTION DIVIDER
+       ================================================================ */
+    .section-divider {
+      width: 60px;
+      height: 3px;
+      background: var(--terracotta-300);
+      border-radius: 2px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       HEADER
+       ═══════════════════════════════════════════════════════════════ -->
+  <header class="header" id="header">
+    <div class="container">
+      <div class="header-inner">
+        <!-- Logo -->
+        <a href="/es" class="logo">
+          retiru<span class="logo-dot"></span>
+        </a>
+
+        <!-- Nav Links -->
+        <nav>
+          <ul class="nav-links">
+            <li><a href="/es/buscar">Explorar retiros</a></li>
+            <li><a href="/es/categorias">Categorías</a></li>
+            <li><a href="/es/destinos">Destinos</a></li>
+            <li><a href="/es/para-organizadores">Para organizadores</a></li>
+          </ul>
+        </nav>
+
+        <!-- Actions -->
+        <div class="nav-actions">
+          <button class="lang-toggle">EN</button>
+          <a href="/es/login" class="btn-ghost" style="display:none">
+            Iniciar sesión
+          </a>
+          <a href="/es/login" class="btn-ghost">Entrar</a>
+          <a href="/es/registro" class="btn-primary" style="display:none">
+            Registrarse
+          </a>
+          <button class="mobile-menu-btn" aria-label="Menú">
+            <div class="hamburger">
+              <span></span><span></span><span></span>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       HERO
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="hero">
+    <div class="hero-bg">
+      <img src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1920&q=80" alt="Persona meditando al amanecer en la naturaleza">
+      <div class="hero-overlay"></div>
+    </div>
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-badge animate-fade-up">
+          <span class="hero-badge-dot"></span>
+          +500 retiros en España
+        </div>
+        
+        <h1 class="animate-fade-up delay-1">
+          Encuentra tu próximo <em>retiro</em>
+        </h1>
+        
+        <p class="hero-subtitle animate-fade-up delay-2">
+          Descubre experiencias de yoga, meditación, naturaleza y bienestar en los rincones más especiales de España.
+        </p>
+
+        <!-- SEARCH BOX -->
+        <div class="search-box">
+          <div class="search-box-inner">
+            <div class="search-field">
+              <svg class="search-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input type="text" placeholder="Yoga, meditación, detox...">
+            </div>
+            <div class="search-divider"></div>
+            <div class="search-field">
+              <svg class="search-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              <input type="text" placeholder="¿Dónde?">
+            </div>
+            <div class="search-divider"></div>
+            <div class="search-field">
+              <svg class="search-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              <input type="text" placeholder="¿Cuándo?">
+            </div>
+            <button class="search-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              Buscar
+            </button>
+          </div>
+        </div>
+
+        <!-- TRUST BAR -->
+        <div class="trust-bar animate-fade-up delay-5">
+          <div class="trust-item">
+            <div class="trust-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <span>Pago seguro</span>
+          </div>
+          <div class="trust-item">
+            <div class="trust-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <span>Organizadores verificados</span>
+          </div>
+          <div class="trust-item">
+            <div class="trust-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            </div>
+            <span>Precios transparentes</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       CATEGORÍAS
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Explora por categoría</h2>
+          <p class="section-subtitle">Encuentra el tipo de retiro que mejor conecta contigo</p>
+        </div>
+        <a href="/es/categorias" class="section-link">
+          Ver todas
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+      </div>
+      <div class="categories-grid">
+        <a href="/es/categorias/yoga" class="category-card">
+          <img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&q=80" alt="Yoga">
+          <div class="category-card-overlay"></div>
+          <div class="category-card-content">
+            <div class="category-card-icon">🧘</div>
+            <h3>Yoga</h3>
+            <div class="category-card-count">127 retiros</div>
+          </div>
+        </a>
+        <a href="/es/categorias/meditacion" class="category-card">
+          <img src="https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=400&q=80" alt="Meditación">
+          <div class="category-card-overlay"></div>
+          <div class="category-card-content">
+            <div class="category-card-icon">🧠</div>
+            <h3>Meditación</h3>
+            <div class="category-card-count">89 retiros</div>
+          </div>
+        </a>
+        <a href="/es/categorias/naturaleza" class="category-card">
+          <img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80" alt="Naturaleza">
+          <div class="category-card-overlay"></div>
+          <div class="category-card-content">
+            <div class="category-card-icon">🌿</div>
+            <h3>Naturaleza</h3>
+            <div class="category-card-count">94 retiros</div>
+          </div>
+        </a>
+        <a href="/es/categorias/detox" class="category-card">
+          <img src="https://images.unsplash.com/photo-1540555700478-4be289fbec6e?w=400&q=80" alt="Detox & Ayuno">
+          <div class="category-card-overlay"></div>
+          <div class="category-card-content">
+            <div class="category-card-icon">🍃</div>
+            <h3>Detox</h3>
+            <div class="category-card-count">52 retiros</div>
+          </div>
+        </a>
+        <a href="/es/categorias/gastronomia" class="category-card">
+          <img src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&q=80" alt="Gastronomía">
+          <div class="category-card-overlay"></div>
+          <div class="category-card-content">
+            <div class="category-card-icon">🍷</div>
+            <h3>Gastronomía</h3>
+            <div class="category-card-count">38 retiros</div>
+          </div>
+        </a>
+        <a href="/es/categorias/aventura" class="category-card">
+          <img src="https://images.unsplash.com/photo-1551632811-561732d1e306?w=400&q=80" alt="Aventura">
+          <div class="category-card-overlay"></div>
+          <div class="category-card-content">
+            <div class="category-card-icon">⛰️</div>
+            <h3>Aventura</h3>
+            <div class="category-card-count">61 retiros</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       EVENTOS POPULARES
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="section" style="background: var(--bg-alt); padding-top: 0;">
+    <div class="container" style="padding-top: 80px;">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Retiros populares</h2>
+          <p class="section-subtitle">Los más reservados por nuestra comunidad</p>
+        </div>
+        <a href="/es/buscar" class="section-link">
+          Ver todos
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+      </div>
+      <div class="events-grid">
+        
+        <!-- Event Card 1 -->
+        <a href="/es/retiros/retiro-yoga-ibiza-junio-2026" class="event-card">
+          <div class="event-card-image">
+            <img src="https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=600&q=80" alt="Retiro de yoga en Ibiza">
+            <div class="event-card-badges">
+              <span class="badge badge-category">Yoga</span>
+              <span class="badge badge-instant">⚡ Confirmación inmediata</span>
+            </div>
+            <div class="event-card-save">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            </div>
+          </div>
+          <div class="event-card-body">
+            <div class="event-card-meta">
+              <span class="event-card-location">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                Ibiza, Baleares
+              </span>
+              <span class="event-card-rating">
+                <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                4.9 <span style="color: var(--text-muted); font-weight: 400;">(23)</span>
+              </span>
+            </div>
+            <h3>Retiro de Yoga y Meditación frente al mar</h3>
+            <div class="event-card-dates">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              15–20 Jun 2026 · 6 días
+            </div>
+            <div class="event-card-footer">
+              <div class="event-card-price">
+                <span class="event-card-price-label">Desde</span>
+                <span class="event-card-price-amount">790€ <span>/persona</span></span>
+              </div>
+              <span class="event-card-spots low">🔥 3 plazas</span>
+            </div>
+          </div>
+        </a>
+
+        <!-- Event Card 2 -->
+        <a href="/es/retiros/escapada-detox-sierra-grazalema" class="event-card">
+          <div class="event-card-image">
+            <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80" alt="Detox en Sierra de Grazalema">
+            <div class="event-card-badges">
+              <span class="badge badge-category">Detox</span>
+            </div>
+            <div class="event-card-save">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            </div>
+          </div>
+          <div class="event-card-body">
+            <div class="event-card-meta">
+              <span class="event-card-location">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                Sierra de Grazalema, Cádiz
+              </span>
+              <span class="event-card-rating">
+                <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                4.8 <span style="color: var(--text-muted); font-weight: 400;">(15)</span>
+              </span>
+            </div>
+            <h3>Escapada Detox y Ayuno en plena naturaleza</h3>
+            <div class="event-card-dates">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              22–25 Jul 2026 · 4 días
+            </div>
+            <div class="event-card-footer">
+              <div class="event-card-price">
+                <span class="event-card-price-label">Desde</span>
+                <span class="event-card-price-amount">450€ <span>/persona</span></span>
+              </div>
+              <span class="event-card-spots">8 plazas</span>
+            </div>
+          </div>
+        </a>
+
+        <!-- Event Card 3 -->
+        <a href="/es/retiros/retiro-gastronomico-priorat" class="event-card">
+          <div class="event-card-image">
+            <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80" alt="Retiro gastronómico en Priorat">
+            <div class="event-card-badges">
+              <span class="badge badge-category">Gastronomía</span>
+              <span class="badge badge-instant">⚡ Confirmación inmediata</span>
+            </div>
+            <div class="event-card-save">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            </div>
+          </div>
+          <div class="event-card-body">
+            <div class="event-card-meta">
+              <span class="event-card-location">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                Priorat, Tarragona
+              </span>
+              <span class="event-card-rating">
+                <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                5.0 <span style="color: var(--text-muted); font-weight: 400;">(9)</span>
+              </span>
+            </div>
+            <h3>Escapada gastronómica entre viñedos del Priorat</h3>
+            <div class="event-card-dates">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              5–8 Sep 2026 · 4 días
+            </div>
+            <div class="event-card-footer">
+              <div class="event-card-price">
+                <span class="event-card-price-label">Desde</span>
+                <span class="event-card-price-amount">650€ <span>/persona</span></span>
+              </div>
+              <span class="event-card-spots">5 plazas</span>
+            </div>
+          </div>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       CÓMO FUNCIONA
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="section how-it-works">
+    <div class="container">
+      <div style="text-align: center; margin-bottom: 48px;">
+        <h2 class="section-title">¿Cómo funciona?</h2>
+        <p class="section-subtitle" style="margin: 8px auto 0;">Reservar tu retiro es sencillo y transparente</p>
+      </div>
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <h3>Explora</h3>
+          <p>Busca entre cientos de retiros por categoría, destino, fecha o precio. Filtra por lo que más te importa.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <h3>Reserva tu plaza</h3>
+          <p>Paga solo el 20% como cuota de gestión para asegurar tu plaza. Proceso 100% seguro con Stripe.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <h3>Coordina</h3>
+          <p>Habla directamente con el organizador por el chat. Rellena el cuestionario y prepara tu experiencia.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">4</div>
+          <h3>Vive la experiencia</h3>
+          <p>Paga el 80% restante al organizador antes del retiro y disfruta de una experiencia transformadora.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       TRANSPARENCIA DE PRECIOS
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="container">
+      <div class="transparency-section">
+        <h3>Precios 100% transparentes</h3>
+        <p>Siempre sabrás exactamente qué pagas y a quién</p>
+        
+        <div class="price-breakdown">
+          <div class="price-example-title">Ejemplo: retiro de 500€</div>
+          <div class="price-row">
+            <span class="price-row-label">
+              Cuota de gestión de reserva
+              <span class="price-row-tag tag-retiru">Retiru</span>
+            </span>
+            <span class="price-row-amount">100€</span>
+          </div>
+          <div class="price-row">
+            <span class="price-row-label">
+              Pago al organizador
+              <span class="price-row-tag tag-organizer">Organizador</span>
+            </span>
+            <span class="price-row-amount">400€</span>
+          </div>
+          <div class="price-total">
+            <span class="price-total-label">Precio total del retiro</span>
+            <span class="price-total-amount">500€</span>
+          </div>
+        </div>
+        
+        <p class="transparency-note">
+          <strong>Al reservar pagas 100€ a Retiru.</strong> Los 400€ restantes se los pagas directamente al organizador antes del inicio del retiro. Sin costes ocultos, sin sorpresas.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       DESTINOS POPULARES
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="section" style="background: var(--bg-alt);">
+    <div class="container">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Destinos populares</h2>
+          <p class="section-subtitle">Los lugares más buscados para desconectar</p>
+        </div>
+        <a href="/es/destinos" class="section-link">
+          Ver todos
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+      </div>
+      <div class="destinations-scroll">
+        <a href="/es/destinos/ibiza" class="destination-card">
+          <img src="https://images.unsplash.com/photo-1534766555764-ce878a4e947d?w=400&q=80" alt="Ibiza">
+          <div class="destination-card-overlay"></div>
+          <div class="destination-card-content">
+            <h3>Ibiza</h3>
+            <div class="destination-card-count">34 retiros</div>
+          </div>
+        </a>
+        <a href="/es/destinos/mallorca" class="destination-card">
+          <img src="https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=400&q=80" alt="Mallorca">
+          <div class="destination-card-overlay"></div>
+          <div class="destination-card-content">
+            <h3>Mallorca</h3>
+            <div class="destination-card-count">28 retiros</div>
+          </div>
+        </a>
+        <a href="/es/destinos/costa-brava" class="destination-card">
+          <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=80" alt="Costa Brava">
+          <div class="destination-card-overlay"></div>
+          <div class="destination-card-content">
+            <h3>Costa Brava</h3>
+            <div class="destination-card-count">19 retiros</div>
+          </div>
+        </a>
+        <a href="/es/destinos/sierra-nevada" class="destination-card">
+          <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&q=80" alt="Sierra Nevada">
+          <div class="destination-card-overlay"></div>
+          <div class="destination-card-content">
+            <h3>Sierra Nevada</h3>
+            <div class="destination-card-count">15 retiros</div>
+          </div>
+        </a>
+        <a href="/es/destinos/pais-vasco" class="destination-card">
+          <img src="https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=400&q=80" alt="País Vasco">
+          <div class="destination-card-overlay"></div>
+          <div class="destination-card-content">
+            <h3>País Vasco</h3>
+            <div class="destination-card-count">12 retiros</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       TESTIMONIOS
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="container">
+      <div style="text-align: center; margin-bottom: 48px;">
+        <h2 class="section-title">Lo que dicen nuestros asistentes</h2>
+        <p class="section-subtitle" style="margin: 8px auto 0;">Experiencias reales de personas que encontraron su retiro ideal</p>
+      </div>
+      <div class="testimonials-grid">
+        <div class="testimonial-card">
+          <div class="testimonial-stars">
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <p class="testimonial-text">"Una experiencia increíble. La reserva fue super fácil y transparente. Sabía exactamente qué estaba pagando en cada momento. El retiro de yoga en Ibiza me cambió la vida."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">MC</div>
+            <div>
+              <div class="testimonial-name">María C.</div>
+              <div class="testimonial-event">Retiro Yoga Ibiza · Jun 2025</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="testimonial-stars">
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <p class="testimonial-text">"Como organizador, Retiru me ha dado todo lo que necesitaba. Panel gratuito, gestión de reservas, check-in con QR... He dejado de usar Excel y WhatsApp para todo."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">JL</div>
+            <div>
+              <div class="testimonial-name">Jorge L.</div>
+              <div class="testimonial-event">Organizador · 12 retiros publicados</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="testimonial-stars">
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <p class="testimonial-text">"Found this amazing meditation retreat in Mallorca through Retiru. The whole booking process was in English, clear pricing breakdown. Will definitely book again!"</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">ST</div>
+            <div>
+              <div class="testimonial-name">Sarah T.</div>
+              <div class="testimonial-event">Meditation Retreat Mallorca · May 2025</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       CTA ORGANIZADORES
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="container">
+      <div class="cta-organizers">
+        <div class="cta-organizers-pattern"></div>
+        <div class="cta-organizers-content">
+          <div class="cta-organizers-badge">
+            ✨ 100% GRATIS para organizadores
+          </div>
+          <h2>¿Organizas retiros? Publica gratis.</h2>
+          <p>
+            Sin comisiones, sin suscripciones. Obtén un panel profesional completo para gestionar tus eventos, reservas, asistentes, mensajería y mucho más. Todo gratis.
+          </p>
+          <div class="cta-features">
+            <div class="cta-feature">
+              <div class="cta-feature-check">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              0% comisión
+            </div>
+            <div class="cta-feature">
+              <div class="cta-feature-check">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              Panel completo
+            </div>
+            <div class="cta-feature">
+              <div class="cta-feature-check">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              CRM de asistentes
+            </div>
+            <div class="cta-feature">
+              <div class="cta-feature-check">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              Check-in con QR
+            </div>
+            <div class="cta-feature">
+              <div class="cta-feature-check">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              Mensajería integrada
+            </div>
+            <div class="cta-feature">
+              <div class="cta-feature-check">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              Analíticas
+            </div>
+          </div>
+          <a href="/es/para-organizadores" class="btn-white">
+            Empieza a publicar gratis
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       FOOTER
+       ═══════════════════════════════════════════════════════════════ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="logo">
+            retiru<span class="logo-dot"></span>
+          </div>
+          <p>Descubre retiros y escapadas únicas en España. Yoga, meditación, naturaleza, gastronomía y bienestar.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Explorar</h4>
+          <ul>
+            <li><a href="/es/buscar">Buscar retiros</a></li>
+            <li><a href="/es/categorias">Categorías</a></li>
+            <li><a href="/es/destinos">Destinos</a></li>
+            <li><a href="/es/categorias/yoga">Retiros de yoga</a></li>
+            <li><a href="/es/categorias/meditacion">Meditación</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Organizadores</h4>
+          <ul>
+            <li><a href="/es/para-organizadores">Publica tu retiro</a></li>
+            <li><a href="/es/para-organizadores#como-funciona">Cómo funciona</a></li>
+            <li><a href="/es/para-organizadores#panel">Panel de gestión</a></li>
+            <li><a href="/es/ayuda/organizadores">Centro de ayuda</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Retiru</h4>
+          <ul>
+            <li><a href="/es/ayuda">Centro de ayuda</a></li>
+            <li><a href="/es/sobre-nosotros">Sobre nosotros</a></li>
+            <li><a href="/es/contacto">Contacto</a></li>
+            <li><a href="/es/blog">Blog</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 Retiru. Todos los derechos reservados.</span>
+        <div class="footer-bottom-links">
+          <a href="/es/legal/privacidad">Privacidad</a>
+          <a href="/es/legal/terminos">Términos</a>
+          <a href="/es/legal/cookies">Cookies</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       JAVASCRIPT
+       ═══════════════════════════════════════════════════════════════ -->
+  <script>
+    // Header scroll effect
+    const header = document.getElementById('header');
+    window.addEventListener('scroll', () => {
+      header.classList.toggle('scrolled', window.scrollY > 10);
+    });
+  </script>
+
+</body>
+</html>
