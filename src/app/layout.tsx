@@ -1,9 +1,21 @@
 // ============================================================================
-// RETIRU · Root Layout (no locale — just redirects)
+// RETIRU · Root Layout — <html> + <body> únicos para toda la app
 // ============================================================================
 
 import './globals.css';
+import BackToTop from '@/components/ui/back-to-top';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return (
+    <html lang="es" suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
+      <body className="min-h-screen bg-background antialiased">
+        {children}
+        <BackToTop />
+      </body>
+    </html>
+  );
 }

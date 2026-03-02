@@ -12,11 +12,5 @@ export const metadata: Metadata = {
 };
 
 export default function AdministratorLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="es">
-      <body className="min-h-screen bg-background antialiased">
-        <AdminShell>{children}</AdminShell>
-      </body>
-    </html>
-  );
+  return <AdminShell>{children}</AdminShell>;
 }

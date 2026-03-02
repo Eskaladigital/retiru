@@ -1,12 +1,9 @@
 // ============================================================================
-// RETIRU · Spanish locale layout — SEO optimized
+// RETIRU · Spanish locale layout — SEO metadata + JSON-LD
 // ============================================================================
 
 import type { Metadata, Viewport } from 'next';
-import '../../globals.css';
 import { jsonLdOrganization, jsonLdWebSite, jsonLdScript } from '@/lib/seo';
-import BackToTop from '@/components/ui/back-to-top';
-
 const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://retiru.com';
 
 export const viewport: Viewport = {
@@ -64,35 +61,22 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  verification: {
-    // google: 'your-google-verification-code',
-    // yandex: 'your-yandex-verification-code',
-  },
-  icons: {
-    icon: '/favicon.ico',
-  },
+  icons: { icon: '/favicon.ico' },
   manifest: '/site.webmanifest',
 };
 
 export default function EsLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLdOrganization()) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLdWebSite('es')) }}
-        />
-      </head>
-      <body className="min-h-screen bg-background antialiased">
-        {children}
-        <BackToTop />
-      </body>
-    </html>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLdOrganization()) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLdWebSite('es')) }}
+      />
+      {children}
+    </>
   );
 }

@@ -1,11 +1,9 @@
 // ============================================================================
-// RETIRU · English locale layout — SEO optimized
+// RETIRU · English locale layout — SEO metadata + JSON-LD
 // ============================================================================
 
 import type { Metadata, Viewport } from 'next';
-import '../../globals.css';
-import { jsonLdOrganization, jsonLdWebSite, jsonLdScript } from '@/lib/seo';
-import BackToTop from '@/components/ui/back-to-top';
+import { jsonLdOrganization, jsonLdWebSite } from '@/lib/seo';
 
 const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://retiru.com';
 
@@ -62,17 +60,16 @@ export const metadata: Metadata = {
 
 export default function EnLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrganization()) }} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebSite('en')) }} />
-      </head>
-      <body className="min-h-screen bg-background antialiased">
-        {children}
-        <BackToTop />
-      </body>
-    </html>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrganization()) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebSite('en')) }}
+      />
+      {children}
+    </>
   );
 }
