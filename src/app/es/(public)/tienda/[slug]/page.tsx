@@ -3,14 +3,21 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { generatePageMetadata } from '@/lib/seo';
+import { getShopProductSlugs } from '@/lib/data';
 import { createServerSupabase } from '@/lib/supabase/server';
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateStaticParams() {
+  const slugs = await getShopProductSlugs();
+  return slugs.map((slug) => ({ slug }));
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
   const supabase = await createServerSupabase();
   const { data: p } = await supabase
     .from('shop_products')
     .select('name_es, description_es, slug, meta_title_es, meta_description_es, category')
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .single();
 
   if (!p) return {};
@@ -26,12 +33,13 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   });
 }
 
-export default async function ProductoDetailPage({ params }: { params: { slug: string } }) {
+export default async function ProductoDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   const supabase = await createServerSupabase();
   const { data: p } = await supabase
     .from('shop_products')
     .select('*')
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .single();
 
   if (!p) notFound();

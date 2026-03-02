@@ -1,8 +1,13 @@
 // /es/destinos/[slug] — Retiros en un destino (Supabase)
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getDestinationBySlug, getPublishedRetreats } from '@/lib/data';
+import { getDestinationBySlug, getDestinationSlugs, getPublishedRetreats } from '@/lib/data';
 import { ImageWithFallback } from '@/components/ui/image-with-fallback';
+
+export async function generateStaticParams() {
+  const slugs = await getDestinationSlugs();
+  return slugs.map((slug) => ({ slug }));
+}
 
 function formatDates(start: string, end: string, days: number): string {
   const d1 = new Date(start);

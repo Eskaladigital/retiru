@@ -23,16 +23,22 @@ function citySlug(city: string): string {
   return city.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s/g, '-');
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const cityName = CITIES[params.slug] || params.slug;
+export async function generateStaticParams() {
+  return Object.keys(CITIES).map((slug) => ({ slug }));
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const cityName = CITIES[slug] || slug;
   return {
     title: `Wellness centers in ${cityName} | Retiru`,
     description: `Find yoga, meditation, wellness and spa centers in ${cityName}. Verified directory.`,
   };
 }
 
-export default function CentersByCityPageEN({ params }: { params: { slug: string } }) {
-  const cityName = CITIES[params.slug];
+export default async function CentersByCityPageEN({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const cityName = CITIES[slug];
   if (!cityName) {
     return (
       <div className="container-wide py-12">
@@ -45,7 +51,7 @@ export default function CentersByCityPageEN({ params }: { params: { slug: string
     );
   }
 
-  const filtered = CENTERS.filter(c => citySlug(c.city) === params.slug);
+  const filtered = CENTERS.filter(c => citySlug(c.city) === slug);
 
   return (
     <div className="container-wide py-10">

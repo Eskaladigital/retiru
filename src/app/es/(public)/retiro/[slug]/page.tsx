@@ -23,6 +23,14 @@ function durationLabel(days: number) {
   return `${days} días · ${days - 1} noches`;
 }
 
+// ─── Static params ────────────────────────────────────────────────────────────
+
+export async function generateStaticParams() {
+  const { getRetreatSlugs } = await import('@/lib/data');
+  const slugs = await getRetreatSlugs();
+  return slugs.map((slug) => ({ slug }));
+}
+
 // ─── Metadata ───────────────────────────────────────────────────────────────
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {

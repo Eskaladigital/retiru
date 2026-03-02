@@ -3,9 +3,14 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { generatePageMetadata } from '@/lib/seo';
-import { getCenterBySlug } from '@/lib/data';
+import { getCenterBySlug, getCenterSlugs } from '@/lib/data';
 
 type Props = { params: Promise<{ slug: string }> };
+
+export async function generateStaticParams() {
+  const slugs = await getCenterSlugs();
+  return slugs.map((slug) => ({ slug })).filter((p) => p.slug && p.slug.length > 0);
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;

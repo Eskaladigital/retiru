@@ -42,7 +42,7 @@ export function GenerateDescriptionsButton() {
         ) : (
           <>
             <span>✨</span>
-            Generar descripciones con IA
+            Generar descripciones enriquecidas (800-1200 palabras)
           </>
         )}
       </button>
@@ -50,7 +50,7 @@ export function GenerateDescriptionsButton() {
         <div className="rounded-xl border border-sand-200 bg-white p-4 text-sm">
           <p className="font-semibold text-foreground mb-2">
             {result.processed === 0
-              ? 'Todos los centros ya tienen descripción.'
+              ? result.results.length === 0 ? 'Todos los centros ya tienen descripción enriquecida.' : 'Sin centros procesados.'
               : `Procesados: ${result.results.filter((r) => r.status === 'ok').length} OK, ${result.results.filter((r) => r.status === 'error').length} errores`}
           </p>
           {result.results.length > 0 && (

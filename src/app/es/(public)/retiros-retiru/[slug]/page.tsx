@@ -25,16 +25,22 @@ const EVENTS = [
   { slug: 'yoga-murcia-retiro', title: 'Retiro de Yoga y Meditación en Murcia', type: 'Yoga', price: 350, location: 'Murcia', province: 'Murcia', destinoSlug: 'murcia', dates: '18–21 Sep 2026', duration: '4 días', rating: 4.8, reviews: 12, spots: 6, spotsLow: false, instant: true, img: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&q=80' },
 ];
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const destName = DESTINATIONS[params.slug] || params.slug;
+export async function generateStaticParams() {
+  return Object.keys(DESTINATIONS).map((slug) => ({ slug }));
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const destName = DESTINATIONS[slug] || slug;
   return {
     title: `Retiros y escapadas en ${destName} | Retiru`,
     description: `Descubre retiros de yoga, meditación, naturaleza y bienestar en ${destName}. Reserva tu plaza.`,
   };
 }
 
-export default function EventosPorCiudadPage({ params }: { params: { slug: string } }) {
-  const destName = DESTINATIONS[params.slug];
+export default async function EventosPorCiudadPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const destName = DESTINATIONS[slug];
   if (!destName) {
     return (
       <div className="container-wide py-12">
@@ -47,7 +53,7 @@ export default function EventosPorCiudadPage({ params }: { params: { slug: strin
     );
   }
 
-  const filtered = EVENTS.filter(e => e.destinoSlug === params.slug);
+  const filtered = EVENTS.filter(e => e.destinoSlug === slug);
 
   return (
     <>

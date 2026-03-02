@@ -2,8 +2,21 @@
 // RETIRU · Supabase client — Server (Server Components, Route Handlers, Server Actions)
 // ============================================================================
 
+import { createClient } from '@supabase/supabase-js';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+
+/**
+ * Cliente Supabase para generateStaticParams, sitemap, etc.
+ * Sin cookies — solo para lectura de datos públicos en build time.
+ */
+export function createStaticSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { auth: { persistSession: false, autoRefreshToken: false } }
+  );
+}
 
 export async function createServerSupabase() {
   const cookieStore = await cookies();

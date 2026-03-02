@@ -1,0 +1,21 @@
+{
+  "name": "Retiru — Retiros, Centros y Bienestar en España",
+  "short_name": "Retiru",
+  "description": "Descubre y reserva retiros de yoga, meditación, naturaleza y wellness en España.",
+  "start_url": "/es",
+  "display": "standalone",
+  "background_color": "#fefdfb",
+  "theme_color": "#c85a30",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

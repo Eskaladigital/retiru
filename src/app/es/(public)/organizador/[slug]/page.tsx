@@ -2,8 +2,13 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { getOrganizerBySlug } from '@/lib/data';
+import { getOrganizerBySlug, getOrganizerSlugs } from '@/lib/data';
 import { createServerSupabase } from '@/lib/supabase/server';
+
+export async function generateStaticParams() {
+  const slugs = await getOrganizerSlugs();
+  return slugs.map((slug) => ({ slug }));
+}
 
 export default async function OrganizadorPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

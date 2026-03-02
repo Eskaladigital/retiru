@@ -4,7 +4,7 @@
 // Usar createServerSupabase en Server Components / Route Handlers
 // ============================================================================
 
-import { createServerSupabase } from '@/lib/supabase/server';
+import { createServerSupabase, createStaticSupabase } from '@/lib/supabase/server';
 import type { Locale } from '@/types';
 import type { Category, Destination, Retreat, Center, Product, OrganizerProfile } from '@/types';
 
@@ -225,6 +225,84 @@ export async function getActiveCenters(filters?: {
 
   if (error) throw error;
   return { centers: (data || []) as Center[], total: count ?? 0 };
+}
+
+/** Usar solo en generateStaticParams (build time, sin cookies) */
+export async function getCenterSlugs(): Promise<string[]> {
+  const supabase = createStaticSupabase();
+  const { data, error } = await supabase
+    .from('centers')
+    .select('slug')
+    .eq('status', 'active')
+    .order('slug');
+  if (error) throw error;
+  return (data || []).map((r) => r.slug).filter((s): s is string => !!s && typeof s === 'string');
+}
+
+/** Usar solo en generateStaticParams */
+export async function getRetreatSlugs(): Promise<string[]> {
+  const supabase = createStaticSupabase();
+  const { data, error } = await supabase
+    .from('retreats')
+    .select('slug')
+    .eq('status', 'published')
+    .gte('end_date', new Date().toISOString().slice(0, 10))
+    .order('slug');
+  if (error) throw error;
+  return (data || []).map((r) => r.slug).filter(Boolean);
+}
+
+/** Usar solo en generateStaticParams */
+export async function getBlogPostSlugs(): Promise<string[]> {
+  const supabase = createStaticSupabase();
+  const { data, error } = await supabase
+    .from('blog_articles')
+    .select('slug')
+    .eq('is_published', true)
+    .order('slug');
+  if (error) throw error;
+  return (data || []).map((r) => r.slug).filter(Boolean);
+}
+
+/** Usar solo en generateStaticParams */
+export async function getOrganizerSlugs(): Promise<string[]> {
+  const supabase = createStaticSupabase();
+  const { data, error } = await supabase
+    .from('organizer_profiles')
+    .select('slug')
+    .eq('status', 'verified')
+    .order('slug');
+  if (error) throw error;
+  return (data || []).map((r) => r.slug).filter(Boolean);
+}
+
+/** Usar solo en generateStaticParams */
+export async function getProductSlugs(): Promise<string[]> {
+  const supabase = createStaticSupabase();
+  const { data, error } = await supabase
+    .from('products')
+    .select('slug')
+    .eq('status', 'active')
+    .order('slug');
+  if (error) throw error;
+  return (data || []).map((r) => r.slug).filter(Boolean);
+}
+
+/** Slugs para tienda/shop (usa products — tienda puede usar products o shop_products) */
+export async function getShopProductSlugs(): Promise<string[]> {
+  return getProductSlugs();
+}
+
+/** Usar solo en generateStaticParams */
+export async function getDestinationSlugs(): Promise<string[]> {
+  const supabase = createStaticSupabase();
+  const { data, error } = await supabase
+    .from('destinations')
+    .select('slug')
+    .eq('is_active', true)
+    .order('slug');
+  if (error) throw error;
+  return (data || []).map((r) => r.slug).filter(Boolean);
 }
 
 export async function getCenterBySlug(slug: string): Promise<Center | null> {
