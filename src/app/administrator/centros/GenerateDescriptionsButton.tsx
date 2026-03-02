@@ -1,74 +1,214 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { X } from 'lucide-react';
+
+interface LogEntry {
+  type: 'info' | 'start' | 'detail' | 'success' | 'error';
+  message: string;
+  timestamp: Date;
+}
 
 export function GenerateDescriptionsButton() {
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{
-    processed: number;
-    results: { name: string; status: string; description?: string; error?: string }[];
-  } | null>(null);
+  const [open, setOpen] = useState(false);
+  const [running, setRunning] = useState(false);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [summary, setSummary] = useState<{ processed: number; ok: number; errors: number } | null>(null);
+  const logsEndRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
-  const handleClick = async () => {
-    setLoading(true);
-    setResult(null);
+  useEffect(() => {
+    logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [logs]);
+
+  const addLog = useCallback((entry: LogEntry) => {
+    setLogs((prev) => [...prev, entry]);
+  }, []);
+
+  const handleGenerate = async () => {
+    setRunning(true);
+    setLogs([]);
+    setSummary(null);
+
+    addLog({ type: 'info', message: '⏳ Conectando con el servidor...', timestamp: new Date() });
+
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     try {
-      const res = await fetch('/api/admin/generate-center-descriptions', { method: 'POST' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Error al generar');
-      setResult(data);
-    } catch (err) {
-      setResult({
-        processed: 0,
-        results: [{ name: '', status: 'error', error: err instanceof Error ? err.message : String(err) }],
+      const res = await fetch('/api/admin/generate-center-descriptions', {
+        method: 'POST',
+        signal: controller.signal,
       });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `Error ${res.status}`);
+      }
+
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error('No se pudo leer la respuesta');
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        let currentEvent = '';
+        for (const line of lines) {
+          if (line.startsWith('event: ')) {
+            currentEvent = line.slice(7).trim();
+          } else if (line.startsWith('data: ')) {
+            const data = JSON.parse(line.slice(6));
+            if (currentEvent === 'log') {
+              addLog({ ...data, timestamp: new Date() });
+            } else if (currentEvent === 'done') {
+              setSummary(data);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      if ((err as Error).name !== 'AbortError') {
+        addLog({ type: 'error', message: `❌ Error: ${(err as Error).message}`, timestamp: new Date() });
+      }
     } finally {
-      setLoading(false);
+      setRunning(false);
+      abortRef.current = null;
+    }
+  };
+
+  const handleClose = () => {
+    if (running && abortRef.current) {
+      abortRef.current.abort();
+    }
+    setOpen(false);
+    setRunning(false);
+    setLogs([]);
+    setSummary(null);
+  };
+
+  const handleOpen = () => {
+    setOpen(true);
+    setLogs([]);
+    setSummary(null);
+  };
+
+  const logColor = (type: LogEntry['type']) => {
+    switch (type) {
+      case 'success': return 'text-emerald-400';
+      case 'error': return 'text-red-400';
+      case 'start': return 'text-amber-300 font-semibold';
+      case 'info': return 'text-blue-300 font-semibold';
+      default: return 'text-gray-300';
     }
   };
 
   return (
-    <div className="flex flex-col gap-3">
+    <>
       <button
-        onClick={handleClick}
-        disabled={loading}
-        className="inline-flex items-center gap-2 bg-sage-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-sage-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+        onClick={handleOpen}
+        className="inline-flex items-center gap-2 bg-sage-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-sage-700 transition-colors"
       >
-        {loading ? (
-          <>
-            <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-            Generando con IA...
-          </>
-        ) : (
-          <>
-            <span>✨</span>
-            Generar descripciones enriquecidas (800-1200 palabras)
-          </>
-        )}
+        <span>✨</span> Generando con IA...
       </button>
-      {result && (
-        <div className="rounded-xl border border-sand-200 bg-white p-4 text-sm">
-          <p className="font-semibold text-foreground mb-2">
-            {result.processed === 0
-              ? result.results.length === 0 ? 'Todos los centros ya tienen descripción enriquecida.' : 'Sin centros procesados.'
-              : `Procesados: ${result.results.filter((r) => r.status === 'ok').length} OK, ${result.results.filter((r) => r.status === 'error').length} errores`}
-          </p>
-          {result.results.length > 0 && (
-            <ul className="space-y-1.5 max-h-40 overflow-y-auto">
-              {result.results.map((r, i) => (
-                <li key={i} className="flex items-start gap-2">
-                  <span className={r.status === 'ok' ? 'text-sage-600' : 'text-red-600'}>
-                    {r.status === 'ok' ? '✓' : '✗'}
+
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Overlay */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={!running ? handleClose : undefined} />
+
+          {/* Modal */}
+          <div className="relative w-full max-w-3xl bg-[#1e1e2e] rounded-2xl shadow-2xl border border-white/10 flex flex-col max-h-[85vh]">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <span className="text-lg">✨</span>
+                <div>
+                  <h2 className="text-white font-semibold text-base">Generador de descripciones con IA</h2>
+                  <p className="text-gray-400 text-xs mt-0.5">SerpAPI + Google Maps + GPT-4o-mini</p>
+                </div>
+              </div>
+              <button
+                onClick={handleClose}
+                className="text-gray-400 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Logs area */}
+            <div className="flex-1 overflow-y-auto p-4 font-mono text-[13px] leading-relaxed min-h-[300px]">
+              {logs.length === 0 && !running && (
+                <div className="flex flex-col items-center justify-center h-full text-gray-500 gap-4">
+                  <p className="text-sm">Pulsa "Iniciar" para generar descripciones enriquecidas</p>
+                  <p className="text-xs text-gray-600">Se procesarán todos los centros sin descripción (&lt; 400 caracteres)</p>
+                </div>
+              )}
+              {logs.map((log, i) => (
+                <div key={i} className={`${logColor(log.type)} whitespace-pre-wrap`}>
+                  <span className="text-gray-600 text-[11px] mr-2">
+                    {log.timestamp.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                   </span>
-                  <span>
-                    {r.name || 'Error'}: {r.status === 'ok' ? 'Descripción generada' : r.error}
-                  </span>
-                </li>
+                  {log.message}
+                </div>
               ))}
-            </ul>
-          )}
+              <div ref={logsEndRef} />
+            </div>
+
+            {/* Summary bar */}
+            {summary && (
+              <div className="px-6 py-3 border-t border-white/10 bg-white/5">
+                <div className="flex items-center gap-4 text-sm">
+                  <span className="text-gray-300">
+                    Procesados: <strong className="text-white">{summary.processed}</strong>
+                  </span>
+                  <span className="text-emerald-400">
+                    OK: <strong>{summary.ok}</strong>
+                  </span>
+                  {summary.errors > 0 && (
+                    <span className="text-red-400">
+                      Errores: <strong>{summary.errors}</strong>
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-white/10">
+              {!running && !summary && (
+                <button
+                  onClick={handleGenerate}
+                  className="bg-sage-600 text-white font-semibold px-6 py-2.5 rounded-xl text-sm hover:bg-sage-700 transition-colors"
+                >
+                  Iniciar generación
+                </button>
+              )}
+              {running && (
+                <div className="flex items-center gap-3">
+                  <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span className="text-gray-300 text-sm">Procesando...</span>
+                </div>
+              )}
+              {summary && (
+                <button
+                  onClick={handleClose}
+                  className="bg-white/10 text-white font-semibold px-6 py-2.5 rounded-xl text-sm hover:bg-white/20 transition-colors"
+                >
+                  Cerrar
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
