@@ -1,12 +1,17 @@
 #!/usr/bin/env node
 /**
- * Genera descripciones con IA para TODOS los centros sin descripción.
+ * Genera descripción con IA para UN centro concreto.
  * Fuentes de datos (por orden de prioridad):
  *   1. Base de datos Retiru (fuente de verdad absoluta)
  *   2. Scraping de la web oficial del centro
  *   3. Google Places API (reseñas reales)
  *
- * Uso:  node scripts/generate-all-descriptions.mjs [--limit N] [--dry-run]
+ * Uso:
+ *   node scripts/generate-one-description.mjs "Thalassa Pilates Studio"
+ *   node scripts/generate-one-description.mjs --id <uuid>
+ *   node scripts/generate-one-description.mjs --slug <slug>
+ *   node scripts/generate-one-description.mjs "Thalassa" --force   (sobrescribe aunque ya tenga)
+ *   node scripts/generate-one-description.mjs "Thalassa" --dry-run (muestra sin guardar)
  */
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
@@ -32,10 +37,22 @@ const GOOGLE_PLACES_KEY = process.env.GOOGLE_PLACES_API_KEY || process.env.GOOGL
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 const args = process.argv.slice(2);
-const limitIdx = args.indexOf('--limit');
-const LIMIT = limitIdx !== -1 ? parseInt(args[limitIdx + 1], 10) : 0;
+const FORCE = args.includes('--force');
 const DRY_RUN = args.includes('--dry-run');
-const MIN_DESC = 400;
+const cleanArgs = args.filter((a) => !a.startsWith('--'));
+
+const idIdx = args.indexOf('--id');
+const slugIdx = args.indexOf('--slug');
+const searchId = idIdx !== -1 ? args[idIdx + 1] : null;
+const searchSlug = slugIdx !== -1 ? args[slugIdx + 1] : null;
+const searchName = !searchId && !searchSlug ? cleanArgs[0] : null;
+
+if (!searchId && !searchSlug && !searchName) {
+  console.error('Uso: node scripts/generate-one-description.mjs "Nombre del centro"');
+  console.error('     node scripts/generate-one-description.mjs --id <uuid>');
+  console.error('     node scripts/generate-one-description.mjs --slug <slug>');
+  process.exit(1);
+}
 
 const SYSTEM_PROMPT = `Eres un redactor profesional para Retiru, plataforma de retiros y centros de bienestar en España.
 Tu tarea: escribir una descripción COMPLETA y ENRIQUECIDA del centro de 800 a 1200 palabras, en español.
@@ -102,7 +119,8 @@ async function scrapeWebsite(url) {
     const html = await res.text();
     const text = stripHtml(html);
     return text.length > 50 ? text.slice(0, 4000) : null;
-  } catch {
+  } catch (e) {
+    console.log(`    [web] ${e.message}`);
     return null;
   }
 }
@@ -135,7 +153,8 @@ async function fetchGoogleReviews(placeId) {
       })
       .filter(Boolean)
       .join('\n');
-  } catch {
+  } catch (e) {
+    console.log(`    [reviews] ${e.message}`);
     return null;
   }
 }
@@ -145,7 +164,7 @@ async function fetchGoogleReviews(placeId) {
 async function fetchContext(center) {
   const parts = [];
 
-  // 1. DATOS OFICIALES DE LA BD
+  // 1. DATOS OFICIALES DE LA BD (fuente de verdad absoluta)
   const official = [];
   official.push(`Nombre: ${center.name}`);
   official.push(`Ciudad: ${center.city}, ${center.province}`);
@@ -159,19 +178,25 @@ async function fetchContext(center) {
   if (services) official.push(`Servicios: ${services}`);
   parts.push('## DATOS OFICIALES DE LA BASE DE DATOS (fuente de verdad, cifras EXACTAS):\n' + official.join('\n'));
 
-  // 2. SCRAPING WEB OFICIAL
+  // 2. SCRAPING WEB OFICIAL (fuente principal de contenido)
   if (center.website) {
+    console.log(`    [web] Scrapeando ${center.website}...`);
     const webContent = await scrapeWebsite(center.website);
     if (webContent) {
       parts.push('## CONTENIDO WEB OFICIAL DEL CENTRO (extraído directamente de su web):\n' + webContent);
+    } else {
+      console.log('    [web] No se pudo extraer contenido');
     }
   }
 
-  // 3. RESEÑAS REALES DE GOOGLE
+  // 3. RESEÑAS REALES DE GOOGLE (via Google Places API)
   if (center.google_place_id) {
+    console.log(`    [reviews] Obteniendo reseñas de Google Places...`);
     const reviews = await fetchGoogleReviews(center.google_place_id);
     if (reviews) {
       parts.push('## RESEÑAS REALES DE GOOGLE (textos literales de usuarios):\n' + reviews);
+    } else {
+      console.log('    [reviews] Sin reseñas disponibles');
     }
   }
 
@@ -206,63 +231,84 @@ async function generateDescription(center) {
   return data.choices?.[0]?.message?.content?.trim() || null;
 }
 
-// ── Main ──
-const { data: centers } = await supabase
-  .from('centers')
-  .select('id, name, slug, city, province, type, services_es, description_es, avg_rating, review_count, website, phone, address, google_place_id');
+// ── Buscar el centro ──
+let query = supabase.from('centers').select(
+  'id, name, slug, city, province, type, services_es, description_es, avg_rating, review_count, website, phone, address, google_place_id'
+);
 
-let toProcess = (centers || []).filter((c) => {
-  const desc = (c.description_es || '').trim();
-  return desc.length < MIN_DESC;
-});
-
-if (LIMIT > 0) toProcess = toProcess.slice(0, LIMIT);
-
-console.log(`\n═══ GENERAR DESCRIPCIONES CON IA ═══`);
-console.log(`Fuentes: Web del centro + Google Places API + BD`);
-console.log(`Centros sin descripción: ${toProcess.length}${LIMIT ? ` (limitado a ${LIMIT})` : ''}`);
-if (DRY_RUN) console.log('DRY RUN — no se guardarán cambios\n');
-else console.log('');
-
-let ok = 0, errors = 0;
-const startTime = Date.now();
-
-for (let i = 0; i < toProcess.length; i++) {
-  const c = toProcess[i];
-  const t0 = Date.now();
-  process.stdout.write(`[${i + 1}/${toProcess.length}] ${c.name} (${c.city})... `);
-
-  try {
-    const desc = await generateDescription(c);
-    if (!desc) throw new Error('Sin contenido');
-
-    const words = desc.split(/\s+/).length;
-
-    if (!DRY_RUN) {
-      const now = new Date().toISOString();
-      const { error: upErr } = await supabase.from('centers').update({
-        description_es: desc,
-        description_ai_generated_at: now,
-        updated_at: now,
-      }).eq('id', c.id);
-      if (upErr) throw upErr;
-    }
-
-    const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
-    console.log(`✓ ${words} palabras (${elapsed}s)`);
-    ok++;
-  } catch (err) {
-    const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
-    console.log(`✗ ${err.message} (${elapsed}s)`);
-    errors++;
-
-    if (err.message?.includes('rate_limit') || err.message?.includes('429')) {
-      console.log('  Rate limit — esperando 30s...');
-      await new Promise((r) => setTimeout(r, 30000));
-    }
-  }
+if (searchId) {
+  query = query.eq('id', searchId);
+} else if (searchSlug) {
+  query = query.eq('slug', searchSlug);
+} else {
+  query = query.ilike('name', `%${searchName}%`);
 }
 
-const totalTime = ((Date.now() - startTime) / 1000 / 60).toFixed(1);
-console.log(`\n═══ RESULTADO ═══`);
-console.log(`✓ ${ok} generados | ✗ ${errors} errores | ${totalTime} min`);
+const { data: results, error } = await query;
+
+if (error) {
+  console.error('Error buscando centro:', error.message);
+  process.exit(1);
+}
+
+if (!results?.length) {
+  console.error(`No se encontró ningún centro con: ${searchId || searchSlug || searchName}`);
+  process.exit(1);
+}
+
+if (results.length > 1) {
+  console.log(`Se encontraron ${results.length} centros:`);
+  results.forEach((c, i) => console.log(`  ${i + 1}. ${c.name} (${c.city}) [${c.slug}]`));
+  console.log('\nUsa --id o --slug para ser más específico.');
+  process.exit(1);
+}
+
+const center = results[0];
+const currentDesc = (center.description_es || '').trim();
+
+console.log(`\n═══ GENERAR DESCRIPCIÓN ═══`);
+console.log(`Centro:  ${center.name}`);
+console.log(`Ciudad:  ${center.city}, ${center.province}`);
+console.log(`Slug:    ${center.slug}`);
+console.log(`Web:     ${center.website || '—'}`);
+console.log(`PlaceID: ${center.google_place_id || '—'}`);
+console.log(`Rating:  ${center.avg_rating || '—'} (${center.review_count || 0} reseñas)`);
+console.log(`Desc actual: ${currentDesc.length} caracteres\n`);
+
+if (currentDesc.length >= 400 && !FORCE) {
+  console.log('⚠ Este centro ya tiene descripción (≥400 chars). Usa --force para sobrescribir.');
+  process.exit(0);
+}
+
+console.log('Generando descripción con IA...\n');
+
+const t0 = Date.now();
+const desc = await generateDescription(center);
+
+if (!desc) {
+  console.error('No se generó contenido.');
+  process.exit(1);
+}
+
+const words = desc.split(/\s+/).length;
+const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+
+if (DRY_RUN) {
+  console.log('── PREVIEW (dry-run, no se guarda) ──\n');
+  console.log(desc);
+  console.log(`\n── ${words} palabras · ${elapsed}s ──`);
+} else {
+  const now = new Date().toISOString();
+  const { error: upErr } = await supabase.from('centers').update({
+    description_es: desc,
+    description_ai_generated_at: now,
+    updated_at: now,
+  }).eq('id', center.id);
+
+  if (upErr) {
+    console.error('Error al guardar:', upErr.message);
+    process.exit(1);
+  }
+
+  console.log(`✅ Descripción guardada: ${words} palabras (${elapsed}s)`);
+}
