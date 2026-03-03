@@ -102,7 +102,7 @@ export default async function RetirosPorDestinoPage({ params }: { params: Promis
                       {r.categories?.[0] && (
                         <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground">{r.categories[0].name_es}</span>
                       )}
-                      {r.confirmation_type === 'instant' && (
+                      {r.confirmation_type === 'automatic' && (
                         <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[rgba(92,127,96,0.9)] text-white">Inmediata</span>
                       )}
                     </div>

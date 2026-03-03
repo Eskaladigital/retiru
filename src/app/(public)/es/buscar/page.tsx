@@ -172,7 +172,7 @@ function RetiroCard({ item }: { item: any }) {
         <div className="absolute top-3 left-3 flex gap-1.5">
           <span className="text-[10px] font-bold uppercase tracking-wider bg-terracotta-600 text-white px-2 py-0.5 rounded-full">Retiro</span>
           {categoryName && <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm">{categoryName}</span>}
-          {item.confirmation_type === 'instant' && <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[rgba(92,127,96,0.9)] text-white">⚡</span>}
+          {item.confirmation_type === 'automatic' && <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[rgba(92,127,96,0.9)] text-white">⚡</span>}
         </div>
         {item.available_spots != null && item.available_spots <= 5 && (
           <span className="absolute top-3 right-3 text-[10px] font-bold bg-red-500 text-white px-2 py-0.5 rounded-full">🔥 {item.available_spots} plazas</span>
