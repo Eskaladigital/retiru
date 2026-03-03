@@ -11,6 +11,7 @@ import { Menu, X } from 'lucide-react';
 
 const NAV = [
   { href: '/administrator', label: 'Dashboard', icon: '📊' },
+  { href: '/administrator/usuarios', label: 'Usuarios', icon: '👤' },
   { href: '/administrator/organizadores', label: 'Organizadores', icon: '👥' },
   { href: '/administrator/retiros', label: 'Retiros', icon: '📅' },
   { href: '/administrator/centros', label: 'Centros', icon: '🏢' },

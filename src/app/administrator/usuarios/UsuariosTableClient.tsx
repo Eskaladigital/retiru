@@ -1,0 +1,249 @@
+'use client';
+
+import { useState, useMemo } from 'react';
+import { Search, ChevronUp, ChevronDown, ChevronsUpDown, X } from 'lucide-react';
+
+interface UserRow {
+  id: string;
+  email: string;
+  full_name: string;
+  avatar_url: string | null;
+  phone: string | null;
+  role: string;
+  preferred_locale: string;
+  bio: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+type SortKey = 'full_name' | 'email' | 'role' | 'created_at';
+type SortDir = 'asc' | 'desc';
+
+const PAGE_SIZE = 50;
+
+const ROLE_BADGE: Record<string, { label: string; cls: string }> = {
+  admin: { label: 'Admin', cls: 'bg-red-100 text-red-700' },
+  organizer: { label: 'Organizador', cls: 'bg-amber-100 text-amber-700' },
+  attendee: { label: 'Asistente', cls: 'bg-sand-200 text-[#7a6b5d]' },
+};
+
+function getSortValue(u: UserRow, key: SortKey): string {
+  switch (key) {
+    case 'full_name': return (u.full_name || '').toLowerCase();
+    case 'email': return (u.email || '').toLowerCase();
+    case 'role': return u.role || '';
+    case 'created_at': return u.created_at || '';
+  }
+}
+
+function SortIcon({ active, dir }: { active: boolean; dir: SortDir }) {
+  if (!active) return <ChevronsUpDown size={14} className="text-[#bbb] ml-1 inline" />;
+  return dir === 'asc'
+    ? <ChevronUp size={14} className="text-terracotta-600 ml-1 inline" />
+    : <ChevronDown size={14} className="text-terracotta-600 ml-1 inline" />;
+}
+
+function ThSortable({ label, sortKey, current, dir, onSort, align = 'left' }: {
+  label: string; sortKey: SortKey; current: SortKey; dir: SortDir;
+  onSort: (k: SortKey) => void; align?: 'left' | 'center' | 'right';
+}) {
+  const textAlign = align === 'center' ? 'text-center' : align === 'right' ? 'text-right' : 'text-left';
+  return (
+    <th
+      className={`${textAlign} py-3 px-4 font-semibold text-[#7a6b5d] cursor-pointer select-none hover:text-terracotta-600 transition-colors whitespace-nowrap`}
+      onClick={() => onSort(sortKey)}
+    >
+      {label}
+      <SortIcon active={current === sortKey} dir={dir} />
+    </th>
+  );
+}
+
+function PaginationBtn({ disabled, active, onClick, label }: { disabled?: boolean; active?: boolean; onClick: () => void; label: string }) {
+  return (
+    <button
+      disabled={disabled}
+      onClick={onClick}
+      className={`min-w-[32px] h-8 rounded-lg text-xs font-semibold transition-colors ${
+        active
+          ? 'bg-terracotta-600 text-white'
+          : disabled
+            ? 'text-[#ccc] cursor-not-allowed'
+            : 'text-[#666] hover:bg-sand-100'
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
+function paginationRange(current: number, total: number): number[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i);
+  const pages: number[] = [];
+  pages.push(0);
+  if (current > 2) pages.push(-1);
+  for (let i = Math.max(1, current - 1); i <= Math.min(total - 2, current + 1); i++) pages.push(i);
+  if (current < total - 3) pages.push(-1);
+  pages.push(total - 1);
+  return pages;
+}
+
+export function UsuariosTableClient({ users }: { users: UserRow[] }) {
+  const [query, setQuery] = useState('');
+  const [sortKey, setSortKey] = useState<SortKey>('created_at');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [filterRole, setFilterRole] = useState('');
+  const [page, setPage] = useState(0);
+
+  const filtered = useMemo(() => {
+    const words = query.toLowerCase().trim() ? query.toLowerCase().trim().split(/\s+/) : [];
+    return users.filter((u) => {
+      if (words.length > 0) {
+        const searchable = `${u.full_name || ''} ${u.email || ''} ${u.phone || ''} ${u.role || ''}`
+          .toLowerCase()
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const normed = words.map(w => w.normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+        if (!normed.every(w => searchable.includes(w))) return false;
+      }
+      if (filterRole && u.role !== filterRole) return false;
+      return true;
+    });
+  }, [users, query, filterRole]);
+
+  const sorted = useMemo(() => {
+    const copy = [...filtered];
+    copy.sort((a, b) => {
+      const va = getSortValue(a, sortKey);
+      const vb = getSortValue(b, sortKey);
+      if (va < vb) return sortDir === 'asc' ? -1 : 1;
+      if (va > vb) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return copy;
+  }, [filtered, sortKey, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages - 1);
+  const pageData = sorted.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+    else { setSortKey(key); setSortDir('asc'); }
+    setPage(0);
+  };
+
+  const hasFilters = !!(query || filterRole);
+  const clearAll = () => { setQuery(''); setFilterRole(''); setPage(0); };
+
+  const selectClasses = 'rounded-lg border border-sand-200 bg-white text-sm text-[#333] px-3 py-2 focus:outline-none focus:ring-2 focus:ring-terracotta-300 appearance-none cursor-pointer';
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-[240px]">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#aaa]" />
+          <input
+            type="text"
+            placeholder="Buscar por nombre, email, teléfono..."
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); setPage(0); }}
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-sand-200 bg-white text-sm placeholder:text-[#bbb] focus:outline-none focus:ring-2 focus:ring-terracotta-300 transition-shadow"
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <select value={filterRole} onChange={(e) => { setFilterRole(e.target.value); setPage(0); }} className={selectClasses}>
+          <option value="">Todos los roles</option>
+          <option value="admin">Admin</option>
+          <option value="organizer">Organizador</option>
+          <option value="attendee">Asistente</option>
+        </select>
+        {hasFilters && (
+          <button onClick={clearAll} className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold text-terracotta-600 hover:bg-terracotta-50 transition-colors">
+            <X size={14} /> Limpiar filtros
+          </button>
+        )}
+        <span className="ml-auto text-xs text-[#999]">
+          {sorted.length} resultado{sorted.length !== 1 ? 's' : ''}
+        </span>
+      </div>
+
+      <div className="bg-white border border-sand-200 rounded-2xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-sand-200 bg-sand-50">
+                <th className="text-left py-3 px-4 font-semibold text-[#7a6b5d] w-14">Img</th>
+                <ThSortable label="Nombre" sortKey="full_name" current={sortKey} dir={sortDir} onSort={handleSort} />
+                <ThSortable label="Email" sortKey="email" current={sortKey} dir={sortDir} onSort={handleSort} />
+                <th className="text-left py-3 px-4 font-semibold text-[#7a6b5d]">Teléfono</th>
+                <ThSortable label="Rol" sortKey="role" current={sortKey} dir={sortDir} onSort={handleSort} align="center" />
+                <ThSortable label="Registro" sortKey="created_at" current={sortKey} dir={sortDir} onSort={handleSort} />
+              </tr>
+            </thead>
+            <tbody>
+              {pageData.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-[#999]">
+                    {hasFilters ? 'No hay usuarios que coincidan con los filtros.' : 'No hay usuarios en la base de datos.'}
+                  </td>
+                </tr>
+              ) : (
+                pageData.map((u) => {
+                  const badge = ROLE_BADGE[u.role] || ROLE_BADGE.attendee;
+                  const date = u.created_at ? new Date(u.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+                  return (
+                    <tr key={u.id} className="border-b border-sand-100 hover:bg-sand-50/50 transition-colors">
+                      <td className="py-2 px-4">
+                        <div className="w-9 h-9 rounded-full overflow-hidden bg-sand-100 shrink-0">
+                          {u.avatar_url ? (
+                            <img src={u.avatar_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xs font-bold text-[#bbb]">
+                              {(u.full_name || u.email || '?')[0].toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 font-medium max-w-[200px] truncate">{u.full_name || '—'}</td>
+                      <td className="py-3 px-4 text-[#7a6b5d] max-w-[220px] truncate">{u.email}</td>
+                      <td className="py-3 px-4 text-[#7a6b5d]">{u.phone || '—'}</td>
+                      <td className="py-3 px-4 text-center">
+                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${badge.cls}`}>
+                          {badge.label}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-[#7a6b5d] text-sm">{date}</td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-1">
+          <p className="text-xs text-[#999]">
+            Mostrando {safePage * PAGE_SIZE + 1}–{Math.min((safePage + 1) * PAGE_SIZE, sorted.length)} de {sorted.length}
+          </p>
+          <div className="flex items-center gap-1">
+            <PaginationBtn disabled={safePage === 0} onClick={() => setPage(0)} label="«" />
+            <PaginationBtn disabled={safePage === 0} onClick={() => setPage(safePage - 1)} label="‹" />
+            {paginationRange(safePage, totalPages).map((p, i) =>
+              p === -1 ? (
+                <span key={`dots-${i}`} className="px-2 text-[#ccc]">…</span>
+              ) : (
+                <PaginationBtn key={p} active={p === safePage} onClick={() => setPage(p)} label={String(p + 1)} />
+              ),
+            )}
+            <PaginationBtn disabled={safePage >= totalPages - 1} onClick={() => setPage(safePage + 1)} label="›" />
+            <PaginationBtn disabled={safePage >= totalPages - 1} onClick={() => setPage(totalPages - 1)} label="»" />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

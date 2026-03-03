@@ -6,7 +6,8 @@
  *   2. Scraping de la web oficial del centro
  *   3. Google Places API (reseñas reales)
  *
- * Uso:  node scripts/generate-all-descriptions.mjs [--limit N] [--dry-run]
+ * Uso:  node scripts/generate-all-descriptions.mjs [--limit N] [--dry-run] [--force]
+ *   --force  Regenera TODAS las descripciones (incluidas las existentes)
  */
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
@@ -35,6 +36,7 @@ const args = process.argv.slice(2);
 const limitIdx = args.indexOf('--limit');
 const LIMIT = limitIdx !== -1 ? parseInt(args[limitIdx + 1], 10) : 0;
 const DRY_RUN = args.includes('--dry-run');
+const FORCE = args.includes('--force');
 const MIN_DESC = 400;
 
 const SYSTEM_PROMPT = `Eres un redactor profesional para Retiru, plataforma de retiros y centros de bienestar en España.
@@ -212,6 +214,7 @@ const { data: centers } = await supabase
   .select('id, name, slug, city, province, type, services_es, description_es, avg_rating, review_count, website, phone, address, google_place_id');
 
 let toProcess = (centers || []).filter((c) => {
+  if (FORCE) return true;
   const desc = (c.description_es || '').trim();
   return desc.length < MIN_DESC;
 });
@@ -220,7 +223,7 @@ if (LIMIT > 0) toProcess = toProcess.slice(0, LIMIT);
 
 console.log(`\n═══ GENERAR DESCRIPCIONES CON IA ═══`);
 console.log(`Fuentes: Web del centro + Google Places API + BD`);
-console.log(`Centros sin descripción: ${toProcess.length}${LIMIT ? ` (limitado a ${LIMIT})` : ''}`);
+console.log(`Centros a procesar: ${toProcess.length}${FORCE ? ' (FORCE: regenerar todas)' : ''}${LIMIT ? ` (limitado a ${LIMIT})` : ''}`);
 if (DRY_RUN) console.log('DRY RUN — no se guardarán cambios\n');
 else console.log('');
 

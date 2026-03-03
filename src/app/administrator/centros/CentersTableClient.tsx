@@ -17,6 +17,7 @@ export type CenterRow = {
   description_es?: string | null;
   cover_url?: string | null;
   images?: string[];
+  email?: string | null;
 };
 
 function getMainImage(c: CenterRow): string {
@@ -113,10 +114,14 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
+    const words = q ? q.split(/\s+/) : [];
     return list.filter((c) => {
-      if (q) {
-        const searchable = `${c.name} ${c.slug} ${c.city} ${c.province} ${c.plan} ${c.status}`.toLowerCase();
-        if (!searchable.includes(q)) return false;
+      if (words.length > 0) {
+        const searchable = `${c.name || ''} ${c.slug || ''} ${c.city || ''} ${c.province || ''} ${c.plan || ''} ${c.status || ''} ${c.email || ''}`
+          .toLowerCase()
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const qNorm = words.map(w => w.normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+        if (!qNorm.every(w => searchable.includes(w))) return false;
       }
       if (filterProvince && c.province !== filterProvince) return false;
       if (filterPlan && c.plan !== filterPlan) return false;
