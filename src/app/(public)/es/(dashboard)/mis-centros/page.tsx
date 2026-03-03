@@ -66,9 +66,8 @@ export default async function MisCentrosPage() {
           {list.map((c) => {
             const img = c.cover_url || (Array.isArray(c.images) ? c.images[0] : null);
             return (
-              <Link
+              <div
                 key={c.id}
-                href={`/es/centro/${c.slug}`}
                 className="flex flex-col md:flex-row gap-4 bg-white border border-sand-200 rounded-2xl p-4 hover:shadow-soft hover:border-sand-300 transition-all group"
               >
                 <div className="w-full md:w-36 h-24 rounded-xl overflow-hidden shrink-0 bg-sand-100">
@@ -96,8 +95,12 @@ export default async function MisCentrosPage() {
                       </span>
                     )}
                   </div>
+                  <div className="flex gap-3 mt-2">
+                    <Link href={`/es/mis-centros/${c.id}`} className="text-xs font-semibold text-terracotta-600 hover:underline">Editar perfil</Link>
+                    <Link href={`/es/centro/${c.slug}`} className="text-xs font-medium text-[#7a6b5d] hover:text-foreground">Ver ficha pública</Link>
+                  </div>
                 </div>
-              </Link>
+              </div>
             );
           })}
         </div>
