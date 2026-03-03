@@ -182,10 +182,12 @@ Cualquier usuario logueado (incluido el admin) accede a estas 4 secciones desde 
 | Ruta | Descripción |
 |------|-------------|
 | `/administrator` | Dashboard admin |
+| `/administrator/usuarios` | Gestión de usuarios |
 | `/administrator/organizadores` | Gestión organizadores |
-| `/administrator/eventos` | Gestión retiros |
+| `/administrator/retiros` | Gestión retiros (aprobar/rechazar) |
 | `/administrator/centros` | Gestión centros |
 | `/administrator/claims` | Gestión claims de centros |
+| `/administrator/blog` | Gestión blog |
 | `/administrator/tienda` | Gestión tienda |
 | `/administrator/reembolsos` | Reembolsos |
 | `/administrator/reporting` | Reporting y métricas |
@@ -311,7 +313,7 @@ Se han importado **~592 centros** de yoga, pilates, meditación, wellness y spa 
 | Tarea | Estado | Detalle |
 |-------|--------|---------|
 | Importar centros desde `directorio.csv` | ✅ Completado | 592 centros |
-| Enriquecer descripciones con IA (SerpAPI + OpenAI) | 🔄 En curso | ~77 completados, ~515 pendientes |
+| Enriquecer descripciones con IA (scraping web + Google Places + OpenAI) | 🔄 En curso | ~857 centros total |
 | Buscar emails faltantes (CSV + SerpAPI) | 🔄 En curso | 416 con email, 176 sin email |
 | Generar descripciones en inglés | ⏳ Pendiente | Traducción automática tras completar ES |
 
@@ -376,19 +378,54 @@ El dueño de un centro puede vincularse como propietario verificado mediante:
 |---------|-------------|
 | Tasa de apertura del email | Plataforma de envío (Resend) |
 | Centros que visitan su perfil | Analítica web (GA4) |
-| Centros que se registran | Tabla `profiles` con role=organizer |
+| Centros que se registran | Tabla `center_claims` con status=approved |
 | Centros que crean eventos | Tabla `retreats` con organizer vinculado a centro |
 | Conversión a pago (mes 6) | Manual / CRM |
 
 ---
 
-## Roles
+## Roles y tipos de usuario
 
-| Rol | Capacidades |
-|---|---|
-| **Visitante** (sin login) | Navega, busca, ve retiros y centros |
-| **Usuario** (logueado) | Reserva retiros, gestiona perfil, reclama centros, crea eventos |
-| **Admin** | Todo lo del usuario + panel `/administrator` (modera centros, claims, retiros, reembolsos, reporting) |
+### Roles en base de datos
+
+La tabla `profiles` tiene un campo `role` con 3 valores posibles: `attendee`, `organizer`, `admin`.
+
+```
+user_role: 'attendee' | 'organizer' | 'admin'
+```
+
+### Tipos funcionales de usuario
+
+| Tipo funcional | Rol en BD | Cómo se llega | Capacidades |
+|---|---|---|---|
+| **Visitante** | Sin cuenta | Navega sin registrarse | Buscar, ver retiros, centros, blog, tienda |
+| **Asistente** | `attendee` | Se registra con email | Reservar retiros, gestionar perfil, reclamar centros |
+| **Propietario de centro** | `attendee` | Reclama un centro (claim aprobado en `center_claims`) | Todo lo de asistente + editar su centro, publicar eventos |
+| **Organizador** | `organizer` | Crea su primer evento y el admin lo aprueba | Todo lo de asistente + crear/gestionar retiros (ya sin aprobación previa) |
+| **Admin** | `admin` | Asignado manualmente | Todo + panel `/administrator`, modera claims, retiros, centros |
+
+### Flujo de promoción de rol
+
+1. **Registro**: todo usuario nuevo se crea como `attendee`.
+2. **Reclamar centro**: un `attendee` puede reclamar un centro. El admin aprueba/rechaza el claim. Si se aprueba, el usuario puede editar su centro pero sigue siendo `attendee` (se identifica como propietario por la relación en `center_claims`).
+3. **Crear primer evento**: cualquier `attendee` puede crear un retiro/evento desde "Mis eventos". Al crear el primero:
+   - Se auto-crea un `organizer_profile` vinculado al usuario.
+   - El retiro se guarda como `draft` y pasa a `pending_review`.
+   - **El admin debe verificar y aprobar** el primer retiro desde `/administrator/retiros`.
+   - Al aprobarlo, el retiro se publica y el rol del usuario se actualiza a `organizer`.
+4. **Eventos posteriores**: una vez que el usuario es `organizer` (su primer retiro fue aprobado), los siguientes retiros siguen el mismo flujo de revisión pero el admin ya tiene confianza en el organizador.
+
+### Verificación del primer evento (admin)
+
+Es fundamental que **ningún retiro se publique sin revisión del admin**. El flujo:
+
+1. Usuario crea evento → estado `draft`
+2. Usuario envía a revisión → estado `pending_review`
+3. Admin revisa en `/administrator/retiros` → aprueba (`published`) o rechaza (`rejected` con motivo)
+4. Si aprobado: el retiro se publica y es visible en el frontend
+5. El rol del usuario se promueve a `organizer` si era su primer retiro aprobado
+
+Esto protege la calidad de la plataforma y evita contenido fraudulento o de baja calidad.
 
 ### Dashboard del usuario (4 secciones)
 
@@ -400,6 +437,12 @@ Cualquier usuario logueado (incluido el admin) tiene acceso a:
 4. **Mis eventos** — retiros/eventos creados; formulario wizard para crear nuevos
 
 El admin tiene además acceso a `/administrator` desde el menú.
+
+### Flujo de autenticación
+
+- **Solo email/contraseña** (Google OAuth desactivado por ahora).
+- Registro → email de verificación → clic en enlace → cuenta activa → login.
+- Si el usuario intenta reclamar un centro sin estar logueado, se le redirige a **registro** (no a login) con `redirect` al centro. Si ya tiene cuenta, puede ir a login desde el registro.
 
 ---
 
@@ -432,10 +475,14 @@ El admin tiene además acceso a `/administrator` desde el menú.
 
 ### Panel de administrador (solo role=admin)
 - Dashboard con métricas generales
-- Gestión de organizadores, retiros, centros y claims
+- **Usuarios** — tabla con todos los perfiles (buscador, filtro por rol)
+- **Organizadores** — gestión de organizadores verificados *(pendiente: conectar a datos reales)*
+- **Retiros** — gestión de retiros (aprobar/rechazar los `pending_review`, ver todos)
+- **Centros** — gestión de centros (buscador, filtros, exportar CSV/Excel, generar descripciones IA)
+- **Claims** — gestión de reclamaciones de centros (aprobar/rechazar)
 - Gestión de tienda (productos, categorías, pedidos)
 - Reembolsos y reporting
-- Acceso en `/administrator` (protegido por rol)
+- Acceso en `/administrator` (protegido por middleware + rol)
 
 ---
 

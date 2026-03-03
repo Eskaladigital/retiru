@@ -109,7 +109,7 @@ function LoginForm() {
         </div>
 
         <p className="text-center text-sm text-[#7a6b5d] mt-6">
-          ¿No tienes cuenta? <Link href="/es/registro" className="text-terracotta-600 font-semibold hover:underline">Regístrate</Link>
+          ¿No tienes cuenta? <Link href={`/es/registro?redirect=${encodeURIComponent(redirect)}`} className="text-terracotta-600 font-semibold hover:underline">Regístrate</Link>
         </p>
       </div>
     </div>

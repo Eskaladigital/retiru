@@ -123,6 +123,23 @@ export default function CondicionesPage() {
         {/* ═══ RESERVAS, CONFIRMACIÓN Y CANCELACIONES ═══ */}
         <section>
           <h2 className="font-serif text-2xl font-bold text-foreground mb-4">
+            Directorio de centros
+          </h2>
+          <div className="space-y-4 text-[15px] leading-relaxed text-muted-foreground">
+            <p>
+              <strong className="text-foreground">Membresía gratuita inicial:</strong> Los centros seleccionados para nuestro directorio reciben 6 meses de membresía gratuita. Durante ese periodo, tu ficha está activa con todos los beneficios: visibilidad SEO, reseñas, contacto directo y gestión desde tu panel.
+            </p>
+            <p>
+              <strong className="text-foreground">Tras el periodo gratuito:</strong> Evaluaremos juntos el impacto del directorio en tu negocio. Si deseas continuar, pasarás a una cuota mensual asequible. Si no, tu ficha se desactivará sin compromiso.
+            </p>
+            <p>
+              <strong className="text-foreground">Reclama tu centro:</strong> Si tu centro ya aparece en el directorio, puedes reclamarlo creando una cuenta y haciendo clic en "Reclamar este centro" en tu ficha. Nuestro equipo verificará tu identidad como propietario.
+            </p>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="font-serif text-2xl font-bold text-foreground mb-4">
             Reservas, confirmación y cancelaciones
           </h2>
           <div className="space-y-4 text-[15px] leading-relaxed text-muted-foreground">

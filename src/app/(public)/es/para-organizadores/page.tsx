@@ -33,11 +33,12 @@ const ORGANIZER_FEATURES = [
 
 const FAQS = [
   { q: '¿De verdad es gratis para organizadores?', a: 'Sí. No cobramos comisión ni suscripción al organizador. Nuestros ingresos vienen del 20% que paga el asistente como cuota de gestión.' },
-  { q: '¿Cómo funciona el directorio de centros?', a: 'Tu centro aparece en nuestro directorio con ficha completa: fotos, servicios, horarios, ubicación y reseñas. Los usuarios pueden encontrarte buscando por zona, tipo de disciplina o nombre.' },
-  { q: '¿Cuánto cuesta aparecer en el directorio?', a: 'Actualmente, incluir tu centro en el directorio es gratuito. Contacta con nosotros para dar de alta tu ficha.' },
+  { q: '¿Cómo funciona el directorio de centros?', a: 'Tu centro aparece en nuestro directorio con ficha completa: fotos, servicios, horarios, ubicación y reseñas. Los usuarios pueden encontrarte buscando por zona, tipo de disciplina o nombre. Si tu centro ya está en Retiru, puedes reclamarlo desde su ficha para gestionarlo tú mismo.' },
+  { q: '¿Cuánto cuesta aparecer en el directorio?', a: 'Actualmente ofrecemos 6 meses de membresía gratuita a los centros seleccionados. Tras ese periodo, evaluaremos el impacto contigo y podrás continuar con una cuota mensual asequible.' },
   { q: '¿Puedo ser centro y organizador a la vez?', a: 'Sí. Si eres un centro que organiza retiros o escapadas, puedes tener tu ficha en el directorio y además publicar retiros con todas las herramientas del panel.' },
   { q: '¿Cómo cobro a mis asistentes?', a: 'Cuando alguien reserva un retiro, paga el 20% a Retiru. Tú cobras el 80% restante directamente al asistente antes del retiro, por transferencia o el método que prefieras.' },
-  { q: '¿Necesito verificarme?', a: 'Sí. Pedimos un documento de identidad y datos fiscales para proteger a los asistentes. El proceso es rápido y lo revisamos en 24-48h.' },
+  { q: '¿Necesito verificarme para publicar retiros?', a: 'No necesitas subir documentos. Simplemente crea tu cuenta, crea tu primer retiro y nuestro equipo lo revisará en 24-48h. Una vez aprobado tu primer retiro, te conviertes en organizador verificado y puedes seguir publicando.' },
+  { q: '¿Cómo reclamo mi centro?', a: 'Si tu centro ya está en nuestro directorio, busca tu centro en Retiru y haz clic en "Reclamar este centro". Si no tienes cuenta, te guiaremos para crear una. Nuestro equipo verificará que eres el propietario y te dará acceso para editar tu ficha.' },
   { q: '¿Y si un asistente cancela?', a: 'Tú configuras tu política de cancelación por retiro. Retiru gestiona los reembolsos automáticamente según esa política.' },
 ];
 
@@ -100,21 +101,26 @@ export default function ParaOrganizadoresPage() {
           {/* CTA Centro */}
           <div className="rounded-2xl bg-gradient-to-r from-sage-800 to-sage-900 text-white p-8 md:p-12 flex flex-col md:flex-row items-center gap-8">
             <div className="flex-1">
-              <h3 className="font-serif text-2xl font-bold mb-3">¿Quieres aparecer en nuestro directorio?</h3>
+              <h3 className="font-serif text-2xl font-bold mb-3">¿Tu centro ya está en Retiru?</h3>
               <p className="text-sage-300 leading-relaxed max-w-lg">
-                Escríbenos con los datos de tu centro y nos encargamos de crear tu ficha.
-                Es rápido, sencillo y actualmente gratuito.
+                Busca tu centro en nuestro directorio y reclámalo para gestionar tu ficha, responder reseñas y publicar eventos.
+                Si aún no estás, contáctanos y te incluimos gratis.
               </p>
             </div>
             <div className="flex flex-col gap-3 shrink-0">
               <Link
-                href="/es/contacto"
+                href="/es/centros-retiru"
                 className="btn-primary bg-terracotta-600 hover:bg-terracotta-700 px-8 py-4 text-base text-center"
               >
-                <Mail size={18} className="mr-2 inline" />
-                Contáctanos
+                <MapPin size={18} className="mr-2 inline" />
+                Buscar mi centro
               </Link>
-              <span className="text-sage-400 text-xs text-center">Respondemos en menos de 24h</span>
+              <Link
+                href="/es/contacto"
+                className="text-sage-400 text-xs text-center hover:text-sage-200 transition-colors"
+              >
+                ¿No lo encuentras? Contáctanos
+              </Link>
             </div>
           </div>
         </div>
@@ -189,10 +195,10 @@ export default function ParaOrganizadoresPage() {
           <h2 className="mb-12 text-center font-serif text-3xl font-bold">¿Cómo funciona para organizadores?</h2>
           <div className="space-y-8">
             {[
-              { step: '01', title: 'Regístrate y verifícate', desc: 'Crea tu perfil de organizador. Sube tu documento de identidad y datos fiscales. Lo revisamos en 24-48h.' },
-              { step: '02', title: 'Publica tu retiro', desc: 'Usa nuestro wizard paso a paso para crear tu retiro o escapada. Añade fotos, programa, precios y configura tu política de cancelación.' },
-              { step: '03', title: 'Recibe reservas', desc: 'Los asistentes pagan el 20% a Retiru para asegurar su plaza. Tú recibes notificaciones y gestionas todo desde tu panel.' },
-              { step: '04', title: 'Cobra directamente', desc: 'Tú cobras el 80% restante directamente al asistente antes del retiro. Sin intermediarios.' },
+              { step: '01', title: 'Crea tu cuenta', desc: 'Regístrate con tu email y verifica tu cuenta. Cualquier usuario puede crear retiros desde su panel.' },
+              { step: '02', title: 'Crea tu primer retiro', desc: 'Usa nuestro wizard paso a paso para crear tu retiro o escapada. Añade fotos, programa, precios y configura tu política de cancelación.' },
+              { step: '03', title: 'Revisamos y publicamos', desc: 'Nuestro equipo revisa tu primer retiro en 24-48h para asegurar la calidad. Una vez aprobado, se publica y te conviertes en organizador verificado.' },
+              { step: '04', title: 'Recibe reservas y cobra', desc: 'Los asistentes pagan el 20% a Retiru para asegurar su plaza. Tú cobras el 80% restante directamente al asistente antes del retiro. Sin intermediarios.' },
             ].map(({ step, title, desc }) => (
               <div key={step} className="flex gap-6 items-start">
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-terracotta-600 text-lg font-bold text-white">
@@ -236,10 +242,10 @@ export default function ParaOrganizadoresPage() {
           </p>
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link
-              href="/es/contacto"
+              href="/es/centros-retiru"
               className="btn-primary bg-white text-terracotta-700 hover:bg-sand-100 px-8 py-4 text-base"
             >
-              Soy un centro — Contáctanos
+              Soy un centro — Buscar mi ficha
             </Link>
             <Link
               href="/es/registro"

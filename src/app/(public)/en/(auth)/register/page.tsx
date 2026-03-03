@@ -1,13 +1,13 @@
 // /en/register
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
-export default function RegisterPageEN() {
+function RegisterFormEN() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,6 +18,9 @@ export default function RegisterPageEN() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get('redirect') || '/en';
+  const isClaim = searchParams.get('claim') === 'true';
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,7 +39,7 @@ export default function RegisterPageEN() {
         password,
         options: {
           data: { full_name: fullName.trim() },
-          emailRedirectTo: `${window.location.origin}/api/auth/callback?locale=en&redirect=/en`,
+          emailRedirectTo: `${window.location.origin}/api/auth/callback?locale=en&redirect=${encodeURIComponent(redirect)}`,
         },
       });
 
@@ -100,8 +103,8 @@ export default function RegisterPageEN() {
             <span className="font-serif text-[32px] text-terracotta-700 tracking-[-0.02em]">retiru</span>
             <span className="w-2 h-2 bg-terracotta-600 rounded-full animate-[float_3s_ease-in-out_infinite] -mb-0.5" />
           </Link>
-          <h1 className="font-serif text-2xl mt-4">Create account</h1>
-          <p className="text-sm text-[#7a6b5d] mt-1">Join and discover your next retreat</p>
+          <h1 className="font-serif text-2xl mt-4">{isClaim ? 'Create your account to claim your center' : 'Create account'}</h1>
+          <p className="text-sm text-[#7a6b5d] mt-1">{isClaim ? 'Sign up and manage your center profile' : 'Join and discover your next retreat'}</p>
         </div>
 
         <div className="bg-white border border-sand-200 rounded-2xl p-8 shadow-soft">
@@ -195,7 +198,7 @@ export default function RegisterPageEN() {
         </div>
 
         <p className="text-center text-sm text-[#7a6b5d] mt-6">
-          Already have an account? <Link href="/en/login" className="text-terracotta-600 font-semibold hover:underline">Sign in</Link>
+          Already have an account? <Link href={`/en/login?redirect=${encodeURIComponent(redirect)}`} className="text-terracotta-600 font-semibold hover:underline">Sign in</Link>
         </p>
 
         <div className="mt-8 bg-sage-50 border border-sage-200 rounded-2xl p-6 text-center">
@@ -205,5 +208,13 @@ export default function RegisterPageEN() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPageEN() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-cream-100"><div className="animate-pulse text-[#7a6b5d]">Loading…</div></div>}>
+      <RegisterFormEN />
+    </Suspense>
   );
 }

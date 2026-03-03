@@ -2,8 +2,10 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { Download, FileSpreadsheet, Search, ChevronUp, ChevronDown, ChevronsUpDown, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Download, FileSpreadsheet, Search, ChevronUp, ChevronDown, ChevronsUpDown, X, Pencil, ExternalLink, Trash2, EyeOff, Eye } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { createClient } from '@/lib/supabase/client';
 
 export type CenterRow = {
   id: string;
@@ -98,9 +100,50 @@ function SortIcon({ active, dir }: { active: boolean; dir: SortDir }) {
 }
 
 export function CentersTableClient({ list }: { list: CenterRow[] }) {
+  const router = useRouter();
   const [query, setQuery] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [toggling, setToggling] = useState<string | null>(null);
+
+  const handleDelete = async (c: CenterRow) => {
+    if (!window.confirm(`¿Seguro que quieres eliminar "${c.name}"?\n\nEsta acción no se puede deshacer.`)) return;
+    setDeleting(c.id);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.from('centers').delete().eq('id', c.id);
+      if (error) {
+        alert(`Error al eliminar: ${error.message}`);
+      } else {
+        router.refresh();
+      }
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  const handleToggleStatus = async (c: CenterRow) => {
+    const isActive = c.status === 'active';
+    const action = isActive ? 'despublicar' : 'publicar';
+    if (!window.confirm(`¿${isActive ? 'Despublicar' : 'Publicar'} "${c.name}"?`)) return;
+    setToggling(c.id);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from('centers')
+        .update({ status: isActive ? 'draft' : 'active' })
+        .eq('id', c.id);
+      if (error) {
+        alert(`Error al ${action}: ${error.message}`);
+      } else {
+        router.refresh();
+      }
+    } finally {
+      setToggling(null);
+    }
+  };
+
   const [filterProvince, setFilterProvince] = useState('');
   const [filterPlan, setFilterPlan] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
@@ -244,7 +287,7 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
                 <ThSortable label="Estado" sortKey="status" current={sortKey} dir={sortDir} onSort={handleSort} align="center" />
                 <ThSortable label="MRR" sortKey="mrr" current={sortKey} dir={sortDir} onSort={handleSort} align="right" />
                 <ThSortable label="Desc" sortKey="desc" current={sortKey} dir={sortDir} onSort={handleSort} align="center" />
-                <th className="py-3 px-4 w-16"></th>
+                <th className="py-3 px-4 w-36"></th>
               </tr>
             </thead>
             <tbody>
@@ -289,10 +332,45 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
                           <span className="text-amber-500 text-xs">✗</span>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-right">
-                        <Link href={`/administrator/centros/${c.id}`} className="text-xs font-semibold text-terracotta-600 hover:underline">
-                          Editar
-                        </Link>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center justify-end gap-1">
+                          <Link
+                            href={`/administrator/centros/${c.id}`}
+                            title="Editar centro"
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-terracotta-600 hover:bg-terracotta-50 transition-colors"
+                          >
+                            <Pencil size={15} />
+                          </Link>
+                          <a
+                            href={`/es/centro/${c.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Ver ficha pública"
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-sage-600 hover:bg-sage-50 transition-colors"
+                          >
+                            <ExternalLink size={15} />
+                          </a>
+                          <button
+                            onClick={() => handleToggleStatus(c)}
+                            disabled={toggling === c.id}
+                            title={c.status === 'active' ? 'Despublicar' : 'Publicar'}
+                            className={`inline-flex items-center justify-center w-8 h-8 rounded-lg transition-colors disabled:opacity-40 ${
+                              c.status === 'active'
+                                ? 'text-amber-500 hover:text-amber-700 hover:bg-amber-50'
+                                : 'text-sage-500 hover:text-sage-700 hover:bg-sage-50'
+                            }`}
+                          >
+                            {c.status === 'active' ? <EyeOff size={15} /> : <Eye size={15} />}
+                          </button>
+                          <button
+                            onClick={() => handleDelete(c)}
+                            disabled={deleting === c.id}
+                            title="Eliminar centro"
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-40"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

@@ -13,9 +13,14 @@ const SECTIONS = [
   ]},
   { title: 'Para organizadores', items: [
     { q: '¿Es gratis publicar?', a: 'Sí, 100%. No cobramos comisión ni suscripción. Nuestros ingresos vienen del 20% que paga el asistente.' },
-    { q: '¿Cómo me verifico?', a: 'Necesitas subir un documento de identidad y datos fiscales. Lo revisamos en 24-48h.' },
+    { q: '¿Cómo empiezo a publicar retiros?', a: 'Crea tu cuenta con email, verifica tu email y crea tu primer retiro desde tu panel. Nuestro equipo lo revisa en 24-48h. Una vez aprobado tu primer retiro, te conviertes en organizador verificado.' },
     { q: '¿Cómo cobro a mis asistentes?', a: 'Tú cobras el 80% directamente al asistente antes del retiro, por transferencia o el método que prefieras.' },
-    { q: '¿Mis retiros pasan revisión?', a: 'Sí, revisamos cada retiro antes de publicarlo para garantizar la calidad. Normalmente en 24h.' },
+    { q: '¿Mis retiros pasan revisión?', a: 'Tu primer retiro se revisa para garantizar la calidad (24-48h). Una vez verificado como organizador, los siguientes retiros se publican directamente.' },
+  ]},
+  { title: 'Para centros', items: [
+    { q: '¿Cómo reclamo mi centro?', a: 'Busca tu centro en el directorio de Retiru y haz clic en "Reclamar este centro". Si no tienes cuenta, te guiaremos para crearla. Verificamos que eres el propietario y te damos acceso para editar tu ficha.' },
+    { q: '¿Cuánto cuesta estar en el directorio?', a: 'Ofrecemos 6 meses de membresía gratuita a los centros seleccionados. Tras ese periodo, evaluaremos el impacto contigo.' },
+    { q: '¿Qué puedo hacer una vez reclame mi centro?', a: 'Podrás editar tu ficha (fotos, descripción, horarios, servicios), responder a reseñas y publicar retiros y eventos desde tu perfil.' },
   ]},
   { title: 'Pagos y seguridad', items: [
     { q: '¿Es seguro pagar en Retiru?', a: 'Sí. Procesamos todos los pagos con Stripe, el mismo sistema que usan Airbnb, Spotify o Shopify.' },
@@ -51,7 +56,7 @@ export default function AyudaPage() {
         <div className="bg-sand-100 rounded-2xl p-8 text-center mt-12">
           <h3 className="font-serif text-xl mb-2">¿No encuentras lo que buscas?</h3>
           <p className="text-sm text-[#7a6b5d] mb-4">Escríbenos y te respondemos en menos de 24h</p>
-          <a href="mailto:hola@retiru.es" className="inline-flex items-center gap-2 bg-terracotta-600 text-white font-semibold text-sm px-6 py-3 rounded-xl hover:bg-terracotta-700 transition-colors">
+          <a href="mailto:contacto@retiru.com" className="inline-flex items-center gap-2 bg-terracotta-600 text-white font-semibold text-sm px-6 py-3 rounded-xl hover:bg-terracotta-700 transition-colors">
             Contactar por email
           </a>
         </div>

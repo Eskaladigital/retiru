@@ -1,0 +1,42 @@
+---
+description: Antes de cualquier cambio funcional, leer la documentación del proyecto y actualizarla si es necesario
+alwaysApply: true
+---
+
+# Sincronización obligatoria con documentación
+
+## Antes de hacer cambios
+
+Antes de implementar cualquier cambio funcional (nuevas features, cambios de flujo, cambios de negocio, cambios en UI pública), SIEMPRE:
+
+1. **Leer `README.md`** (raíz del proyecto) — contiene roles, flujos de usuario, estrategia de negocio, estado de features
+2. **Leer `docs/ROUTES.md`** — contiene el mapa de rutas de la app
+3. **Leer otros `.md` relevantes** según el contexto del cambio:
+   - `mailing/README.md` — si se tocan emails
+   - `docs/SCHEMA-REVIEW.md` — si se tocan tablas/migraciones
+   - `docs/SEO-LANDINGS.md` — si se tocan landings o SEO
+
+## Después de hacer cambios
+
+Si el cambio afecta a cualquiera de estos aspectos, **actualizar los `.md` correspondientes**:
+
+- Roles de usuario o flujo de autenticación
+- Flujo de reclamación de centros
+- Flujo de creación/verificación de eventos
+- Modelo de precios o condiciones
+- Rutas nuevas o renombradas
+- Estado de features (pendiente → implementado)
+- Estrategia de negocio (membresías, plazos, etc.)
+
+## Páginas públicas informativas
+
+Si el cambio afecta a flujos que se explican en páginas públicas, actualizar también:
+
+- `/es/para-organizadores` + `/en/for-organizers` — cómo funciona para centros y organizadores
+- `/es/ayuda` + `/en/help` — preguntas frecuentes
+- `/es/condiciones` + `/en/condiciones` — condiciones y precios
+- `/es/contacto` — FAQs rápidas
+
+## Consistencia
+
+Toda la información debe ser consistente entre README, docs, páginas públicas y emails. Si algo se dice de una forma en el README, debe decirse igual en las páginas del front.

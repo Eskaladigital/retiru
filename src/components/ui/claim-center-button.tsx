@@ -43,9 +43,9 @@ export function ClaimCenterButton({ centerId, centerSlug, claimedBy, locale }: C
       const data = await res.json();
 
       if (res.status === 401) {
-        const loginPath = locale === 'es' ? '/es/login' : '/en/login';
+        const registerPath = locale === 'es' ? '/es/registro' : '/en/register';
         const centerPath = locale === 'es' ? `/es/centro/${centerSlug}` : `/en/center/${centerSlug}`;
-        router.push(`${loginPath}?redirect=${encodeURIComponent(centerPath)}&claim=true`);
+        router.push(`${registerPath}?redirect=${encodeURIComponent(centerPath)}&claim=true`);
         return;
       }
 

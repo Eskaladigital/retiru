@@ -119,6 +119,23 @@ export default function CondicionesPageEn() {
 
         <section>
           <h2 className="font-serif text-2xl font-bold text-foreground mb-4">
+            Center directory
+          </h2>
+          <div className="space-y-4 text-[15px] leading-relaxed text-muted-foreground">
+            <p>
+              <strong className="text-foreground">Free initial membership:</strong> Selected centers receive 6 months of free membership. During this period, your listing is active with all benefits: SEO visibility, reviews, direct contact and management from your dashboard.
+            </p>
+            <p>
+              <strong className="text-foreground">After the free period:</strong> We&apos;ll assess the directory&apos;s impact on your business together. If you wish to continue, you&apos;ll move to an affordable monthly fee. If not, your listing will be deactivated with no commitment.
+            </p>
+            <p>
+              <strong className="text-foreground">Claim your center:</strong> If your center already appears in the directory, you can claim it by creating an account and clicking &quot;Claim this center&quot; on your listing. Our team will verify your identity as the owner.
+            </p>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="font-serif text-2xl font-bold text-foreground mb-4">
             Bookings, confirmation and cancellations
           </h2>
           <div className="space-y-4 text-[15px] leading-relaxed text-muted-foreground">

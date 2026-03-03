@@ -144,10 +144,12 @@ Localidades y categorías vienen de la base de datos.
 | Ruta | Archivo | Descripción |
 |------|---------|-------------|
 | `/administrator` | `app/administrator/page.tsx` | Dashboard admin |
+| `/administrator/usuarios` | `app/administrator/usuarios/page.tsx` | Gestión usuarios |
 | `/administrator/organizadores` | `app/administrator/organizadores/page.tsx` | Gestión organizadores |
-| `/administrator/eventos` | `app/administrator/eventos/page.tsx` | Gestión retiros |
+| `/administrator/retiros` | `app/administrator/retiros/page.tsx` | Gestión retiros (aprobar/rechazar) |
 | `/administrator/centros` | `app/administrator/centros/page.tsx` | Gestión centros |
 | `/administrator/claims` | `app/administrator/claims/page.tsx` | Gestión claims de centros |
+| `/administrator/blog` | `app/administrator/blog/page.tsx` | Gestión blog |
 | `/administrator/tienda` | `app/administrator/tienda/page.tsx` | Gestión tienda |
 | `/administrator/reembolsos` | `app/administrator/reembolsos/page.tsx` | Reembolsos |
 | `/administrator/reporting` | `app/administrator/reporting/page.tsx` | Reporting y métricas |

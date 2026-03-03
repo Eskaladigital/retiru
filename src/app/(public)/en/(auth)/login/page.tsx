@@ -109,7 +109,7 @@ function LoginFormEN() {
         </div>
 
         <p className="text-center text-sm text-[#7a6b5d] mt-6">
-          Don&apos;t have an account? <Link href="/en/register" className="text-terracotta-600 font-semibold hover:underline">Sign up</Link>
+          Don&apos;t have an account? <Link href={`/en/register?redirect=${encodeURIComponent(redirect)}`} className="text-terracotta-600 font-semibold hover:underline">Sign up</Link>
         </p>
       </div>
     </div>

@@ -27,11 +27,12 @@ const ORGANIZER_FEATURES = [
 
 const FAQS = [
   { q: 'Is it really free for organizers?', a: 'Yes. We don\'t charge any commission or subscription to organizers. Our revenue comes from the 20% the attendee pays as a booking management fee.' },
-  { q: 'How does the center directory work?', a: 'Your center appears in our directory with a full profile: photos, services, hours, location and reviews. Users can find you by searching by area, discipline type or name.' },
-  { q: 'How much does a directory listing cost?', a: 'Currently, listing your center in the directory is free. Contact us to set up your profile.' },
+  { q: 'How does the center directory work?', a: 'Your center appears in our directory with a full profile: photos, services, hours, location and reviews. Users can find you by searching by area, discipline type or name. If your center is already on Retiru, you can claim it from its listing to manage it yourself.' },
+  { q: 'How much does a directory listing cost?', a: 'We currently offer 6 months of free membership to selected centers. After that period, we\'ll assess the impact with you and you can continue with an affordable monthly fee.' },
   { q: 'Can I be both a center and an organizer?', a: 'Yes. If you\'re a center that organizes retreats or events, you can have your directory listing and also publish events with all the panel tools.' },
   { q: 'How do I get paid?', a: 'When someone books a retreat, they pay 20% to Retiru. You collect the remaining 80% directly from the attendee before the retreat, by bank transfer or your preferred method.' },
-  { q: 'Do I need to get verified?', a: 'Yes. We ask for an ID document and tax details to protect attendees. The process is quick and we review it within 24-48h.' },
+  { q: 'Do I need to get verified to publish retreats?', a: 'No documents required. Simply create your account, create your first retreat and our team will review it within 24-48h. Once your first retreat is approved, you become a verified organizer and can keep publishing.' },
+  { q: 'How do I claim my center?', a: 'If your center is already in our directory, search for it on Retiru and click "Claim this center". If you don\'t have an account, we\'ll guide you to create one. Our team will verify you\'re the owner and grant you access to edit your listing.' },
   { q: 'What if an attendee cancels?', a: 'You configure your cancellation policy per retreat. Retiru handles refunds automatically according to that policy.' },
 ];
 
@@ -91,17 +92,19 @@ export default function ForOrganizersPageEN() {
 
           <div className="rounded-2xl bg-gradient-to-r from-sage-800 to-sage-900 text-white p-8 md:p-12 flex flex-col md:flex-row items-center gap-8">
             <div className="flex-1">
-              <h3 className="font-serif text-2xl font-bold mb-3">Want to appear in our directory?</h3>
+              <h3 className="font-serif text-2xl font-bold mb-3">Is your center already on Retiru?</h3>
               <p className="text-sage-300 leading-relaxed max-w-lg">
-                Write to us with your center details and we&apos;ll take care of creating your profile.
-                It&apos;s quick, simple and currently free.
+                Search for your center in our directory and claim it to manage your listing, respond to reviews and publish events.
+                Not listed yet? Contact us and we&apos;ll add you for free.
               </p>
             </div>
             <div className="flex flex-col gap-3 shrink-0">
-              <Link href="/en/contact" className="bg-terracotta-600 hover:bg-terracotta-700 text-white font-semibold px-8 py-4 rounded-xl transition-colors text-center">
-                ✉️ Contact us
+              <Link href="/en/centers" className="bg-terracotta-600 hover:bg-terracotta-700 text-white font-semibold px-8 py-4 rounded-xl transition-colors text-center">
+                📍 Find my center
               </Link>
-              <span className="text-sage-400 text-xs text-center">We respond within 24h</span>
+              <Link href="/en/contact" className="text-sage-400 text-xs text-center hover:text-sage-200 transition-colors">
+                Can&apos;t find it? Contact us
+              </Link>
             </div>
           </div>
         </div>
@@ -172,10 +175,10 @@ export default function ForOrganizersPageEN() {
           <h2 className="mb-12 text-center font-serif text-3xl font-bold">How does it work for organizers?</h2>
           <div className="space-y-8">
             {[
-              { s: '01', t: 'Sign up & verify', d: 'Create your organizer profile. Upload your ID and tax details. We review in 24-48h.' },
-              { s: '02', t: 'Publish your retreat', d: 'Use our step-by-step wizard to create your retreat or getaway. Add photos, schedule, prices and configure your cancellation policy.' },
-              { s: '03', t: 'Receive bookings', d: 'Attendees pay 20% to Retiru to secure their spot. You receive notifications and manage everything from your panel.' },
-              { s: '04', t: 'Get paid directly', d: 'You collect the remaining 80% directly from the attendee before the retreat. No intermediaries.' },
+              { s: '01', t: 'Create your account', d: 'Sign up with your email and verify your account. Any user can create retreats from their dashboard.' },
+              { s: '02', t: 'Create your first retreat', d: 'Use our step-by-step wizard to create your retreat or getaway. Add photos, schedule, prices and configure your cancellation policy.' },
+              { s: '03', t: 'We review & publish', d: 'Our team reviews your first retreat within 24-48h to ensure quality. Once approved, it goes live and you become a verified organizer.' },
+              { s: '04', t: 'Receive bookings & get paid', d: 'Attendees pay 20% to Retiru to secure their spot. You collect the remaining 80% directly from the attendee before the retreat. No intermediaries.' },
             ].map(({ s, t, d }) => (
               <div key={s} className="flex gap-6 items-start">
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-terracotta-600 text-lg font-bold text-white">{s}</span>
@@ -216,8 +219,8 @@ export default function ForOrganizersPageEN() {
             and visibility you need. Free.
           </p>
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <Link href="/en/contact" className="inline-block bg-white text-terracotta-700 font-bold px-8 py-4 rounded-xl hover:bg-sand-100 transition-colors">
-              I&apos;m a center — Contact us
+            <Link href="/en/centers" className="inline-block bg-white text-terracotta-700 font-bold px-8 py-4 rounded-xl hover:bg-sand-100 transition-colors">
+              I&apos;m a center — Find my listing
             </Link>
             <Link href="/en/register" className="inline-block bg-white/10 hover:bg-white/20 border border-white/30 text-white font-bold px-8 py-4 rounded-xl transition-colors">
               I&apos;m an organizer — Create account
