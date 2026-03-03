@@ -2,9 +2,22 @@
 // RETIRU · Root Layout — <html> + <body> únicos para toda la app
 // ============================================================================
 
+import type { Metadata } from 'next';
 import './globals.css';
 import BackToTop from '@/components/ui/back-to-top';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
+import { getSiteUrl } from '@/lib/site-url';
+
+export const metadata: Metadata = {
+  metadataBase: new URL(getSiteUrl()),
+  icons: {
+    icon: [
+      { url: '/favicon.png', type: 'image/png', sizes: '48x48' },
+      { url: '/favicon.png', type: 'image/png', sizes: '192x192' },
+    ],
+    apple: [{ url: '/favicon.png', type: 'image/png', sizes: '180x180' }],
+  },
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
