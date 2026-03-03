@@ -79,6 +79,9 @@ export default async function CentersByProvincePageEN({ params }: { params: Prom
                           <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-sage-100 text-sage-700 capitalize">{c.type.replace(/_/g, ' ')}</span>
                         )}
                         <span className="text-[13px] text-[#7a6b5d] flex items-center gap-1"><MapPin size={13} /> {c.city}{c.province ? `, ${c.province}` : ''}</span>
+                        {(c.google_maps_url || c.google_place_id) && (
+                          <a href={c.google_maps_url || `https://www.google.com/maps/place/?q=place_id:${c.google_place_id}`} target="_blank" rel="noopener" className="text-[11px] text-terracotta-600 hover:underline flex items-center gap-0.5">Maps</a>
+                        )}
                       </div>
                     </div>
                     {(c.avg_rating ?? 0) > 0 && (

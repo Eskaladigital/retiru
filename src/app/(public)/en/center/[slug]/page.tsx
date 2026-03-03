@@ -135,26 +135,55 @@ export default async function CenterDetailEN({ params }: Props) {
                 <div className="text-sm"><span className="text-[#a09383] block text-xs uppercase tracking-wider font-semibold mb-0.5">Address</span><p className="text-foreground">{C.address}</p></div>
               )}
               {C.phone && (
-                <div className="text-sm"><span className="text-[#a09383] block text-xs uppercase tracking-wider font-semibold mb-0.5">Phone</span><a href={`tel:${C.phone}`} className="text-terracotta-600 hover:underline">{C.phone}</a></div>
+                <div className="text-sm"><span className="text-[#a09383] block text-xs uppercase tracking-wider font-semibold mb-0.5">Phone</span><a href={`tel:${C.phone}`} className="text-foreground hover:text-terracotta-600 transition-colors">{C.phone}</a></div>
               )}
               {C.email && (
-                <div className="text-sm"><span className="text-[#a09383] block text-xs uppercase tracking-wider font-semibold mb-0.5">Email</span><a href={`mailto:${C.email}`} className="text-terracotta-600 hover:underline">{C.email}</a></div>
-              )}
-              {C.website && (
-                <div className="text-sm"><span className="text-[#a09383] block text-xs uppercase tracking-wider font-semibold mb-0.5">Web</span><a href={C.website} target="_blank" rel="noopener" className="text-terracotta-600 hover:underline">{C.website.replace('https://', '').replace('http://', '')}</a></div>
+                <div className="text-sm"><span className="text-[#a09383] block text-xs uppercase tracking-wider font-semibold mb-0.5">Email</span><a href={`mailto:${C.email}`} className="text-foreground hover:text-terracotta-600 transition-colors break-all">{C.email}</a></div>
               )}
               {C.instagram && (
-                <div className="text-sm"><span className="text-[#a09383] block text-xs uppercase tracking-wider font-semibold mb-0.5">Instagram</span><a href={`https://instagram.com/${C.instagram.replace('@', '')}`} target="_blank" rel="noopener" className="text-terracotta-600 hover:underline">{C.instagram}</a></div>
+                <div className="text-sm"><span className="text-[#a09383] block text-xs uppercase tracking-wider font-semibold mb-0.5">Instagram</span><a href={`https://instagram.com/${C.instagram.replace('@', '')}`} target="_blank" rel="noopener" className="text-foreground hover:text-terracotta-600 transition-colors">{C.instagram}</a></div>
               )}
             </div>
-            {C.website && (
-              <a href={C.website} target="_blank" rel="noopener" className="mt-5 w-full inline-flex justify-center bg-terracotta-600 text-white font-semibold py-3 rounded-xl hover:bg-terracotta-700 transition-colors text-sm">
-                Visit center website
-              </a>
-            )}
+
+            {/* Action buttons */}
+            <div className="flex flex-col gap-2.5 mt-5">
+              {(C.google_maps_url || C.google_place_id) && (
+                <a
+                  href={C.google_maps_url || `https://www.google.com/maps/place/?q=place_id:${C.google_place_id}`}
+                  target="_blank"
+                  rel="noopener"
+                  className="w-full inline-flex items-center justify-center gap-2 bg-white border border-sand-300 text-foreground font-semibold py-3 rounded-xl hover:bg-sand-50 transition-colors text-sm"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  View on Google Maps
+                </a>
+              )}
+              {(C.latitude && C.longitude) && (
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${C.latitude},${C.longitude}`}
+                  target="_blank"
+                  rel="noopener"
+                  className="w-full inline-flex items-center justify-center gap-2 bg-white border border-sand-300 text-foreground font-semibold py-3 rounded-xl hover:bg-sand-50 transition-colors text-sm"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                  Get directions
+                </a>
+              )}
+              {C.website && (
+                <a href={C.website} target="_blank" rel="noopener" className="w-full inline-flex items-center justify-center gap-2 bg-terracotta-600 text-white font-semibold py-3 rounded-xl hover:bg-terracotta-700 transition-colors text-sm">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                  Visit website
+                </a>
+              )}
+              {C.phone && (
+                <a href={`tel:${C.phone}`} className="w-full inline-flex items-center justify-center gap-2 bg-sage-600 text-white font-semibold py-3 rounded-xl hover:bg-sage-700 transition-colors text-sm">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                  Call
+                </a>
+              )}
+            </div>
           </div>
 
-          {/* OpenStreetMap map (free, no API key) */}
           <CenterMap
             latitude={C.latitude}
             longitude={C.longitude}

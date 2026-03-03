@@ -198,7 +198,8 @@ const CENTER_SELECT = `
   logo_url, cover_url, images, website, email, phone, instagram,
   address, city, province, postal_code, latitude, longitude,
   services_es, services_en, schedule_summary_es, schedule_summary_en,
-  price_range_es, price_range_en, avg_rating, review_count, status, claimed_by
+  price_range_es, price_range_en, avg_rating, review_count, status, claimed_by,
+  google_place_id, google_maps_url
 `;
 
 export async function getActiveCenters(filters?: {
