@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { MarkdownContent } from '@/components/ui/markdown-content';
+import { CenterMap } from '@/components/ui/center-map';
 import { generatePageMetadata } from '@/lib/seo';
 import { getCenterBySlug, getCenterSlugs } from '@/lib/data';
 
@@ -152,10 +153,14 @@ export default async function CenterDetailEN({ params }: Props) {
             )}
           </div>
 
-          {/* Map placeholder */}
-          <div className="bg-sand-100 border border-sand-200 rounded-2xl h-48 flex items-center justify-center text-sm text-[#a09383]">
-            📍 Map (Google Maps)
-          </div>
+          {/* OpenStreetMap map (free, no API key) */}
+          <CenterMap
+            latitude={C.latitude}
+            longitude={C.longitude}
+            name={C.name}
+            address={C.address}
+            className="h-48"
+          />
         </div>
       </div>
     </div>

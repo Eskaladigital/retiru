@@ -3,6 +3,10 @@ import { Clock, Calendar, ArrowLeft, Share2, ChevronRight } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getBlogPostSlugs } from '@/lib/data';
 import { createServerSupabase } from '@/lib/supabase/server';
+import { MarkdownContent } from '@/components/ui/markdown-content';
+
+export const revalidate = 60;
+export const dynamicParams = true;
 
 export async function generateStaticParams() {
   const slugs = await getBlogPostSlugs();
@@ -96,8 +100,8 @@ export default async function BlogPostEN({ params }: { params: Promise<{ slug: s
 
           {/* Article content */}
           <div className="px-2 md:px-4 mb-16">
-            <div className="text-[15px] text-[#7a6b5d] leading-[1.85] whitespace-pre-line">
-              {articleContent}
+            <div className="text-[15px] text-[#7a6b5d] leading-[1.85]">
+              <MarkdownContent content={articleContent} />
             </div>
 
             {/* CTA */}

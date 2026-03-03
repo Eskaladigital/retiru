@@ -4,6 +4,7 @@ import { Clock, ArrowRight } from 'lucide-react';
 import { blogES } from '@/lib/seo/page-metadata';
 import { createServerSupabase } from '@/lib/supabase/server';
 
+export const revalidate = 60;
 export const metadata: Metadata = blogES;
 
 export default async function BlogPage() {

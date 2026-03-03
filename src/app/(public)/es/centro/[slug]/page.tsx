@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { generatePageMetadata } from '@/lib/seo';
 import { getCenterBySlug, getCenterSlugs } from '@/lib/data';
 import { MarkdownContent } from '@/components/ui/markdown-content';
+import { CenterMap } from '@/components/ui/center-map';
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -152,10 +153,14 @@ export default async function CentroDetailPage({ params }: Props) {
             )}
           </div>
 
-          {/* Map placeholder */}
-          <div className="bg-sand-100 border border-sand-200 rounded-2xl h-48 flex items-center justify-center text-sm text-[#a09383]">
-            📍 Mapa (Google Maps)
-          </div>
+          {/* Mapa OpenStreetMap (gratis, sin API key) */}
+          <CenterMap
+            latitude={C.latitude}
+            longitude={C.longitude}
+            name={C.name}
+            address={C.address}
+            className="h-48"
+          />
         </div>
       </div>
     </div>
