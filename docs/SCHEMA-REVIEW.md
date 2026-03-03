@@ -403,20 +403,24 @@ created_at          timestamptz DEFAULT now()
 | `products` | Product | ✅ Definido (faltan campos) |
 | `product_categories` | ProductCategory | ✅ Definido |
 | `orders` | Order | ✅ Definido |
+| `center_claims` | CenterClaim | ✅ Definido (migración 006) |
+| `claim_tokens` | ClaimToken | ✅ Definido (migración 006) |
 
 ### Tablas NUEVAS necesarias
 
-| Tabla | Prioridad | Páginas |
-|-------|-----------|---------|
-| `invoices` | Crítica | facturas |
-| `blog_categories` | Crítica | blog |
-| `blog_articles` | Crítica | blog |
-| `product_reviews` | Crítica | tienda/[slug] |
-| `refunds` | Alta | administrator/reembolsos |
-| `notification_preferences` | Alta | configuracion |
-| `organizer_verification_steps` | Alta | verificacion |
-| `organizer_attendee_tags` | Alta | asistentes |
-| `page_views` | Media | analiticas |
+| Tabla | Prioridad | Páginas | Estado |
+|-------|-----------|---------|--------|
+| `center_claims` | Crítica | centro/[slug], administrator/claims, mis-centros | ✅ Implementado (migración 006) |
+| `claim_tokens` | Crítica | reclamar/[token], email bienvenida | ✅ Implementado (migración 006) |
+| `invoices` | Crítica | facturas | Pendiente |
+| `blog_categories` | Crítica | blog | ✅ Implementado |
+| `blog_articles` | Crítica | blog | ✅ Implementado |
+| `product_reviews` | Crítica | tienda/[slug] | Pendiente |
+| `refunds` | Alta | administrator/reembolsos | Pendiente |
+| `notification_preferences` | Alta | configuracion | Pendiente |
+| `organizer_verification_steps` | Alta | verificacion | Pendiente |
+| `organizer_attendee_tags` | Alta | asistentes | Pendiente |
+| `page_views` | Media | analiticas | Pendiente |
 
 ---
 

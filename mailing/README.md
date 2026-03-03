@@ -1,8 +1,63 @@
-# 📧 Mailing HTML - ESKALA Marketing Digital
+# Mailing HTML — Retiru + ESKALA
 
-## 📁 Catálogo de Emails
+## Emails Retiru (directorio de centros)
 
-### 🎨 Emails de Marca (Presentación General)
+Emails transaccionales y de captación para la estrategia de crecimiento del directorio de centros.
+
+### Secuencia de onboarding
+
+| # | Archivo | Asunto sugerido | Cuándo enviar |
+|---|---------|-----------------|---------------|
+| 1 | `retiru-bienvenida-centro.html` | Enhorabuena, tu centro ha sido incluido en Retiru | Día 0 — primera toma de contacto |
+| 2 | `retiru-crea-tu-evento.html` | Crea tu primer evento en Retiru | Día 7-14 — activación |
+
+### Personalización
+
+Ambos emails incluyen variables que deben sustituirse antes del envío:
+
+| Variable | Ejemplo | Dónde aparece |
+|----------|---------|---------------|
+| `{{NOMBRE_CENTRO}}` | Yoga Sala Madrid | Saludo y cuerpo |
+| `{{URL_PERFIL}}` | `retiru.com/es/centro/yoga-sala-madrid` | Link "ver tu ficha" |
+| `{{CENTER_SLUG}}` | `yoga-sala-madrid` | Link secundario al perfil |
+| `{{CLAIM_TOKEN}}` | `abc123...` (base64url) | Botón CTA "Reclamar mi centro" |
+| `{{CIUDAD}}` | Madrid | Cuerpo del texto |
+
+> **Flujo de reclamación:** El email de bienvenida incluye un link mágico `https://retiru.com/es/reclamar/{{CLAIM_TOKEN}}` que permite al dueño reclamar su centro con un clic. Los tokens se generan con `npm run centers:claim-tokens`.
+
+### Datos de contacto Retiru
+
+```
+Email remitente: contacto@retiru.com
+Web: https://www.retiru.com
+```
+
+### Compatibilidad
+
+Ambos emails siguen las mismas reglas de compatibilidad que los de ESKALA (ver abajo): tablas HTML, estilos inline, condicionales MSO, responsive 600px, sin gradientes ni animaciones.
+
+### Logo
+
+El header replica el logo del navbar de retiru.com: "retiru" en Georgia serif terracota + punto redondo terracota. Compatible con Outlook (MSO conditional comments).
+
+### Checklist pre-envío Retiru
+
+- [ ] Email remitente: `contacto@retiru.com`
+- [ ] Variables personalizadas sustituidas (`{{NOMBRE_CENTRO}}`, `{{URL_PERFIL}}`, `{{CENTER_SLUG}}`, `{{CLAIM_TOKEN}}`)
+- [ ] Tokens de claim generados (`npm run centers:claim-tokens`)
+- [ ] Todos los links apuntan a `retiru.com` (no localhost)
+- [ ] Link "Cancelar suscripción" con mailto a `contacto@retiru.com`
+- [ ] Probado en Outlook Desktop y Gmail
+- [ ] Responsive verificado (600px)
+- [ ] Cumple RGPD
+
+---
+
+## Emails ESKALA Marketing Digital (referencia)
+
+Emails de ejemplo de otro proyecto (Eskala Digital) usados como referencia de diseño y estructura.
+
+### Emails de Marca (Presentación General)
 
 | Archivo | Descripción | Estilo |
 |---------|-------------|--------|
@@ -184,43 +239,30 @@ Elige según el objetivo y audiencia.
 
 ---
 
-## 📊 Estructura de Archivos
+## Estructura de archivos
 
 ```
 mailing/
 ├── README.md                          # Este archivo
-├── CATALOGO-COMPLETO.md               # Comparativa detallada
-├── ALTERNATIVA-GIF.md                 # Solución GIF para animaciones
 │
-├── # Marca General
+├── # ═══ RETIRU (emails activos) ═══
+├── retiru-bienvenida-centro.html      # Email 1: bienvenida al directorio
+├── retiru-crea-tu-evento.html         # Email 2: crea tu primer evento
+│
+├── # ═══ ESKALA (referencia) ═══
+├── CATALOGO-COMPLETO.md
+├── ALTERNATIVA-GIF.md
 ├── email-franjas-murcia.html
 ├── eskala-franjas-vertical.html
 ├── eskala-dia-noche-animado.html
-│
-├── # Versiones Día/Noche
 ├── v1-horizonte-completo.html
 ├── v2-timeline-24h.html
 ├── v3-split-dia-noche.html
 ├── v4-viaje-amanecer.html
 ├── v5-cielo-completo.html
+├── kit-digital-*.html                 # 10 versiones Kit Digital
 │
-├── # Kit Digital - Estilo Visual
-├── kit-digital-timeline-24h.html
-├── kit-digital-split-dia-noche.html
-├── kit-digital-viaje-amanecer.html
-├── kit-digital-cielo-completo.html
-│
-└── # Kit Digital - Expresiones
-    ├── kit-digital-nurdo-murciano.html
-    ├── kit-digital-truno.html
-    ├── kit-digital-churro-murciano.html
-    ├── kit-digital-queso.html
-    ├── kit-digital-doblada.html
-    ├── kit-digital-moto.html
-    ├── kit-digital-pelo.html
-    ├── kit-digital-cara.html
-    ├── kit-digital-tangado.html
-    └── kit-digimal.html
+└── enviados/                          # Emails ya enviados (historial)
 ```
 
 ---

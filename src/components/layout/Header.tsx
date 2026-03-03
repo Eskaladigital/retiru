@@ -129,25 +129,27 @@ export default function Header({ locale, user }: HeaderProps) {
                 <ChevronDown size={14} className={`transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
               </button>
               {userMenuOpen && (
-                <div className="absolute right-0 top-full mt-1 w-48 rounded-xl border border-sand-200 bg-white py-1 shadow-lg">
+                <div className="absolute right-0 top-full mt-1 w-52 rounded-xl border border-sand-200 bg-white py-1 shadow-lg">
                   <Link href={`${prefix}/mis-reservas`} className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-sand-50" onClick={() => setUserMenuOpen(false)}>
-                    {t.nav.myBookings}
+                    <span className="text-base w-5">📋</span> {locale === 'es' ? 'Mis reservas' : 'My bookings'}
                   </Link>
                   <Link href={`${prefix}/perfil`} className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-sand-50" onClick={() => setUserMenuOpen(false)}>
-                    {t.nav.profile}
+                    <span className="text-base w-5">👤</span> {locale === 'es' ? 'Mi perfil' : 'My profile'}
                   </Link>
+                  <Link href={`${prefix}/mis-centros`} className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-sand-50" onClick={() => setUserMenuOpen(false)}>
+                    <span className="text-base w-5">🏢</span> {locale === 'es' ? 'Mis centros' : 'My centers'}
+                  </Link>
+                  <Link href={`${prefix}/mis-eventos`} className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-sand-50" onClick={() => setUserMenuOpen(false)}>
+                    <span className="text-base w-5">📅</span> {locale === 'es' ? 'Mis eventos' : 'My events'}
+                  </Link>
+                  <hr className="my-1 border-sand-100" />
                   {user.role === 'admin' && (
                     <Link href="/administrator" className="flex items-center gap-2 px-4 py-2.5 text-sm text-terracotta-600 hover:bg-terracotta-50" onClick={() => setUserMenuOpen(false)}>
                       <Shield size={14} /> Admin
                     </Link>
                   )}
-                  {user.role === 'organizer' && (
-                    <Link href="/es/panel" className="flex items-center gap-2 px-4 py-2.5 text-sm text-sage-600 hover:bg-sage-50" onClick={() => setUserMenuOpen(false)}>
-                      Panel
-                    </Link>
-                  )}
                   <button onClick={handleLogout} className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">
-                    <LogOut size={14} /> {t.nav.logout}
+                    <LogOut size={14} /> {locale === 'es' ? 'Cerrar sesión' : 'Log out'}
                   </button>
                 </div>
               )}
@@ -248,23 +250,25 @@ export default function Header({ locale, user }: HeaderProps) {
               {user ? (
                 <>
                   <Link href={`${prefix}/mis-reservas`} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]" onClick={closeMenu}>
-                    {t.nav.myBookings}
+                    <span className="text-base">📋</span> {locale === 'es' ? 'Mis reservas' : 'My bookings'}
                   </Link>
                   <Link href={`${prefix}/perfil`} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]" onClick={closeMenu}>
-                    {t.nav.profile}
+                    <span className="text-base">👤</span> {locale === 'es' ? 'Mi perfil' : 'My profile'}
                   </Link>
+                  <Link href={`${prefix}/mis-centros`} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]" onClick={closeMenu}>
+                    <span className="text-base">🏢</span> {locale === 'es' ? 'Mis centros' : 'My centers'}
+                  </Link>
+                  <Link href={`${prefix}/mis-eventos`} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]" onClick={closeMenu}>
+                    <span className="text-base">📅</span> {locale === 'es' ? 'Mis eventos' : 'My events'}
+                  </Link>
+                  <hr className="my-1 border-sand-100" />
                   {user.role === 'admin' && (
                     <Link href="/administrator" className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-terracotta-50 text-terracotta-600 transition-colors text-[15px]" onClick={closeMenu}>
                       <Shield size={17} /> Admin
                     </Link>
                   )}
-                  {user.role === 'organizer' && (
-                    <Link href="/es/panel" className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sage-50 text-sage-600 transition-colors text-[15px]" onClick={closeMenu}>
-                      Panel
-                    </Link>
-                  )}
                   <button onClick={handleLogout} className="flex w-full items-center gap-3 px-3 py-3 rounded-xl hover:bg-red-50 text-red-600 text-[15px] text-left">
-                    <LogOut size={17} /> {t.nav.logout}
+                    <LogOut size={17} /> {locale === 'es' ? 'Cerrar sesión' : 'Log out'}
                   </button>
                 </>
               ) : (

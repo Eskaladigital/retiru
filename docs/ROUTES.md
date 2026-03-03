@@ -50,6 +50,30 @@ Documentación de la arquitectura de rutas y landings.
 
 ---
 
+## Dashboard de usuario (requiere login)
+
+| Ruta | Archivo | Descripción |
+|------|---------|-------------|
+| `/es/mis-reservas` | `app/es/(dashboard)/mis-reservas/page.tsx` | Reservas como asistente |
+| `/es/perfil` | `app/es/(dashboard)/perfil/page.tsx` | Datos personales, avatar |
+| `/es/mis-centros` | `app/es/(dashboard)/mis-centros/page.tsx` | Centros reclamados |
+| `/es/mis-eventos` | `app/es/(dashboard)/mis-eventos/page.tsx` | Eventos/retiros creados |
+| `/es/mis-eventos/nuevo` | `app/es/(dashboard)/mis-eventos/nuevo/page.tsx` | Wizard para crear evento |
+| `/es/mis-eventos/[id]` | `app/es/(dashboard)/mis-eventos/[id]/page.tsx` | Editar evento existente |
+
+Cualquier usuario logueado (incluido admin) accede a estas secciones desde el menú de usuario.
+
+---
+
+## Rutas de claim (reclamar centro)
+
+| Ruta | Archivo | Descripción |
+|------|---------|-------------|
+| `/es/reclamar/[token]` | `app/es/(public)/reclamar/[token]/page.tsx` | Link mágico de email |
+| `/en/claim/[token]` | `app/en/(public)/claim/[token]/page.tsx` | Magic link (EN) |
+
+---
+
 ## Slug = ciudad o identificador
 
 - **retiros-retiru/[slug]** / **retreats-retiru/[slug]**: slug = ciudad/destino (murcia, barcelona, ibiza, etc.)
@@ -115,7 +139,7 @@ Localidades y categorías vienen de la base de datos.
 
 ---
 
-## Panel de administrador (protegido)
+## Panel de administrador (protegido, solo role=admin)
 
 | Ruta | Archivo | Descripción |
 |------|---------|-------------|
@@ -123,8 +147,21 @@ Localidades y categorías vienen de la base de datos.
 | `/administrator/organizadores` | `app/administrator/organizadores/page.tsx` | Gestión organizadores |
 | `/administrator/eventos` | `app/administrator/eventos/page.tsx` | Gestión retiros |
 | `/administrator/centros` | `app/administrator/centros/page.tsx` | Gestión centros |
+| `/administrator/claims` | `app/administrator/claims/page.tsx` | Gestión claims de centros |
 | `/administrator/tienda` | `app/administrator/tienda/page.tsx` | Gestión tienda |
 | `/administrator/reembolsos` | `app/administrator/reembolsos/page.tsx` | Reembolsos |
 | `/administrator/reporting` | `app/administrator/reporting/page.tsx` | Reporting y métricas |
 
-Protegido por middleware. No indexado en buscadores.
+Protegido por middleware (role=admin). No indexado en buscadores.
+
+---
+
+## API endpoints
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/api/centers/claim` | Reclamar un centro (auto-aprueba si email coincide) |
+| GET | `/api/admin/center-claims` | Listar claims (admin) |
+| POST | `/api/admin/center-claims` | Aprobar/rechazar claim (admin) |
+| POST | `/api/retreats/create` | Crear retiro (auto-crea organizer_profile) |
+| PATCH | `/api/retreats/[id]` | Actualizar retiro (solo propietario) |

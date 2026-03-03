@@ -483,6 +483,34 @@ export interface Center {
   updated_at: string;
 }
 
+export type ClaimStatus = 'pending' | 'approved' | 'rejected';
+export type ClaimMethod = 'email_match' | 'magic_link' | 'manual_request';
+
+export interface CenterClaim {
+  id: string;
+  center_id: string;
+  user_id: string;
+  status: ClaimStatus;
+  method: ClaimMethod;
+  notes: string | null;
+  admin_notes: string | null;
+  reviewed_by: string | null;
+  created_at: string;
+  reviewed_at: string | null;
+  center?: Center;
+  user?: Profile;
+}
+
+export interface ClaimToken {
+  id: string;
+  center_id: string;
+  token: string;
+  used_by: string | null;
+  used_at: string | null;
+  expires_at: string;
+  created_at: string;
+}
+
 export interface CenterReview {
   id: string;
   center_id: string;

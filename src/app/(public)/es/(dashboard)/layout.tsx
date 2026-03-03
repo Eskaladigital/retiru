@@ -3,9 +3,9 @@ import Link from 'next/link';
 
 const NAV = [
   { href: '/es/mis-reservas', label: 'Mis reservas', icon: '📋' },
-  { href: '/es/mensajes', label: 'Mensajes', icon: '💬' },
-  { href: '/es/perfil', label: 'Perfil', icon: '👤' },
-  { href: '/es/facturas', label: 'Facturas', icon: '🧾' },
+  { href: '/es/perfil', label: 'Mi perfil', icon: '👤' },
+  { href: '/es/mis-centros', label: 'Mis centros', icon: '🏢' },
+  { href: '/es/mis-eventos', label: 'Mis eventos', icon: '📅' },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

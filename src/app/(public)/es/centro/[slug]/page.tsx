@@ -6,6 +6,7 @@ import { generatePageMetadata } from '@/lib/seo';
 import { getCenterBySlug, getCenterSlugs } from '@/lib/data';
 import { MarkdownContent } from '@/components/ui/markdown-content';
 import { CenterMap } from '@/components/ui/center-map';
+import { ClaimCenterButton } from '@/components/ui/claim-center-button';
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -163,6 +164,13 @@ export default async function CentroDetailPage({ params }: Props) {
           />
         </div>
       </div>
+
+      <ClaimCenterButton
+        centerId={C.id}
+        centerSlug={slug}
+        claimedBy={C.claimed_by}
+        locale="es"
+      />
     </div>
   );
 }

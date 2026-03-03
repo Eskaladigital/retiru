@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { MarkdownContent } from '@/components/ui/markdown-content';
 import { CenterMap } from '@/components/ui/center-map';
+import { ClaimCenterButton } from '@/components/ui/claim-center-button';
 import { generatePageMetadata } from '@/lib/seo';
 import { getCenterBySlug, getCenterSlugs } from '@/lib/data';
 
@@ -163,6 +164,13 @@ export default async function CenterDetailEN({ params }: Props) {
           />
         </div>
       </div>
+
+      <ClaimCenterButton
+        centerId={C.id}
+        centerSlug={slug}
+        claimedBy={C.claimed_by}
+        locale="en"
+      />
     </div>
   );
 }

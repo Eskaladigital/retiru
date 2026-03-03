@@ -16,7 +16,8 @@
     "centers:vaciar-genericas": "node scripts/count-generic-descriptions.mjs --vaciar",
     "centers:emails": "node scripts/sync-and-fetch-emails.mjs",
     "centers:emails-csv": "node scripts/sync-and-fetch-emails.mjs --solo-csv",
-    "centers:emails-serp": "node scripts/sync-and-fetch-emails.mjs --solo-serp"
+    "centers:emails-serp": "node scripts/sync-and-fetch-emails.mjs --solo-serp",
+    "centers:claim-tokens": "node scripts/generate-claim-tokens.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
