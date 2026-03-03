@@ -61,7 +61,7 @@ const RETREAT_SELECT = `
   max_attendees, min_attendees, total_price, platform_fee, organizer_amount, currency,
   confirmation_type, sla_hours, languages, cancellation_policy, post_booking_form, schedule,
   status, confirmed_bookings, available_spots, view_count, avg_rating, review_count,
-  organizer_profiles!organizer_id(id, slug, business_name, logo_url, avg_rating, review_count),
+  organizer_profiles!organizer_id(id, slug, business_name, logo_url, avg_rating, review_count, total_retreats, status),
   destinations!destination_id(id, name_es, name_en, slug, region, country),
   retreat_images(id, url, alt_text, sort_order, is_cover)
 `;
