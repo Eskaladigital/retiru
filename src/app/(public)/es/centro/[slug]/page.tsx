@@ -54,16 +54,17 @@ export default async function CentroDetailPage({ params }: Props) {
         Directorio de centros
       </Link>
 
-      {/* Image gallery */}
       {mainImage && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8 rounded-2xl overflow-hidden">
-          <div className="md:col-span-2 aspect-[16/10]">
+        <div className="mb-8 space-y-3">
+          <div className="w-full aspect-[21/9] rounded-2xl overflow-hidden">
             <img src={mainImage} alt={C.name} className="w-full h-full object-cover" />
           </div>
           {galleryImages.length > 0 && (
-            <div className="hidden md:flex flex-col gap-3">
-              {galleryImages.slice(0, 2).map((img: string, i: number) => (
-                <div key={i} className="flex-1"><img src={img} alt="" className="w-full h-full object-cover" /></div>
+            <div className="flex gap-3 overflow-x-auto pb-1">
+              {galleryImages.slice(0, 4).map((img: string, i: number) => (
+                <div key={i} className="w-32 h-24 rounded-xl overflow-hidden shrink-0">
+                  <img src={img} alt="" className="w-full h-full object-cover" />
+                </div>
               ))}
             </div>
           )}
