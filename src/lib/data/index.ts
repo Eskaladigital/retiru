@@ -308,6 +308,61 @@ export async function getDestinationSlugs(): Promise<string[]> {
   return (data || []).map((r) => r.slug).filter(Boolean);
 }
 
+/** Destinos que tienen al menos 1 retiro publicado (para sitemap y generateStaticParams) */
+export async function getDestinationsWithRetreats(): Promise<{ slug: string; name_es: string; name_en: string }[]> {
+  const supabase = createStaticSupabase();
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: retreats, error: rErr } = await supabase
+    .from('retreats')
+    .select('destination_id')
+    .eq('status', 'published')
+    .gte('end_date', today);
+  if (rErr) throw rErr;
+  const destIds = [...new Set((retreats || []).map(r => r.destination_id).filter(Boolean))];
+  if (!destIds.length) return [];
+  const { data: dests, error: dErr } = await supabase
+    .from('destinations')
+    .select('slug, name_es, name_en')
+    .eq('is_active', true)
+    .in('id', destIds)
+    .order('slug');
+  if (dErr) throw dErr;
+  return (dests || []).map(d => ({ slug: d.slug, name_es: d.name_es, name_en: d.name_en }));
+}
+
+/** Ciudades/provincias distintas con centros activos (para generateStaticParams) */
+export async function getCenterProvinces(): Promise<{ slug: string; name: string }[]> {
+  const supabase = createStaticSupabase();
+  const { data, error } = await supabase
+    .from('centers')
+    .select('province')
+    .eq('status', 'active');
+  if (error) throw error;
+  const unique = new Map<string, string>();
+  for (const row of data || []) {
+    if (!row.province) continue;
+    const slug = row.province.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
+    if (!unique.has(slug)) unique.set(slug, row.province);
+  }
+  return Array.from(unique.entries()).map(([slug, name]) => ({ slug, name })).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** Centros activos filtrados por provincia (slug normalizado) */
+export async function getCentersByProvince(provinceSlug: string): Promise<{ centers: Center[]; provinceName: string | null }> {
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from('centers')
+    .select(CENTER_SELECT)
+    .eq('status', 'active')
+    .order('name');
+  if (error) throw error;
+  const all = (data || []) as Center[];
+  const normalize = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
+  const filtered = all.filter(c => c.province && normalize(c.province) === provinceSlug);
+  const provinceName = filtered.length ? filtered[0].province : null;
+  return { centers: filtered, provinceName };
+}
+
 export async function getCenterBySlug(slug: string): Promise<Center | null> {
   const supabase = await createServerSupabase();
   const { data, error } = await supabase
