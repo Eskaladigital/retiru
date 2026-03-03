@@ -74,6 +74,15 @@ export async function POST(request: NextRequest) {
 
     const retreatSlug = slugify(title_es) + '-' + Date.now().toString(36);
 
+    // Confianza progresiva: si el usuario ya tiene al menos 1 retiro publicado, el nuevo se publica directamente
+    const { count: publishedCount } = await admin
+      .from('retreats')
+      .select('id', { count: 'exact', head: true })
+      .eq('organizer_id', orgProfile!.id)
+      .eq('status', 'published');
+
+    const isVerifiedOrganizer = (publishedCount ?? 0) > 0;
+
     const { data: retreat, error: retErr } = await admin
       .from('retreats')
       .insert({
@@ -115,6 +124,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       retreat,
+      isVerifiedOrganizer,
       message: 'Retiro creado como borrador.',
     });
   } catch (err) {

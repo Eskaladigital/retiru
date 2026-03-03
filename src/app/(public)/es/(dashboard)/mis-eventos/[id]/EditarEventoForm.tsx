@@ -93,7 +93,13 @@ export function EditarEventoForm({ retreat, categories, destinations }: Props) {
         return;
       }
 
-      setSuccess(publish ? 'Evento publicado.' : 'Cambios guardados.');
+      if (publish) {
+        setSuccess(data.status === 'published'
+          ? 'Evento publicado directamente.'
+          : 'Evento enviado a revisión. El equipo de Retiru lo revisará pronto.');
+      } else {
+        setSuccess('Cambios guardados.');
+      }
       router.refresh();
     } catch {
       setError('Error de conexión');
@@ -193,6 +199,20 @@ export function EditarEventoForm({ retreat, categories, destinations }: Props) {
         <button type="button" onClick={addInclude} className="mt-2 text-sm font-medium text-terracotta-600 hover:underline">+ Añadir otro</button>
       </div>
 
+      {/* Status banner */}
+      {retreat.status === 'pending_review' && (
+        <div className="px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-sm text-amber-700">
+          Este evento está <strong>pendiente de revisión</strong> por el equipo de Retiru. Te notificaremos cuando sea aprobado.
+        </div>
+      )}
+      {retreat.status === 'rejected' && (
+        <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
+          Este evento fue <strong>rechazado</strong>.
+          {retreat.rejection_reason && <> Motivo: <em>{retreat.rejection_reason}</em></>}
+          {' '}Puedes corregirlo y volver a enviarlo a revisión.
+        </div>
+      )}
+
       <div className="flex gap-3 pt-4 border-t border-sand-200">
         <button
           type="button"
@@ -202,14 +222,14 @@ export function EditarEventoForm({ retreat, categories, destinations }: Props) {
         >
           Guardar cambios
         </button>
-        {retreat.status === 'draft' && (
+        {(retreat.status === 'draft' || retreat.status === 'rejected') && (
           <button
             type="button"
             onClick={() => handleSave(true)}
             disabled={saving}
             className="bg-terracotta-600 text-white font-semibold px-6 py-3 rounded-xl text-sm hover:bg-terracotta-700 transition-colors disabled:opacity-50"
           >
-            Publicar evento
+            Enviar a revisión
           </button>
         )}
       </div>

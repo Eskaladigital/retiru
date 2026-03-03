@@ -64,9 +64,22 @@ export async function PATCH(
     if (address !== undefined) updateData.address = address || null;
     if (confirmation_type !== undefined) updateData.confirmation_type = confirmation_type;
     if (languages !== undefined) updateData.languages = languages;
-    if (status === 'published') {
-      updateData.status = 'published';
-      updateData.published_at = new Date().toISOString();
+    if (status === 'published' || status === 'pending_review') {
+      // Confianza progresiva: si ya tiene al menos 1 retiro publicado, puede publicar directamente
+      const { count: publishedCount } = await admin
+        .from('retreats')
+        .select('id', { count: 'exact', head: true })
+        .eq('organizer_id', orgProfile.id)
+        .eq('status', 'published');
+
+      const isVerifiedOrganizer = (publishedCount ?? 0) > 0;
+
+      if (isVerifiedOrganizer) {
+        updateData.status = 'published';
+        updateData.published_at = new Date().toISOString();
+      } else {
+        updateData.status = 'pending_review';
+      }
     }
 
     const { error: updErr } = await admin

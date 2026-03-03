@@ -29,6 +29,7 @@ export default async function EditarEventoPage({ params }: Props) {
       description_es, description_en, includes_es, includes_en,
       start_date, end_date, total_price, max_attendees,
       destination_id, address, confirmation_type, languages, status,
+      rejection_reason, reviewed_at,
       retreat_categories(category_id)
     `)
     .eq('id', id)
@@ -57,7 +58,10 @@ export default async function EditarEventoPage({ params }: Props) {
       </a>
       <h1 className="font-serif text-3xl text-foreground mb-2">Editar evento</h1>
       <p className="text-sm text-[#7a6b5d] mb-8">
-        {retreat.status === 'published' ? 'Los cambios se aplicarán inmediatamente.' : 'Evento en borrador. Publica cuando esté listo.'}
+        {retreat.status === 'published' && 'Los cambios se aplicarán inmediatamente.'}
+        {retreat.status === 'draft' && 'Evento en borrador. Envíalo a revisión cuando esté listo.'}
+        {retreat.status === 'pending_review' && 'Evento pendiente de revisión por el equipo de Retiru.'}
+        {retreat.status === 'rejected' && 'Evento rechazado. Corrige los problemas y vuelve a enviarlo.'}
       </p>
 
       <EditarEventoForm

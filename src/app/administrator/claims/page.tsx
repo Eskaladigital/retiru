@@ -10,8 +10,8 @@ export default async function AdminClaimsPage() {
     .select(`
       id, center_id, user_id, status, method, notes, admin_notes,
       reviewed_by, created_at, reviewed_at,
-      centers!center_id(id, name, slug, email),
-      profiles!user_id(id, full_name)
+      centers!center_id(id, name, slug, email, website, phone, address, city),
+      profiles!user_id(id, full_name, email)
     `)
     .order('created_at', { ascending: false });
 

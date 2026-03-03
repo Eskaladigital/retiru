@@ -7,7 +7,9 @@ const STATUS_MAP: Record<string, { label: string; color: string }> = {
   published: { label: 'Publicado', color: 'bg-sage-100 text-sage-700' },
   draft: { label: 'Borrador', color: 'bg-sand-200 text-[#7a6b5d]' },
   pending_review: { label: 'En revisión', color: 'bg-amber-100 text-amber-700' },
-  cancelled: { label: 'Cancelado', color: 'bg-red-100 text-red-700' },
+  rejected: { label: 'Rechazado', color: 'bg-red-100 text-red-700' },
+  cancelled: { label: 'Cancelado', color: 'bg-gray-100 text-gray-500' },
+  archived: { label: 'Archivado', color: 'bg-blue-50 text-blue-600' },
 };
 
 export default async function MisEventosPage() {
