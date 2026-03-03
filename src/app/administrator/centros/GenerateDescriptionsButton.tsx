@@ -12,6 +12,7 @@ interface LogEntry {
 export function GenerateDescriptionsButton() {
   const [open, setOpen] = useState(false);
   const [running, setRunning] = useState(false);
+  const [limit, setLimit] = useState(30); // Por defecto 30 por lote (~5-7 min) para evitar timeout
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [summary, setSummary] = useState<{ processed: number; ok: number; errors: number } | null>(null);
   const logsEndRef = useRef<HTMLDivElement>(null);
@@ -38,6 +39,8 @@ export function GenerateDescriptionsButton() {
     try {
       const res = await fetch('/api/admin/generate-center-descriptions', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ limit: limit > 0 ? limit : 0 }),
         signal: controller.signal,
       });
 
@@ -148,7 +151,8 @@ export function GenerateDescriptionsButton() {
               {logs.length === 0 && !running && (
                 <div className="flex flex-col items-center justify-center h-full text-gray-500 gap-4">
                   <p className="text-sm">Pulsa "Iniciar" para generar descripciones enriquecidas</p>
-                  <p className="text-xs text-gray-600">Se procesarán todos los centros sin descripción (&lt; 400 caracteres)</p>
+                  <p className="text-xs text-gray-600">Se procesarán centros sin descripción (&lt; 400 caracteres)</p>
+                  <p className="text-xs text-amber-500/80">Por lote para evitar timeout. Ejecuta varias veces hasta completar todos.</p>
                 </div>
               )}
               {logs.map((log, i) => (
@@ -184,12 +188,29 @@ export function GenerateDescriptionsButton() {
             {/* Footer */}
             <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-white/10">
               {!running && !summary && (
-                <button
-                  onClick={handleGenerate}
-                  className="bg-sage-600 text-white font-semibold px-6 py-2.5 rounded-xl text-sm hover:bg-sage-700 transition-colors"
-                >
-                  Iniciar generación
-                </button>
+                <>
+                  <div className="flex items-center gap-2 mr-auto">
+                    <label className="text-gray-400 text-sm">Límite por lote:</label>
+                    <select
+                      value={limit}
+                      onChange={(e) => setLimit(Number(e.target.value))}
+                      className="bg-white/10 text-white rounded-lg px-3 py-1.5 text-sm border border-white/20"
+                    >
+                      <option value={10}>10 centros</option>
+                      <option value={20}>20 centros</option>
+                      <option value={30}>30 centros</option>
+                      <option value={50}>50 centros</option>
+                      <option value={100}>100 centros</option>
+                      <option value={0}>Todos (puede dar timeout)</option>
+                    </select>
+                  </div>
+                  <button
+                    onClick={handleGenerate}
+                    className="bg-sage-600 text-white font-semibold px-6 py-2.5 rounded-xl text-sm hover:bg-sage-700 transition-colors"
+                  >
+                    Iniciar generación
+                  </button>
+                </>
               )}
               {running && (
                 <div className="flex items-center gap-3">

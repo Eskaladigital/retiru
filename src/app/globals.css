@@ -134,6 +134,17 @@
   .text-gradient {
     @apply bg-gradient-to-r from-terracotta-600 to-terracotta-500 bg-clip-text text-transparent;
   }
+
+  /* Markdown content (centros, descripciones IA) */
+  .markdown-content strong {
+    @apply font-semibold text-foreground;
+  }
+  .markdown-content h3 {
+    @apply font-serif text-lg font-semibold mt-6 mb-2 text-foreground;
+  }
+  .markdown-content p {
+    @apply mb-4 last:mb-0;
+  }
 }
 
 @layer utilities {

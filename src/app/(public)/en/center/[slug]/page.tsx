@@ -2,6 +2,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { MarkdownContent } from '@/components/ui/markdown-content';
 import { generatePageMetadata } from '@/lib/seo';
 import { getCenterBySlug, getCenterSlugs } from '@/lib/data';
 
@@ -88,7 +89,7 @@ export default async function CenterDetailEN({ params }: Props) {
           {(C.description_en || C.description_es) && (
             <div className="mb-8">
               <h2 className="font-serif text-xl mb-3">About</h2>
-              <div className="text-[15px] text-[#7a6b5d] leading-[1.8] whitespace-pre-line">{C.description_en || C.description_es}</div>
+              <MarkdownContent content={C.description_en || C.description_es} />
             </div>
           )}
 

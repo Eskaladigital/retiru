@@ -7,6 +7,9 @@
 
 import { createAdminSupabase } from '@/lib/supabase/server';
 
+// Vercel: 300s máx (Pro plan). Sin esto, timeout a 60s y solo se procesan ~8 centros.
+export const maxDuration = 300;
+
 const MIN_DESC_LENGTH = 400;
 
 type CenterRow = {
@@ -122,7 +125,7 @@ export async function POST(request: Request) {
     if (text) {
       const body = JSON.parse(text);
       force = !!body.force;
-      limit = Math.min(Math.max(0, Number(body.limit) || 0), 50);
+      limit = Math.min(Math.max(0, Number(body.limit) || 0), 100);
     }
   } catch {
     // ignorar body vacío o inválido
@@ -226,9 +229,14 @@ Reglas:
           const wordCount = description.split(/\s+/).length;
           send('log', { type: 'detail', message: `  📝 Descripción generada: ${wordCount} palabras` });
 
+          const now = new Date().toISOString();
           const { error: updateError } = await supabase
             .from('centers')
-            .update({ description_es: description, updated_at: new Date().toISOString() })
+            .update({
+              description_es: description,
+              description_ai_generated_at: now,
+              updated_at: now,
+            })
             .eq('id', center.id);
 
           if (updateError) throw updateError;

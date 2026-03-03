@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { generatePageMetadata } from '@/lib/seo';
 import { getCenterBySlug, getCenterSlugs } from '@/lib/data';
+import { MarkdownContent } from '@/components/ui/markdown-content';
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -88,7 +89,7 @@ export default async function CentroDetailPage({ params }: Props) {
           {C.description_es && (
             <div className="mb-8">
               <h2 className="font-serif text-xl mb-3">Sobre el centro</h2>
-              <div className="text-[15px] text-[#7a6b5d] leading-[1.8] whitespace-pre-line">{C.description_es}</div>
+              <MarkdownContent content={C.description_es} />
             </div>
           )}
 
