@@ -24,6 +24,10 @@ Documentación de la arquitectura de rutas y landings.
 | `/es/tienda/[slug]` | `app/es/(public)/tienda/[slug]/page.tsx` | Ficha de producto |
 | `/es/blog` | `app/es/(public)/blog/page.tsx` | Blog |
 | `/es/blog/[slug]` | `app/es/(public)/blog/[slug]/page.tsx` | Artículo de blog |
+| `/es/sobre-nosotros` | `app/es/(public)/sobre-nosotros/page.tsx` | Sobre nosotros |
+| `/es/ayuda` | `app/es/(public)/ayuda/page.tsx` | Centro de ayuda (FAQs) |
+| `/es/contacto` | `app/es/(public)/contacto/page.tsx` | Contacto |
+| `/es/condiciones` | `app/es/(public)/condiciones/page.tsx` | Condiciones de uso y precios |
 
 ---
 
@@ -47,6 +51,23 @@ Documentación de la arquitectura de rutas y landings.
 | `/en/shop/[slug]` | `app/en/(public)/shop/[slug]/page.tsx` |
 | `/en/blog` | `app/en/(public)/blog/page.tsx` |
 | `/en/blog/[slug]` | `app/en/(public)/blog/[slug]/page.tsx` |
+| `/en/about` | `app/en/(public)/about/page.tsx` |
+| `/en/help` | `app/en/(public)/help/page.tsx` |
+| `/en/contact` | `app/en/(public)/contact/page.tsx` |
+| `/en/condiciones` | `app/en/(public)/condiciones/page.tsx` |
+
+---
+
+## Autenticación
+
+| Ruta | Archivo | Descripción |
+|------|---------|-------------|
+| `/es/login` | `app/es/(public)/(auth)/login/page.tsx` | Inicio de sesión (solo email/contraseña) |
+| `/es/registro` | `app/es/(public)/(auth)/registro/page.tsx` | Registro (solo email, sin Google OAuth) |
+| `/en/login` | `app/en/(public)/(auth)/login/page.tsx` | Login (EN) |
+| `/en/register` | `app/en/(public)/(auth)/register/page.tsx` | Register (EN) |
+
+Parámetros opcionales en registro: `?redirect=/ruta&claim=true` (redirige tras registro y contextualiza para reclamar centro).
 
 ---
 

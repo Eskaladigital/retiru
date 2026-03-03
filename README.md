@@ -72,11 +72,11 @@ Copia `.env.example` a `.env.local` y rellena los valores:
 | `STRIPE_SECRET_KEY` | Clave secreta de Stripe |
 | `STRIPE_WEBHOOK_SECRET` | Secreto del webhook de Stripe |
 | `RESEND_API_KEY` | API key de Resend |
-| `RESEND_FROM_EMAIL` | Email remitente (ej: `hola@retiru.com`) |
+| `RESEND_FROM_EMAIL` | Email remitente (ej: `contacto@retiru.com`) |
 | `NEXT_PUBLIC_APP_URL` | URL base de la app |
 | `NEXT_PUBLIC_APP_NAME` | Nombre de la app (`Retiru`) |
-| `OPENAI_API_KEY` | (opcional) Para funcionalidades IA |
-| `SERPAPI_API_KEY` | (opcional) Para búsquedas externas |
+| `OPENAI_API_KEY` | (opcional) Para generación de descripciones IA |
+| `GOOGLE_PLACES_API_KEY` | (opcional) Para obtener reseñas de Google Places |
 
 > **Nota:** Supabase es necesario para que la app muestre retiros, centros, blog y tienda. Sin él, las páginas mostrarán listas vacías.
 
@@ -93,16 +93,16 @@ npm run lint             # Linter (ESLint)
 npm run db:types         # Generar tipos TypeScript desde el esquema de Supabase
 npm run stripe:listen    # Escuchar webhooks de Stripe en local
 
-# Centros — descripciones IA
-node scripts/generate-all-descriptions.mjs            # Generar todas las descripciones
+# Centros — descripciones IA (scraping web + Google Places + OpenAI, temp 0.2)
+node scripts/generate-all-descriptions.mjs            # Generar descripciones faltantes
+node scripts/generate-all-descriptions.mjs --force    # Regenerar TODAS las descripciones
 node scripts/generate-all-descriptions.mjs --limit 10 # Solo N centros
 node scripts/generate-all-descriptions.mjs --dry-run  # Simular sin guardar
 npm run centers:vaciar-genericas                       # Vaciar descripciones genéricas
 
 # Centros — emails
-npm run centers:emails        # Sincronizar emails (CSV + SerpAPI)
+npm run centers:emails        # Sincronizar emails desde CSV
 npm run centers:emails-csv    # Solo desde directorio.csv
-npm run centers:emails-serp   # Solo búsqueda SerpAPI
 
 # Centros — claims
 npm run centers:claim-tokens                              # Generar tokens de reclamación
@@ -320,11 +320,11 @@ Se han importado **~592 centros** de yoga, pilates, meditación, wellness y spa 
 **Scripts disponibles:**
 
 ```bash
-node scripts/generate-all-descriptions.mjs          # Generar descripciones IA (todos)
-node scripts/generate-all-descriptions.mjs --limit 5 # Solo N centros
-node scripts/sync-and-fetch-emails.mjs               # Buscar emails (CSV + SerpAPI)
-node scripts/count-generic-descriptions.mjs           # Contar descripciones genéricas
-node scripts/quick-stats.mjs                          # Estadísticas rápidas
+node scripts/generate-all-descriptions.mjs            # Generar descripciones faltantes
+node scripts/generate-all-descriptions.mjs --force    # Regenerar TODAS (scraping web + Google Places + OpenAI)
+node scripts/generate-all-descriptions.mjs --limit 5  # Solo N centros
+node scripts/count-generic-descriptions.mjs            # Contar descripciones genéricas
+node scripts/quick-stats.mjs                           # Estadísticas rápidas
 ```
 
 #### Fase 1 — Notificación (email de bienvenida + claim)
@@ -478,7 +478,7 @@ El admin tiene además acceso a `/administrator` desde el menú.
 - **Usuarios** — tabla con todos los perfiles (buscador, filtro por rol)
 - **Organizadores** — gestión de organizadores verificados *(pendiente: conectar a datos reales)*
 - **Retiros** — gestión de retiros (aprobar/rechazar los `pending_review`, ver todos)
-- **Centros** — gestión de centros (buscador, filtros, exportar CSV/Excel, generar descripciones IA)
+- **Centros** — gestión de centros (buscador, filtros, exportar CSV/Excel, generar descripciones IA, editar, ver ficha pública, despublicar/publicar, eliminar)
 - **Claims** — gestión de reclamaciones de centros (aprobar/rechazar)
 - Gestión de tienda (productos, categorías, pedidos)
 - Reembolsos y reporting
