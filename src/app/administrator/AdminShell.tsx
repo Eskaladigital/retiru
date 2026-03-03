@@ -70,13 +70,24 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
       {/* Sidebar — desktop: fijo | móvil: drawer colapsable */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-40 w-56 shrink-0 border-r border-sand-200 bg-white transform transition-transform duration-200 ease-out lg:translate-x-0 ${
+        className={`fixed lg:static inset-y-0 left-0 z-40 w-56 shrink-0 border-r border-sand-200 bg-white transform transition-transform duration-200 ease-out lg:translate-x-0 flex flex-col ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="sticky top-0 pt-6 lg:pt-6 pb-6 px-4">
+        <div className="sticky top-0 flex-1 flex flex-col pt-6 lg:pt-6 pb-4 px-4">
           <p className="text-xs font-bold uppercase tracking-[0.08em] text-red-500 px-3 mb-3">Admin</p>
           <NavContent />
+          <div className="mt-auto pt-4 border-t border-sand-200">
+            <a
+              href="/es"
+              target="_blank"
+              rel="noopener"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[#7a6b5d] hover:bg-sand-100 hover:text-foreground transition-colors"
+            >
+              <span className="text-base">🌐</span> Ver web
+              <svg className="w-3.5 h-3.5 ml-auto opacity-40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </a>
+          </div>
         </div>
       </aside>
 
