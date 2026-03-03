@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Search, SlidersHorizontal, X, MapPin, Star, ChevronDown, CalendarDays } from 'lucide-react';
+import { isGenericDescription, stripMarkdownForPreview } from '@/lib/utils';
 
 const SORT_OPTIONS = [
   { value: 'relevance', label: 'Relevancia' },
@@ -264,7 +265,13 @@ export default function CentrosClient({ centers }: CentrosClientProps) {
                       <span className="text-xs text-[#a09383]">({c.review_count ?? 0})</span>
                     </div>
                   </div>
-                  <p className="text-sm text-[#7a6b5d] leading-relaxed mt-2 line-clamp-2">{c.description_es}</p>
+                  {(() => {
+                    const raw = c.description_es;
+                    if (!raw || isGenericDescription(raw)) return null;
+                    const clean = stripMarkdownForPreview(raw);
+                    if (!clean) return null;
+                    return <p className="text-sm text-[#7a6b5d] leading-relaxed mt-2 line-clamp-2">{clean}</p>;
+                  })()}
                   {services.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-3">
                       {services.slice(0, 4).map((s: string) => (

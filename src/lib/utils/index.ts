@@ -76,6 +76,25 @@ export function truncate(text: string, length: number): string {
   return text.slice(0, length).trimEnd() + '…';
 }
 
+const GENERIC_DESC_SUFFIX = 'Descripción generada automáticamente. Puedes completarla desde el panel de administración.';
+
+/** Detecta si la descripción es la genérica del import */
+export function isGenericDescription(desc: string | null | undefined): boolean {
+  return !!desc?.includes(GENERIC_DESC_SUFFIX);
+}
+
+/** Quita markdown para mostrar un resumen limpio en cards (sin ###, **, etc.) */
+export function stripMarkdownForPreview(text: string | null | undefined): string {
+  if (!text?.trim()) return '';
+  return text
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/\n+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 /** Get initials from name */
 export function getInitials(name: string): string {
   return name

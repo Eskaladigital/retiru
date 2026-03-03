@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Search, SlidersHorizontal, X, MapPin, Star, ChevronDown, CalendarDays } from 'lucide-react';
+import { isGenericDescription, stripMarkdownForPreview } from '@/lib/utils';
 
 const SORT_OPTIONS = [
   { value: 'relevance', label: 'Relevance' },
@@ -257,7 +258,8 @@ export default function CentersClientEN({ centers }: CentersClientProps) {
             {paginated.map((c: any) => {
             const services: string[] = Array.isArray(c.services_en) ? c.services_en : Array.isArray(c.services_es) ? c.services_es : [];
             const imgSrc = c.cover_url || (Array.isArray(c.images) && c.images[0]) || '';
-            const desc = c.description_en || c.description_es || '';
+            const rawDesc = c.description_en || c.description_es || '';
+            const cardDesc = !rawDesc || isGenericDescription(rawDesc) ? '' : stripMarkdownForPreview(rawDesc);
             return (
               <Link
                 key={c.slug}
@@ -288,7 +290,7 @@ export default function CentersClientEN({ centers }: CentersClientProps) {
                       <span className="text-xs text-[#a09383]">({c.review_count ?? 0})</span>
                     </div>
                   </div>
-                  <p className="text-sm text-[#7a6b5d] leading-relaxed mt-2 line-clamp-2">{desc}</p>
+                  {cardDesc ? <p className="text-sm text-[#7a6b5d] leading-relaxed mt-2 line-clamp-2">{cardDesc}</p> : null}
                   {services.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-3">
                       {services.slice(0, 4).map((s: string) => (
