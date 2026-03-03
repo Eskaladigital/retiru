@@ -17,7 +17,9 @@
     "centers:emails": "node scripts/sync-and-fetch-emails.mjs",
     "centers:emails-csv": "node scripts/sync-and-fetch-emails.mjs --solo-csv",
     "centers:emails-serp": "node scripts/sync-and-fetch-emails.mjs --solo-serp",
-    "centers:claim-tokens": "node scripts/generate-claim-tokens.mjs"
+    "centers:claim-tokens": "node scripts/generate-claim-tokens.mjs",
+    "centers:sync-directorio": "node scripts/sync-directorio.mjs",
+    "centers:sync-directorio:dry": "node scripts/sync-directorio.mjs --dry-run"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

@@ -2,6 +2,8 @@
 import { createAdminSupabase } from '@/lib/supabase/server';
 import { ClaimsTableClient } from './ClaimsTableClient';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminClaimsPage() {
   const supabase = createAdminSupabase();
 
@@ -13,7 +15,8 @@ export default async function AdminClaimsPage() {
       centers!center_id(id, name, slug, email, website, phone, address, city),
       profiles!user_id(id, full_name, email)
     `)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(2000);
 
   const list = (claims || []) as any[];
   const pending = list.filter((c) => c.status === 'pending').length;

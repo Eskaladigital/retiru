@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Download, FileSpreadsheet } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -148,7 +149,7 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
                       )}
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <button className="text-xs font-semibold text-terracotta-600 hover:underline">Editar</button>
+                      <Link href={`/administrator/centros/${c.id}`} className="text-xs font-semibold text-terracotta-600 hover:underline">Editar</Link>
                     </td>
                   </tr>
                 );

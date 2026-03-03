@@ -3,12 +3,15 @@ import { createAdminSupabase } from '@/lib/supabase/server';
 import { GenerateDescriptionsButton } from './GenerateDescriptionsButton';
 import { CentersTableClient, type CenterRow } from './CentersTableClient';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminCentrosPage() {
   const supabase = createAdminSupabase();
   const { data: centers } = await supabase
     .from('centers')
     .select('id, name, slug, city, province, plan, status, price_monthly, created_at, description_es, cover_url, images')
-    .order('name');
+    .order('name')
+    .limit(5000);
 
   const list = (centers || []) as CenterRow[];
   const totalMRR = list.reduce((s: number, c) => s + (c.plan === 'featured' ? 65 : c.plan === 'basic' ? 50 : 0), 0);

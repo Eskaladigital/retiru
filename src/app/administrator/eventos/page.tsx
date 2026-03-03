@@ -2,6 +2,8 @@
 import { createAdminSupabase } from '@/lib/supabase/server';
 import { EventosTableClient } from './EventosTableClient';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminEventosPage() {
   const supabase = createAdminSupabase();
 
@@ -14,7 +16,8 @@ export default async function AdminEventosPage() {
         profiles!user_id(id, full_name, email)
       )
     `)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(2000);
 
   const list = (retreats || []) as any[];
   const pending = list.filter((r) => r.status === 'pending_review').length;
