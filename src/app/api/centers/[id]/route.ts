@@ -42,7 +42,7 @@ export async function PATCH(
 
     const body = await request.json();
 
-    // Editable fields for center owner
+    // Editable fields for center owner/admin
     const ALLOWED_FIELDS = [
       'name', 'description_es', 'description_en', 'type',
       'cover_url', 'images', 'logo_url',
@@ -51,6 +51,8 @@ export async function PATCH(
       'services_es', 'services_en',
       'schedule_summary_es', 'schedule_summary_en',
       'price_range_es', 'price_range_en',
+      'google_place_id', 'google_types', 'google_maps_url', 'google_status',
+      'region', 'country', 'web_valid_ia', 'quality_ia', 'search_terms', 'price_level',
     ];
 
     const updateData: Record<string, any> = {};

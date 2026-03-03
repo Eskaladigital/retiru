@@ -45,6 +45,16 @@ export function EditarCentroForm({ center }: Props) {
     services_es: (center.services_es?.length ? center.services_es : ['']) as string[],
     schedule_summary_es: center.schedule_summary_es || '',
     price_range_es: center.price_range_es || '',
+    google_place_id: center.google_place_id || '',
+    google_types: center.google_types || '',
+    google_maps_url: center.google_maps_url || '',
+    google_status: center.google_status || '',
+    region: center.region || '',
+    country: center.country || '',
+    web_valid_ia: center.web_valid_ia || '',
+    quality_ia: center.quality_ia || '',
+    search_terms: center.search_terms || '',
+    price_level: center.price_level || '',
   });
 
   const [images, setImages] = useState<string[]>(
@@ -87,9 +97,18 @@ export function EditarCentroForm({ center }: Props) {
         ...form,
         services_es: form.services_es.filter(Boolean),
         images: images.filter(Boolean),
+        google_place_id: form.google_place_id || null,
+        google_types: form.google_types || null,
+        google_maps_url: form.google_maps_url || null,
+        google_status: form.google_status || null,
+        region: form.region || null,
+        country: form.country || null,
+        web_valid_ia: form.web_valid_ia || null,
+        quality_ia: form.quality_ia || null,
+        search_terms: form.search_terms || null,
+        price_level: form.price_level || null,
       };
 
-      // Don't send empty strings for nullable fields
       if (!payload.cover_url) delete payload.cover_url;
       if (!payload.logo_url) delete payload.logo_url;
 
@@ -256,6 +275,39 @@ export function EditarCentroForm({ center }: Props) {
           <div>
             <label className={labelCls}>Rango de precios</label>
             <input type="text" value={form.price_range_es} onChange={(e) => set('price_range_es', e.target.value)} className={inputCls} placeholder="Ej: Desde 10€/clase, bonos desde 60€/mes" />
+          </div>
+        </div>
+      </section>
+
+      {/* Datos del directorio / Google */}
+      <section>
+        <h2 className="font-serif text-xl mb-4 pb-2 border-b border-sand-200">Datos del directorio</h2>
+        <div className="space-y-4">
+          <div>
+            <label className={labelCls}>Place ID (Google)</label>
+            <input type="text" value={form.google_place_id} onChange={(e) => set('google_place_id', e.target.value)} className={inputCls} placeholder="ChIJ..." />
+          </div>
+          <div>
+            <label className={labelCls}>URL Google Maps</label>
+            <input type="url" value={form.google_maps_url} onChange={(e) => set('google_maps_url', e.target.value)} className={inputCls} placeholder="https://..." />
+          </div>
+          <div>
+            <label className={labelCls}>Tipos Google</label>
+            <input type="text" value={form.google_types} onChange={(e) => set('google_types', e.target.value)} className={inputCls} placeholder="establishment, health, point_of_interest" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className={labelCls}>Región</label>
+              <input type="text" value={form.region} onChange={(e) => set('region', e.target.value)} className={inputCls} />
+            </div>
+            <div>
+              <label className={labelCls}>País</label>
+              <input type="text" value={form.country} onChange={(e) => set('country', e.target.value)} className={inputCls} />
+            </div>
+          </div>
+          <div>
+            <label className={labelCls}>Términos de búsqueda</label>
+            <input type="text" value={form.search_terms} onChange={(e) => set('search_terms', e.target.value)} className={inputCls} placeholder="ayurveda · españa" />
           </div>
         </div>
       </section>

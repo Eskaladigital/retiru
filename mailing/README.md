@@ -19,11 +19,11 @@ Ambos emails incluyen variables que deben sustituirse antes del envío:
 |----------|---------|---------------|
 | `{{NOMBRE_CENTRO}}` | Yoga Sala Madrid | Saludo y cuerpo |
 | `{{URL_PERFIL}}` | `retiru.com/es/centro/yoga-sala-madrid` | Link "ver tu ficha" |
-| `{{CENTER_SLUG}}` | `yoga-sala-madrid` | Link secundario al perfil |
-| `{{CLAIM_TOKEN}}` | `abc123...` (base64url) | Botón CTA "Reclamar mi centro" |
+| `{{CENTER_SLUG}}` | `yoga-sala-madrid` | Botón CTA principal "Ver tu centro en nuestra web" |
+| `{{CLAIM_TOKEN}}` | `abc123...` (base64url) | Link secundario "Reclama tu centro" para gestionar |
 | `{{CIUDAD}}` | Madrid | Cuerpo del texto |
 
-> **Flujo de reclamación:** El email de bienvenida incluye un link mágico `https://retiru.com/es/reclamar/{{CLAIM_TOKEN}}` que permite al dueño reclamar su centro con un clic. Los tokens se generan con `npm run centers:claim-tokens`.
+> **Flujo:** El CTA principal es "Ver tu centro en nuestra web" (`/es/centro/{{CENTER_SLUG}}`). El link secundario "Reclama tu centro" usa `https://retiru.com/es/reclamar/{{CLAIM_TOKEN}}` para gestionar el perfil. Los tokens se generan con `npm run centers:claim-tokens`.
 
 ### Datos de contacto Retiru
 

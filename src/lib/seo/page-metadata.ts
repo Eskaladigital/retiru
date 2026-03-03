@@ -90,7 +90,7 @@ export const aboutES: Metadata = generatePageMetadata({
 
 export const contactES: Metadata = generatePageMetadata({
   title: 'Contacto — Escríbenos',
-  description: 'Contacta con el equipo de Retiru. Respondemos en menos de 24h. Email: hola@retiru.es.',
+  description: 'Contacta con el equipo de Retiru. Respondemos en menos de 24h. Email: contacto@retiru.com.',
   locale: 'es',
   path: '/es/contacto',
   altPath: '/en/contact',
@@ -201,7 +201,7 @@ export const aboutEN: Metadata = generatePageMetadata({
 
 export const contactEN: Metadata = generatePageMetadata({
   title: 'Contact us',
-  description: 'Contact the Retiru team. We respond within 24h. Email: hello@retiru.es.',
+  description: 'Contact the Retiru team. We respond within 24h. Email: contacto@retiru.com.',
   locale: 'en',
   path: '/en/contact',
   altPath: '/es/contacto',

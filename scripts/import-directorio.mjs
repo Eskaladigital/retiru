@@ -3,6 +3,9 @@
  * RETIRU · Importar centros desde directorio.csv a Supabase
  * Usa variables de .env.local (SUPABASE_SERVICE_ROLE_KEY, NEXT_PUBLIC_SUPABASE_URL)
  *
+ * IMPORTANTE: Al actualizar centros existentes, NO sobrescribe campos vacíos del CSV.
+ * Solo usa valores del CSV cuando tienen contenido; si el CSV está vacío, mantiene el dato en BD.
+ *
  * Uso: node scripts/import-directorio.mjs
  */
 
@@ -110,10 +113,95 @@ function extractCity(address, province) {
 // ─── Mapear categoría CSV → center_type ────────────────────────────────────
 function mapType(categoria) {
   const c = (categoria || '').toLowerCase();
+  if (c.includes('spa')) return 'spa';
   if (c.includes('pilates') && c.includes('yoga')) return 'yoga_meditation';
   if (c.includes('pilates')) return 'yoga_meditation';
   if (c.includes('yoga')) return 'yoga';
+  if (c.includes('ayurveda') || c.includes('meditación') || c.includes('meditation')) return 'meditation';
+  if (c.includes('wellness')) return 'wellness';
   return 'multidisciplinary';
+}
+
+// ─── Construir objeto centro con todas las columnas del CSV (para INSERT) ─────
+function buildCenterFromRow(r, slug) {
+  const name = (r.Nombre || '').trim();
+  const province = (r.Provincia || '').trim() || 'España';
+  const address = (r.Dirección || '').trim() || name;
+  const city = extractCity(address, province);
+  const description_es =
+    'Centro de yoga, pilates y wellness en ' +
+    province +
+    '. Descripción generada automáticamente. Puedes completarla desde el panel de administración.';
+
+  return {
+    name,
+    slug,
+    description_es,
+    type: mapType(r.Categoría),
+    address,
+    city,
+    province,
+    postal_code: null,
+    latitude: r.Latitud ? parseFloat(r.Latitud) : null,
+    longitude: r.Longitud ? parseFloat(r.Longitud) : null,
+    website: r.Web?.trim() || null,
+    email: r.Email?.trim() || null,
+    phone: r.Teléfono?.trim() || null,
+    status: 'active',
+    plan: 'basic',
+    price_monthly: 50,
+    avg_rating: r.Valoración ? parseFloat(r.Valoración) : 0,
+    review_count: parseInt(r['Nº Reseñas'], 10) || 0,
+    services_es: r.Categoría?.includes('Spa') ? ['Spa', 'Wellness'] : ['Yoga', 'Pilates', 'Wellness'],
+    schedule_summary_es: r.Horarios?.trim() || null,
+    price_range_es: r['Nivel Precio']?.trim() || null,
+    google_place_id: r['Place ID']?.trim() || null,
+    google_types: r['Tipos Google']?.trim() || null,
+    google_maps_url: r['Google Maps']?.trim() || null,
+    google_status: r.Estado?.trim() || null,
+    region: r.Región?.trim() || null,
+    country: r.País?.trim() || null,
+    web_valid_ia: r['Web válida (IA)']?.trim() || null,
+    quality_ia: r['Calidad (IA)']?.trim() || null,
+    search_terms: r.Búsqueda?.trim() || null,
+    price_level: r['Nivel Precio']?.trim() || null,
+  };
+}
+
+// ─── Merge: solo incluye campos donde el CSV tiene valor (no sobrescribe con null) ─
+function buildMergeFromRow(r, existing) {
+  const province = (r.Provincia || '').trim() || 'España';
+  const address = (r.Dirección || '').trim();
+  const city = address ? extractCity(address, province) : null;
+
+  const out = {};
+  if ((r.Nombre || '').trim()) out.name = r.Nombre.trim();
+  if (address) out.address = address;
+  if (city) out.city = city;
+  if (province) out.province = province;
+  if (r.Latitud) out.latitude = parseFloat(r.Latitud);
+  if (r.Longitud) out.longitude = parseFloat(r.Longitud);
+  if (r.Web?.trim()) out.website = r.Web.trim();
+  if (r.Email?.trim()) out.email = r.Email.trim();
+  if (r.Teléfono?.trim()) out.phone = r.Teléfono.trim();
+  if (r.Valoración) out.avg_rating = parseFloat(r.Valoración);
+  if (r['Nº Reseñas']) out.review_count = parseInt(r['Nº Reseñas'], 10) || 0;
+  if (r.Horarios?.trim()) out.schedule_summary_es = r.Horarios.trim();
+  if (r['Nivel Precio']?.trim()) {
+    out.price_range_es = r['Nivel Precio'].trim();
+    out.price_level = r['Nivel Precio'].trim();
+  }
+  if (r['Place ID']?.trim()) out.google_place_id = r['Place ID'].trim();
+  if (r['Tipos Google']?.trim()) out.google_types = r['Tipos Google'].trim();
+  if (r['Google Maps']?.trim()) out.google_maps_url = r['Google Maps'].trim();
+  if (r.Estado?.trim()) out.google_status = r.Estado.trim();
+  if (r.Región?.trim()) out.region = r.Región.trim();
+  if (r.País?.trim()) out.country = r.País.trim();
+  if (r['Web válida (IA)']?.trim()) out.web_valid_ia = r['Web válida (IA)'].trim();
+  if (r['Calidad (IA)']?.trim()) out.quality_ia = r['Calidad (IA)'].trim();
+  if (r.Búsqueda?.trim()) out.search_terms = r.Búsqueda.trim();
+
+  return Object.keys(out).length ? out : null;
 }
 
 async function main() {
@@ -141,67 +229,79 @@ async function main() {
   const { createClient } = await import('@supabase/supabase-js');
   const supabase = createClient(url, serviceKey);
 
-  const usedSlugs = new Set();
+  // Cargar centros existentes para merge (no sobrescribir emails/webs vacíos)
+  console.log('📥 Cargando centros existentes...');
+  const { data: existingList, error: fetchErr } = await supabase
+    .from('centers')
+    .select('id, slug, name, province, email, website, phone');
+  if (fetchErr) {
+    console.error('❌ Error al cargar centros:', fetchErr.message);
+    process.exit(1);
+  }
+  const nameProvKey = (n, p) => `${slugify(n).slice(0, 50)}|${slugify(p || '')}`;
+  const byNameProvince = new Map((existingList || []).map((c) => [nameProvKey(c.name, c.province), c]));
+  const usedSlugs = new Set((existingList || []).map((c) => c.slug));
+  console.log(`   ${byNameProvince.size} centros en BD\n`);
+
   const BATCH = 50;
   let inserted = 0;
+  let updated = 0;
   let errors = 0;
 
   for (let i = 0; i < rows.length; i += BATCH) {
     const batch = rows.slice(i, i + BATCH);
-    const centers = batch
-      .map((r) => {
-        const name = (r.Nombre || '').trim();
-        const province = (r.Provincia || '').trim() || 'España';
-        const address = (r.Dirección || '').trim() || name;
-        const city = extractCity(address, province);
+    const toInsert = [];
+    const toUpdate = [];
 
-        if (!name) return null;
+    for (const r of batch) {
+      const name = (r.Nombre || '').trim();
+      const province = (r.Provincia || '').trim() || 'España';
+      if (!name) continue;
 
+      const key = nameProvKey(name, province);
+      const existing = byNameProvince.get(key);
+
+      if (existing && existing.id) {
+        const merge = buildMergeFromRow(r, existing);
+        if (merge) toUpdate.push({ id: existing.id, ...merge });
+      } else if (!existing) {
         const slug = makeSlug(name, province, usedSlugs);
-        const description_es =
-          'Centro de yoga y pilates en ' +
-          province +
-          '. Descripción generada automáticamente. Puedes completarla desde el panel de administración.';
+        byNameProvince.set(key, { slug });
+        toInsert.push(buildCenterFromRow(r, slug));
+      }
+    }
 
-        return {
-          name,
-          slug,
-          description_es,
-          type: mapType(r.Categoría),
-          address,
-          city,
-          province,
-          postal_code: null,
-          latitude: r.Latitud ? parseFloat(r.Latitud) : null,
-          longitude: r.Longitud ? parseFloat(r.Longitud) : null,
-          website: r.Web || null,
-          email: r.Email || null,
-          phone: r.Teléfono || null,
-          status: 'active',
-          plan: 'basic',
-          price_monthly: 50,
-          avg_rating: r.Valoración ? parseFloat(r.Valoración) : 0,
-          review_count: parseInt(r['Nº Reseñas'], 10) || 0,
-          services_es: r.Categoría?.includes('pilates') ? ['Pilates', 'Yoga'] : ['Yoga', 'Pilates'],
-        };
-      })
-      .filter(Boolean);
+    if (toInsert.length > 0) {
+      const { data: insertedRows, error } = await supabase
+        .from('centers')
+        .upsert(toInsert, { onConflict: 'slug', ignoreDuplicates: false })
+        .select('id, slug, name, province');
+      if (error) {
+        console.error(`❌ Error insert batch ${Math.floor(i / BATCH) + 1}:`, error.message);
+        errors += toInsert.length;
+      } else {
+        inserted += toInsert.length;
+        (insertedRows || []).forEach((c) => byNameProvince.set(nameProvKey(c.name, c.province), c));
+        console.log(`   ✓ Batch ${Math.floor(i / BATCH) + 1}: ${toInsert.length} insertados`);
+      }
+    }
 
-    const { data, error } = await supabase.from('centers').upsert(centers, {
-      onConflict: 'slug',
-      ignoreDuplicates: false,
-    });
-
-    if (error) {
-      console.error(`❌ Error en batch ${Math.floor(i / BATCH) + 1}:`, error.message);
-      errors += batch.length;
-    } else {
-      inserted += centers.length;
-      console.log(`   ✓ Batch ${Math.floor(i / BATCH) + 1}: ${centers.length} centros`);
+    for (const u of toUpdate) {
+      const { id, ...data } = u;
+      const { error } = await supabase.from('centers').update(data).eq('id', id);
+      if (error) {
+        console.error(`   ❌ Error actualizando ${id}:`, error.message);
+        errors++;
+      } else {
+        updated++;
+      }
+    }
+    if (toUpdate.length > 0 && toInsert.length === 0) {
+      console.log(`   ✓ Batch ${Math.floor(i / BATCH) + 1}: ${toUpdate.length} actualizados (merge, sin borrar datos)`);
     }
   }
 
-  console.log(`\n✅ Importación completada: ${inserted} centros insertados/actualizados`);
+  console.log(`\n✅ Importación completada: ${inserted} insertados, ${updated} actualizados (merge seguro)`);
   if (errors > 0) console.log(`   ⚠ ${errors} con error\n`);
   else console.log('\n   Puedes usar "Generar descripciones con IA" en /administrator/centros para completar las descripciones.\n');
 }

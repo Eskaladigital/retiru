@@ -15,6 +15,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
 
 const DRY_RUN = process.argv.includes('--dry-run');
+const UPDATE_EXISTING = process.argv.includes('--update-existing');
 
 // ─── Cargar .env.local ─────────────────────────────────────────────────────
 function loadEnvLocal() {
@@ -144,6 +145,38 @@ function mapType(categoria) {
   return 'multidisciplinary';
 }
 
+// Construye el objeto de columnas del directorio desde una fila CSV
+function buildDirectorioFields(r, base = {}) {
+  const province = (r.Provincia || '').trim() || 'España';
+  const address = (r.Dirección || '').trim() || base.address;
+  const city = extractCity(address, province);
+  return {
+    ...base,
+    address: address || base.address,
+    city: city || base.city,
+    province,
+    latitude: r.Latitud ? parseFloat(r.Latitud) : base.latitude,
+    longitude: r.Longitud ? parseFloat(r.Longitud) : base.longitude,
+    website: r.Web?.trim() || base.website,
+    email: normalizeEmail(r.Email) ? r.Email.trim() : base.email,
+    phone: r.Teléfono?.trim() || base.phone,
+    avg_rating: r.Valoración ? parseFloat(r.Valoración) : base.avg_rating,
+    review_count: parseInt(r['Nº Reseñas'], 10) || base.review_count || 0,
+    schedule_summary_es: r.Horarios?.trim() || base.schedule_summary_es,
+    price_range_es: r['Nivel Precio']?.trim() || base.price_range_es,
+    google_place_id: r['Place ID']?.trim() || base.google_place_id,
+    google_types: r['Tipos Google']?.trim() || base.google_types,
+    google_maps_url: r['Google Maps']?.trim() || base.google_maps_url,
+    google_status: r.Estado?.trim() || base.google_status,
+    region: r.Región?.trim() || base.region,
+    country: r.País?.trim() || base.country,
+    web_valid_ia: r['Web válida (IA)']?.trim() || base.web_valid_ia,
+    quality_ia: r['Calidad (IA)']?.trim() || base.quality_ia,
+    search_terms: r.Búsqueda?.trim() || base.search_terms,
+    price_level: r['Nivel Precio']?.trim() || base.price_level,
+  };
+}
+
 function makeSlug(name, province, used) {
   let base = slugify(name);
   if (base.length > 40) base = base.slice(0, 40);
@@ -186,7 +219,7 @@ async function main() {
   console.log('📥 Cargando centros existentes en BD...');
   const { data: existing, error: fetchErr } = await supabase
     .from('centers')
-    .select('id, name, slug, email, website, phone, address, city, province');
+    .select('id, name, slug, email, website, phone, address, city, province, latitude, longitude, avg_rating, review_count');
 
   if (fetchErr) {
     console.error('❌ Error al cargar centros:', fetchErr.message);
@@ -217,10 +250,11 @@ async function main() {
 
   console.log(`   ${existingList.length} centros en BD\n`);
 
-  // Determinar cuáles son nuevos (evitando duplicados dentro del CSV)
+  // Determinar cuáles son nuevos y cuáles actualizar (evitando duplicados dentro del CSV)
   const toInsert = [];
+  const toUpdate = []; // { row, center } para actualizar existentes con columnas del directorio
   const skipped = [];
-  const insertedKeys = new Set(); // para no duplicar dentro del mismo CSV
+  const insertedKeys = new Set();
 
   for (const r of rows) {
     const name = (r.Nombre || '').trim();
@@ -234,28 +268,35 @@ async function main() {
 
     let found = false;
     let matchReason = '';
+    let matchedCenter = null;
 
     if (email && byEmail.has(email)) {
       found = true;
       matchReason = 'email';
+      matchedCenter = byEmail.get(email);
     }
     if (!found && web && byWebsite.has(web)) {
       found = true;
       matchReason = 'web';
+      matchedCenter = byWebsite.get(web);
     }
     if (!found && phone && byPhone.has(phone)) {
       found = true;
       matchReason = 'teléfono';
+      matchedCenter = byPhone.get(phone);
     }
     if (!found && byNameProvince.has(nameProvKey)) {
       found = true;
       matchReason = 'nombre+provincia';
+      matchedCenter = byNameProvince.get(nameProvKey);
     }
 
     if (found) {
       skipped.push({ name, matchReason });
+      if (UPDATE_EXISTING && matchedCenter) {
+        toUpdate.push({ row: r, center: matchedCenter });
+      }
     } else {
-      // Evitar duplicados dentro del CSV: si ya vamos a insertar uno con mismo email/web/name+prov, omitir
       const dupKey = email || web || nameProvKey;
       if (insertedKeys.has(dupKey)) {
         skipped.push({ name, matchReason: 'duplicado en CSV' });
@@ -268,29 +309,78 @@ async function main() {
 
   console.log(`📊 Resultado del análisis:`);
   console.log(`   ✓ ${skipped.length} ya existen (omitidos)`);
-  console.log(`   + ${toInsert.length} nuevos a insertar\n`);
+  console.log(`   + ${toInsert.length} nuevos a insertar`);
+  if (UPDATE_EXISTING && toUpdate.length > 0) {
+    console.log(`   ↻ ${toUpdate.length} a actualizar con columnas del directorio`);
+  }
+  console.log('');
 
-  if (toInsert.length === 0) {
-    console.log('✅ No hay centros nuevos que añadir.\n');
+  if (toInsert.length === 0 && toUpdate.length === 0) {
+    console.log('✅ No hay centros nuevos que añadir ni actualizar.\n');
     return;
   }
 
   if (DRY_RUN) {
-    console.log('🔍 Modo dry-run: no se insertará nada. Centros que se añadirían:\n');
-    toInsert.slice(0, 15).forEach((r, i) => {
-      console.log(`   ${i + 1}. ${r.Nombre} (${r.Provincia})`);
-    });
-    if (toInsert.length > 15) {
-      console.log(`   ... y ${toInsert.length - 15} más`);
+    console.log('🔍 Modo dry-run: no se modificará nada.\n');
+    if (toInsert.length > 0) {
+      console.log('   Centros que se añadirían:');
+      toInsert.slice(0, 15).forEach((r, i) => {
+        console.log(`   ${i + 1}. ${r.Nombre} (${r.Provincia})`);
+      });
+      if (toInsert.length > 15) console.log(`   ... y ${toInsert.length - 15} más`);
     }
-    console.log('\n   Ejecuta sin --dry-run para insertar.\n');
+    if (toUpdate.length > 0) {
+      console.log(`\n   Centros que se actualizarían: ${toUpdate.length}`);
+    }
+    console.log('\n   Ejecuta sin --dry-run para aplicar. Usa --update-existing para actualizar existentes.\n');
     return;
   }
 
   const usedSlugs = new Set(existingList.map((c) => c.slug));
   const BATCH = 50;
   let inserted = 0;
+  let updated = 0;
 
+  // Actualizar centros existentes con columnas del directorio
+  if (toUpdate.length > 0) {
+    console.log('↻ Actualizando centros existentes...');
+    for (const { row: r, center } of toUpdate) {
+      const updateData = {
+        address: (r.Dirección || '').trim() || center.address,
+        city: extractCity(r.Dirección || '', r.Provincia || '') || center.city,
+        province: (r.Provincia || '').trim() || center.province,
+        latitude: r.Latitud ? parseFloat(r.Latitud) : center.latitude,
+        longitude: r.Longitud ? parseFloat(r.Longitud) : center.longitude,
+        website: r.Web?.trim() || center.website,
+        email: normalizeEmail(r.Email) ? r.Email.trim() : center.email,
+        phone: r.Teléfono?.trim() || center.phone,
+        avg_rating: r.Valoración ? parseFloat(r.Valoración) : center.avg_rating,
+        review_count: parseInt(r['Nº Reseñas'], 10) || center.review_count || 0,
+        schedule_summary_es: r.Horarios?.trim() || null,
+        price_range_es: r['Nivel Precio']?.trim() || null,
+        google_place_id: r['Place ID']?.trim() || null,
+        google_types: r['Tipos Google']?.trim() || null,
+        google_maps_url: r['Google Maps']?.trim() || null,
+        google_status: r.Estado?.trim() || null,
+        region: r.Región?.trim() || null,
+        country: r.País?.trim() || null,
+        web_valid_ia: r['Web válida (IA)']?.trim() || null,
+        quality_ia: r['Calidad (IA)']?.trim() || null,
+        search_terms: r.Búsqueda?.trim() || null,
+        price_level: r['Nivel Precio']?.trim() || null,
+        updated_at: new Date().toISOString(),
+      };
+      const { error } = await supabase.from('centers').update(updateData).eq('id', center.id);
+      if (error) {
+        console.error(`   ❌ Error actualizando ${center.name}:`, error.message);
+      } else {
+        updated++;
+      }
+    }
+    console.log(`   ✓ ${updated} centros actualizados\n`);
+  }
+
+  // Insertar centros nuevos
   for (let i = 0; i < toInsert.length; i += BATCH) {
     const batch = toInsert.slice(i, i + BATCH);
     const centers = batch
@@ -298,8 +388,6 @@ async function main() {
         const name = (r.Nombre || '').trim();
         const province = (r.Provincia || '').trim() || 'España';
         const address = (r.Dirección || '').trim() || name;
-        const city = extractCity(address, province);
-
         if (!name) return null;
 
         const slug = makeSlug(name, province, usedSlugs);
@@ -308,27 +396,17 @@ async function main() {
           province +
           '. Descripción generada automáticamente. Puedes completarla desde el panel de administración.';
 
-        return {
+        return buildDirectorioFields(r, {
           name,
           slug,
           description_es,
           type: mapType(r.Categoría),
-          address,
-          city,
-          province,
           postal_code: null,
-          latitude: r.Latitud ? parseFloat(r.Latitud) : null,
-          longitude: r.Longitud ? parseFloat(r.Longitud) : null,
-          website: r.Web?.trim() || null,
-          email: normalizeEmail(r.Email) ? r.Email.trim() : null,
-          phone: r.Teléfono?.trim() || null,
           status: 'active',
           plan: 'basic',
           price_monthly: 50,
-          avg_rating: r.Valoración ? parseFloat(r.Valoración) : 0,
-          review_count: parseInt(r['Nº Reseñas'], 10) || 0,
           services_es: r.Categoría?.includes('Spa') ? ['Spa', 'Wellness'] : ['Yoga', 'Pilates', 'Wellness'],
-        };
+        });
       })
       .filter(Boolean);
 
@@ -342,7 +420,7 @@ async function main() {
     }
   }
 
-  console.log(`\n✅ Sincronización completada: ${inserted} centros nuevos añadidos.\n`);
+  console.log(`\n✅ Sincronización completada: ${inserted} nuevos, ${updated} actualizados.\n`);
 }
 
 main().catch((e) => {

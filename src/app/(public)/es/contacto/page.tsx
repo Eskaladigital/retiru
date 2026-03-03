@@ -9,8 +9,8 @@ const CHANNELS = [
     icon: Mail,
     title: 'Email',
     description: 'Para consultas generales, colaboraciones o soporte técnico.',
-    action: 'hola@retiru.es',
-    href: 'mailto:hola@retiru.es',
+    action: 'contacto@retiru.com',
+    href: 'mailto:contacto@retiru.com',
     label: 'Enviar email',
   },
   {
@@ -75,51 +75,6 @@ export default function ContactoPage() {
         </div>
       </section>
 
-      {/* Formulario de contacto */}
-      <section className="bg-sand-100">
-        <div className="container-wide py-12">
-          <div className="max-w-2xl mx-auto">
-            <h2 className="font-serif text-2xl md:text-3xl mb-2 text-center">Envíanos un mensaje</h2>
-            <p className="text-sm text-[#7a6b5d] mb-8 text-center">Te responderemos en menos de 24 horas.</p>
-
-            <form className="bg-white rounded-2xl border border-sand-200 p-8 space-y-5">
-              <div className="grid sm:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1.5">Nombre</label>
-                  <input type="text" placeholder="Tu nombre" className="w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1.5">Email</label>
-                  <input type="email" placeholder="tu@email.com" className="w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all" />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Asunto</label>
-                <select className="w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all text-[#7a6b5d]">
-                  <option value="">Selecciona un tema</option>
-                  <option value="reserva">Tengo una duda sobre mi reserva</option>
-                  <option value="organizador">Quiero publicar un retiro</option>
-                  <option value="pago">Problema con un pago</option>
-                  <option value="colaboracion">Propuesta de colaboración</option>
-                  <option value="prensa">Prensa y medios</option>
-                  <option value="otro">Otro</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Mensaje</label>
-                <textarea rows={5} placeholder="Cuéntanos en qué podemos ayudarte..." className="w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all resize-none" />
-              </div>
-
-              <button type="submit" className="w-full bg-terracotta-600 text-white font-semibold py-3.5 rounded-xl hover:bg-terracotta-700 transition-colors shadow-[0_2px_8px_rgba(200,90,48,0.3)]">
-                Enviar mensaje
-              </button>
-            </form>
-          </div>
-        </div>
-      </section>
-
       {/* FAQ rápido */}
       <section className="container-wide py-12">
         <h2 className="font-serif text-2xl mb-6 text-center">Preguntas frecuentes</h2>
@@ -151,7 +106,7 @@ export default function ContactoPage() {
             <div className="flex flex-col items-center gap-2">
               <Mail className="w-5 h-5 text-terracotta-400" />
               <p className="font-semibold text-white">Email</p>
-              <a href="mailto:hola@retiru.es" className="hover:text-white transition-colors">hola@retiru.es</a>
+              <a href="mailto:contacto@retiru.com" className="hover:text-white transition-colors">contacto@retiru.com</a>
             </div>
             <div className="flex flex-col items-center gap-2">
               <MapPin className="w-5 h-5 text-terracotta-400" />

@@ -19,7 +19,8 @@
     "centers:emails-serp": "node scripts/sync-and-fetch-emails.mjs --solo-serp",
     "centers:claim-tokens": "node scripts/generate-claim-tokens.mjs",
     "centers:sync-directorio": "node scripts/sync-directorio.mjs",
-    "centers:sync-directorio:dry": "node scripts/sync-directorio.mjs --dry-run"
+    "centers:sync-directorio:dry": "node scripts/sync-directorio.mjs --dry-run",
+    "centers:sync-directorio:update": "node scripts/sync-directorio.mjs --update-existing"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

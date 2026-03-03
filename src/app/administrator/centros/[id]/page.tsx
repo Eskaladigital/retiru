@@ -21,6 +21,8 @@ export default async function AdminEditarCentroPage({ params }: Props) {
       services_es, services_en,
       schedule_summary_es, schedule_summary_en,
       price_range_es, price_range_en,
+      google_place_id, google_types, google_maps_url, google_status,
+      region, country, web_valid_ia, quality_ia, search_terms, price_level,
       claimed_by, status
     `)
     .eq('id', id)
