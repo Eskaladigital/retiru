@@ -57,105 +57,49 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   }));
 
-  // ── Dynamic entries from Supabase ─────────────────────────────────────
+  // ── Dynamic entries from Supabase (ES + EN por cada slug) ──────────────
   const supabase = createStaticSupabase();
   const dynamicEntries: MetadataRoute.Sitemap = [];
 
-  // 1) Centros individuales (/es/centro/[slug])
+  function pushBilingual(esPath: string, enPath: string, freq: MetadataRoute.Sitemap[0]['changeFrequency'], prio: number) {
+    const alt = { languages: { es: `${SITE_URL}${esPath}`, en: `${SITE_URL}${enPath}` } };
+    dynamicEntries.push(
+      { url: `${SITE_URL}${esPath}`, lastModified: now, changeFrequency: freq, priority: prio, alternates: alt },
+      { url: `${SITE_URL}${enPath}`, lastModified: now, changeFrequency: freq, priority: prio, alternates: alt },
+    );
+  }
+
+  // 1) Centros individuales
   const { data: centerSlugs } = await supabase.from('centers').select('slug').eq('status', 'active');
-  (centerSlugs || []).forEach((c) => {
-    dynamicEntries.push({
-      url: `${SITE_URL}/es/centro/${c.slug}`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.7,
-      alternates: { languages: { es: `${SITE_URL}/es/centro/${c.slug}`, en: `${SITE_URL}/en/center/${c.slug}` } },
-    });
-  });
+  (centerSlugs || []).forEach((c) => pushBilingual(`/es/centro/${c.slug}`, `/en/center/${c.slug}`, 'weekly', 0.7));
 
-  // 2) Centros por provincia (/es/centros-retiru/[slug]) — solo provincias con >= 1 centro activo
+  // 2) Centros por provincia — solo provincias con >= 1 centro
   const provinces = await getCenterProvinces();
-  provinces.forEach((p) => {
-    dynamicEntries.push({
-      url: `${SITE_URL}/es/centros-retiru/${p.slug}`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.8,
-      alternates: { languages: { es: `${SITE_URL}/es/centros-retiru/${p.slug}`, en: `${SITE_URL}/en/centers-retiru/${p.slug}` } },
-    });
-  });
+  provinces.forEach((p) => pushBilingual(`/es/centros-retiru/${p.slug}`, `/en/centers-retiru/${p.slug}`, 'weekly', 0.8));
 
-  // 3) Retiros individuales (/es/retiro/[slug])
+  // 3) Retiros individuales
   const { data: retreatSlugs } = await supabase.from('retreats').select('slug').eq('status', 'published').gte('end_date', today);
-  (retreatSlugs || []).forEach((r) => {
-    dynamicEntries.push({
-      url: `${SITE_URL}/es/retiro/${r.slug}`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.8,
-      alternates: { languages: { es: `${SITE_URL}/es/retiro/${r.slug}`, en: `${SITE_URL}/en/retreat/${r.slug}` } },
-    });
-  });
+  (retreatSlugs || []).forEach((r) => pushBilingual(`/es/retiro/${r.slug}`, `/en/retreat/${r.slug}`, 'weekly', 0.8));
 
-  // 4) Retiros por destino (/es/retiros-retiru/[slug]) — solo destinos con >= 1 retiro publicado
+  // 4) Retiros por destino — solo destinos con >= 1 retiro
   const destinationsWithRetreats = await getDestinationsWithRetreats();
-  destinationsWithRetreats.forEach((d) => {
-    dynamicEntries.push({
-      url: `${SITE_URL}/es/retiros-retiru/${d.slug}`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.8,
-      alternates: { languages: { es: `${SITE_URL}/es/retiros-retiru/${d.slug}`, en: `${SITE_URL}/en/retreats-retiru/${d.slug}` } },
-    });
-  });
+  destinationsWithRetreats.forEach((d) => pushBilingual(`/es/retiros-retiru/${d.slug}`, `/en/retreats-retiru/${d.slug}`, 'weekly', 0.8));
 
   // 5) Blog
   const { data: blogSlugs } = await supabase.from('blog_articles').select('slug').eq('is_published', true);
-  (blogSlugs || []).forEach((b) => {
-    dynamicEntries.push({
-      url: `${SITE_URL}/es/blog/${b.slug}`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.6,
-      alternates: { languages: { es: `${SITE_URL}/es/blog/${b.slug}`, en: `${SITE_URL}/en/blog/${b.slug}` } },
-    });
-  });
+  (blogSlugs || []).forEach((b) => pushBilingual(`/es/blog/${b.slug}`, `/en/blog/${b.slug}`, 'monthly', 0.6));
 
   // 6) Destinos
   const { data: destSlugs } = await supabase.from('destinations').select('slug').eq('is_active', true);
-  (destSlugs || []).forEach((d) => {
-    dynamicEntries.push({
-      url: `${SITE_URL}/es/destinos/${d.slug}`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.7,
-      alternates: { languages: { es: `${SITE_URL}/es/destinos/${d.slug}`, en: `${SITE_URL}/en/destinations/${d.slug}` } },
-    });
-  });
+  (destSlugs || []).forEach((d) => pushBilingual(`/es/destinos/${d.slug}`, `/en/destinations/${d.slug}`, 'monthly', 0.7));
 
   // 7) Organizadores verificados
   const { data: orgSlugs } = await supabase.from('organizer_profiles').select('slug').eq('status', 'verified');
-  (orgSlugs || []).forEach((o) => {
-    dynamicEntries.push({
-      url: `${SITE_URL}/es/organizador/${o.slug}`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.5,
-      alternates: { languages: { es: `${SITE_URL}/es/organizador/${o.slug}`, en: `${SITE_URL}/en/organizer/${o.slug}` } },
-    });
-  });
+  (orgSlugs || []).forEach((o) => pushBilingual(`/es/organizador/${o.slug}`, `/en/organizer/${o.slug}`, 'monthly', 0.5));
 
   // 8) Productos de la tienda
   const { data: prodSlugs } = await supabase.from('products').select('slug').eq('status', 'active');
-  (prodSlugs || []).forEach((p) => {
-    dynamicEntries.push({
-      url: `${SITE_URL}/es/tienda/${p.slug}`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.6,
-      alternates: { languages: { es: `${SITE_URL}/es/tienda/${p.slug}`, en: `${SITE_URL}/en/shop/${p.slug}` } },
-    });
-  });
+  (prodSlugs || []).forEach((p) => pushBilingual(`/es/tienda/${p.slug}`, `/en/shop/${p.slug}`, 'weekly', 0.6));
 
   return [...staticEntries, ...dynamicEntries];
 }
