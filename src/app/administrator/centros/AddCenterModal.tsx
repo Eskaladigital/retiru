@@ -5,9 +5,8 @@ import { X, MapPin, Globe, Phone, Star, Loader2, Search, Check, ExternalLink } f
 import type { CenterType } from '@/types';
 
 declare global {
-  interface Window {
-    google: typeof google;
-  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  interface Window { google: any; }
 }
 
 type PlaceData = {
