@@ -13,7 +13,10 @@
     "import-directorio": "node scripts/import-directorio.mjs",
     "blog:generate": "node scripts/generate-blog-articles.mjs",
     "centers:images": "node scripts/assign-center-images.mjs",
-    "centers:vaciar-genericas": "node scripts/count-generic-descriptions.mjs --vaciar"
+    "centers:vaciar-genericas": "node scripts/count-generic-descriptions.mjs --vaciar",
+    "centers:emails": "node scripts/sync-and-fetch-emails.mjs",
+    "centers:emails-csv": "node scripts/sync-and-fetch-emails.mjs --solo-csv",
+    "centers:emails-serp": "node scripts/sync-and-fetch-emails.mjs --solo-serp"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -56,6 +59,7 @@
     "sonner": "^1.5.0",
     "stripe": "^16.8.0",
     "tailwind-merge": "^2.5.0",
+    "xlsx": "^0.18.5",
     "zod": "^3.23.0"
   },
   "devDependencies": {

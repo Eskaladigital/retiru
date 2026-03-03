@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { X } from 'lucide-react';
+import { X, ChevronDown } from 'lucide-react';
+import * as Popover from '@radix-ui/react-popover';
 
 interface LogEntry {
   type: 'info' | 'start' | 'detail' | 'success' | 'error';
@@ -13,6 +14,17 @@ export function GenerateDescriptionsButton() {
   const [open, setOpen] = useState(false);
   const [running, setRunning] = useState(false);
   const [limit, setLimit] = useState(30); // Por defecto 30 por lote (~5-7 min) para evitar timeout
+  const [limitOpen, setLimitOpen] = useState(false);
+
+  const LIMIT_OPTIONS = [
+    { value: 10, label: '10 centros' },
+    { value: 20, label: '20 centros' },
+    { value: 30, label: '30 centros' },
+    { value: 50, label: '50 centros' },
+    { value: 100, label: '100 centros' },
+    { value: 0, label: 'Todos (puede dar timeout)' },
+  ];
+  const limitLabel = LIMIT_OPTIONS.find((o) => o.value === limit)?.label ?? '30 centros';
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [summary, setSummary] = useState<{ processed: number; ok: number; errors: number } | null>(null);
   const logsEndRef = useRef<HTMLDivElement>(null);
@@ -191,18 +203,44 @@ export function GenerateDescriptionsButton() {
                 <>
                   <div className="flex items-center gap-2 mr-auto">
                     <label className="text-gray-400 text-sm">Límite por lote:</label>
-                    <select
-                      value={limit}
-                      onChange={(e) => setLimit(Number(e.target.value))}
-                      className="bg-white/10 text-white rounded-lg px-3 py-1.5 text-sm border border-white/20"
-                    >
-                      <option value={10}>10 centros</option>
-                      <option value={20}>20 centros</option>
-                      <option value={30}>30 centros</option>
-                      <option value={50}>50 centros</option>
-                      <option value={100}>100 centros</option>
-                      <option value={0}>Todos (puede dar timeout)</option>
-                    </select>
+                    <Popover.Root open={limitOpen} onOpenChange={setLimitOpen}>
+                      <Popover.Trigger asChild>
+                        <button
+                          type="button"
+                          className="flex items-center gap-2 bg-white/10 text-white rounded-lg px-3 py-1.5 text-sm border border-white/20 hover:bg-white/15 transition-colors min-w-[140px] justify-between"
+                        >
+                          <span>{limitLabel}</span>
+                          <ChevronDown size={14} className={`shrink-0 transition-transform ${limitOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                      </Popover.Trigger>
+                      <Popover.Portal>
+                        <Popover.Content
+                          side="top"
+                          align="start"
+                          sideOffset={6}
+                          className="z-[100] rounded-lg border border-white/20 bg-[#252536] shadow-xl min-w-[180px] p-1"
+                          onOpenAutoFocus={(e) => e.preventDefault()}
+                        >
+                          {LIMIT_OPTIONS.map((opt) => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => {
+                                setLimit(opt.value);
+                                setLimitOpen(false);
+                              }}
+                              className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                                limit === opt.value
+                                  ? 'bg-sage-600/80 text-white font-medium'
+                                  : 'text-gray-300 hover:bg-white/10'
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </Popover.Content>
+                      </Popover.Portal>
+                    </Popover.Root>
                   </div>
                   <button
                     onClick={handleGenerate}
