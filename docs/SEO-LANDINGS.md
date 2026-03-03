@@ -122,12 +122,16 @@ Las listas filtran por BD pero **no tienen contenido editorial único**. Para SE
 
 1. ~~**Crítico**: `generateMetadata` en destinos/[slug]~~ ✅ Hecho.
 2. ~~**Alto**: JSON-LD Event + Breadcrumb en retiro/[slug]~~ ✅ Hecho.
-3. **Alto**: JSON-LD LocalBusiness en centro/[slug].
-4. **Alto**: Párrafo introductorio por ciudad en retiros-retiru y centros-retiru.
-5. **Medio**: JSON-LD ItemList en listas por ciudad.
-6. **Medio**: FAQ por destino + schema FAQPage.
-7. **Medio**: OG images dinámicas por centro (retiro ya tiene).
-8. **Bajo**: JSON-LD Article en blog.
+3. ~~**Alto**: Conectar centros-retiru/[slug] y retiros-retiru/[slug] a Supabase (eliminar datos hardcodeados)~~ ✅ Hecho.
+4. ~~**Alto**: Completar sitemap bilingüe con centros por provincia, retiros por destino, organizadores, productos (~1.956 URLs)~~ ✅ Hecho.
+5. ~~**Alto**: Generación estática condicional — solo generar páginas de provincia/destino con contenido real~~ ✅ Hecho.
+6. **Alto**: JSON-LD LocalBusiness en centro/[slug].
+7. **Alto**: Párrafo introductorio por ciudad en retiros-retiru y centros-retiru.
+8. **Medio**: Crear landings por tipo+ciudad (centros-yoga/[slug], retiros-yoga/[slug], etc.)
+9. **Medio**: JSON-LD ItemList en listas por ciudad.
+10. **Medio**: FAQ por destino + schema FAQPage.
+11. **Medio**: OG images dinámicas por centro (retiro ya tiene).
+12. **Bajo**: JSON-LD Article en blog.
 
 ---
 
@@ -141,9 +145,40 @@ Para no duplicar contenido entre landings:
 
 ---
 
-## 7. Resumen
+## 7. Sitemap dinámico (`src/app/sitemap.ts`)
+
+El sitemap se genera en build time con ISR (`revalidate = 3600`). Genera URLs **bilingües** (ES + EN) para cada recurso dinámico.
+
+### URLs incluidas
+
+| Tipo | Fuente | ES | EN | Condición |
+|------|--------|----|----|-----------|
+| Estáticas | Hardcoded | `/es/...` | `/en/...` | Siempre |
+| Centros individuales | `centers` (status=active) | `/es/centro/[slug]` | `/en/center/[slug]` | Siempre |
+| Centros por provincia | `getCenterProvinces()` | `/es/centros-retiru/[slug]` | `/en/centers-retiru/[slug]` | Solo si hay >= 1 centro en la provincia |
+| Retiros individuales | `retreats` (published, vigente) | `/es/retiro/[slug]` | `/en/retreat/[slug]` | Siempre |
+| Retiros por destino | `getDestinationsWithRetreats()` | `/es/retiros-retiru/[slug]` | `/en/retreats-retiru/[slug]` | Solo si hay >= 1 retiro en el destino |
+| Blog | `blog_articles` (published) | `/es/blog/[slug]` | `/en/blog/[slug]` | Siempre |
+| Destinos | `destinations` (active) | `/es/destinos/[slug]` | `/en/destinations/[slug]` | Siempre |
+| Organizadores | `organizer_profiles` (verified) | `/es/organizador/[slug]` | `/en/organizer/[slug]` | Siempre |
+| Productos | `products` (active) | `/es/tienda/[slug]` | `/en/shop/[slug]` | Siempre |
+
+Todas las entradas incluyen `alternates` con hreflang ES/EN.
+
+### Generación estática condicional
+
+`generateStaticParams()` en las páginas de centros por provincia y retiros por destino usa:
+- `getCenterProvinces()` — solo provincias con centros activos
+- `getDestinationsWithRetreats()` — solo destinos con retiros publicados y vigentes
+
+Así no se generan páginas vacías ("thin content") en el deploy.
+
+---
+
+## 8. Resumen
 
 - **Listas**: filtran por BD pero necesitan contenido editorial único (intro, FAQ, tips) y schema ItemList.
 - **Fichas**: retiros y centros tienen buen contenido; falta JSON-LD y OG dinámico.
 - **Destinos**: sin metadata y sin contenido único; prioridad alta.
 - **Blog**: contenido editorial; falta schema Article y metadata por artículo.
+- **Sitemap**: ✅ Completo y bilingüe (~1.956 URLs), con generación condicional.

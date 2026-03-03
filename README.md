@@ -135,9 +135,13 @@ Ejecutar en el **SQL Editor** de Supabase (con service_role) en este orden:
 
 Las páginas consumen datos a través de `src/lib/data/index.ts`:
 
-- `getCategories(locale)`, `getDestinations(locale)`
+- `getCategories(locale)`, `getDestinations(locale)`, `getDestinationBySlug(slug)`
 - `getPublishedRetreats(filters)`, `getRetreatBySlug(slug)`
 - `getOrganizerBySlug(slug)`, `getActiveCenters(filters)`, `getCenterBySlug(slug)`
+- `getCenterProvinces()` — provincias únicas con centros activos (para `generateStaticParams` y sitemap)
+- `getCentersByProvince(slug)` — centros filtrados por provincia normalizada
+- `getDestinationsWithRetreats()` — solo destinos con al menos 1 retiro publicado (para `generateStaticParams` y sitemap)
+- Slugs para build: `getCenterSlugs()`, `getRetreatSlugs()`, `getBlogPostSlugs()`, `getOrganizerSlugs()`, `getProductSlugs()`, `getDestinationSlugs()`
 
 Las APIs `/api/retreats`, `/api/centers` y `/api/catalog` exponen datos para búsqueda y filtros.
 
@@ -196,12 +200,32 @@ Cualquier usuario logueado (incluido el admin) accede a estas 4 secciones desde 
 
 - **1 landing genérica**: Home (`/es`) — no compite por términos específicos.
 - **4 tipos × N localidades** (localidades desde base de datos):
-  1. `centros-retiru/[slug]` — Centros en [ciudad]
-  2. `retiros-retiru/[slug]` — Retiros en [ciudad]
+  1. `centros-retiru/[slug]` — Centros en [ciudad] ✅ Conectado a Supabase
+  2. `retiros-retiru/[slug]` — Retiros en [ciudad] ✅ Conectado a Supabase
   3. `centros-[tipo]/[slug]` — Centros de [tipo] en [ciudad] *(planificado)*
   4. `retiros-[tipo]/[slug]` — Retiros de [tipo] en [ciudad] *(planificado)*
 
 Ejemplos: centros-yoga/murcia, retiros-yoga/madrid.
+
+**Generación estática condicional:** Las páginas por provincia/destino solo se generan en el deploy si hay al menos 1 centro/retiro en esa provincia/destino. Evita "thin content" vacío.
+
+### Sitemap dinámico (`/sitemap.xml`)
+
+El sitemap se genera automáticamente en cada deploy con ISR (revalidate 1h). Incluye **~1.956 URLs bilingües** (ES + EN):
+
+| Tipo | Slugs | URLs (ES+EN) |
+|------|-------|-------------|
+| Páginas estáticas | 26 | 26 |
+| Centros individuales | ~858 | ~1.716 |
+| Centros por provincia | ~64 | ~128 |
+| Retiros individuales | ~10 | ~20 |
+| Retiros por destino | ~10 | ~20 |
+| Blog | ~10 | ~20 |
+| Destinos | ~12 | ~24 |
+| Organizadores | ~1 | ~2 |
+| Productos | 0 | 0 |
+
+Cada entrada incluye `alternates` hreflang ES/EN. Solo se generan entradas para provincias con centros y destinos con retiros.
 
 ### Rutas EN (equivalente)
 
