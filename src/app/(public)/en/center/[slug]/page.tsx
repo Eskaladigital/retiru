@@ -127,7 +127,7 @@ export default async function CenterDetailEN({ params }: Props) {
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-4">
+        <div>
           <div className="bg-white border border-sand-200 rounded-2xl p-6 sticky top-24">
             <h3 className="font-serif text-lg mb-4">Contact information</h3>
             <div className="space-y-3">
@@ -145,7 +145,6 @@ export default async function CenterDetailEN({ params }: Props) {
               )}
             </div>
 
-            {/* Action buttons */}
             <div className="flex flex-col gap-2.5 mt-5">
               {(C.google_maps_url || C.google_place_id) && (
                 <a
@@ -182,15 +181,17 @@ export default async function CenterDetailEN({ params }: Props) {
                 </a>
               )}
             </div>
-          </div>
 
-          <CenterMap
-            latitude={C.latitude}
-            longitude={C.longitude}
-            name={C.name}
-            address={C.address}
-            className="h-48"
-          />
+            <div className="mt-5 rounded-xl overflow-hidden">
+              <CenterMap
+                latitude={C.latitude}
+                longitude={C.longitude}
+                name={C.name}
+                address={C.address}
+                className="h-48"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
