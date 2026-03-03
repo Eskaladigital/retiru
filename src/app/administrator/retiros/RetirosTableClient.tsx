@@ -16,12 +16,8 @@ interface RetreatRow {
   published_at: string | null;
   reviewed_at: string | null;
   rejection_reason: string | null;
-  organizer_profiles: {
-    id: string;
-    business_name: string;
-    slug: string;
-    profiles: { id: string; full_name: string | null; email: string | null } | null;
-  } | null;
+  organizer_name: string | null;
+  organizer_email: string | null;
 }
 
 type FilterStatus = 'all' | 'pending_review' | 'draft' | 'published' | 'rejected' | 'archived' | 'cancelled';
@@ -43,8 +39,8 @@ const FILTER_OPTIONS: { value: FilterStatus; label: string }[] = [
   { value: 'rejected', label: 'Rechazados' },
 ];
 
-export function EventosTableClient({ retreats }: { retreats: RetreatRow[] }) {
-  const [filter, setFilter] = useState<FilterStatus>('pending_review');
+export function RetirosTableClient({ retreats }: { retreats: RetreatRow[] }) {
+  const [filter, setFilter] = useState<FilterStatus>('all');
   const [acting, setActing] = useState<string | null>(null);
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
@@ -149,8 +145,6 @@ export function EventosTableClient({ retreats }: { retreats: RetreatRow[] }) {
               ) : (
                 filtered.map((r) => {
                   const badge = STATUS_BADGE[r.status] || STATUS_BADGE.draft;
-                  const org = r.organizer_profiles;
-                  const orgUser = org?.profiles;
                   return (
                     <tr key={r.id} className="hover:bg-sand-50/50 transition-colors">
                       <td className="px-4 py-3">
@@ -169,9 +163,9 @@ export function EventosTableClient({ retreats }: { retreats: RetreatRow[] }) {
                         )}
                       </td>
                       <td className="px-4 py-3 hidden md:table-cell">
-                        <span className="font-medium text-xs">{org?.business_name || '—'}</span>
-                        {orgUser?.email && (
-                          <span className="block text-[11px] text-[#a09383] truncate max-w-[160px]">{orgUser.email}</span>
+                        <span className="font-medium text-xs">{r.organizer_name || '—'}</span>
+                        {r.organizer_email && (
+                          <span className="block text-[11px] text-[#a09383] truncate max-w-[160px]">{r.organizer_email}</span>
                         )}
                       </td>
                       <td className="px-4 py-3 text-center">
@@ -239,7 +233,7 @@ export function EventosTableClient({ retreats }: { retreats: RetreatRow[] }) {
           <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-serif text-xl mb-3">Rechazar retiro</h3>
             <p className="text-sm text-[#7a6b5d] mb-4">
-              Indica el motivo del rechazo. El organizador podrá verlo y corregir su evento.
+              Indica el motivo del rechazo. El organizador podrá verlo y corregir su retiro.
             </p>
             <textarea
               value={rejectReason}

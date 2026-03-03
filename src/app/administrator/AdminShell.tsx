@@ -12,7 +12,7 @@ import { Menu, X } from 'lucide-react';
 const NAV = [
   { href: '/administrator', label: 'Dashboard', icon: '📊' },
   { href: '/administrator/organizadores', label: 'Organizadores', icon: '👥' },
-  { href: '/administrator/eventos', label: 'Retiros', icon: '📅' },
+  { href: '/administrator/retiros', label: 'Retiros', icon: '📅' },
   { href: '/administrator/centros', label: 'Centros', icon: '🏢' },
   { href: '/administrator/claims', label: 'Claims', icon: '🔑' },
   { href: '/administrator/blog', label: 'Blog', icon: '✏️' },
