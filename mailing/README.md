@@ -13,17 +13,16 @@ Emails transaccionales y de captación para la estrategia de crecimiento del dir
 
 ### Personalización
 
-Ambos emails incluyen variables que deben sustituirse antes del envío:
+**Email 1 (bienvenida):** Variables para N8N (solo hero):
 
-| Variable | Ejemplo | Dónde aparece |
-|----------|---------|---------------|
-| `{{NOMBRE_CENTRO}}` | Yoga Sala Madrid | Saludo y cuerpo |
-| `{{URL_PERFIL}}` | `retiru.com/es/centro/yoga-sala-madrid` | Link "ver tu ficha" |
-| `{{CENTER_SLUG}}` | `yoga-sala-madrid` | Botón CTA principal "Ver tu centro en nuestra web" |
-| `{{CLAIM_TOKEN}}` | `abc123...` (base64url) | Link secundario "Reclama tu centro" para gestionar |
-| `{{CIUDAD}}` | Madrid | Cuerpo del texto |
+| Variable | Ejemplo | Dónde |
+|----------|---------|-------|
+| `{{NOMBRE_CENTRO}}` | Yoga Sala Madrid | Nombre del centro, debajo de "¡Enhorabuena!" |
+| `{{LOCATION}}` | Murcia | "Tu centro ha sido seleccionado de entre los mejores centros de yoga de {{LOCATION}}." |
 
-> **Flujo:** El CTA principal es "Ver tu centro en nuestra web" (`/es/centro/{{CENTER_SLUG}}`). El link secundario "Reclama tu centro" usa `https://retiru.com/es/reclamar/{{CLAIM_TOKEN}}` para gestionar el perfil. Los tokens se generan con `npm run centers:claim-tokens`.
+Todos los links apuntan a `https://www.retiru.com/es/centros-retiru`.
+
+> **Flujo:** "Busca tu centro en nuestro directorio. Y una vez allí, reclama su perfil." Un solo CTA: Ir al directorio de centros.
 
 ### Datos de contacto Retiru
 
@@ -38,13 +37,12 @@ Ambos emails siguen las mismas reglas de compatibilidad que los de ESKALA (ver a
 
 ### Logo
 
-El header replica el logo del navbar de retiru.com: "retiru" en Georgia serif terracota + punto redondo terracota. Compatible con Outlook (MSO conditional comments).
+El header y footer usan la imagen `https://www.retiru.com/images/logo.png` (public/images/logo.png).
 
 ### Checklist pre-envío Retiru
 
 - [ ] Email remitente: `contacto@retiru.com`
-- [ ] Variables personalizadas sustituidas (`{{NOMBRE_CENTRO}}`, `{{URL_PERFIL}}`, `{{CENTER_SLUG}}`, `{{CLAIM_TOKEN}}`)
-- [ ] Tokens de claim generados (`npm run centers:claim-tokens`)
+- [ ] Variables N8N: `{{NOMBRE_CENTRO}}`, `{{LOCATION}}` (provincia o ciudad)
 - [ ] Todos los links apuntan a `retiru.com` (no localhost)
 - [ ] Link "Cancelar suscripción" con mailto a `contacto@retiru.com`
 - [ ] Probado en Outlook Desktop y Gmail
