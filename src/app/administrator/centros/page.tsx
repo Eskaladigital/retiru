@@ -2,6 +2,7 @@
 import { createAdminSupabase } from '@/lib/supabase/server';
 import { GenerateDescriptionsButton } from './GenerateDescriptionsButton';
 import { CentersTableClient, type CenterRow } from './CentersTableClient';
+import { AddCenterButton } from './AddCenterButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,9 +32,7 @@ export default async function AdminCentrosPage() {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <GenerateDescriptionsButton />
-          <button className="bg-terracotta-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-terracotta-700 transition-colors">
-            ➕ Añadir centro
-          </button>
+          <AddCenterButton />
         </div>
       </div>
 

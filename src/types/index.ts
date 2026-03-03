@@ -481,6 +481,17 @@ export interface Center {
   claimed_by: string | null;
   created_at: string;
   updated_at: string;
+  description_ai_generated_at: string | null;
+  google_place_id: string | null;
+  google_types: string | null;
+  google_maps_url: string | null;
+  google_status: string | null;
+  region: string | null;
+  country: string | null;
+  web_valid_ia: string | null;
+  quality_ia: string | null;
+  search_terms: string | null;
+  price_level: string | null;
 }
 
 export type ClaimStatus = 'pending' | 'approved' | 'rejected';
