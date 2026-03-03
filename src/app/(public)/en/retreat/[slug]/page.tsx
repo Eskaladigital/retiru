@@ -103,19 +103,25 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbLd) }} />
 
       {/* Image Gallery */}
-      <section className="bg-sand-100">
+      <section className="bg-sand-100 pt-20 md:pt-[72px]">
         <div className="container-wide py-4">
           {hasImages ? (
-            <div className="grid gap-2 md:grid-cols-4 md:grid-rows-2 rounded-2xl overflow-hidden" style={{ maxHeight: '480px' }}>
-              <div className="md:col-span-2 md:row-span-2 relative">
-                <img src={sortedImages[0].url} alt={sortedImages[0].alt_text ?? (r.title_en || r.title_es)} className="h-full w-full object-cover" style={{ minHeight: '300px' }} />
-              </div>
-              {sortedImages.slice(1, 5).map((img, i) => (
-                <div key={img.id ?? i} className="hidden md:block relative">
-                  <img src={img.url} alt={img.alt_text ?? ''} className="h-full w-full object-cover" />
+            sortedImages.length >= 3 ? (
+              <div className="grid gap-2 md:grid-cols-4 md:grid-rows-2 rounded-2xl overflow-hidden" style={{ maxHeight: '480px' }}>
+                <div className="md:col-span-2 md:row-span-2 relative">
+                  <img src={sortedImages[0].url} alt={sortedImages[0].alt_text ?? (r.title_en || r.title_es)} className="h-full w-full object-cover" style={{ minHeight: '300px' }} />
                 </div>
-              ))}
-            </div>
+                {sortedImages.slice(1, 5).map((img, i) => (
+                  <div key={img.id ?? i} className="hidden md:block relative">
+                    <img src={img.url} alt={img.alt_text ?? ''} className="h-full w-full object-cover" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-2xl overflow-hidden" style={{ maxHeight: '420px' }}>
+                <img src={sortedImages[0].url} alt={sortedImages[0].alt_text ?? (r.title_en || r.title_es)} className="w-full h-full object-cover" style={{ minHeight: '280px', maxHeight: '420px' }} />
+              </div>
+            )
           ) : (
             <div className="flex items-center justify-center rounded-2xl bg-sand-200 text-muted-foreground" style={{ height: '320px' }}>
               <span className="text-sm">No images available</span>
