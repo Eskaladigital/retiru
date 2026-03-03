@@ -132,7 +132,7 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
       const supabase = createClient();
       const { error } = await supabase
         .from('centers')
-        .update({ status: isActive ? 'draft' : 'active' })
+        .update({ status: isActive ? 'inactive' : 'active' })
         .eq('id', c.id);
       if (error) {
         alert(`Error al ${action}: ${error.message}`);
