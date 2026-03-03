@@ -1,9 +1,12 @@
-// /sitemap.xml — Dynamic sitemap generator
+// /sitemap.xml — Dynamic sitemap generator (siempre URLs de producción)
 import type { MetadataRoute } from 'next';
+import { getSiteUrl } from '@/lib/site-url';
+import { createStaticSupabase } from '@/lib/supabase/server';
 
-const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://retiru.com';
+export const revalidate = 3600; // Regenerar cada hora
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const SITE_URL = getSiteUrl();
   const now = new Date().toISOString();
 
   // Static pages — ES
@@ -40,14 +43,53 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/en/blog', priority: 0.7, changeFrequency: 'weekly' as const },
   ];
 
-  // TODO: Dynamically generate from Supabase:
-  // - /es/retiro/[slug]  &  /en/retreat/[slug]
-  // - /es/centros-retiru/[slug]  &  /en/centers-retiru/[slug]
-  // - /es/tienda/[slug]   &  /en/shop/[slug]
-  // - /es/retiros-retiru/[slug]  &  /en/retreats-retiru/[slug]
-  // - /es/destinos/[slug]  &  /en/destinations/[slug]
-  // - /es/organizador/[slug]  &  /en/organizer/[slug]
-  // - /es/blog/[slug]  &  /en/blog/[slug]
+  // URLs dinámicas desde Supabase
+  const supabase = createStaticSupabase();
+  const dynamicEntries: MetadataRoute.Sitemap = [];
+
+  const { data: retreatSlugs } = await supabase.from('retreats').select('slug').eq('status', 'published').gte('end_date', new Date().toISOString().slice(0, 10));
+  (retreatSlugs || []).forEach((r) => {
+    dynamicEntries.push({
+      url: `${SITE_URL}/es/retiro/${r.slug}`,
+      lastModified: now,
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+      alternates: { languages: { es: `${SITE_URL}/es/retiro/${r.slug}`, en: `${SITE_URL}/en/retreat/${r.slug}` } },
+    });
+  });
+
+  const { data: centerSlugs } = await supabase.from('centers').select('slug').eq('status', 'active');
+  (centerSlugs || []).forEach((c) => {
+    dynamicEntries.push({
+      url: `${SITE_URL}/es/centro/${c.slug}`,
+      lastModified: now,
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+      alternates: { languages: { es: `${SITE_URL}/es/centro/${c.slug}`, en: `${SITE_URL}/en/center/${c.slug}` } },
+    });
+  });
+
+  const { data: blogSlugs } = await supabase.from('blog_articles').select('slug').eq('is_published', true);
+  (blogSlugs || []).forEach((b) => {
+    dynamicEntries.push({
+      url: `${SITE_URL}/es/blog/${b.slug}`,
+      lastModified: now,
+      changeFrequency: 'monthly' as const,
+      priority: 0.6,
+      alternates: { languages: { es: `${SITE_URL}/es/blog/${b.slug}`, en: `${SITE_URL}/en/blog/${b.slug}` } },
+    });
+  });
+
+  const { data: destSlugs } = await supabase.from('destinations').select('slug').eq('is_active', true);
+  (destSlugs || []).forEach((d) => {
+    dynamicEntries.push({
+      url: `${SITE_URL}/es/destinos/${d.slug}`,
+      lastModified: now,
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
+      alternates: { languages: { es: `${SITE_URL}/es/destinos/${d.slug}`, en: `${SITE_URL}/en/destinations/${d.slug}` } },
+    });
+  });
 
   const staticEntries = [...esPages, ...enPages].map(({ path, priority, changeFrequency }) => ({
     url: `${SITE_URL}${path}`,
@@ -62,5 +104,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   }));
 
-  return staticEntries;
+  return [...staticEntries, ...dynamicEntries];
 }

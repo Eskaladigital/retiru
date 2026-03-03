@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Clock, Calendar, ArrowLeft, Share2, ChevronRight } from 'lucide-react';
 import { notFound } from 'next/navigation';
@@ -5,12 +6,51 @@ import { getBlogPostSlugs } from '@/lib/data';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { MarkdownContent } from '@/components/ui/markdown-content';
 
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.retiru.com';
+
 export const revalidate = 60;
 export const dynamicParams = true;
 
 export async function generateStaticParams() {
   const slugs = await getBlogPostSlugs();
   return slugs.map((slug) => ({ slug }));
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const supabase = await createServerSupabase();
+  const { data: article } = await supabase
+    .from('blog_articles')
+    .select('title_es, excerpt_es, meta_title_es, meta_description_es, slug, slug_en, cover_image_url')
+    .eq('slug', slug)
+    .eq('is_published', true)
+    .single();
+
+  if (!article) return {};
+
+  const title = article.meta_title_es || article.title_es;
+  const description = article.meta_description_es || article.excerpt_es;
+  const enSlug = article.slug_en || article.slug;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `${BASE_URL}/es/blog/${article.slug}`,
+      languages: {
+        es: `${BASE_URL}/es/blog/${article.slug}`,
+        en: `${BASE_URL}/en/blog/${enSlug}`,
+      },
+    },
+    openGraph: {
+      title,
+      description,
+      url: `${BASE_URL}/es/blog/${article.slug}`,
+      images: article.cover_image_url ? [article.cover_image_url] : undefined,
+      locale: 'es',
+      alternateLocale: 'en',
+    },
+  };
 }
 
 export default async function BlogArticlePage({ params }: { params: Promise<{ slug: string }> }) {

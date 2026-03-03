@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Clock, Calendar, ArrowLeft, Share2, ChevronRight } from 'lucide-react';
 import { notFound } from 'next/navigation';
@@ -5,12 +6,51 @@ import { getBlogPostSlugs } from '@/lib/data';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { MarkdownContent } from '@/components/ui/markdown-content';
 
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.retiru.com';
+
 export const revalidate = 60;
 export const dynamicParams = true;
 
 export async function generateStaticParams() {
-  const slugs = await getBlogPostSlugs();
+  const slugs = await getBlogPostSlugs('en');
   return slugs.map((slug) => ({ slug }));
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const supabase = await createServerSupabase();
+  const { data: article } = await supabase
+    .from('blog_articles')
+    .select('title_en, title_es, excerpt_en, excerpt_es, meta_title_en, meta_title_es, meta_description_en, meta_description_es, slug, slug_en, cover_image_url')
+    .or(`slug_en.eq.${slug},slug.eq.${slug}`)
+    .eq('is_published', true)
+    .single();
+
+  if (!article) return {};
+
+  const title = (article as any).meta_title_en || (article as any).meta_title_es || article.title_en || article.title_es;
+  const description = (article as any).meta_description_en || (article as any).meta_description_es || article.excerpt_en || article.excerpt_es;
+  const enSlug = article.slug_en || article.slug;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `${BASE_URL}/en/blog/${enSlug}`,
+      languages: {
+        es: `${BASE_URL}/es/blog/${article.slug}`,
+        en: `${BASE_URL}/en/blog/${enSlug}`,
+      },
+    },
+    openGraph: {
+      title,
+      description,
+      url: `${BASE_URL}/en/blog/${enSlug}`,
+      images: article.cover_image_url ? [article.cover_image_url] : undefined,
+      locale: 'en',
+      alternateLocale: 'es',
+    },
+  };
 }
 
 export default async function BlogPostEN({ params }: { params: Promise<{ slug: string }> }) {
@@ -20,7 +60,7 @@ export default async function BlogPostEN({ params }: { params: Promise<{ slug: s
   const { data: article } = await supabase
     .from('blog_articles')
     .select('*, blog_categories(name_en, name_es, slug)')
-    .eq('slug', slug)
+    .or(`slug_en.eq.${slug},slug.eq.${slug}`)
     .eq('is_published', true)
     .single();
 
@@ -28,7 +68,7 @@ export default async function BlogPostEN({ params }: { params: Promise<{ slug: s
 
   const { data: related } = await supabase
     .from('blog_articles')
-    .select('id, title_en, title_es, slug, cover_image_url, blog_categories(name_en, name_es)')
+    .select('id, title_en, title_es, slug, slug_en, cover_image_url, blog_categories(name_en, name_es)')
     .eq('is_published', true)
     .neq('id', article.id)
     .order('published_at', { ascending: false })
@@ -123,10 +163,11 @@ export default async function BlogPostEN({ params }: { params: Promise<{ slug: s
               {related.map((r) => {
                 const rTitle = (r as any).title_en || (r as any).title_es;
                 const rCat = (r.blog_categories as any)?.name_en || (r.blog_categories as any)?.name_es || 'General';
+                const rSlug = (r as any).slug_en || r.slug;
                 return (
                   <Link
                     key={r.id}
-                    href={`/en/blog/${r.slug}`}
+                    href={`/en/blog/${rSlug}`}
                     className="group bg-white rounded-2xl border border-sand-200 overflow-hidden hover:shadow-soft hover:-translate-y-1 transition-all duration-300"
                   >
                     <div className="aspect-[16/10] overflow-hidden">

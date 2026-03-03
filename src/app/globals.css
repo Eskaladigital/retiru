@@ -135,15 +135,33 @@
     @apply bg-gradient-to-r from-terracotta-600 to-terracotta-500 bg-clip-text text-transparent;
   }
 
-  /* Markdown content (centros, descripciones IA) */
+  /* Markdown content (blog, centros, descripciones IA) */
   .markdown-content strong {
     @apply font-semibold text-foreground;
   }
+  .markdown-content em {
+    @apply italic;
+  }
   .markdown-content h3 {
+    @apply font-serif text-xl font-semibold mt-8 mb-3 text-foreground;
+  }
+  .markdown-content h4 {
     @apply font-serif text-lg font-semibold mt-6 mb-2 text-foreground;
   }
   .markdown-content p {
     @apply mb-4 last:mb-0;
+  }
+  .markdown-content ul {
+    @apply list-disc pl-6 mb-5 space-y-1.5;
+  }
+  .markdown-content ol {
+    @apply list-decimal pl-6 mb-5 space-y-1.5;
+  }
+  .markdown-content li {
+    @apply leading-relaxed;
+  }
+  .markdown-content a {
+    @apply text-terracotta-600 underline underline-offset-2 hover:text-terracotta-700 transition-colors;
   }
 }
 

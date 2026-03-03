@@ -71,8 +71,19 @@ async function searchSerp(query, serpKey) {
 async function generateArticle(topic, serpContext, openaiKey) {
   const systemPrompt = `Eres redactor de Retiru (retiru.com), plataforma de retiros y escapadas de bienestar en España.
 Escribe artículos de blog útiles, bien estructurados y optimizados para SEO.
-Formato: párrafos claros, listas cuando convenga, tono cercano pero profesional.
-Incluye menciones naturales a Retiru cuando sea relevante (ej: "En Retiru puedes buscar retiros por destino...").
+Tono cercano pero profesional. Incluye menciones naturales a Retiru cuando sea relevante.
+
+FORMATO DEL CONTENIDO (markdown soportado):
+- Encabezados de sección: ### Título (con línea en blanco antes y después)
+- Sub-encabezados: #### Subtítulo
+- Listas con viñeta: - elemento (cada uno en su propia línea)
+- Listas numeradas: 1. elemento (cada uno en su propia línea)
+- Negrita: **texto**
+- Cursiva: *texto*
+- Párrafos separados por doble salto de línea
+- NO uses tablas, imágenes ni HTML
+- Asegúrate de que cada elemento de lista esté en una línea independiente
+
 Responde SOLO con un JSON válido, sin markdown ni texto extra.`;
 
   const userPrompt = `Genera un artículo de blog sobre: "${topic}"
@@ -86,8 +97,8 @@ Devuelve un JSON con estas claves exactas:
   "slug": "slug-url-unico",
   "excerpt_es": "resumen 1-2 frases en español",
   "excerpt_en": "resumen 1-2 frases en inglés",
-  "content_es": "contenido completo en español, 800-1200 palabras, párrafos separados por doble salto",
-  "content_en": "contenido completo en inglés, 600-900 palabras",
+  "content_es": "contenido completo en español, 800-1200 palabras, usa ### para secciones, - para listas, **negrita**, párrafos con doble salto",
+  "content_en": "contenido completo en inglés, 600-900 palabras, mismo formato markdown que content_es",
   "read_time_min": número estimado de minutos de lectura,
   "meta_title_es": "título SEO 50-60 caracteres",
   "meta_description_es": "meta descripción 150-160 caracteres"
@@ -232,12 +243,15 @@ async function main() {
       console.log('      ✨ Artículo generado');
 
       const slug = article.slug || slugify(article.title_es);
+      const titleEn = article.title_en || article.title_es;
+      const slugEn = article.slug_en || slugify(titleEn);
       const coverImage = COVER_IMAGES[i] || COVER_IMAGES[0];
 
       const row = {
         title_es: article.title_es,
-        title_en: article.title_en || article.title_es,
+        title_en: titleEn,
         slug,
+        slug_en: slugEn !== slug ? slugEn : null,
         excerpt_es: article.excerpt_es,
         excerpt_en: article.excerpt_en || article.excerpt_es,
         content_es: article.content_es,

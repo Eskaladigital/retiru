@@ -1,7 +1,8 @@
-// /robots.txt
+// /robots.txt — siempre URLs de producción
 import type { MetadataRoute } from 'next';
+import { getSiteUrl } from '@/lib/site-url';
 
-const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://retiru.com';
+const SITE_URL = getSiteUrl();
 
 export default function robots(): MetadataRoute.Robots {
   return {

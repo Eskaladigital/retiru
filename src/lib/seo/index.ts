@@ -3,8 +3,9 @@
 // ============================================================================
 
 import type { Metadata } from 'next';
+import { getSiteUrl } from '@/lib/site-url';
 
-const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://retiru.com';
+const SITE_URL = getSiteUrl();
 const SITE_NAME = 'Retiru';
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-default.jpg`;
 const TWITTER_HANDLE = '@retiru_es';

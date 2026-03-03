@@ -4,7 +4,8 @@
 
 import type { Metadata, Viewport } from 'next';
 import { jsonLdOrganization, jsonLdWebSite, jsonLdScript } from '@/lib/seo';
-const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://retiru.com';
+import { getSiteUrl } from '@/lib/site-url';
+const SITE_URL = getSiteUrl();
 
 export const viewport: Viewport = {
   width: 'device-width',

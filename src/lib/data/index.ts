@@ -253,14 +253,17 @@ export async function getRetreatSlugs(): Promise<string[]> {
 }
 
 /** Usar solo en generateStaticParams */
-export async function getBlogPostSlugs(): Promise<string[]> {
+export async function getBlogPostSlugs(locale: 'es' | 'en' = 'es'): Promise<string[]> {
   const supabase = createStaticSupabase();
   const { data, error } = await supabase
     .from('blog_articles')
-    .select('slug')
+    .select('slug, slug_en')
     .eq('is_published', true)
     .order('slug');
   if (error) throw error;
+  if (locale === 'en') {
+    return (data || []).map((r: any) => r.slug_en || r.slug).filter(Boolean);
+  }
   return (data || []).map((r) => r.slug).filter(Boolean);
 }
 

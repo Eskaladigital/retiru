@@ -17,7 +17,7 @@ export default async function BlogPageEN() {
 
   const { data: articles } = await supabase
     .from('blog_articles')
-    .select('id, title_en, title_es, slug, excerpt_en, excerpt_es, cover_image_url, read_time_min, published_at, category_id, blog_categories(name_en, name_es)')
+    .select('id, title_en, title_es, slug, slug_en, excerpt_en, excerpt_es, cover_image_url, read_time_min, published_at, category_id, blog_categories(name_en, name_es)')
     .eq('is_published', true)
     .order('published_at', { ascending: false });
 
@@ -34,6 +34,7 @@ export default async function BlogPageEN() {
   function title(a: any) { return a.title_en || a.title_es; }
   function excerpt(a: any) { return a.excerpt_en || a.excerpt_es; }
   function catName(a: any) { return (a.blog_categories as any)?.name_en || (a.blog_categories as any)?.name_es || 'General'; }
+  function enSlug(a: any) { return a.slug_en || a.slug; }
 
   return (
     <div>
@@ -71,7 +72,7 @@ export default async function BlogPageEN() {
       {/* Featured article */}
       {featured && (
         <section className="container-wide mb-12">
-          <Link href={`/en/blog/${featured.slug}`} className="group grid md:grid-cols-2 gap-0 bg-white rounded-3xl border border-sand-200 overflow-hidden hover:shadow-elevated transition-all duration-300">
+          <Link href={`/en/blog/${enSlug(featured)}`} className="group grid md:grid-cols-2 gap-0 bg-white rounded-3xl border border-sand-200 overflow-hidden hover:shadow-elevated transition-all duration-300">
             <div className="aspect-[16/10] md:aspect-auto overflow-hidden">
               <img
                 src={featured.cover_image_url || 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=1200&q=80'}
@@ -116,7 +117,7 @@ export default async function BlogPageEN() {
             {rest.map((article) => (
               <Link
                 key={article.id}
-                href={`/en/blog/${article.slug}`}
+                href={`/en/blog/${enSlug(article)}`}
                 className="group bg-white rounded-2xl border border-sand-200 overflow-hidden hover:shadow-soft hover:-translate-y-1 transition-all duration-300"
               >
                 <div className="aspect-[16/10] overflow-hidden">
