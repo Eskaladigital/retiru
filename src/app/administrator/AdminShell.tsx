@@ -48,7 +48,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   );
 
   return (
-    <div className="flex min-h-screen bg-cream-100">
+    <div className="flex h-screen overflow-hidden bg-cream-100">
       {/* Barra móvil con botón menú */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-white border-b border-sand-200 flex items-center justify-between px-4">
         <Link href="/administrator" className="font-serif text-xl text-terracotta-700">retiru</Link>
@@ -70,13 +70,13 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         />
       )}
 
-      {/* Sidebar — desktop: fijo | móvil: drawer colapsable */}
+      {/* Sidebar — desktop: fijo 100vh | móvil: drawer colapsable */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-40 w-56 shrink-0 border-r border-sand-200 bg-white transform transition-transform duration-200 ease-out lg:translate-x-0 flex flex-col ${
+        className={`fixed lg:static inset-y-0 left-0 z-40 w-56 shrink-0 h-screen border-r border-sand-200 bg-white transform transition-transform duration-200 ease-out lg:translate-x-0 flex flex-col ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="sticky top-0 flex-1 flex flex-col pt-6 lg:pt-6 pb-4 px-4">
+        <div className="flex-1 flex flex-col pt-6 lg:pt-6 pb-4 px-4 overflow-y-auto">
           <p className="text-xs font-bold uppercase tracking-[0.08em] text-red-500 px-3 mb-3">Admin</p>
           <NavContent />
           <div className="mt-auto pt-4 border-t border-sand-200">
@@ -93,8 +93,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         </div>
       </aside>
 
-      {/* Contenido principal */}
-      <main className="flex-1 min-w-0 pt-14 lg:pt-0 p-6 md:p-8">{children}</main>
+      {/* Contenido principal — solo esta zona hace scroll */}
+      <main className="flex-1 min-w-0 min-h-0 overflow-y-auto pt-14 lg:pt-0 p-6 md:p-8">{children}</main>
     </div>
   );
 }
