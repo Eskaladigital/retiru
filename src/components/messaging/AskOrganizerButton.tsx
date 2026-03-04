@@ -17,6 +17,7 @@ export default function AskOrganizerButton({ retreatId, locale, compact }: Props
   const [error, setError] = useState<string | null>(null);
 
   const label = locale === 'es' ? 'Preguntar al organizador' : 'Ask the organizer';
+  const compactLabel = locale === 'es' ? 'Organizador' : 'Organizer';
   const loginPath = locale === 'es' ? '/es/registro' : '/en/register';
   const messagesPath = locale === 'es' ? '/es/mensajes' : '/en/messages';
 
@@ -66,12 +67,14 @@ export default function AskOrganizerButton({ retreatId, locale, compact }: Props
         onClick={handleClick}
         disabled={loading}
         className={compact
-          ? 'btn-outline px-3 py-3 text-sm flex items-center justify-center'
+          ? 'btn-outline px-4 py-3 text-sm flex items-center justify-center gap-1.5 whitespace-nowrap'
           : 'btn-outline w-full py-3 text-sm flex items-center justify-center gap-2'}
         title={label}
       >
         <MessageCircle size={16} />
-        {!compact && (loading ? (locale === 'es' ? 'Abriendo...' : 'Opening...') : label)}
+        {compact
+          ? (loading ? '...' : compactLabel)
+          : (loading ? (locale === 'es' ? 'Abriendo...' : 'Opening...') : label)}
       </button>
       {error && (
         <p className="mt-2 text-xs text-red-600 flex items-center gap-1">
