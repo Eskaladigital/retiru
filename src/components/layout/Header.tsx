@@ -75,7 +75,9 @@ export default function Header({ locale, user }: HeaderProps) {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-[100] isolate transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 transition-all duration-300 ${
+        mobileOpen ? 'z-[9999]' : 'z-[100]'
+      } isolate ${
         scrolled
           ? 'bg-white/95 backdrop-blur-md border-b border-sand-200 shadow-sm'
           : 'bg-transparent'
