@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MessageCircle, Search, Eye, AlertTriangle } from 'lucide-react';
+import { MessageCircle, Search, Eye, AlertTriangle, Send, LifeBuoy } from 'lucide-react';
 
 interface AdminConversation {
   id: string;
   retreat_id: string;
   user_id: string;
   organizer_id: string;
+  is_support?: boolean;
   last_message_at: string | null;
   total_unread: number;
   created_at: string;
@@ -40,6 +41,8 @@ export default function AdminMensajesPage() {
   const [selectedConv, setSelectedConv] = useState<string | null>(null);
   const [convDetail, setConvDetail] = useState<ConvMessages | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [replyMsg, setReplyMsg] = useState('');
+  const [sending, setSending] = useState(false);
 
   const fetchConversations = () =>
     fetch('/api/admin/messages')
@@ -54,16 +57,34 @@ export default function AdminMensajesPage() {
   const openConversation = async (convId: string) => {
     setSelectedConv(convId);
     setLoadingDetail(true);
+    setReplyMsg('');
     try {
       const res = await fetch(`/api/messages/conversations/${convId}`);
       const data = await res.json();
       setConvDetail(data);
-      // Refrescar lista para actualizar contadores de no leídos (el API los resetea al abrir)
       fetchConversations();
     } catch {
       setConvDetail(null);
     } finally {
       setLoadingDetail(false);
+    }
+  };
+
+  const handleAdminReply = async () => {
+    if (!replyMsg.trim() || sending || !selectedConv) return;
+    setSending(true);
+    try {
+      const res = await fetch(`/api/messages/conversations/${selectedConv}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: replyMsg.trim() }),
+      });
+      if (res.ok) {
+        setReplyMsg('');
+        openConversation(selectedConv);
+      }
+    } finally {
+      setSending(false);
     }
   };
 
@@ -143,9 +164,14 @@ export default function AdminMensajesPage() {
                         <div className="font-medium">{c.user_profile?.full_name ?? '—'}</div>
                         <div className="text-xs text-[#a09383]">{c.user_profile?.email ?? ''}</div>
                       </td>
-                      <td className="px-4 py-3">{c.organizer?.business_name ?? '—'}</td>
                       <td className="px-4 py-3">
-                        <span className="text-xs text-terracotta-600">{c.retreat?.title_es ?? '—'}</span>
+                        {c.is_support
+                          ? <span className="inline-flex items-center gap-1 text-xs font-semibold text-sage-700 bg-sage-100 px-2 py-0.5 rounded-full"><LifeBuoy size={12} /> Soporte</span>
+                          : (c.organizer?.business_name ?? '—')
+                        }
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-xs text-terracotta-600">{c.is_support ? 'Soporte' : (c.retreat?.title_es ?? '—')}</span>
                       </td>
                       <td className="px-4 py-3">
                         {c.last_message ? (
@@ -184,9 +210,19 @@ export default function AdminMensajesPage() {
           <div className="w-1/2 border border-sand-200 rounded-2xl bg-white overflow-hidden flex flex-col" style={{ maxHeight: 'calc(100vh - 250px)' }}>
             <div className="px-5 py-4 border-b border-sand-200 flex items-center justify-between shrink-0">
               <div>
-                <h3 className="font-semibold text-sm">{convDetail?.conversation?.retreat?.title_es ?? 'Conversación'}</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-sm">
+                    {convDetail?.conversation?.is_support ? 'Soporte' : (convDetail?.conversation?.retreat?.title_es ?? 'Conversación')}
+                  </h3>
+                  {convDetail?.conversation?.is_support && (
+                    <span className="text-[10px] font-bold bg-sage-100 text-sage-700 px-2 py-0.5 rounded-full">Soporte</span>
+                  )}
+                </div>
                 <p className="text-xs text-[#a09383]">
-                  {convDetail?.conversation?.user_profile?.full_name ?? ''} ↔ {convDetail?.conversation?.organizer?.business_name ?? ''}
+                  {convDetail?.conversation?.is_support
+                    ? convDetail?.conversation?.user_profile?.full_name ?? 'Usuario'
+                    : `${convDetail?.conversation?.user_profile?.full_name ?? ''} ↔ ${convDetail?.conversation?.organizer?.business_name ?? ''}`
+                  }
                 </p>
               </div>
               <button onClick={() => { setSelectedConv(null); setConvDetail(null); }} className="p-1.5 hover:bg-sand-100 rounded-lg transition-colors text-xs">
@@ -212,14 +248,18 @@ export default function AdminMensajesPage() {
                     );
                   }
 
+                  const isSupportConv = convDetail?.conversation?.is_support;
                   const isFromUser = m.sender_id === convDetail?.conversation?.user_profile?.id;
+                  const senderLabel = isSupportConv
+                    ? (isFromUser ? (convDetail?.conversation?.user_profile?.full_name ?? 'Usuario') : 'Andrea - Soporte')
+                    : (isFromUser ? (convDetail?.conversation?.user_profile?.full_name ?? 'Usuario') : (convDetail?.conversation?.organizer?.business_name ?? 'Organizador'));
                   return (
                     <div key={m.id} className={`flex ${isFromUser ? 'justify-start' : 'justify-end'}`}>
                       <div className={`max-w-[80%] rounded-xl px-3 py-2 ${
                         isFromUser ? 'bg-sand-100 text-foreground' : 'bg-sage-100 text-foreground'
                       }`}>
                         <p className="text-[11px] font-semibold mb-0.5 text-[#a09383]">
-                          {isFromUser ? (convDetail?.conversation?.user_profile?.full_name ?? 'Usuario') : (convDetail?.conversation?.organizer?.business_name ?? 'Organizador')}
+                          {senderLabel}
                         </p>
                         <p className="text-xs whitespace-pre-wrap">{m.content}</p>
                         <p className="text-[9px] mt-0.5 text-[#a09383]">
@@ -233,7 +273,28 @@ export default function AdminMensajesPage() {
             </div>
 
             <div className="px-4 py-3 border-t border-sand-200 shrink-0">
-              <p className="text-[10px] text-[#a09383] text-center">Vista de solo lectura — Modo administrador</p>
+              {convDetail?.conversation?.is_support ? (
+                <div className="flex gap-2 items-end">
+                  <textarea
+                    value={replyMsg}
+                    onChange={e => setReplyMsg(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleAdminReply(); } }}
+                    placeholder="Responder como Andrea..."
+                    rows={1}
+                    className="flex-1 resize-none rounded-lg border border-sand-200 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-terracotta-300 bg-white"
+                    style={{ maxHeight: '80px' }}
+                  />
+                  <button
+                    onClick={handleAdminReply}
+                    disabled={!replyMsg.trim() || sending}
+                    className="p-2 rounded-lg bg-terracotta-500 text-white hover:bg-terracotta-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+                  >
+                    <Send size={14} />
+                  </button>
+                </div>
+              ) : (
+                <p className="text-[10px] text-[#a09383] text-center">Vista de solo lectura — Modo administrador</p>
+              )}
             </div>
           </div>
         )}

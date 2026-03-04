@@ -14,7 +14,7 @@ export async function GET(req: NextRequest, ctx: Ctx) {
   const { data: conv } = await supabase
     .from('conversations')
     .select(`
-      id, retreat_id, user_id, organizer_id, attendee_unread, organizer_unread,
+      id, retreat_id, user_id, organizer_id, attendee_unread, organizer_unread, admin_unread, is_support,
       retreats!retreat_id(id, title_es, title_en, slug),
       profiles!user_id(id, full_name, avatar_url),
       organizer_profiles!organizer_id(id, business_name, logo_url, user_id)
@@ -24,8 +24,9 @@ export async function GET(req: NextRequest, ctx: Ctx) {
 
   if (!conv) return NextResponse.json({ error: 'Conversación no encontrada' }, { status: 404 });
 
+  const isSupport = !!(conv as any).is_support;
   const orgUserId = (conv as any).organizer_profiles?.user_id;
-  const isOrganizer = orgUserId === user.id;
+  const isOrganizer = !isSupport && orgUserId === user.id;
   const isUser = conv.user_id === user.id;
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
   const isAdmin = profile?.role === 'admin';
@@ -57,7 +58,6 @@ export async function GET(req: NextRequest, ctx: Ctx) {
         .update({ is_read: true })
         .in('id', otherMessages.map((m: any) => m.id));
 
-      // Resetear contador de no leídos del participante actual
       const updateField = isUser ? 'attendee_unread' : 'organizer_unread';
       await supabase
         .from('conversations')
@@ -66,21 +66,23 @@ export async function GET(req: NextRequest, ctx: Ctx) {
     }
   }
 
-  // Admin: al revisar la conversación, resetear ambos contadores (usa admin client para bypassear RLS)
+  // Admin: al revisar, resetear contadores (usa admin client para bypassear RLS)
   if (isAdmin) {
     const admin = createAdminSupabase();
-    await admin
-      .from('conversations')
-      .update({ attendee_unread: 0, organizer_unread: 0 })
-      .eq('id', id);
+    if (isSupport) {
+      await admin.from('conversations').update({ admin_unread: 0 }).eq('id', id);
+    } else {
+      await admin.from('conversations').update({ attendee_unread: 0, organizer_unread: 0 }).eq('id', id);
+    }
   }
 
   return NextResponse.json({
     conversation: {
       ...conv,
+      is_support: isSupport,
       retreat: (conv as any).retreats,
       user_profile: (conv as any).profiles,
-      organizer: (conv as any).organizer_profiles,
+      organizer: isSupport ? null : (conv as any).organizer_profiles,
     },
     messages: messages || [],
     my_role: isOrganizer ? 'organizer' : isAdmin ? 'admin' : 'user',
@@ -101,22 +103,31 @@ export async function POST(req: NextRequest, ctx: Ctx) {
   // Verificar participación
   const { data: conv } = await supabase
     .from('conversations')
-    .select('id, user_id, organizer_id, organizer_profiles!organizer_id(user_id)')
+    .select('id, user_id, organizer_id, is_support, organizer_profiles!organizer_id(user_id)')
     .eq('id', id)
     .single();
 
   if (!conv) return NextResponse.json({ error: 'Conversación no encontrada' }, { status: 404 });
 
+  const isSupport = !!(conv as any).is_support;
   const orgUserId = (conv as any).organizer_profiles?.user_id;
-  const isOrganizer = orgUserId === user.id;
+  const isOrganizer = !isSupport && orgUserId === user.id;
   const isUser = conv.user_id === user.id;
 
-  if (!isUser && !isOrganizer) {
-    return NextResponse.json({ error: 'Sin acceso' }, { status: 403 });
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  const isAdmin = profile?.role === 'admin';
+
+  // En conversaciones de soporte: admin y usuario pueden escribir
+  // En conversaciones normales: usuario y organizador pueden escribir
+  if (isSupport) {
+    if (!isUser && !isAdmin) return NextResponse.json({ error: 'Sin acceso' }, { status: 403 });
+  } else {
+    if (!isUser && !isOrganizer) return NextResponse.json({ error: 'Sin acceso' }, { status: 403 });
   }
 
-  // Insertar mensaje
-  const { data: msg, error } = await supabase
+  // Insertar mensaje (admin usa adminSupabase para bypassear RLS de sender_id)
+  const insertClient = isAdmin ? createAdminSupabase() : supabase;
+  const { data: msg, error } = await insertClient
     .from('messages')
     .insert({
       conversation_id: id,
@@ -130,17 +141,21 @@ export async function POST(req: NextRequest, ctx: Ctx) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   // Actualizar last_message_at y contador de no leídos del otro
-  const unreadField = isUser ? 'organizer_unread' : 'attendee_unread';
-  await supabase.rpc('increment_field', { table_name: 'conversations', field_name: unreadField, row_id: id });
+  const updateClient = (isAdmin || isSupport) ? createAdminSupabase() : supabase;
+  let unreadField: string;
+  if (isSupport) {
+    unreadField = isAdmin ? 'attendee_unread' : 'admin_unread';
+  } else {
+    unreadField = isUser ? 'organizer_unread' : 'attendee_unread';
+  }
 
-  // Fallback si no existe la función RPC
-  const { data: currentConv } = await supabase
+  const { data: currentConv } = await updateClient
     .from('conversations')
     .select(unreadField)
     .eq('id', id)
     .single();
 
-  await supabase
+  await updateClient
     .from('conversations')
     .update({
       last_message_at: new Date().toISOString(),

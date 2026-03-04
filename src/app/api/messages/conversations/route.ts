@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     .from('conversations')
     .select(`
       id, retreat_id, user_id, organizer_id, last_message_at,
-      attendee_unread, organizer_unread, created_at,
+      attendee_unread, organizer_unread, admin_unread, is_support, created_at,
       retreats!retreat_id(id, title_es, title_en, slug),
       profiles!user_id(id, full_name, avatar_url),
       organizer_profiles!organizer_id(id, business_name, logo_url, user_id)
@@ -38,6 +38,15 @@ export async function GET(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   const enriched = (conversations || []).map((c: any) => {
+    if (c.is_support) {
+      return {
+        ...c,
+        unread_count: c.attendee_unread,
+        my_role: 'user',
+        retreat: null,
+        other_participant: { id: 'support', business_name: 'Andrea - Soporte Retiru', logo_url: '/favicon.png' },
+      };
+    }
     const isOrganizer = orgProfile && c.organizer_id === orgProfile.id;
     return {
       ...c,

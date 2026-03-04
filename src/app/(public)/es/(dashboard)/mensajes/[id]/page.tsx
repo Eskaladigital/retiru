@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Send, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Send, AlertTriangle, ShieldCheck, LifeBuoy } from 'lucide-react';
 
 interface MessageItem {
   id: string;
@@ -17,6 +17,7 @@ interface MessageItem {
 
 interface ConversationData {
   id: string;
+  is_support?: boolean;
   retreat?: { id: string; title_es: string; slug: string } | null;
   user_profile?: { id: string; full_name: string; avatar_url?: string } | null;
   organizer?: { id: string; business_name: string; logo_url?: string; user_id: string } | null;
@@ -112,9 +113,12 @@ export default function ConversacionPage() {
     );
   }
 
-  const otherName = myRole === 'user'
-    ? conversation.organizer?.business_name ?? 'Organizador'
-    : conversation.user_profile?.full_name ?? 'Usuario';
+  const isSupport = !!conversation.is_support;
+  const otherName = isSupport
+    ? 'Andrea - Soporte Retiru'
+    : myRole === 'user'
+      ? conversation.organizer?.business_name ?? 'Organizador'
+      : conversation.user_profile?.full_name ?? 'Usuario';
 
   // Group messages by date
   const grouped: { date: string; msgs: MessageItem[] }[] = [];
@@ -135,18 +139,35 @@ export default function ConversacionPage() {
         <button onClick={() => router.push('/es/mensajes')} className="p-2 hover:bg-sand-100 rounded-xl transition-colors">
           <ArrowLeft size={20} />
         </button>
+        {isSupport && (
+          <div className="w-10 h-10 bg-sage-100 rounded-full flex items-center justify-center shrink-0">
+            <LifeBuoy size={20} className="text-sage-600" />
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <h2 className="font-semibold text-foreground truncate">{otherName}</h2>
-          {conversation.retreat && (
+          {isSupport ? (
+            <p className="text-xs text-sage-600">Soporte Retiru</p>
+          ) : conversation.retreat ? (
             <Link href={`/es/retiro/${conversation.retreat.slug}`} className="text-xs text-terracotta-600 hover:underline truncate block">
               {conversation.retreat.title_es}
             </Link>
-          )}
+          ) : null}
         </div>
       </div>
 
-      {/* Info banner — solo para usuario */}
-      {myRole === 'user' && (
+      {/* Banner de soporte */}
+      {isSupport && (
+        <div className="shrink-0 mb-3 rounded-xl bg-sage-50 border border-sage-200 px-4 py-3 flex gap-2 items-start">
+          <LifeBuoy size={16} className="text-sage-500 shrink-0 mt-0.5" />
+          <p className="text-xs text-sage-700 leading-relaxed">
+            Estás hablando con el equipo de Retiru. Responderemos lo antes posible.
+          </p>
+        </div>
+      )}
+
+      {/* Info banner — solo para usuario en conversaciones normales */}
+      {!isSupport && myRole === 'user' && (
         <div className="shrink-0 mb-3 rounded-xl bg-sage-50 border border-sage-200 px-4 py-3 flex gap-2 items-start">
           <ShieldCheck size={16} className="text-sage-500 shrink-0 mt-0.5" />
           <p className="text-xs text-sage-700 leading-relaxed">
@@ -155,8 +176,8 @@ export default function ConversacionPage() {
         </div>
       )}
 
-      {/* Warning banner — solo para organizador */}
-      {myRole === 'organizer' && (
+      {/* Warning banner — solo para organizador en conversaciones normales */}
+      {!isSupport && myRole === 'organizer' && (
         <div className="shrink-0 mb-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 flex gap-2 items-start">
           <AlertTriangle size={16} className="text-amber-500 shrink-0 mt-0.5" />
           <p className="text-xs text-amber-700 leading-relaxed">
@@ -177,22 +198,28 @@ export default function ConversacionPage() {
             <div className="space-y-2">
               {group.msgs.map(m => {
                 if (m.message_type === 'system') {
-                  if (myRole !== 'organizer') return null;
+                  if (!isSupport && myRole !== 'organizer') return null;
                   return (
                     <div key={m.id} className="flex justify-center my-3">
-                      <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 max-w-md text-center">
-                        <AlertTriangle size={14} className="inline mr-1.5 text-amber-500" />
-                        <span className="text-xs text-amber-700">{m.content}</span>
+                      <div className={`rounded-xl px-4 py-2.5 max-w-md text-center ${
+                        isSupport
+                          ? 'bg-sage-50 border border-sage-200'
+                          : 'bg-amber-50 border border-amber-200'
+                      }`}>
+                        {isSupport
+                          ? <LifeBuoy size={14} className="inline mr-1.5 text-sage-500" />
+                          : <AlertTriangle size={14} className="inline mr-1.5 text-amber-500" />
+                        }
+                        <span className={`text-xs ${isSupport ? 'text-sage-700' : 'text-amber-700'}`}>{m.content}</span>
                       </div>
                     </div>
                   );
                 }
 
-                const isMine = m.profiles?.id !== undefined && m.sender_id !== conversation.user_profile?.id
-                  ? myRole === 'organizer'
-                  : myRole === 'user';
-                const senderIsCurrentUser = (myRole === 'user' && m.sender_id === conversation.user_profile?.id) ||
-                  (myRole === 'organizer' && m.sender_id === conversation.organizer?.user_id);
+                const senderIsCurrentUser = isSupport
+                  ? m.sender_id === conversation.user_profile?.id
+                  : (myRole === 'user' && m.sender_id === conversation.user_profile?.id) ||
+                    (myRole === 'organizer' && m.sender_id === conversation.organizer?.user_id);
 
                 return (
                   <div key={m.id} className={`flex ${senderIsCurrentUser ? 'justify-end' : 'justify-start'}`}>

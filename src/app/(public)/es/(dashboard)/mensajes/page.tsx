@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { MessageCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { MessageCircle, LifeBuoy } from 'lucide-react';
 
 interface ConversationItem {
   id: string;
   retreat_id: string;
+  is_support?: boolean;
   my_role: 'user' | 'organizer';
   unread_count: number;
   last_message_at: string | null;
@@ -27,8 +29,10 @@ function timeAgo(iso: string): string {
 }
 
 export default function MensajesPage() {
+  const router = useRouter();
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [openingSupport, setOpeningSupport] = useState(false);
 
   useEffect(() => {
     fetch('/api/messages/conversations')
@@ -38,10 +42,33 @@ export default function MensajesPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const openSupport = async () => {
+    setOpeningSupport(true);
+    try {
+      const res = await fetch('/api/messages/support', { method: 'POST' });
+      const data = await res.json();
+      if (data.conversation_id) router.push(`/es/mensajes/${data.conversation_id}`);
+    } finally {
+      setOpeningSupport(false);
+    }
+  };
+
   return (
     <div>
-      <h1 className="font-serif text-3xl text-foreground mb-2">Mensajes</h1>
-      <p className="text-sm text-[#7a6b5d] mb-8">Conversaciones sobre retiros</p>
+      <div className="flex items-start justify-between gap-4 mb-8">
+        <div>
+          <h1 className="font-serif text-3xl text-foreground mb-2">Mensajes</h1>
+          <p className="text-sm text-[#7a6b5d]">Conversaciones sobre retiros</p>
+        </div>
+        <button
+          onClick={openSupport}
+          disabled={openingSupport}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-sage-50 border border-sage-200 text-sage-700 text-sm font-medium hover:bg-sage-100 transition-colors disabled:opacity-50 shrink-0"
+        >
+          <LifeBuoy size={16} />
+          {openingSupport ? 'Abriendo...' : 'Contactar soporte'}
+        </button>
+      </div>
 
       {loading ? (
         <div className="space-y-3">
@@ -95,7 +122,7 @@ export default function MensajesPage() {
                       <span className="text-xs text-[#a09383]">{timeAgo(c.last_message_at)}</span>
                     )}
                   </div>
-                  <p className="text-xs text-terracotta-600 truncate">{c.retreat?.title_es ?? 'Retiro'}</p>
+                  <p className="text-xs text-terracotta-600 truncate">{c.is_support ? 'Soporte Retiru' : (c.retreat?.title_es ?? 'Retiro')}</p>
                 </div>
                 {c.unread_count > 0 && (
                   <span className="flex items-center justify-center w-5 h-5 bg-terracotta-500 text-white text-[10px] font-bold rounded-full shrink-0">

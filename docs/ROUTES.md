@@ -76,13 +76,14 @@ Parámetros opcionales en registro: `?redirect=/ruta&claim=true` (redirige tras 
 | Ruta | Archivo | Descripción |
 |------|---------|-------------|
 | `/es/mis-reservas` | `app/es/(dashboard)/mis-reservas/page.tsx` | Reservas como asistente |
-| `/es/mensajes` | `app/es/(dashboard)/mensajes/page.tsx` | Bandeja de mensajes |
-| `/es/mensajes/[id]` | `app/es/(dashboard)/mensajes/[id]/page.tsx` | Conversación individual (chat) |
+| `/es/mensajes` | `app/es/(dashboard)/mensajes/page.tsx` | Bandeja de mensajes (+ botón soporte) |
+| `/es/mensajes/[id]` | `app/es/(dashboard)/mensajes/[id]/page.tsx` | Conversación individual (chat / soporte) |
 | `/es/perfil` | `app/es/(dashboard)/perfil/page.tsx` | Datos personales, avatar |
 | `/es/mis-centros` | `app/es/(dashboard)/mis-centros/page.tsx` | Centros reclamados |
 | `/es/mis-eventos` | `app/es/(dashboard)/mis-eventos/page.tsx` | Eventos/retiros creados |
 | `/es/mis-eventos/nuevo` | `app/es/(dashboard)/mis-eventos/nuevo/page.tsx` | Wizard para crear evento |
 | `/es/mis-eventos/[id]` | `app/es/(dashboard)/mis-eventos/[id]/page.tsx` | Editar evento existente |
+| `/es/panel/mensajes` | `app/es/(organizer)/panel/mensajes/page.tsx` | Bandeja de mensajes del organizador (+ botón soporte) |
 
 Cualquier usuario logueado (incluido admin) accede a estas secciones desde el menú de usuario.
 
@@ -172,7 +173,7 @@ Localidades y categorías vienen de la base de datos.
 | `/administrator/retiros` | `app/administrator/retiros/page.tsx` | Gestión retiros (aprobar/rechazar) |
 | `/administrator/centros` | `app/administrator/centros/page.tsx` | Gestión centros |
 | `/administrator/claims` | `app/administrator/claims/page.tsx` | Gestión claims de centros |
-| `/administrator/mensajes` | `app/administrator/mensajes/page.tsx` | Moderación de conversaciones |
+| `/administrator/mensajes` | `app/administrator/mensajes/page.tsx` | Moderación de conversaciones + respuesta en soporte |
 | `/administrator/blog` | `app/administrator/blog/page.tsx` | Gestión blog |
 | `/administrator/tienda` | `app/administrator/tienda/page.tsx` | Gestión tienda |
 | `/administrator/reembolsos` | `app/administrator/reembolsos/page.tsx` | Reembolsos |
@@ -195,4 +196,5 @@ Protegido por middleware (role=admin). No indexado en buscadores.
 | POST | `/api/messages/conversations` | Crear/recuperar conversación sobre un retiro |
 | GET | `/api/messages/conversations/[id]` | Obtener mensajes de una conversación |
 | POST | `/api/messages/conversations/[id]` | Enviar mensaje en una conversación |
-| GET | `/api/admin/messages` | Listar todas las conversaciones (admin) |
+| POST | `/api/messages/support` | Crear/recuperar conversación de soporte con admin |
+| GET | `/api/admin/messages` | Listar todas las conversaciones (admin, incluye soporte) |

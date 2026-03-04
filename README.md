@@ -136,9 +136,18 @@ node scripts/assign-retreats-to-admin.mjs # Asignar retiros de ejemplo al admin
 Ejecutar en el **SQL Editor** de Supabase (con service_role) en este orden:
 
 1. `supabase/migrations/001_initial.sql` — esquema completo (tablas, RLS, triggers)
-2. `supabase/seed/001_categories_destinations.sql` — categorías y destinos
-3. `supabase/seed/002_sample_retreats.sql` — usuario demo + 10 retiros de ejemplo
-4. `supabase/seed/003_sample_blog.sql` — 3 categorías de blog + 5 artículos
+2. `supabase/migrations/002_fix_handle_new_profile.sql` — fix trigger perfil
+3. `supabase/migrations/003_centers_description_ai_generated.sql` — campo IA en centros
+4. `supabase/migrations/004_storage_policies.sql` — políticas de storage
+5. `supabase/migrations/005_blog_slug_en.sql` — slug EN en blog
+6. `supabase/migrations/006_center_claims.sql` — claims de centros
+7. `supabase/migrations/007_centers_directorio_columns.sql` — columnas directorio
+8. `supabase/migrations/008_conversations_messaging.sql` — mensajería interna
+9. `supabase/migrations/009_center_types_ayurveda_pilates.sql` — tipos de centro
+10. `supabase/migrations/010_support_conversations.sql` — soporte (chat con admin)
+11. `supabase/seed/001_categories_destinations.sql` — categorías y destinos
+12. `supabase/seed/002_sample_retreats.sql` — usuario demo + 10 retiros de ejemplo
+13. `supabase/seed/003_sample_blog.sql` — 3 categorías de blog + 5 artículos
 
 ### Capa de datos
 
@@ -150,6 +159,8 @@ Las páginas consumen datos a través de `src/lib/data/index.ts`:
 - `getCenterProvinces()` — provincias únicas con centros activos (para `generateStaticParams` y sitemap)
 - `getCentersByProvince(slug)` — centros filtrados por provincia normalizada
 - `getDestinationsWithRetreats()` — solo destinos con al menos 1 retiro publicado (para `generateStaticParams` y sitemap)
+- `getBookingsForUser(userId)` — reservas del usuario con retiro e imagen de portada
+- `getBookingById(bookingId)` — detalle de una reserva con retiro, organizador y destino
 - Slugs para build: `getCenterSlugs()`, `getRetreatSlugs()`, `getBlogPostSlugs()`, `getOrganizerSlugs()`, `getProductSlugs()`, `getDestinationSlugs()`
 
 Las APIs `/api/retreats`, `/api/centers` y `/api/catalog` exponen datos para búsqueda y filtros.
@@ -182,7 +193,7 @@ Las APIs `/api/retreats`, `/api/centers` y `/api/catalog` exponen datos para bú
 | Ruta | Descripción |
 |------|-------------|
 | `/es/mis-reservas` | Reservas como asistente |
-| `/es/mensajes` | Bandeja de mensajes (conversaciones con organizadores) |
+| `/es/mensajes` | Bandeja de mensajes (conversaciones con organizadores + soporte) |
 | `/es/mensajes/[id]` | Conversación individual (burbujas de chat) |
 | `/es/perfil` | Datos personales, avatar, contraseña |
 | `/es/mis-centros` | Centros reclamados (o CTA para buscar y reclamar) |
@@ -202,7 +213,7 @@ Cualquier usuario logueado (incluido el admin) accede a estas secciones desde el
 | `/administrator/retiros` | Gestión retiros (aprobar/rechazar) |
 | `/administrator/centros` | Gestión centros |
 | `/administrator/claims` | Gestión claims de centros |
-| `/administrator/mensajes` | Moderación de conversaciones usuario-organizador |
+| `/administrator/mensajes` | Moderación de conversaciones + respuesta en chats de soporte |
 | `/administrator/blog` | Gestión blog |
 | `/administrator/tienda` | Gestión tienda |
 | `/administrator/reembolsos` | Reembolsos |
@@ -257,7 +268,7 @@ Cada entrada incluye `alternates` hreflang ES/EN. Solo se generan entradas para 
 
 ## Mensajería interna
 
-Sistema de comunicación dentro de la plataforma entre usuarios y organizadores, vinculado a retiros publicados.
+Sistema de comunicación dentro de la plataforma entre usuarios y organizadores, vinculado a retiros publicados. Incluye también un canal de soporte directo con el equipo de Retiru.
 
 **Reglas de negocio:**
 - Cualquier usuario logueado puede iniciar conversación sobre un retiro publicado (botón "Preguntar al organizador")
@@ -266,11 +277,19 @@ Sistema de comunicación dentro de la plataforma entre usuarios y organizadores,
 - Mensaje de sistema automático al organizador advirtiendo de penalización por contacto externo
 - El admin puede ver y moderar todas las conversaciones desde `/administrator/mensajes`
 
+**Soporte (chat con admin):**
+- Cualquier usuario u organizador puede iniciar un chat de soporte desde su página de mensajes (botón "Contactar soporte")
+- Un solo chat de soporte por usuario (si ya existe, se reutiliza)
+- El admin puede ver y responder chats de soporte desde `/administrator/mensajes` (como "Andrea, responsable de atención al cliente")
+- Las conversaciones de soporte se distinguen con `is_support = true` en la tabla `conversations`
+- Las conversaciones normales (usuario ↔ organizador) siguen en modo solo lectura para el admin
+
 **Arquitectura:**
-- Migración: `supabase/migrations/008_conversations_messaging.sql`
-- API: `POST/GET /api/messages/conversations`, `GET/POST /api/messages/conversations/[id]`, `GET /api/admin/messages`
-- UI usuario: `/es/mensajes` (lista) y `/es/mensajes/[id]` (chat con burbujas)
-- UI admin: `/administrator/mensajes` (tabla + panel de lectura)
+- Migraciones: `008_conversations_messaging.sql` (mensajería base) + `010_support_conversations.sql` (soporte)
+- API: `POST/GET /api/messages/conversations`, `GET/POST /api/messages/conversations/[id]`, `POST /api/messages/support`, `GET /api/admin/messages`
+- UI usuario: `/es/mensajes` (lista + botón soporte) y `/es/mensajes/[id]` (chat con burbujas)
+- UI organizador: `/es/panel/mensajes` (lista + botón soporte)
+- UI admin: `/administrator/mensajes` (tabla + panel de lectura + respuesta en soporte)
 - Componente: `src/components/messaging/AskOrganizerButton.tsx`
 
 ---
@@ -301,11 +320,17 @@ src/
 │   │   │   └── ...
 │   │   ├── (auth)/             # Login, registro
 │   │   ├── (dashboard)/        # Dashboard unificado del usuario
-│   │   │   ├── mis-reservas/   # Reservas como asistente
+│   │   │   ├── mis-reservas/   # Reservas como asistente (datos desde BD)
+│   │   │   ├── mensajes/       # Bandeja de mensajes + chat + soporte
 │   │   │   ├── perfil/         # Datos personales
 │   │   │   ├── mis-centros/    # Centros reclamados
 │   │   │   └── mis-eventos/    # Eventos creados + wizard nuevo + edición
+│   │   ├── (organizer)/        # Panel del organizador
+│   │   │   └── panel/mensajes/ # Bandeja de mensajes del organizador + soporte
 │   │   └── page.tsx            # Home ES
+│   ├── api/
+│   │   ├── messages/           # API mensajería (conversations, support)
+│   │   └── admin/              # API admin (messages, center-claims)
 │   ├── administrator/         # Panel admin (protegido, /administrator)
 │   └── en/                     # Misma estructura en inglés
 ├── components/
@@ -520,7 +545,8 @@ El admin tiene además acceso a `/administrator` desde el menú.
 - **Condiciones** (`/condiciones`): modelo de precios transparente (en footer)
 
 ### Dashboard de usuario (cualquier usuario logueado)
-- **Mis reservas**: reservas como asistente con estados visuales
+- **Mis reservas**: reservas como asistente con estados visuales (datos desde BD)
+- **Mensajes**: bandeja de conversaciones con organizadores + botón "Contactar soporte" para chat con admin
 - **Mi perfil**: datos personales, avatar, contraseña
 - **Mis centros**: centros reclamados; si no tiene, CTA para buscar y reclamar desde el directorio
 - **Mis eventos**: lista de retiros/eventos creados con imagen, estado, ocupación
@@ -536,6 +562,7 @@ El admin tiene además acceso a `/administrator` desde el menú.
 - **Retiros** — gestión de retiros (aprobar/rechazar los `pending_review`, ver todos)
 - **Centros** — gestión de centros (buscador, filtros, exportar CSV/Excel, generar descripciones IA, editar, ver ficha pública, despublicar/publicar, eliminar)
 - **Claims** — gestión de reclamaciones de centros (aprobar/rechazar)
+- **Mensajes** — moderación de conversaciones usuario-organizador + lectura y respuesta en chats de soporte (como "Andrea")
 - Gestión de tienda (productos, categorías, pedidos)
 - Reembolsos y reporting
 - Acceso en `/administrator` (protegido por middleware + rol)

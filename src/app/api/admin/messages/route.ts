@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     .from('conversations')
     .select(`
       id, retreat_id, user_id, organizer_id, last_message_at,
-      attendee_unread, organizer_unread, created_at,
+      attendee_unread, organizer_unread, admin_unread, is_support, created_at,
       retreats!retreat_id(id, title_es, slug),
       profiles!user_id(id, full_name, email),
       organizer_profiles!organizer_id(id, business_name, user_id)
@@ -63,7 +63,9 @@ export async function GET(req: NextRequest) {
     user_profile: c.profiles,
     organizer: c.organizer_profiles,
     last_message: lastMessages[c.id] || null,
-    total_unread: (c.attendee_unread || 0) + (c.organizer_unread || 0),
+    total_unread: c.is_support
+      ? (c.admin_unread || 0)
+      : (c.attendee_unread || 0) + (c.organizer_unread || 0),
   }));
 
   return NextResponse.json({ conversations: enriched });
