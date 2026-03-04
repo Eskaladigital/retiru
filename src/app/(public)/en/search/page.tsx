@@ -6,6 +6,7 @@
 
 import { Suspense, useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
+import { getCenterTypeLabel } from '@/lib/utils';
 
 const TYPES_FILTER = ['All', 'Retreats', 'Centers'];
 const CAT_FILTER = ['Yoga', 'Meditation', 'Wellness', 'Spa', 'Detox', 'Gastronomy', 'Adventure', 'Nature'];
@@ -210,7 +211,7 @@ function CenterCard({ item }: { item: any }) {
         )}
         <div className="absolute top-3 left-3 flex gap-1.5">
           <span className="text-[10px] font-bold uppercase tracking-wider bg-sage-700 text-white px-2 py-0.5 rounded-full">Center</span>
-          {item.type && <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm">{item.type}</span>}
+          {item.type && <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm">{getCenterTypeLabel(item.type, 'en')}</span>}
         </div>
       </div>
       <div className="p-5">

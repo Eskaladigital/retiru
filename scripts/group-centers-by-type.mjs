@@ -2,14 +2,16 @@
 /**
  * RETIRU · Agrupar centros por tipo (categoría + servicios 1, 2, 3)
  *
- * Analiza los 858 centros y propone una agrupación basada en:
- *   - name, description_es, services_es, categories, type, search_terms
+ * Fuentes de verdad (en orden de prioridad):
+ *   1. directorio.csv — Categoría original (yoga, pilates, ayurveda)
+ *   2. search_terms (Búsqueda) — "centro pilates" → pilates, "centro yoga" → yoga
+ *   3. Nombre del centro
+ *   4. Descripción — solo keywords ESPECÍFICOS (yoga, pilates, ayurveda, meditation, spa)
+ *      NO wellness/bienestar (son genéricos, todos los centros los tienen)
  *
- * Categorías objetivo: Yoga, Pilates, Meditación, Ayurveda, Wellness, Spa
+ * Wellness NO compite como categoría principal. Solo yoga, pilates, ayurveda, meditation, spa.
  *
  * Uso: node scripts/group-centers-by-type.mjs [--dry-run] [--update]
- *   --dry-run  Solo genera el CSV de reporte, no actualiza BD
- *   --update   Actualiza el campo type en la BD según la propuesta
  */
 
 import { readFileSync, existsSync, writeFileSync } from 'fs';
@@ -38,29 +40,114 @@ function loadEnvLocal() {
   });
 }
 
-// ─── Categorías objetivo (slug para BD) ─────────────────────────────────────
-const TARGET_TYPES = ['yoga', 'pilates', 'meditation', 'ayurveda', 'wellness', 'spa'];
+function slugify(text) {
+  return (text || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
 
-// Palabras clave por categoría (minúsculas)
-const KEYWORDS = {
-  ayurveda: ['ayurveda', 'ayurvédico', 'ayurvédica', 'abhyanga', 'shirodhara', 'dosha', 'marma', 'udvartana', 'kansu'],
+function parseCSVLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') {
+      inQuotes = !inQuotes;
+    } else if ((c === ',' && !inQuotes) || (c === '\n' && !inQuotes)) {
+      result.push(current.trim());
+      current = '';
+      if (c === '\n') break;
+    } else {
+      current += c;
+    }
+  }
+  if (current !== '') result.push(current.trim());
+  return result;
+}
+
+function parseCSV(content) {
+  const lines = content.split(/\r?\n/).filter((l) => l.trim());
+  const header = parseCSVLine(lines[0]);
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const values = parseCSVLine(lines[i]);
+    const row = {};
+    header.forEach((h, j) => {
+      row[h] = values[j] ?? '';
+    });
+    rows.push(row);
+  }
+  return rows;
+}
+
+// Mapear Categoría CSV → tipo BD
+function mapCategoriaToType(categoria) {
+  const c = (categoria || '').toLowerCase();
+  if (c.includes('spa')) return 'spa';
+  if (c.includes('ayurveda')) return 'ayurveda';
+  if (c.includes('pilates') && c.includes('yoga')) return 'yoga_meditation';
+  if (c.includes('pilates')) return 'pilates';
+  if (c.includes('yoga')) return 'yoga';
+  if (c.includes('meditación') || c.includes('meditation')) return 'meditation';
+  return null;
+}
+
+// ─── Categorías objetivo (sin wellness como principal) ───────────────────────
+const TARGET_TYPES = ['yoga', 'pilates', 'meditation', 'ayurveda', 'spa', 'multidisciplinary'];
+
+// Palabras clave SOLO para disciplinas específicas (NO wellness/bienestar)
+// Ayurveda: solo señales claras (no "dosha" que aparece en yoga)
+const KEYWORDS_SPECIFIC = {
+  ayurveda: ['ayurveda', 'ayurvédico', 'ayurvédica', 'abhyanga', 'shirodhara', 'udvartana', 'kansu'],
   pilates: ['pilates', 'reformer', 'mat pilates'],
   yoga: ['yoga', 'ashtanga', 'vinyasa', 'hatha', 'kundalini', 'yin', 'acroyoga', 'aero yoga', 'yoga restaurativo'],
   meditation: ['meditación', 'meditation', 'mindfulness', 'gong', 'cuencos tibetanos', 'sound bath', 'baño de sonido', 'reiki'],
   spa: ['spa', 'baños árabes', 'termal', 'hidro', 'sauna', 'jacuzzi', 'circuito termal', 'vinoterapia'],
-  wellness: ['wellness', 'bienestar', 'fisioterapia', 'osteopatía', 'masaje', 'quiromasaje', 'reflexología', 'nutrición'],
 };
 
 // ─── Inferir categoría principal ───────────────────────────────────────────
-function inferCategory(center) {
-  const nameText = (center.name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+// Prioridad: Búsqueda (cómo encontramos el centro) > Categoría CSV > Google types > nombre > resto
+function inferCategory(center, csvMap) {
+  const nameNorm = slugify(center.name).slice(0, 50);
+  const provNorm = slugify(center.province || '');
+
+  // 1. search_terms (Búsqueda): "centro pilates" → pilates — cómo encontramos el centro
+  const search = (center.search_terms || '').toLowerCase();
+  if (search.includes('pilates')) return 'pilates';
+  if (search.includes('ayurveda')) return 'ayurveda';
+  if (search.includes('yoga')) return 'yoga';
+  if (search.includes('meditación') || search.includes('meditation')) return 'meditation';
+  if (search.includes('spa')) return 'spa';
+
+  // 2. CSV: Categoría original (si hay match)
+  const csvKey = `${nameNorm}|${provNorm}`;
+  const csvRow = csvMap.get(csvKey);
+  if (csvRow?.categoria) {
+    const t = mapCategoriaToType(csvRow.categoria);
+    if (t) return t === 'yoga_meditation' ? 'yoga' : t;
+  }
+
+  // 3. google_types (Tipos Google) — lo que devuelve la API de Google
+  const gTypes = (center.google_types || '').toLowerCase();
+  if (gTypes.includes('spa')) return 'spa';
+  if (gTypes.includes('yoga_studio')) return 'yoga';
+
+  // 4. Nombre del centro
+  const nameLower = (center.name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (nameLower.includes('ayurveda') || nameLower.includes('ayurvédic')) return 'ayurveda';
+  if (nameLower.includes('pilates')) return 'pilates';
+  if (nameLower.includes('yoga')) return 'yoga';
+  if (nameLower.includes('spa')) return 'spa';
+
+  // 5. services_es + descripción: solo keywords ESPECÍFICOS (sin wellness) — último recurso
   const fullText = [
-    center.name || '',
     center.description_es || '',
     (center.services_es || []).join(' '),
-    (center.categories || []).join(' '),
-    center.type || '',
-    center.search_terms || '',
+    center.google_types || '',
   ]
     .join(' ')
     .toLowerCase()
@@ -68,21 +155,19 @@ function inferCategory(center) {
     .replace(/[\u0300-\u036f]/g, '');
 
   const scores = {};
-  for (const [cat, words] of Object.entries(KEYWORDS)) {
+  for (const [cat, words] of Object.entries(KEYWORDS_SPECIFIC)) {
     let score = 0;
     for (const w of words) {
       const n = w.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
       const regex = new RegExp(n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
       const matches = fullText.match(regex);
       if (matches) score += matches.length;
-      // Bonus si la palabra está en el nombre (más peso)
-      if (nameText.includes(n)) score += 5;
+      if (nameLower.includes(n)) score += 5;
     }
     if (score > 0) scores[cat] = score;
   }
 
-  // Prioridad: Ayurveda > Spa > Pilates > Yoga > Meditación > Wellness
-  const order = ['ayurveda', 'spa', 'pilates', 'yoga', 'meditation', 'wellness'];
+  const order = ['ayurveda', 'spa', 'pilates', 'yoga', 'meditation'];
   let best = null;
   let bestScore = 0;
   for (const cat of order) {
@@ -91,55 +176,40 @@ function inferCategory(center) {
       best = cat;
     }
   }
-
   if (best) return best;
 
-  // Fallback según type actual
+  // 5. Fallback: type actual si es específico (no wellness)
   const typeMap = {
     yoga: 'yoga',
-    meditation: 'meditation',
     pilates: 'pilates',
+    meditation: 'meditation',
     ayurveda: 'ayurveda',
-    wellness: 'wellness',
     spa: 'spa',
     yoga_meditation: 'yoga',
     wellness_spa: 'spa',
-    multidisciplinary: 'wellness',
   };
-  return typeMap[center.type] || 'wellness';
+  if (typeMap[center.type]) return typeMap[center.type];
+
+  return 'multidisciplinary';
 }
 
-// ─── Extraer servicios 1, 2, 3 ──────────────────────────────────────────────
+// ─── Extraer servicios 1, 2, 3 (SOLO lo que da Google/importación, sin inventar) ─
 function extractServices(center, proposedCategory) {
-  const services = [...(center.services_es || [])];
-  const text = (center.description_es || '').toLowerCase();
+  // Filtrar "Wellness"/"Bienestar" — genéricos, no específicos
+  const raw = (center.services_es || []).filter((s) => {
+    const l = s.toLowerCase();
+    return l !== 'wellness' && l !== 'bienestar';
+  });
+  const services = [...raw];
 
-  // Si services_es está vacío o genérico, intentar extraer de la descripción
-  const knownServices = [
-    'Yoga', 'Pilates', 'Meditación', 'Wellness', 'Spa', 'Ayurveda',
-    'Fisioterapia', 'Masaje', 'Osteopatía', 'Reiki', 'Reflexología',
-    'Hatha', 'Vinyasa', 'Ashtanga', 'Yin Yoga', 'Kundalini',
-    'Baños árabes', 'Termal', 'Hidroterapia',
-  ];
-
-  if (services.length < 3) {
-    for (const s of knownServices) {
-      if (services.length >= 3) break;
-      const lower = s.toLowerCase();
-      if (text.includes(lower) && !services.some((x) => x.toLowerCase().includes(lower))) {
-        services.push(s);
-      }
-    }
-  }
-
-  // Priorizar la categoría propuesta como primer servicio si no está
+  // NO inventar servicios desde descripción — solo usar services_es reales
   const catLabels = {
     yoga: 'Yoga',
     pilates: 'Pilates',
     meditation: 'Meditación',
     ayurveda: 'Ayurveda',
-    wellness: 'Wellness',
     spa: 'Spa',
+    multidisciplinary: '',
   };
   const primary = catLabels[proposedCategory];
   if (primary && !services.some((s) => s.toLowerCase().includes(primary.toLowerCase()))) {
@@ -150,21 +220,19 @@ function extractServices(center, proposedCategory) {
     servicio_1: services[0] || primary || '',
     servicio_2: services[1] || '',
     servicio_3: services[2] || '',
-    services_es: services.slice(0, 6),
+    services_es: services.slice(0, 6).filter(Boolean),
   };
 }
 
 // ─── Mapear tipo propuesto al enum de BD ───────────────────────────────────
-// El enum actual: yoga, meditation, wellness, spa, yoga_meditation, wellness_spa, multidisciplinary
-// Añadiremos pilates y ayurveda si la migración existe; si no, mapeamos a los existentes
 function mapToDbType(proposed) {
   const mapping = {
     yoga: 'yoga',
     pilates: 'pilates',
     meditation: 'meditation',
     ayurveda: 'ayurveda',
-    wellness: 'wellness',
     spa: 'spa',
+    multidisciplinary: 'multidisciplinary',
   };
   return mapping[proposed] || 'multidisciplinary';
 }
@@ -186,10 +254,27 @@ async function main() {
   const DRY_RUN = args.includes('--dry-run');
   const UPDATE = args.includes('--update') && !DRY_RUN;
 
-  console.log('\n📂 Cargando centros desde Supabase...');
+  // Cargar directorio.csv para Categoría original
+  const csvPath = join(root, 'directorio.csv');
+  const csvMap = new Map();
+  if (existsSync(csvPath)) {
+    const csvContent = readFileSync(csvPath, 'utf8');
+    const csvRows = parseCSV(csvContent);
+    for (const r of csvRows) {
+      const nameNorm = slugify(r.Nombre).slice(0, 50);
+      const provNorm = slugify(r.Provincia || '');
+      csvMap.set(`${nameNorm}|${provNorm}`, {
+        categoria: r.Categoría?.trim() || '',
+        busqueda: r.Búsqueda?.trim() || '',
+      });
+    }
+    console.log(`📂 directorio.csv: ${csvRows.length} filas cargadas\n`);
+  }
+
+  console.log('📂 Cargando centros desde Supabase...');
   const { data: centers, error } = await supabase
     .from('centers')
-    .select('id, name, slug, type, categories, services_es, description_es, search_terms, city, province')
+    .select('id, name, slug, type, categories, services_es, description_es, search_terms, google_types, city, province')
     .eq('status', 'active')
     .order('name');
 
@@ -204,7 +289,7 @@ async function main() {
   const stats = {};
 
   for (const c of centers) {
-    const tipo_propuesto = inferCategory(c);
+    const tipo_propuesto = inferCategory(c, csvMap);
     const { servicio_1, servicio_2, servicio_3, services_es } = extractServices(c, tipo_propuesto);
     const tipo_db = mapToDbType(tipo_propuesto);
 

@@ -4,16 +4,7 @@ import { useState } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { useRouter } from 'next/navigation';
 import { MapPin, Search, ChevronDown, Check, Building2 } from 'lucide-react';
-
-const CENTER_TYPES = [
-  { slug: '', name: 'Todos los tipos' },
-  { slug: 'yoga', name: 'Yoga' },
-  { slug: 'pilates', name: 'Pilates' },
-  { slug: 'meditation', name: 'Meditación' },
-  { slug: 'ayurveda', name: 'Ayurveda' },
-  { slug: 'wellness', name: 'Wellness' },
-  { slug: 'spa', name: 'Spa' },
-];
+import { CENTER_FILTER_OPTIONS_ES } from '@/lib/utils';
 
 const CITIES = [
   { slug: '', name: 'Toda España' },
@@ -30,7 +21,7 @@ const CITIES = [
 export default function CentrosSearch() {
   const router = useRouter();
   const [queryText, setQueryText] = useState('');
-  const [centerType, setCenterType] = useState(CENTER_TYPES[0]);
+  const [centerType, setCenterType] = useState(CENTER_FILTER_OPTIONS_ES[0]);
   const [typeOpen, setTypeOpen] = useState(false);
   const [city, setCity] = useState(CITIES[0]);
   const [cityOpen, setCityOpen] = useState(false);
@@ -67,18 +58,18 @@ export default function CentrosSearch() {
           <Popover.Trigger asChild>
             <button type="button" className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sand-100 transition-colors cursor-pointer text-left">
               <Building2 className="w-5 h-5 text-[#a09383] shrink-0" />
-              <span className={`flex-1 text-[15px] font-sans truncate ${centerType.slug ? 'text-foreground' : 'text-[#a09383]'}`}>{centerType.slug ? centerType.name : 'Tipo'}</span>
+              <span className={`flex-1 text-[15px] font-sans truncate ${centerType.slug ? 'text-foreground' : 'text-[#a09383]'}`}>{centerType.slug ? centerType.label : 'Tipo'}</span>
               <ChevronDown className={`w-4 h-4 text-[#a09383] shrink-0 transition-transform ${typeOpen ? 'rotate-180' : ''}`} />
             </button>
           </Popover.Trigger>
           <Popover.Portal>
             <Popover.Content className="z-50 rounded-2xl border border-sand-200 bg-white shadow-elevated w-[220px] max-h-[300px] overflow-y-auto" side="bottom" align="start" sideOffset={2}>
               <div className="p-1.5">
-                {CENTER_TYPES.map((t) => (
+                {CENTER_FILTER_OPTIONS_ES.map((t) => (
                   <button key={t.slug || '__all__'} type="button" onClick={() => { setCenterType(t); setTypeOpen(false); }} className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[14px] ${centerType.slug === t.slug ? 'bg-sage-50 text-sage-700 font-semibold' : 'text-foreground hover:bg-sand-50'}`}>
                     {centerType.slug === t.slug && <Check className="w-3.5 h-3.5 text-sage-600 shrink-0" />}
                     {centerType.slug !== t.slug && <span className="w-3.5 shrink-0" />}
-                    {t.name}
+                    {t.label}
                   </button>
                 ))}
               </div>

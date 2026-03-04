@@ -10,7 +10,7 @@ export default async function AdminCentrosPage() {
   const supabase = createAdminSupabase();
   const { data: centers } = await supabase
     .from('centers')
-    .select('id, name, slug, city, province, plan, status, price_monthly, created_at, description_es, cover_url, images, email')
+    .select('id, name, slug, city, province, plan, status, type, price_monthly, created_at, description_es, cover_url, images, email')
     .order('name')
     .limit(5000);
 

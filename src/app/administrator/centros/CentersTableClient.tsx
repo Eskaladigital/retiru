@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Download, FileSpreadsheet, Search, ChevronUp, ChevronDown, ChevronsUpDown, X, Pencil, ExternalLink, Trash2, EyeOff, Eye } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { createClient } from '@/lib/supabase/client';
+import { CENTER_FILTER_OPTIONS_ES, getCenterTypeLabel } from '@/lib/utils';
 
 export type CenterRow = {
   id: string;
@@ -15,6 +16,7 @@ export type CenterRow = {
   province: string;
   plan: string;
   status: string;
+  type?: string;
   price_monthly?: number;
   description_es?: string | null;
   cover_url?: string | null;
@@ -147,6 +149,7 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
   const [filterProvince, setFilterProvince] = useState('');
   const [filterPlan, setFilterPlan] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [filterType, setFilterType] = useState('');
   const [filterDesc, setFilterDesc] = useState('');
   const [page, setPage] = useState(0);
 
@@ -169,11 +172,12 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
       if (filterProvince && c.province !== filterProvince) return false;
       if (filterPlan && c.plan !== filterPlan) return false;
       if (filterStatus && c.status !== filterStatus) return false;
+      if (filterType && c.type !== filterType) return false;
       if (filterDesc === 'yes' && !hasDesc(c)) return false;
       if (filterDesc === 'no' && hasDesc(c)) return false;
       return true;
     });
-  }, [list, query, filterProvince, filterPlan, filterStatus, filterDesc]);
+  }, [list, query, filterProvince, filterPlan, filterStatus, filterType, filterDesc]);
 
   const sorted = useMemo(() => {
     const copy = [...filtered];
@@ -201,13 +205,14 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
     setPage(0);
   };
 
-  const hasFilters = !!(query || filterProvince || filterPlan || filterStatus || filterDesc);
+  const hasFilters = !!(query || filterProvince || filterPlan || filterStatus || filterType || filterDesc);
 
   const clearAll = () => {
     setQuery('');
     setFilterProvince('');
     setFilterPlan('');
     setFilterStatus('');
+    setFilterType('');
     setFilterDesc('');
     setPage(0);
   };
@@ -257,6 +262,12 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
           <option value="">Todos los estados</option>
           <option value="active">Activo</option>
           <option value="payment_pending">Pago pendiente</option>
+        </select>
+        <select value={filterType} onChange={(e) => { setFilterType(e.target.value); setPage(0); }} className={selectClasses}>
+          <option value="">Todos los tipos</option>
+          {CENTER_FILTER_OPTIONS_ES.filter((o) => o.slug).map((o) => (
+            <option key={o.slug} value={o.slug}>{o.label}</option>
+          ))}
         </select>
         <select value={filterDesc} onChange={(e) => { setFilterDesc(e.target.value); setPage(0); }} className={selectClasses}>
           <option value="">Descripción: todas</option>

@@ -105,6 +105,74 @@ export function getInitials(name: string): string {
     .slice(0, 2);
 }
 
+// ─── Tipos de centro (fuente única de verdad para todo el front) ─────────────
+// Usar en CentrosSearch, CentrosClient, badges, filtros, etc.
+
+export const CENTER_TYPE_LABELS_ES: Record<string, string> = {
+  yoga: 'Yoga',
+  pilates: 'Pilates',
+  meditation: 'Meditación',
+  ayurveda: 'Ayurveda',
+  spa: 'Spa',
+  wellness: 'Wellness',
+  yoga_meditation: 'Yoga + Meditación',
+  wellness_spa: 'Wellness + Spa',
+  multidisciplinary: 'Multidisciplinar',
+};
+
+export const CENTER_TYPE_LABELS_EN: Record<string, string> = {
+  yoga: 'Yoga',
+  pilates: 'Pilates',
+  meditation: 'Meditation',
+  ayurveda: 'Ayurveda',
+  spa: 'Spa',
+  wellness: 'Wellness',
+  yoga_meditation: 'Yoga + Meditation',
+  wellness_spa: 'Wellness + Spa',
+  multidisciplinary: 'Multidisciplinary',
+};
+
+/** Tipos válidos para filtros (excluye retiro y otros no deseados) */
+export const VALID_CENTER_TYPE_SLUGS = [
+  'yoga', 'pilates', 'meditation', 'ayurveda', 'spa', 'wellness',
+  'yoga_meditation', 'wellness_spa', 'multidisciplinary',
+] as const;
+
+/** Opciones para el buscador/filtro de centros (ES) */
+export const CENTER_FILTER_OPTIONS_ES = [
+  { slug: '', label: 'Todos los tipos' },
+  { slug: 'yoga', label: 'Yoga' },
+  { slug: 'pilates', label: 'Pilates' },
+  { slug: 'meditation', label: 'Meditación' },
+  { slug: 'ayurveda', label: 'Ayurveda' },
+  { slug: 'spa', label: 'Spa' },
+  { slug: 'wellness', label: 'Wellness' },
+  { slug: 'yoga_meditation', label: 'Yoga + Meditación' },
+  { slug: 'wellness_spa', label: 'Wellness + Spa' },
+  { slug: 'multidisciplinary', label: 'Multidisciplinar' },
+];
+
+/** Opciones para el buscador/filtro de centros (EN) */
+export const CENTER_FILTER_OPTIONS_EN = [
+  { slug: '', label: 'All types' },
+  { slug: 'yoga', label: 'Yoga' },
+  { slug: 'pilates', label: 'Pilates' },
+  { slug: 'meditation', label: 'Meditation' },
+  { slug: 'ayurveda', label: 'Ayurveda' },
+  { slug: 'spa', label: 'Spa' },
+  { slug: 'wellness', label: 'Wellness' },
+  { slug: 'yoga_meditation', label: 'Yoga + Meditation' },
+  { slug: 'wellness_spa', label: 'Wellness + Spa' },
+  { slug: 'multidisciplinary', label: 'Multidisciplinary' },
+];
+
+/** Devuelve la etiqueta formateada para un tipo de centro */
+export function getCenterTypeLabel(type: string | null | undefined, locale: 'es' | 'en' = 'es'): string {
+  if (!type) return '';
+  const labels = locale === 'es' ? CENTER_TYPE_LABELS_ES : CENTER_TYPE_LABELS_EN;
+  return labels[type] ?? type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 /** Booking status colors */
 export function getBookingStatusColor(status: string): string {
   const colors: Record<string, string> = {

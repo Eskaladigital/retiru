@@ -10,6 +10,7 @@ export const metadata: Metadata = homeES;
 import { ImageWithFallback } from '@/components/ui/image-with-fallback';
 import HeroSearch from '@/components/home/HeroSearch';
 import { getCategories, getDestinations, getPublishedRetreats } from '@/lib/data';
+import { getCenterTypeLabel } from '@/lib/utils';
 
 /* ── Fallback images ──────────────────────────────────────────────────── */
 const CAT_IMAGES: Record<string, string> = {
@@ -361,7 +362,7 @@ export default async function HomePage() {
                     <img src={c.img} alt={c.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     <div className="absolute top-3 left-3 flex gap-1.5">
                       <span className="text-[10px] font-bold uppercase tracking-wider bg-sage-700 text-white px-2 py-0.5 rounded-full">Centro</span>
-                      <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm">{c.type}</span>
+                      <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm">{getCenterTypeLabel(c.type)}</span>
                     </div>
                     <span className="absolute top-3 right-3 text-[10px] font-bold bg-amber-400 text-amber-900 px-2 py-0.5 rounded-full">⭐ Destacado</span>
                   </div>

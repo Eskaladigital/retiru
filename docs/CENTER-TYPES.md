@@ -12,53 +12,51 @@ Documentación de la lógica de agrupación de los ~858 centros del directorio.
 | pilates    | Pilates       |
 | meditation | Meditación    |
 | ayurveda   | Ayurveda      |
-| wellness   | Wellness      |
 | spa        | Spa           |
+| multidisciplinary | Multidisciplinar |
 
-Además se mantienen los tipos compuestos: `yoga_meditation`, `wellness_spa`, `multidisciplinary`.
+Wellness no se usa como categoría principal (es genérico). Se mantienen tipos compuestos: `yoga_meditation`, `wellness_spa`.
 
 ---
 
 ## Campos utilizados para la agrupación
 
-Para cada centro se analizan:
+Fuentes de verdad (en orden de prioridad):
 
-- **name** — Nombre del centro (peso extra si la palabra clave aparece aquí)
-- **description_es** — Descripción generada por IA
-- **services_es** — Array de servicios/disciplinas
-- **categories** — Array de categorías
-- **type** — Tipo actual en BD
-- **search_terms** — Términos de búsqueda (Búsqueda del CSV)
+- **search_terms** (Búsqueda del CSV) — Cómo encontramos el centro ("centro pilates" → pilates)
+- **directorio.csv** — Categoría original por nombre+provincia
+- **google_types** (Tipos Google) — Lo que devuelve la API de Google (spa, yoga_studio)
+- **name** — Nombre del centro
+- **services_es** + **description_es** — Último recurso, solo keywords específicos (NO wellness)
 
 ---
 
 ## Lógica de inferencia (categoría principal)
 
-1. **Puntuación por palabras clave**  
-   Se buscan términos específicos en el texto combinado. Cada coincidencia suma puntos. Si la palabra está en el **nombre**, se añaden +5 puntos extra.
+1. **search_terms (Búsqueda)** — Si contiene "pilates", "yoga", "ayurveda", "spa", "meditación" → tipo correspondiente.
 
-2. **Palabras clave por categoría**
-   - **ayurveda**: ayurveda, ayurvédico, abhyanga, shirodhara, dosha, marma, udvartana, kansu
+2. **CSV Categoría** — Si hay match nombre+provincia en directorio.csv, usar su Categoría.
+
+3. **google_types** — Si contiene "spa" → spa; "yoga_studio" → yoga.
+
+4. **Nombre** — Si contiene ayurveda, pilates, yoga, spa.
+
+5. **Puntuación por keywords** (description + services_es) — Solo términos específicos (NO wellness/bienestar):
+   - **ayurveda**: ayurveda, ayurvédico, abhyanga, shirodhara, udvartana, kansu
    - **pilates**: pilates, reformer, mat pilates
    - **yoga**: yoga, ashtanga, vinyasa, hatha, kundalini, yin, acroyoga
    - **meditation**: meditación, mindfulness, gong, cuencos tibetanos, sound bath, reiki
    - **spa**: spa, baños árabes, termal, hidro, sauna, jacuzzi, circuito termal
-   - **wellness**: wellness, bienestar, fisioterapia, osteopatía, masaje, quiromasaje, reflexología
 
-3. **Prioridad de decisión**  
-   En caso de empate o solapamiento, se aplica este orden:  
-   Ayurveda > Spa > Pilates > Yoga > Meditación > Wellness
-
-4. **Fallback**  
-   Si no hay coincidencias, se usa el `type` actual mapeado a las categorías objetivo.
+6. **Fallback** — type actual mapeado, o multidisciplinary.
 
 ---
 
 ## Servicios 1, 2 y 3
 
-- Se toman primero de `services_es` si existen.
-- Si faltan, se intentan extraer de `description_es` usando una lista de servicios conocidos.
-- Se prioriza la categoría principal como primer servicio si no está ya en la lista.
+- **Solo datos reales**: se usan `services_es` (filtrando Wellness/Bienestar).
+- No se inventan servicios desde la descripción.
+- Se añade la categoría principal como primer servicio si no está ya.
 
 ---
 

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { CENTER_FILTER_OPTIONS_ES } from '@/lib/utils';
 
 interface Props {
   center: any;
@@ -11,17 +12,7 @@ const inputCls = 'w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px]
 const textareaCls = `${inputCls} resize-none`;
 const labelCls = 'block text-sm font-medium text-foreground mb-1.5';
 
-const CENTER_TYPES: { value: string; label: string }[] = [
-  { value: 'yoga', label: 'Yoga' },
-  { value: 'pilates', label: 'Pilates' },
-  { value: 'meditation', label: 'Meditación' },
-  { value: 'ayurveda', label: 'Ayurveda' },
-  { value: 'wellness', label: 'Wellness' },
-  { value: 'spa', label: 'Spa' },
-  { value: 'yoga_meditation', label: 'Yoga y Meditación' },
-  { value: 'wellness_spa', label: 'Wellness y Spa' },
-  { value: 'multidisciplinary', label: 'Multidisciplinar' },
-];
+const CENTER_TYPES = CENTER_FILTER_OPTIONS_ES.filter((o) => o.slug).map((o) => ({ value: o.slug!, label: o.label }));
 
 export function EditarCentroForm({ center }: Props) {
   const router = useRouter();

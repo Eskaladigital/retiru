@@ -7,6 +7,7 @@ import { CenterMap } from '@/components/ui/center-map';
 import { ClaimCenterButton } from '@/components/ui/claim-center-button';
 import { generatePageMetadata } from '@/lib/seo';
 import { getCenterBySlug, getCenterSlugs } from '@/lib/data';
+import { getCenterTypeLabel } from '@/lib/utils';
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -27,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     });
   }
   return generatePageMetadata({
-    title: `${center.name} — ${center.type ? `${center.type} center` : 'Center'} in ${center.city || ''}`,
+    title: `${center.name} — ${center.type ? `${getCenterTypeLabel(center.type, 'en')} center` : 'Center'} in ${center.city || ''}`,
     description: center.description_en?.slice(0, 160) || center.description_es?.slice(0, 160) || `${center.name}: wellness center in ${center.city}, ${center.province}.`,
     locale: 'en',
     path: `/en/center/${slug}`,
@@ -78,7 +79,7 @@ export default async function CenterDetailEN({ params }: Props) {
             <h1 className="font-serif text-[clamp(24px,3vw,36px)] text-foreground">{C.name}</h1>
           </div>
           <div className="flex flex-wrap items-center gap-3 text-sm text-[#7a6b5d] mb-6">
-            {C.type && <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-sage-100 text-sage-700">{C.type}</span>}
+            {C.type && <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-sage-100 text-sage-700">{getCenterTypeLabel(C.type, 'en')}</span>}
             {(C.city || C.province) && <span>📍 {C.city}{C.province ? `, ${C.province}` : ''}</span>}
             {C.avg_rating != null && (
               <span className="flex items-center gap-1">

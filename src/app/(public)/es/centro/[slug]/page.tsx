@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { generatePageMetadata } from '@/lib/seo';
+import { getCenterTypeLabel } from '@/lib/utils';
 import { getCenterBySlug, getCenterSlugs } from '@/lib/data';
 import { MarkdownContent } from '@/components/ui/markdown-content';
 import { CenterMap } from '@/components/ui/center-map';
@@ -27,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     });
   }
   return generatePageMetadata({
-    title: `${center.name} — ${center.type ? `Centro de ${center.type}` : 'Centro'} en ${center.city || ''}`,
+    title: `${center.name} — ${center.type ? `Centro de ${getCenterTypeLabel(center.type)}` : 'Centro'} en ${center.city || ''}`,
     description: center.description_es?.slice(0, 160) || `${center.name}: centro de bienestar en ${center.city}, ${center.province}.`,
     locale: 'es',
     path: `/es/centro/${slug}`,
@@ -78,7 +79,7 @@ export default async function CentroDetailPage({ params }: Props) {
             <h1 className="font-serif text-[clamp(24px,3vw,36px)] text-foreground">{C.name}</h1>
           </div>
           <div className="flex flex-wrap items-center gap-3 text-sm text-[#7a6b5d] mb-6">
-            {C.type && <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-sage-100 text-sage-700">{C.type}</span>}
+            {C.type && <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-sage-100 text-sage-700">{getCenterTypeLabel(C.type)}</span>}
             {(C.city || C.province) && <span>📍 {C.city}{C.province ? `, ${C.province}` : ''}</span>}
             {C.avg_rating != null && (
               <span className="flex items-center gap-1">

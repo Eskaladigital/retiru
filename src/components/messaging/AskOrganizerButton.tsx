@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { MessageCircle } from 'lucide-react';
-import { createBrowserClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 
 interface Props {
   retreatId: string;
@@ -21,7 +21,7 @@ export default function AskOrganizerButton({ retreatId, locale }: Props) {
   const handleClick = async () => {
     setLoading(true);
     try {
-      const supabase = createBrowserClient();
+      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {

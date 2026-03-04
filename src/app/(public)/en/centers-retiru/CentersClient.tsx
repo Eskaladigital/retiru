@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Search, SlidersHorizontal, X, MapPin, Star, ChevronDown, CalendarDays } from 'lucide-react';
-import { isGenericDescription, stripMarkdownForPreview } from '@/lib/utils';
+import { isGenericDescription, stripMarkdownForPreview, CENTER_FILTER_OPTIONS_EN, getCenterTypeLabel, VALID_CENTER_TYPE_SLUGS } from '@/lib/utils';
 
 const SORT_OPTIONS = [
   { value: 'relevance', label: 'Relevance' },
@@ -43,8 +43,10 @@ export default function CentersClientEN({ centers }: CentersClientProps) {
   const [currentPage, setCurrentPage] = useState(1);
 
   const TYPES = useMemo(() => {
-    const types = Array.from(new Set(centers.map(c => c.type).filter(Boolean))).sort();
-    return ['All', ...types];
+    const fromCenters = Array.from(new Set(centers.map((c) => c.type).filter(Boolean)));
+    const valid = fromCenters.filter((t) => VALID_CENTER_TYPE_SLUGS.includes(t as any));
+    const ordered = CENTER_FILTER_OPTIONS_EN.filter((o) => o.slug && valid.includes(o.slug)).map((o) => ({ value: o.slug, label: o.label }));
+    return [{ value: 'All', label: 'All' }, ...ordered];
   }, [centers]);
 
   const PROVINCES = useMemo(() => {
@@ -70,8 +72,8 @@ export default function CentersClientEN({ centers }: CentersClientProps) {
     const ciudadParam = searchParams.get('city') || searchParams.get('ciudad');
     if (qParam) setQuery(qParam);
     if (tipoParam) {
-      const match = TYPES.find(t => t.toLowerCase() === tipoParam.toLowerCase());
-      if (match) setSelectedType(match);
+      const match = TYPES.find((t) => t.value.toLowerCase() === tipoParam.toLowerCase());
+      if (match) setSelectedType(match.value);
     }
     if (provParam) {
       const match = PROVINCES.find(p => p !== 'All' && p.toLowerCase().replace(/\s/g, '-') === provParam.toLowerCase());
@@ -163,7 +165,9 @@ export default function CentersClientEN({ centers }: CentersClientProps) {
             <label className="block text-xs font-semibold text-[#a09383] uppercase tracking-wider mb-2">Center type</label>
             <div className="relative">
               <select value={selectedType} onChange={e => setSelectedType(e.target.value)} className="w-full appearance-none bg-sand-50 border border-sand-200 rounded-lg px-4 py-2.5 text-sm pr-8 focus:outline-none focus:ring-2 focus:ring-terracotta-300">
-                {TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                {TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
               </select>
               <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#a09383] pointer-events-none" />
             </div>
@@ -208,7 +212,7 @@ export default function CentersClientEN({ centers }: CentersClientProps) {
       {hasActiveFilters && !showFilters && (
         <div className="flex flex-wrap gap-2 mb-6">
           {query && <span className="inline-flex items-center gap-1 text-xs bg-terracotta-100 text-terracotta-700 px-3 py-1.5 rounded-full font-medium">&ldquo;{query}&rdquo; <button onClick={() => setQuery('')}><X size={12} /></button></span>}
-          {selectedType !== 'All' && <span className="inline-flex items-center gap-1 text-xs bg-sage-100 text-sage-700 px-3 py-1.5 rounded-full font-medium">{selectedType} <button onClick={() => setSelectedType('All')}><X size={12} /></button></span>}
+          {selectedType !== 'All' && <span className="inline-flex items-center gap-1 text-xs bg-sage-100 text-sage-700 px-3 py-1.5 rounded-full font-medium">{getCenterTypeLabel(selectedType, 'en')} <button onClick={() => setSelectedType('All')}><X size={12} /></button></span>}
           {selectedProvince !== 'All' && <span className="inline-flex items-center gap-1 text-xs bg-sage-100 text-sage-700 px-3 py-1.5 rounded-full font-medium">{selectedProvince} <button onClick={() => setSelectedProvince('All')}><X size={12} /></button></span>}
           {selectedCity && <span className="inline-flex items-center gap-1 text-xs bg-sage-100 text-sage-700 px-3 py-1.5 rounded-full font-medium">{selectedCity} <button onClick={() => setSelectedCity(null)}><X size={12} /></button></span>}
           {minRating > 0 && <span className="inline-flex items-center gap-1 text-xs bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full font-medium">{minRating}+ stars <button onClick={() => setMinRating(0)}><X size={12} /></button></span>}
@@ -278,7 +282,7 @@ export default function CentersClientEN({ centers }: CentersClientProps) {
                     <div>
                       <h2 className="font-serif text-lg leading-tight group-hover:text-terracotta-600 transition-colors">{c.name}</h2>
                       <div className="flex items-center gap-2 mt-1.5">
-                        {c.type && <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-sage-100 text-sage-700">{c.type}</span>}
+                        {c.type && <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-sage-100 text-sage-700">{getCenterTypeLabel(c.type, 'en')}</span>}
                         <span className="text-[13px] text-[#7a6b5d] flex items-center gap-1">
                           <MapPin size={13} /> {c.city}{c.province ? `, ${c.province}` : ''}
                         </span>

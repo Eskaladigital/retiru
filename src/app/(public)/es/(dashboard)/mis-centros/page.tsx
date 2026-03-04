@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createServerSupabase } from '@/lib/supabase/server';
+import { getCenterTypeLabel } from '@/lib/utils';
 
 export default async function MisCentrosPage() {
   const supabase = await createServerSupabase();
@@ -85,7 +86,7 @@ export default async function MisCentrosPage() {
                     </span>
                   </div>
                   <div className="flex flex-wrap items-center gap-3 text-sm text-[#7a6b5d]">
-                    {c.type && <span className="text-xs px-2 py-0.5 rounded-full bg-sand-100">{c.type}</span>}
+                    {c.type && <span className="text-xs px-2 py-0.5 rounded-full bg-sand-100">{getCenterTypeLabel(c.type)}</span>}
                     {(c.city || c.province) && <span>{c.city}{c.province ? `, ${c.province}` : ''}</span>}
                     {c.avg_rating != null && (
                       <span className="flex items-center gap-1">

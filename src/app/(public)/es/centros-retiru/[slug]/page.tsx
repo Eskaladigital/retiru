@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { MapPin, Star } from 'lucide-react';
 import CentrosSearch from '@/components/home/CentrosSearch';
 import { getCenterProvinces, getCentersByProvince } from '@/lib/data';
+import { getCenterTypeLabel } from '@/lib/utils';
 
 export const revalidate = 3600;
 
@@ -94,7 +95,7 @@ export default async function CentrosPorProvinciaPage({ params }: { params: Prom
                         <h2 className="font-serif text-lg leading-tight group-hover:text-terracotta-600 transition-colors">{c.name}</h2>
                         <div className="flex items-center gap-2 mt-1.5">
                           {c.type && (
-                            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-sage-100 text-sage-700 capitalize">{c.type.replace(/_/g, ' ')}</span>
+                            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-sage-100 text-sage-700">{getCenterTypeLabel(c.type)}</span>
                           )}
                           <span className="text-[13px] text-[#7a6b5d] flex items-center gap-1"><MapPin size={13} /> {c.city}{c.province ? `, ${c.province}` : ''}</span>
                         {(c.google_maps_url || c.google_place_id) && (
