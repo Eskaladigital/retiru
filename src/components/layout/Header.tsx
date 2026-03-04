@@ -74,10 +74,9 @@ export default function Header({ locale, user }: HeaderProps) {
   const closeMenu = () => setMobileOpen(false);
 
   return (
+    <>
     <header
-      className={`fixed top-0 left-0 right-0 transition-all duration-300 ${
-        mobileOpen ? 'z-[9999]' : 'z-[100]'
-      } isolate ${
+      className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${
         scrolled
           ? 'bg-white/95 backdrop-blur-md border-b border-sand-200 shadow-sm'
           : 'bg-transparent'
@@ -179,10 +178,11 @@ export default function Header({ locale, user }: HeaderProps) {
           {mobileOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
       </nav>
+    </header>
 
-      {/* Off-canvas mobile menu */}
-      <div
-        className={`fixed inset-0 z-[110] md:hidden transition-opacity duration-300 ${
+    {/* Off-canvas mobile menu — fuera del header para evitar stacking context */}
+    <div
+      className={`fixed inset-0 z-[9999] md:hidden transition-opacity duration-300 ${
           mobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         aria-hidden={!mobileOpen}
@@ -304,6 +304,6 @@ export default function Header({ locale, user }: HeaderProps) {
           )}
         </div>
       </div>
-    </header>
+    </>
   );
 }
