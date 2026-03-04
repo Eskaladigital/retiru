@@ -453,6 +453,55 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   return data as Product;
 }
 
+// ─── Bookings (usuario attendee) ──────────────────────────────────────────
+
+export async function getBookingsForUser(userId: string) {
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from('bookings')
+    .select(`
+      id, booking_number, status, total_price, platform_fee, organizer_amount, created_at,
+      retreats!retreat_id(id, title_es, title_en, slug, start_date, end_date, retreat_images(url, is_cover)),
+      organizer_profiles!organizer_id(id, business_name, slug)
+    `)
+    .eq('attendee_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data || []) as unknown as Array<{
+    id: string;
+    booking_number: string;
+    status: string;
+    total_price: number;
+    platform_fee: number;
+    organizer_amount: number;
+    created_at: string;
+    retreats: { id: string; title_es: string; title_en: string; slug: string; start_date: string; end_date: string; retreat_images?: { url: string; is_cover: boolean }[] } | null;
+    organizer_profiles: { id: string; business_name: string; slug: string } | null;
+  }>;
+}
+
+export async function getBookingById(bookingId: string, userId: string) {
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from('bookings')
+    .select(`
+      id, booking_number, status, total_price, platform_fee, organizer_amount,
+      platform_payment_status, remaining_payment_status, qr_code, created_at,
+      retreats!retreat_id(id, title_es, title_en, slug, start_date, end_date, duration_days, address, destination_id, destinations(name_es), retreat_images(url, alt_text, is_cover)),
+      organizer_profiles!organizer_id(id, business_name, slug)
+    `)
+    .eq('id', bookingId)
+    .eq('attendee_id', userId)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw error;
+  }
+  return data;
+}
+
 // ─── Product categories (para filtros tienda) ────────────────────────────
 
 export async function getProductCategories(): Promise<{ id: string; name_es: string; name_en: string; slug: string }[]> {

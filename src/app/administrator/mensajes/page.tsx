@@ -41,12 +41,14 @@ export default function AdminMensajesPage() {
   const [convDetail, setConvDetail] = useState<ConvMessages | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
 
-  useEffect(() => {
+  const fetchConversations = () =>
     fetch('/api/admin/messages')
       .then(r => r.json())
       .then(data => setConversations(data.conversations || []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      .catch(() => {});
+
+  useEffect(() => {
+    fetchConversations().finally(() => setLoading(false));
   }, []);
 
   const openConversation = async (convId: string) => {
@@ -56,6 +58,8 @@ export default function AdminMensajesPage() {
       const res = await fetch(`/api/messages/conversations/${convId}`);
       const data = await res.json();
       setConvDetail(data);
+      // Refrescar lista para actualizar contadores de no leídos (el API los resetea al abrir)
+      fetchConversations();
     } catch {
       setConvDetail(null);
     } finally {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabase } from '@/lib/supabase/server';
+import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -57,13 +57,22 @@ export async function GET(req: NextRequest, ctx: Ctx) {
         .update({ is_read: true })
         .in('id', otherMessages.map((m: any) => m.id));
 
-      // Resetear contador de no leídos
+      // Resetear contador de no leídos del participante actual
       const updateField = isUser ? 'attendee_unread' : 'organizer_unread';
       await supabase
         .from('conversations')
         .update({ [updateField]: 0 })
         .eq('id', id);
     }
+  }
+
+  // Admin: al revisar la conversación, resetear ambos contadores (usa admin client para bypassear RLS)
+  if (isAdmin) {
+    const admin = createAdminSupabase();
+    await admin
+      .from('conversations')
+      .update({ attendee_unread: 0, organizer_unread: 0 })
+      .eq('id', id);
   }
 
   return NextResponse.json({
