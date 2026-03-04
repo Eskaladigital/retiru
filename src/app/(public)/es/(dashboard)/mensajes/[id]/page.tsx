@@ -45,9 +45,7 @@ export default function ConversacionPage() {
   const [newMsg, setNewMsg] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const shouldAutoScroll = useRef(true);
 
   const fetchMessages = () => {
     fetch(`/api/messages/conversations/${id}`)
@@ -67,13 +65,6 @@ export default function ConversacionPage() {
     return () => clearInterval(interval);
   }, [id]);
 
-  useEffect(() => {
-    if (shouldAutoScroll.current) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      shouldAutoScroll.current = false;
-    }
-  }, [messages]);
-
   const handleSend = async () => {
     if (!newMsg.trim() || sending) return;
     setSending(true);
@@ -85,7 +76,6 @@ export default function ConversacionPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        shouldAutoScroll.current = true;
         setMessages(prev => [...prev, data.message]);
         setNewMsg('');
         inputRef.current?.focus();
@@ -222,7 +212,6 @@ export default function ConversacionPage() {
             </div>
           </div>
         ))}
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Input */}
