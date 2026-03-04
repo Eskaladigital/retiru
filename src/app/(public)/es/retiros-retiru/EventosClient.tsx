@@ -14,10 +14,11 @@ interface EventosClientProps {
 
 const SORT_OPTIONS = [
   { value: 'relevance', label: 'Relevancia' },
+  { value: 'date_asc', label: 'Fecha: más cercano' },
+  { value: 'date_desc', label: 'Fecha: más lejano' },
   { value: 'price_asc', label: 'Precio: menor a mayor' },
   { value: 'price_desc', label: 'Precio: mayor a menor' },
   { value: 'rating', label: 'Mejor valorados' },
-  { value: 'date', label: 'Fecha más próxima' },
 ];
 const RATING_OPTIONS = [
   { value: 0, label: 'Cualquier valoración' },
@@ -81,10 +82,11 @@ export default function EventosClient({ retreats, categories, destinations }: Ev
     });
 
     switch (sortBy) {
+      case 'date_asc': results.sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime()); break;
+      case 'date_desc': results.sort((a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime()); break;
       case 'price_asc': results.sort((a, b) => a.total_price - b.total_price); break;
       case 'price_desc': results.sort((a, b) => b.total_price - a.total_price); break;
       case 'rating': results.sort((a, b) => b.avg_rating - a.avg_rating); break;
-      case 'date': results.sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime()); break;
       default: results.sort((a, b) => b.review_count - a.review_count);
     }
     return results;

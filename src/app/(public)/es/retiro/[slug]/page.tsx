@@ -395,14 +395,17 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
 
       {/* ═══ Sticky CTA mobile ═══ */}
       <div className="sticky-cta lg:hidden">
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex items-center justify-between gap-3">
+          <div className="shrink-0">
             <p className="text-lg font-bold text-foreground">{r.total_price}€</p>
             <p className="text-xs text-muted-foreground">Hoy pagas {r.platform_fee}€</p>
           </div>
-          <button className="btn-primary px-8 py-3" disabled={r.available_spots === 0}>
-            {r.available_spots === 0 ? 'Agotado' : `Reservar plaza · ${r.platform_fee}€`}
-          </button>
+          <div className="flex items-center gap-2">
+            <AskOrganizerButton retreatId={r.id} locale="es" compact />
+            <button className="btn-primary px-6 py-3 whitespace-nowrap" disabled={r.available_spots === 0}>
+              {r.available_spots === 0 ? 'Agotado' : `Reservar · ${r.platform_fee}€`}
+            </button>
+          </div>
         </div>
       </div>
     </div>
