@@ -36,7 +36,7 @@ function hasDesc(c: CenterRow): boolean {
   return !!(c.description_es?.trim() && c.description_es.trim().length >= 80);
 }
 
-type SortKey = 'name' | 'city' | 'province' | 'plan' | 'status' | 'mrr' | 'desc';
+type SortKey = 'name' | 'city' | 'province' | 'plan' | 'type' | 'status' | 'mrr' | 'desc';
 type SortDir = 'asc' | 'desc';
 
 function getSortValue(c: CenterRow, key: SortKey): string | number {
@@ -45,6 +45,7 @@ function getSortValue(c: CenterRow, key: SortKey): string | number {
     case 'city': return (c.city || '').toLowerCase();
     case 'province': return (c.province || '').toLowerCase();
     case 'plan': return c.plan || '';
+    case 'type': return (c.type || '').toLowerCase();
     case 'status': return c.status || '';
     case 'mrr': return getMRR(c);
     case 'desc': return hasDesc(c) ? 1 : 0;
@@ -295,6 +296,7 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
                 <ThSortable label="Ciudad" sortKey="city" current={sortKey} dir={sortDir} onSort={handleSort} />
                 <ThSortable label="Provincia" sortKey="province" current={sortKey} dir={sortDir} onSort={handleSort} align="left" />
                 <ThSortable label="Plan" sortKey="plan" current={sortKey} dir={sortDir} onSort={handleSort} align="center" />
+                <ThSortable label="Tipo" sortKey="type" current={sortKey} dir={sortDir} onSort={handleSort} align="left" />
                 <ThSortable label="Estado" sortKey="status" current={sortKey} dir={sortDir} onSort={handleSort} align="center" />
                 <ThSortable label="MRR" sortKey="mrr" current={sortKey} dir={sortDir} onSort={handleSort} align="right" />
                 <ThSortable label="Desc" sortKey="desc" current={sortKey} dir={sortDir} onSort={handleSort} align="center" />
@@ -304,7 +306,7 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
             <tbody>
               {pageData.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-[#999]">
+                  <td colSpan={10} className="py-12 text-center text-[#999]">
                     {hasFilters ? 'No hay centros que coincidan con los filtros.' : 'No hay centros en la base de datos.'}
                   </td>
                 </tr>
@@ -329,6 +331,9 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
                         <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${c.plan === 'featured' ? 'bg-amber-100 text-amber-700' : 'bg-sand-200 text-[#7a6b5d]'}`}>
                           {c.plan === 'featured' ? 'Destacado' : 'Básico'}
                         </span>
+                      </td>
+                      <td className="py-3 px-4 text-[#7a6b5d]">
+                        {c.type ? <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-sage-50 text-sage-700">{getCenterTypeLabel(c.type)}</span> : '—'}
                       </td>
                       <td className="py-3 px-4 text-center">
                         <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${c.status === 'active' ? 'bg-sage-100 text-sage-700' : 'bg-red-100 text-red-600'}`}>
