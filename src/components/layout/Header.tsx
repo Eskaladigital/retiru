@@ -75,7 +75,7 @@ export default function Header({ locale, user }: HeaderProps) {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-[100] isolate transition-all duration-300 ${
         scrolled
           ? 'bg-white/95 backdrop-blur-md border-b border-sand-200 shadow-sm'
           : 'bg-transparent'
@@ -180,7 +180,7 @@ export default function Header({ locale, user }: HeaderProps) {
 
       {/* Off-canvas mobile menu */}
       <div
-        className={`fixed inset-0 z-[60] md:hidden transition-opacity duration-300 ${
+        className={`fixed inset-0 z-[110] md:hidden transition-opacity duration-300 ${
           mobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         aria-hidden={!mobileOpen}

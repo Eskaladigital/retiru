@@ -134,7 +134,7 @@ export default function ConversacionPage() {
   });
 
   return (
-    <div className="flex flex-col h-[calc(100vh-180px)]">
+    <div className="flex flex-col h-[calc(100vh-180px)] pt-8">
       {/* Header */}
       <div className="flex items-center gap-3 pb-4 border-b border-sand-200 mb-4 shrink-0">
         <button onClick={() => router.push('/es/mensajes')} className="p-2 hover:bg-sand-100 rounded-xl transition-colors">
@@ -150,15 +150,17 @@ export default function ConversacionPage() {
         </div>
       </div>
 
-      {/* Warning banner */}
-      <div className="shrink-0 mb-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 flex gap-2 items-start">
-        <AlertTriangle size={16} className="text-amber-500 shrink-0 mt-0.5" />
-        <p className="text-xs text-amber-700 leading-relaxed">
-          <strong>Importante:</strong> Toda comunicación debe realizarse a través de este chat.
-          Compartir datos de contacto, teléfono, email o redes sociales, o intentar contactar por canales externos a Retiru,
-          puede conllevar la suspensión de la cuenta. <Link href="/es/condiciones" className="underline font-medium">Más info</Link>
-        </p>
-      </div>
+      {/* Warning banner — solo para organizador */}
+      {myRole === 'organizer' && (
+        <div className="shrink-0 mb-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 flex gap-2 items-start">
+          <AlertTriangle size={16} className="text-amber-500 shrink-0 mt-0.5" />
+          <p className="text-xs text-amber-700 leading-relaxed">
+            <strong>Importante:</strong> Toda comunicación debe realizarse a través de este chat.
+            Compartir datos de contacto, teléfono, email o redes sociales, o intentar contactar por canales externos a Retiru,
+            puede conllevar la suspensión de la cuenta. <Link href="/es/condiciones" className="underline font-medium">Más info</Link>
+          </p>
+        </div>
+      )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto space-y-6 pr-2 min-h-0">
@@ -170,6 +172,7 @@ export default function ConversacionPage() {
             <div className="space-y-2">
               {group.msgs.map(m => {
                 if (m.message_type === 'system') {
+                  if (myRole !== 'organizer') return null;
                   return (
                     <div key={m.id} className="flex justify-center my-3">
                       <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 max-w-md text-center">
