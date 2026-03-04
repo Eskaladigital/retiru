@@ -33,7 +33,7 @@ export type NotificationType =
   | 'penalty_received' | 'general';
 export type CenterStatus = 'active' | 'inactive' | 'pending_payment' | 'expired';
 export type CenterPlan = 'basic' | 'featured';
-export type CenterType = 'yoga' | 'meditation' | 'wellness' | 'spa' | 'yoga_meditation' | 'wellness_spa' | 'multidisciplinary';
+export type CenterType = 'yoga' | 'pilates' | 'meditation' | 'ayurveda' | 'wellness' | 'spa' | 'yoga_meditation' | 'wellness_spa' | 'multidisciplinary';
 export type ProductStatus = 'active' | 'draft' | 'out_of_stock';
 export type OrderStatus = 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
 export type InvoiceStatus = 'draft' | 'issued' | 'paid' | 'voided';
@@ -304,15 +304,19 @@ export interface Invoice {
 
 export interface Conversation {
   id: string;
-  booking_id: string;
+  retreat_id: string | null;
+  booking_id: string | null;
+  user_id: string | null;
   attendee_id: string;
   organizer_id: string;
   last_message_at: string | null;
   attendee_unread: number;
   organizer_unread: number;
   created_at: string;
+  retreat?: Retreat;
   booking?: Booking;
   attendee?: Profile;
+  user?: Profile;
   organizer?: OrganizerProfile;
   messages?: Message[];
 }

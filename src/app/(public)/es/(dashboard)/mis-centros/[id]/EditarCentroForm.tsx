@@ -13,7 +13,9 @@ const labelCls = 'block text-sm font-medium text-foreground mb-1.5';
 
 const CENTER_TYPES: { value: string; label: string }[] = [
   { value: 'yoga', label: 'Yoga' },
+  { value: 'pilates', label: 'Pilates' },
   { value: 'meditation', label: 'Meditación' },
+  { value: 'ayurveda', label: 'Ayurveda' },
   { value: 'wellness', label: 'Wellness' },
   { value: 'spa', label: 'Spa' },
   { value: 'yoga_meditation', label: 'Yoga y Meditación' },

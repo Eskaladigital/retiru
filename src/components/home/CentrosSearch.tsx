@@ -8,8 +8,9 @@ import { MapPin, Search, ChevronDown, Check, Building2 } from 'lucide-react';
 const CENTER_TYPES = [
   { slug: '', name: 'Todos los tipos' },
   { slug: 'yoga', name: 'Yoga' },
-  { slug: 'meditacion', name: 'Meditación' },
   { slug: 'pilates', name: 'Pilates' },
+  { slug: 'meditation', name: 'Meditación' },
+  { slug: 'ayurveda', name: 'Ayurveda' },
   { slug: 'wellness', name: 'Wellness' },
   { slug: 'spa', name: 'Spa' },
 ];

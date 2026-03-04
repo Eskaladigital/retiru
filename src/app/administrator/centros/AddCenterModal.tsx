@@ -32,7 +32,9 @@ type PlaceData = {
 
 const CENTER_TYPES: { value: CenterType; label: string }[] = [
   { value: 'yoga', label: 'Yoga' },
+  { value: 'pilates', label: 'Pilates' },
   { value: 'meditation', label: 'Meditación' },
+  { value: 'ayurveda', label: 'Ayurveda' },
   { value: 'wellness', label: 'Wellness' },
   { value: 'spa', label: 'Spa' },
   { value: 'yoga_meditation', label: 'Yoga + Meditación' },
@@ -47,6 +49,8 @@ function extractAddressComponent(components: google.maps.GeocoderAddressComponen
 function guessType(types: string[]): CenterType {
   const t = types.join(' ').toLowerCase();
   if (t.includes('spa')) return 'spa';
+  if (t.includes('ayurveda')) return 'ayurveda';
+  if (t.includes('pilates')) return 'pilates';
   if (t.includes('yoga')) return 'yoga';
   if (t.includes('gym') || t.includes('fitness')) return 'wellness';
   return 'multidisciplinary';

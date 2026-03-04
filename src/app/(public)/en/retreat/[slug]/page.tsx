@@ -8,6 +8,7 @@ import { notFound } from 'next/navigation';
 import { getRetreatBySlug } from '@/lib/data';
 import { generatePageMetadata, jsonLdEvent, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
 import { Star, MapPin, Calendar, Clock, Users, Globe, Shield, Zap, Heart, Share2, ChevronRight, Check, X as XIcon } from 'lucide-react';
+import AskOrganizerButton from '@/components/messaging/AskOrganizerButton';
 
 const dateFmt = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1200&q=80';
@@ -358,6 +359,10 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
                   <Shield size={12} className="inline mr-1" />
                   Secure payment with Stripe · You won&apos;t be charged yet
                 </p>
+
+                <div className="mt-4">
+                  <AskOrganizerButton retreatId={r.id} locale="en" />
+                </div>
               </div>
             </div>
           </aside>

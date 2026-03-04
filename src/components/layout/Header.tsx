@@ -7,7 +7,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Menu, X, Globe, User, ChevronDown, MapPin, Compass, ShoppingBag, Heart, BookOpen, LogOut, Shield } from 'lucide-react';
+import { Menu, X, Globe, User, ChevronDown, MapPin, Compass, ShoppingBag, Heart, BookOpen, LogOut, Shield, MessageCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import type { Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n';
@@ -133,6 +133,9 @@ export default function Header({ locale, user }: HeaderProps) {
                   <Link href={`${prefix}/mis-reservas`} className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-sand-50" onClick={() => setUserMenuOpen(false)}>
                     <span className="text-base w-5">📋</span> {locale === 'es' ? 'Mis reservas' : 'My bookings'}
                   </Link>
+                  <Link href="/es/mensajes" className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-sand-50" onClick={() => setUserMenuOpen(false)}>
+                    <MessageCircle size={16} className="w-5" /> {locale === 'es' ? 'Mensajes' : 'Messages'}
+                  </Link>
                   <Link href={`${prefix}/perfil`} className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-sand-50" onClick={() => setUserMenuOpen(false)}>
                     <span className="text-base w-5">👤</span> {locale === 'es' ? 'Mi perfil' : 'My profile'}
                   </Link>
@@ -251,6 +254,9 @@ export default function Header({ locale, user }: HeaderProps) {
                 <>
                   <Link href={`${prefix}/mis-reservas`} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]" onClick={closeMenu}>
                     <span className="text-base">📋</span> {locale === 'es' ? 'Mis reservas' : 'My bookings'}
+                  </Link>
+                  <Link href="/es/mensajes" className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]" onClick={closeMenu}>
+                    <MessageCircle size={17} /> {locale === 'es' ? 'Mensajes' : 'Messages'}
                   </Link>
                   <Link href={`${prefix}/perfil`} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]" onClick={closeMenu}>
                     <span className="text-base">👤</span> {locale === 'es' ? 'Mi perfil' : 'My profile'}

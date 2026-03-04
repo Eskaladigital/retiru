@@ -8,6 +8,7 @@ import { notFound } from 'next/navigation';
 import { getRetreatBySlug } from '@/lib/data';
 import { generatePageMetadata, jsonLdEvent, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
 import { Star, MapPin, Calendar, Clock, Users, Globe, Shield, Zap, Heart, Share2, ChevronRight, Check, X as XIcon } from 'lucide-react';
+import AskOrganizerButton from '@/components/messaging/AskOrganizerButton';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -382,6 +383,10 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
                   <Shield size={12} className="inline mr-1" />
                   Pago seguro con Stripe · No se te cobrará aún
                 </p>
+
+                <div className="mt-4">
+                  <AskOrganizerButton retreatId={r.id} locale="es" />
+                </div>
               </div>
             </div>
           </aside>

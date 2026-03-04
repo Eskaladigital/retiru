@@ -110,14 +110,27 @@ function extractCity(address, province) {
   return province || 'España';
 }
 
+// ─── Inferir servicios desde categoría CSV ─────────────────────────────────
+function inferServicesFromCategoria(categoria) {
+  const c = (categoria || '').toLowerCase();
+  if (c.includes('spa')) return ['Spa', 'Wellness'];
+  if (c.includes('ayurveda')) return ['Ayurveda', 'Masaje ayurvédico', 'Wellness'];
+  if (c.includes('pilates') && c.includes('yoga')) return ['Yoga', 'Pilates', 'Wellness'];
+  if (c.includes('pilates')) return ['Pilates', 'Wellness'];
+  if (c.includes('yoga')) return ['Yoga', 'Pilates', 'Wellness'];
+  if (c.includes('meditación') || c.includes('meditation')) return ['Meditación', 'Wellness'];
+  return ['Yoga', 'Pilates', 'Wellness'];
+}
+
 // ─── Mapear categoría CSV → center_type ────────────────────────────────────
 function mapType(categoria) {
   const c = (categoria || '').toLowerCase();
   if (c.includes('spa')) return 'spa';
+  if (c.includes('ayurveda')) return 'ayurveda';
   if (c.includes('pilates') && c.includes('yoga')) return 'yoga_meditation';
-  if (c.includes('pilates')) return 'yoga_meditation';
+  if (c.includes('pilates')) return 'pilates';
   if (c.includes('yoga')) return 'yoga';
-  if (c.includes('ayurveda') || c.includes('meditación') || c.includes('meditation')) return 'meditation';
+  if (c.includes('meditación') || c.includes('meditation')) return 'meditation';
   if (c.includes('wellness')) return 'wellness';
   return 'multidisciplinary';
 }
@@ -152,7 +165,7 @@ function buildCenterFromRow(r, slug) {
     price_monthly: 50,
     avg_rating: r.Valoración ? parseFloat(r.Valoración) : 0,
     review_count: parseInt(r['Nº Reseñas'], 10) || 0,
-    services_es: r.Categoría?.includes('Spa') ? ['Spa', 'Wellness'] : ['Yoga', 'Pilates', 'Wellness'],
+    services_es: inferServicesFromCategoria(r.Categoría),
     schedule_summary_es: r.Horarios?.trim() || null,
     price_range_es: r['Nivel Precio']?.trim() || null,
     google_place_id: r['Place ID']?.trim() || null,

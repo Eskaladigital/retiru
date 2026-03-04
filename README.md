@@ -107,6 +107,10 @@ npm run centers:emails-csv    # Solo desde directorio.csv
 # Centros — claims
 npm run centers:claim-tokens                              # Generar tokens de reclamación
 
+# Centros — tipos y agrupación (Yoga, Pilates, Meditación, Ayurveda, Wellness, Spa)
+npm run centers:group-types                               # Analizar y generar reporte CSV (centros-agrupacion-propuesta.csv)
+npm run centers:group-types:update                        # Aplicar cambios a la BD (requiere migración 009)
+
 # Centros — estadísticas
 node scripts/quick-stats.mjs              # Resumen rápido (descripciones + emails)
 node scripts/count-center-stats.mjs       # Total, con/sin email
@@ -173,13 +177,15 @@ Las APIs `/api/retreats`, `/api/centers` y `/api/catalog` exponen datos para bú
 | Ruta | Descripción |
 |------|-------------|
 | `/es/mis-reservas` | Reservas como asistente |
+| `/es/mensajes` | Bandeja de mensajes (conversaciones con organizadores) |
+| `/es/mensajes/[id]` | Conversación individual (burbujas de chat) |
 | `/es/perfil` | Datos personales, avatar, contraseña |
 | `/es/mis-centros` | Centros reclamados (o CTA para buscar y reclamar) |
 | `/es/mis-eventos` | Lista de eventos/retiros creados |
 | `/es/mis-eventos/nuevo` | Formulario wizard para crear evento |
 | `/es/mis-eventos/[id]` | Editar evento existente |
 
-Cualquier usuario logueado (incluido el admin) accede a estas 4 secciones desde el menú de usuario.
+Cualquier usuario logueado (incluido el admin) accede a estas secciones desde el menú de usuario.
 
 ### Panel de administrador (protegido)
 
@@ -191,6 +197,7 @@ Cualquier usuario logueado (incluido el admin) accede a estas 4 secciones desde 
 | `/administrator/retiros` | Gestión retiros (aprobar/rechazar) |
 | `/administrator/centros` | Gestión centros |
 | `/administrator/claims` | Gestión claims de centros |
+| `/administrator/mensajes` | Moderación de conversaciones usuario-organizador |
 | `/administrator/blog` | Gestión blog |
 | `/administrator/tienda` | Gestión tienda |
 | `/administrator/reembolsos` | Reembolsos |
@@ -240,6 +247,26 @@ Cada entrada incluye `alternates` hreflang ES/EN. Solo se generan entradas para 
 | `/es/destinos` | `/en/destinations` |
 | `/es/para-organizadores` | `/en/for-organizers` |
 | `/es/tienda` | `/en/shop` |
+
+---
+
+## Mensajería interna
+
+Sistema de comunicación dentro de la plataforma entre usuarios y organizadores, vinculado a retiros publicados.
+
+**Reglas de negocio:**
+- Cualquier usuario logueado puede iniciar conversación sobre un retiro publicado (botón "Preguntar al organizador")
+- Una conversación por par (usuario, retiro) — si ya existe, se reutiliza
+- Los datos de contacto del organizador NO se revelan hasta que hay reserva pagada
+- Mensaje de sistema automático al organizador advirtiendo de penalización por contacto externo
+- El admin puede ver y moderar todas las conversaciones desde `/administrator/mensajes`
+
+**Arquitectura:**
+- Migración: `supabase/migrations/008_conversations_messaging.sql`
+- API: `POST/GET /api/messages/conversations`, `GET/POST /api/messages/conversations/[id]`, `GET /api/admin/messages`
+- UI usuario: `/es/mensajes` (lista) y `/es/mensajes/[id]` (chat con burbujas)
+- UI admin: `/administrator/mensajes` (tabla + panel de lectura)
+- Componente: `src/components/messaging/AskOrganizerButton.tsx`
 
 ---
 
