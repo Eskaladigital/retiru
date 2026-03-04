@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Send, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Send, AlertTriangle, ShieldCheck } from 'lucide-react';
 
 interface MessageItem {
   id: string;
@@ -154,6 +154,16 @@ export default function ConversacionPage() {
           )}
         </div>
       </div>
+
+      {/* Info banner — solo para usuario */}
+      {myRole === 'user' && (
+        <div className="shrink-0 mb-3 rounded-xl bg-sage-50 border border-sage-200 px-4 py-3 flex gap-2 items-start">
+          <ShieldCheck size={16} className="text-sage-500 shrink-0 mt-0.5" />
+          <p className="text-xs text-sage-700 leading-relaxed">
+            Bienvenido a la conversación. Por motivos de seguridad y privacidad, no compartas información personal sensible como teléfono o email.
+          </p>
+        </div>
+      )}
 
       {/* Warning banner — solo para organizador */}
       {myRole === 'organizer' && (
