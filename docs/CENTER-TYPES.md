@@ -60,19 +60,28 @@ Fuentes de verdad (en orden de prioridad):
 
 ---
 
-## Uso del script
+## Scripts de clasificación
+
+### 1. group-centers-by-type (reglas + directorio + Google)
 
 ```bash
-# Generar reporte y revisar propuesta (sin modificar BD)
-npm run centers:group-types
-
-# Aplicar cambios a la BD (requiere migración 009 ejecutada)
-npm run centers:group-types:update
+npm run centers:group-types        # Reporte CSV (centros-agrupacion-propuesta.csv)
+npm run centers:group-types:update  # Aplicar a BD
 ```
 
-El reporte se guarda en `centros-agrupacion-propuesta.csv` con columnas:
+Usa: directorio.csv, search_terms, google_types, nombre, services_es, descripción.
 
-- Nombre, Slug, Tipo_actual, Tipo_propuesto, Servicio_1, Servicio_2, Servicio_3
+### 2. infer-center-types-with-ai (OpenAI)
+
+La IA recibe tipo actual, servicios (Google), descripción (que ella misma escribió), nombre, search_terms. Con todo eso determina la categoría correcta. Útil para afinar: ej. gimnasio de alto rendimiento que ofrece pilates → multidisciplinary, no pilates.
+
+```bash
+npm run centers:infer-types-ai           # Reporte CSV (centros-tipos-ia-propuesta.csv)
+npm run centers:infer-types-ai -- --limit 20   # Probar con 20 centros
+npm run centers:infer-types-ai:update    # Aplicar a BD (tras revisar)
+```
+
+Requiere `OPENAI_API_KEY` en .env.local.
 
 ---
 

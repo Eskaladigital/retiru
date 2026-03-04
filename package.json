@@ -20,6 +20,8 @@
     "centers:claim-tokens": "node scripts/generate-claim-tokens.mjs",
     "centers:group-types": "node scripts/group-centers-by-type.mjs",
     "centers:group-types:update": "node scripts/group-centers-by-type.mjs --update",
+    "centers:infer-types-ai": "node scripts/infer-center-types-with-ai.mjs",
+    "centers:infer-types-ai:update": "node scripts/infer-center-types-with-ai.mjs --update",
     "centers:sync-directorio": "node scripts/sync-directorio.mjs",
     "centers:sync-directorio:dry": "node scripts/sync-directorio.mjs --dry-run",
     "centers:sync-directorio:update": "node scripts/sync-directorio.mjs --update-existing"

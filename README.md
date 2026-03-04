@@ -111,6 +111,11 @@ npm run centers:claim-tokens                              # Generar tokens de re
 npm run centers:group-types                               # Analizar y generar reporte CSV (centros-agrupacion-propuesta.csv)
 npm run centers:group-types:update                        # Aplicar cambios a la BD (requiere migración 009)
 
+# Centros — inferir tipo con IA (afinar clasificación usando descripciones)
+npm run centers:infer-types-ai                           # Analizar con OpenAI, generar centros-tipos-ia-propuesta.csv
+npm run centers:infer-types-ai -- --limit 20              # Probar con 20 centros
+npm run centers:infer-types-ai:update                     # Aplicar cambios a la BD (tras revisar el CSV)
+
 # Centros — estadísticas
 node scripts/quick-stats.mjs              # Resumen rápido (descripciones + emails)
 node scripts/count-center-stats.mjs       # Total, con/sin email

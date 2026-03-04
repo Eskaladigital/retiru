@@ -138,32 +138,32 @@ export const VALID_CENTER_TYPE_SLUGS = [
   'yoga_meditation', 'wellness_spa', 'multidisciplinary',
 ] as const;
 
-/** Opciones para el buscador/filtro de centros (ES) */
+/** Opciones para el buscador/filtro de centros (ES) — orden alfabético */
 export const CENTER_FILTER_OPTIONS_ES = [
   { slug: '', label: 'Todos los tipos' },
-  { slug: 'yoga', label: 'Yoga' },
-  { slug: 'pilates', label: 'Pilates' },
-  { slug: 'meditation', label: 'Meditación' },
   { slug: 'ayurveda', label: 'Ayurveda' },
+  { slug: 'meditation', label: 'Meditación' },
+  { slug: 'multidisciplinary', label: 'Multidisciplinar' },
+  { slug: 'pilates', label: 'Pilates' },
   { slug: 'spa', label: 'Spa' },
   { slug: 'wellness', label: 'Wellness' },
-  { slug: 'yoga_meditation', label: 'Yoga + Meditación' },
   { slug: 'wellness_spa', label: 'Wellness + Spa' },
-  { slug: 'multidisciplinary', label: 'Multidisciplinar' },
+  { slug: 'yoga', label: 'Yoga' },
+  { slug: 'yoga_meditation', label: 'Yoga + Meditación' },
 ];
 
-/** Opciones para el buscador/filtro de centros (EN) */
+/** Opciones para el buscador/filtro de centros (EN) — orden alfabético */
 export const CENTER_FILTER_OPTIONS_EN = [
   { slug: '', label: 'All types' },
-  { slug: 'yoga', label: 'Yoga' },
-  { slug: 'pilates', label: 'Pilates' },
-  { slug: 'meditation', label: 'Meditation' },
   { slug: 'ayurveda', label: 'Ayurveda' },
+  { slug: 'meditation', label: 'Meditation' },
+  { slug: 'multidisciplinary', label: 'Multidisciplinary' },
+  { slug: 'pilates', label: 'Pilates' },
   { slug: 'spa', label: 'Spa' },
   { slug: 'wellness', label: 'Wellness' },
-  { slug: 'yoga_meditation', label: 'Yoga + Meditation' },
   { slug: 'wellness_spa', label: 'Wellness + Spa' },
-  { slug: 'multidisciplinary', label: 'Multidisciplinary' },
+  { slug: 'yoga', label: 'Yoga' },
+  { slug: 'yoga_meditation', label: 'Yoga + Meditation' },
 ];
 
 /** Devuelve la etiqueta formateada para un tipo de centro */
