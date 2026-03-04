@@ -150,6 +150,16 @@ export default function ConversacionPage() {
         </div>
       </div>
 
+      {/* Warning banner */}
+      <div className="shrink-0 mb-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 flex gap-2 items-start">
+        <AlertTriangle size={16} className="text-amber-500 shrink-0 mt-0.5" />
+        <p className="text-xs text-amber-700 leading-relaxed">
+          <strong>Importante:</strong> Toda comunicación debe realizarse a través de este chat.
+          Compartir datos de contacto, teléfono, email o redes sociales, o intentar contactar por canales externos a Retiru,
+          puede conllevar la suspensión de la cuenta. <Link href="/es/condiciones" className="underline font-medium">Más info</Link>
+        </p>
+      </div>
+
       {/* Messages */}
       <div className="flex-1 overflow-y-auto space-y-6 pr-2 min-h-0">
         {grouped.map((group, gi) => (
