@@ -1,10 +1,12 @@
 // /administrator/claims — Gestión de claims de centros (admin)
+import { unstable_noStore } from 'next/cache';
 import { createAdminSupabase } from '@/lib/supabase/server';
 import { ClaimsTableClient } from './ClaimsTableClient';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminClaimsPage() {
+  unstable_noStore(); // Evitar caché de Next.js — datos deben ser siempre frescos
   const supabase = createAdminSupabase();
 
   const { data: claims } = await supabase

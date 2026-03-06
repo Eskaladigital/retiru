@@ -74,12 +74,19 @@ export async function getCurrentUserForHeader(): Promise<{ name: string; role: s
 /**
  * Admin client with service role key — use only in server-side code
  * (webhooks, cron jobs, admin operations)
+ * Usa fetch con cache: 'no-store' para evitar caché de Next.js en datos dinámicos (claims, etc.)
  */
 export function createAdminSupabase() {
   const { createClient } = require('@supabase/supabase-js');
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
+    {
+      auth: { autoRefreshToken: false, persistSession: false },
+      global: {
+        fetch: (url: RequestInfo | URL, init?: RequestInit) =>
+          fetch(url, { ...init, cache: 'no-store' }),
+      },
+    }
   );
 }
