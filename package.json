@@ -18,6 +18,7 @@
     "centers:emails-csv": "node scripts/sync-and-fetch-emails.mjs --solo-csv",
     "centers:emails-serp": "node scripts/sync-and-fetch-emails.mjs --solo-serp",
     "centers:claim-tokens": "node scripts/generate-claim-tokens.mjs",
+    "claims:check": "node scripts/check-claims-status.mjs",
     "centers:group-types": "node scripts/group-centers-by-type.mjs",
     "centers:group-types:update": "node scripts/group-centers-by-type.mjs --update",
     "centers:infer-types-ai": "node scripts/infer-center-types-with-ai.mjs",

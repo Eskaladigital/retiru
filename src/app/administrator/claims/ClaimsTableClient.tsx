@@ -59,10 +59,18 @@ export function ClaimsTableClient({ claims }: { claims: ClaimRow[] }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ claimId, action, adminNotes: adminNotes || undefined }),
       });
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
         window.location.reload();
+      } else if (res.status === 409 && data.error) {
+        // Claim ya está en el estado deseado (approved/rejected) — recargar para mostrar datos actuales
+        const desired = action === 'approve' ? 'approved' : 'rejected';
+        if (data.error.toLowerCase().includes(desired)) {
+          window.location.reload();
+          return;
+        }
+        alert(data.error || 'Error al procesar el claim');
       } else {
-        const data = await res.json();
         alert(data.error || 'Error al procesar el claim');
       }
     } catch {
