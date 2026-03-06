@@ -50,8 +50,14 @@ export function ClaimsTableClient({ claims }: { claims: ClaimRow[] }) {
 
   const detailClaim = detailId ? claims.find((c) => c.id === detailId) : null;
 
-  async function handleAction(claimId: string, action: 'approve' | 'reject') {
-    if (!confirm(action === 'approve' ? '¿Aprobar este claim?' : '¿Rechazar este claim?')) return;
+  const CONFIRM_MSG: Record<string, string> = {
+    approve: '¿Aprobar este claim?',
+    reject: '¿Rechazar este claim?',
+    revert_to_pending: '¿Revertir a pendiente? El centro dejará de estar asignado al usuario.',
+  };
+
+  async function handleAction(claimId: string, action: 'approve' | 'reject' | 'revert_to_pending') {
+    if (!confirm(CONFIRM_MSG[action] || '¿Continuar?')) return;
     setActing(claimId);
     try {
       const res = await fetch('/api/admin/center-claims', {
@@ -63,9 +69,9 @@ export function ClaimsTableClient({ claims }: { claims: ClaimRow[] }) {
       if (res.ok) {
         window.location.reload();
       } else if (res.status === 409 && data.error) {
-        // Claim ya está en el estado deseado (approved/rejected) — recargar para mostrar datos actuales
-        const desired = action === 'approve' ? 'approved' : 'rejected';
-        if (data.error.toLowerCase().includes(desired)) {
+        // Posible conflicto de estado — recargar para mostrar datos actuales
+        const desired = action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'pendiente';
+        if (data.error.toLowerCase().includes(desired) || data.error.toLowerCase().includes('pending')) {
           window.location.reload();
           return;
         }
@@ -203,6 +209,29 @@ export function ClaimsTableClient({ claims }: { claims: ClaimRow[] }) {
                               Detalle
                             </button>
                           </div>
+                        ) : c.status === 'approved' ? (
+                          <div className="flex gap-1.5">
+                            <button
+                              onClick={() => handleAction(c.id, 'revert_to_pending')}
+                              disabled={acting === c.id}
+                              className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors disabled:opacity-50"
+                            >
+                              Desaprobar
+                            </button>
+                            <button
+                              onClick={() => handleAction(c.id, 'reject')}
+                              disabled={acting === c.id}
+                              className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition-colors disabled:opacity-50"
+                            >
+                              Rechazar
+                            </button>
+                            <button
+                              onClick={() => { setDetailId(c.id); setAdminNotes(c.admin_notes || ''); }}
+                              className="text-xs font-medium text-terracotta-600 hover:underline px-1"
+                            >
+                              Detalle
+                            </button>
+                          </div>
                         ) : (
                           <div className="flex gap-1.5 items-center">
                             <span className="text-xs text-[#a09383]">
@@ -291,7 +320,7 @@ export function ClaimsTableClient({ claims }: { claims: ClaimRow[] }) {
               })()}
 
               {/* Notas admin */}
-              {detailClaim.status === 'pending' && (
+              {(detailClaim.status === 'pending' || detailClaim.status === 'approved') && (
                 <div>
                   <label className="block text-xs font-semibold text-[#7a6b5d] mb-1.5">Notas del administrador</label>
                   <textarea
@@ -303,7 +332,7 @@ export function ClaimsTableClient({ claims }: { claims: ClaimRow[] }) {
                 </div>
               )}
 
-              {detailClaim.admin_notes && detailClaim.status !== 'pending' && (
+              {detailClaim.admin_notes && detailClaim.status === 'rejected' && (
                 <div className="text-sm text-[#7a6b5d]">
                   <span className="font-semibold">Notas admin:</span> {detailClaim.admin_notes}
                 </div>
@@ -332,6 +361,24 @@ export function ClaimsTableClient({ claims }: { claims: ClaimRow[] }) {
                     className="text-sm font-semibold px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50"
                   >
                     Aprobar
+                  </button>
+                </>
+              )}
+              {detailClaim.status === 'approved' && (
+                <>
+                  <button
+                    onClick={() => handleAction(detailClaim.id, 'reject')}
+                    disabled={acting === detailClaim.id}
+                    className="text-sm font-semibold px-4 py-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition-colors disabled:opacity-50"
+                  >
+                    Rechazar
+                  </button>
+                  <button
+                    onClick={() => handleAction(detailClaim.id, 'revert_to_pending')}
+                    disabled={acting === detailClaim.id}
+                    className="text-sm font-semibold px-4 py-2 rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors disabled:opacity-50"
+                  >
+                    Desaprobar
                   </button>
                 </>
               )}

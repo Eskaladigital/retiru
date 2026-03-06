@@ -1,10 +1,12 @@
 // /administrator/usuarios — Gestión de usuarios (admin)
-import { createAdminSupabase } from '@/lib/supabase/server';
+import { createAdminSupabase, createServerSupabase } from '@/lib/supabase/server';
 import { UsuariosTableClient } from './UsuariosTableClient';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminUsuariosPage() {
+  const serverSupabase = await createServerSupabase();
+  const { data: { user } } = await serverSupabase.auth.getUser();
   const supabase = createAdminSupabase();
 
   const { data: profiles, error } = await supabase
@@ -53,7 +55,7 @@ export default async function AdminUsuariosPage() {
         </div>
       </div>
 
-      <UsuariosTableClient users={list} />
+      <UsuariosTableClient users={list} currentUserId={user?.id ?? null} />
     </div>
   );
 }

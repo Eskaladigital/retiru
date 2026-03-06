@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Search, ChevronUp, ChevronDown, ChevronsUpDown, X } from 'lucide-react';
+import { Search, ChevronUp, ChevronDown, ChevronsUpDown, X, Trash2 } from 'lucide-react';
 
 interface UserRow {
   id: string;
@@ -88,12 +88,31 @@ function paginationRange(current: number, total: number): number[] {
   return pages;
 }
 
-export function UsuariosTableClient({ users }: { users: UserRow[] }) {
+export function UsuariosTableClient({ users, currentUserId }: { users: UserRow[]; currentUserId: string | null }) {
   const [query, setQuery] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('created_at');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [filterRole, setFilterRole] = useState('');
   const [page, setPage] = useState(0);
+  const [deleting, setDeleting] = useState<string | null>(null);
+
+  async function handleDelete(userId: string, email: string) {
+    if (!confirm(`¿Eliminar al usuario ${email || userId}? Esta acción no se puede deshacer.`)) return;
+    setDeleting(userId);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        window.location.reload();
+      } else {
+        alert(data.error || 'Error al eliminar el usuario');
+      }
+    } catch {
+      alert('Error de conexión');
+    } finally {
+      setDeleting(null);
+    }
+  }
 
   const filtered = useMemo(() => {
     const words = query.toLowerCase().trim() ? query.toLowerCase().trim().split(/\s+/) : [];
@@ -180,12 +199,13 @@ export function UsuariosTableClient({ users }: { users: UserRow[] }) {
                 <th className="text-left py-3 px-4 font-semibold text-[#7a6b5d]">Teléfono</th>
                 <ThSortable label="Rol" sortKey="role" current={sortKey} dir={sortDir} onSort={handleSort} align="center" />
                 <ThSortable label="Registro" sortKey="created_at" current={sortKey} dir={sortDir} onSort={handleSort} />
+                <th className="text-right py-3 px-4 font-semibold text-[#a09383] w-24">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {pageData.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-[#999]">
+                  <td colSpan={7} className="py-12 text-center text-[#999]">
                     {hasFilters ? 'No hay usuarios que coincidan con los filtros.' : 'No hay usuarios en la base de datos.'}
                   </td>
                 </tr>
@@ -215,6 +235,21 @@ export function UsuariosTableClient({ users }: { users: UserRow[] }) {
                         </span>
                       </td>
                       <td className="py-3 px-4 text-[#7a6b5d] text-sm">{date}</td>
+                      <td className="py-3 px-4 text-right">
+                        {u.id !== currentUserId ? (
+                          <button
+                            onClick={() => handleDelete(u.id, u.email)}
+                            disabled={deleting === u.id}
+                            className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                            title="Eliminar usuario"
+                          >
+                            <Trash2 size={14} />
+                            Eliminar
+                          </button>
+                        ) : (
+                          <span className="text-xs text-[#999]">—</span>
+                        )}
+                      </td>
                     </tr>
                   );
                 })

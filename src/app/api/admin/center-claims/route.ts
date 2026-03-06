@@ -14,9 +14,9 @@ export async function POST(request: NextRequest) {
 
   const { claimId, action, adminNotes } = await request.json();
 
-  if (!claimId || !['approve', 'reject'].includes(action)) {
+  if (!claimId || !['approve', 'reject', 'revert_to_pending'].includes(action)) {
     return NextResponse.json(
-      { error: 'claimId y action (approve|reject) son obligatorios' },
+      { error: 'claimId y action (approve|reject|revert_to_pending) son obligatorios' },
       { status: 400 },
     );
   }
@@ -32,12 +32,31 @@ export async function POST(request: NextRequest) {
   if (!claim) {
     return NextResponse.json({ error: 'Claim no encontrado' }, { status: 404 });
   }
-  if (claim.status !== 'pending') {
-    return NextResponse.json({ error: `Claim ya está ${claim.status}` }, { status: 409 });
-  }
 
   const now = new Date().toISOString();
-  const newStatus = action === 'approve' ? 'approved' : 'rejected';
+  let newStatus: string;
+  let message: string;
+
+  if (action === 'approve') {
+    if (claim.status !== 'pending') {
+      return NextResponse.json({ error: `Solo se puede aprobar un claim pendiente (actual: ${claim.status})` }, { status: 409 });
+    }
+    newStatus = 'approved';
+    message = 'Claim aprobado. El centro ha sido asignado al usuario.';
+  } else if (action === 'reject') {
+    if (claim.status === 'rejected') {
+      return NextResponse.json({ error: 'Claim ya está rechazado' }, { status: 409 });
+    }
+    newStatus = 'rejected';
+    message = 'Claim rechazado.';
+  } else {
+    // revert_to_pending
+    if (claim.status !== 'approved') {
+      return NextResponse.json({ error: `Solo se puede desaprobar un claim aprobado (actual: ${claim.status})` }, { status: 409 });
+    }
+    newStatus = 'pending';
+    message = 'Claim revertido a pendiente. El centro ya no está asignado al usuario.';
+  }
 
   const { error: updateErr } = await admin
     .from('center_claims')
@@ -56,14 +75,18 @@ export async function POST(request: NextRequest) {
       .from('centers')
       .update({ claimed_by: claim.user_id, updated_at: now })
       .eq('id', claim.center_id);
+  } else if (claim.status === 'approved' && (action === 'reject' || action === 'revert_to_pending')) {
+    // Quitar claimed_by del centro al desaprobar o rechazar un claim aprobado
+    await admin
+      .from('centers')
+      .update({ claimed_by: null, updated_at: now })
+      .eq('id', claim.center_id);
   }
 
   return NextResponse.json({
     success: true,
     status: newStatus,
-    message: action === 'approve'
-      ? 'Claim aprobado. El centro ha sido asignado al usuario.'
-      : 'Claim rechazado.',
+    message,
   });
 }
 
