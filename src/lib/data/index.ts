@@ -4,7 +4,7 @@
 // Usar createServerSupabase en Server Components / Route Handlers
 // ============================================================================
 
-import { createServerSupabase, createStaticSupabase } from '@/lib/supabase/server';
+import { createServerSupabase, createStaticSupabase, createAdminSupabase } from '@/lib/supabase/server';
 import type { Locale } from '@/types';
 import type { Category, Destination, Retreat, Center, Product, OrganizerProfile } from '@/types';
 
@@ -185,6 +185,48 @@ export async function getRetreatBySlug(slug: string): Promise<Retreat | null> {
       .from('categories')
       .select('*')
       .in('id', catLinks.map((c) => c.category_id));
+    retreat.categories = (cats || []) as Category[];
+  }
+
+  return retreat;
+}
+
+/** Obtiene un retiro por slug sin filtrar por status. Solo para admin (preview de pendientes). */
+export async function getRetreatBySlugForAdmin(slug: string): Promise<Retreat | null> {
+  const supabase = createAdminSupabase();
+  const { data, error } = await supabase
+    .from('retreats')
+    .select(RETREAT_SELECT)
+    .eq('slug', slug)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw error;
+  }
+
+  if (!data) return null;
+
+  const raw = data as Record<string, unknown>;
+  const { organizer_profiles, destinations, retreat_images, ...rest } = raw;
+  const retreat = {
+    ...rest,
+    organizer: organizer_profiles as OrganizerProfile | undefined,
+    destination: destinations as Destination | undefined,
+    categories: [] as Category[],
+    images: (retreat_images as Retreat['images']) ?? [],
+  } as unknown as Retreat;
+
+  const { data: catLinks } = await supabase
+    .from('retreat_categories')
+    .select('category_id')
+    .eq('retreat_id', retreat.id);
+  if (catLinks?.length) {
+    const catIds = (catLinks as { category_id: string }[]).map((c) => c.category_id);
+    const { data: cats } = await supabase
+      .from('categories')
+      .select('*')
+      .in('id', catIds);
     retreat.categories = (cats || []) as Category[];
   }
 

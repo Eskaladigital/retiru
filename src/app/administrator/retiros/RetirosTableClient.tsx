@@ -149,9 +149,9 @@ export function RetirosTableClient({ retreats }: { retreats: RetreatRow[] }) {
                     <tr key={r.id} className="hover:bg-sand-50/50 transition-colors">
                       <td className="px-4 py-3">
                         <a
-                          href={`/es/retiro/${r.slug}`}
-                          target="_blank"
-                          rel="noopener"
+                          href={r.status === 'published' ? `/es/retiro/${r.slug}` : `/administrator/retiros/preview/${r.slug}`}
+                          target={r.status === 'published' ? '_blank' : undefined}
+                          rel={r.status === 'published' ? 'noopener' : undefined}
                           className="text-terracotta-600 hover:underline font-medium line-clamp-2"
                         >
                           {r.title_es}
@@ -189,7 +189,13 @@ export function RetirosTableClient({ retreats }: { retreats: RetreatRow[] }) {
                       </td>
                       <td className="px-4 py-3">
                         {r.status === 'pending_review' ? (
-                          <div className="flex gap-1.5">
+                          <div className="flex gap-1.5 flex-wrap">
+                            <a
+                              href={`/administrator/retiros/preview/${r.slug}`}
+                              className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-sand-100 text-[#7a6b5d] hover:bg-sand-200 transition-colors"
+                            >
+                              Ver preview
+                            </a>
                             <button
                               onClick={() => handleApprove(r.id)}
                               disabled={acting === r.id}
@@ -215,7 +221,12 @@ export function RetirosTableClient({ retreats }: { retreats: RetreatRow[] }) {
                             Ver
                           </a>
                         ) : (
-                          <span className="text-xs text-[#a09383]">—</span>
+                          <a
+                            href={`/administrator/retiros/preview/${r.slug}`}
+                            className="text-xs font-semibold text-terracotta-600 hover:underline"
+                          >
+                            Ver preview
+                          </a>
                         )}
                       </td>
                     </tr>

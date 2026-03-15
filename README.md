@@ -558,7 +558,7 @@ El admin tiene además acceso a `/administrator` desde el menú.
 ### Panel de administrador (solo role=admin)
 - Dashboard con métricas generales
 - **Usuarios** — tabla con todos los perfiles (buscador, filtro por rol)
-- **Organizadores** — gestión de organizadores verificados *(pendiente: conectar a datos reales)*
+- **Organizadores** — gestión de organizadores verificados (datos desde `organizer_profiles`)
 - **Retiros** — gestión de retiros (aprobar/rechazar los `pending_review`, ver todos)
 - **Centros** — gestión de centros (buscador, filtros, exportar CSV/Excel, generar descripciones IA, editar, ver ficha pública, despublicar/publicar, eliminar)
 - **Claims** — gestión de reclamaciones de centros (aprobar/rechazar)

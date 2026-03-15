@@ -1,38 +1,71 @@
-// /administrator/reembolsos
-export default function AdminReembolsosPage() {
-  const REFUNDS = [
-    { id: 'REF-001', attendee: 'Pedro Sánchez L.', event: 'Yoga Retreat Ibiza', amount: 158, reason: 'Cancelación > 30 días', status: 'processed', date: '28 Feb 2026' },
-    { id: 'REF-002', attendee: 'Clara Ruiz', event: 'Detox Grazalema', amount: 90, reason: 'Retiro cancelado por organizador', status: 'pending', date: '1 Mar 2026' },
-    { id: 'REF-003', attendee: 'John Smith', event: 'Wellness Retreat', amount: 220, reason: 'Cancelación < 7 días (50%)', status: 'pending', date: '2 Mar 2026' },
-  ];
+// /administrator/reembolsos — Gestión de reembolsos (admin)
+import { unstable_noStore } from 'next/cache';
+import { createAdminSupabase } from '@/lib/supabase/server';
+import { ReembolsosTableClient } from './ReembolsosTableClient';
+
+export const dynamic = 'force-dynamic';
+
+export default async function AdminReembolsosPage() {
+  unstable_noStore();
+  const supabase = createAdminSupabase();
+
+  const { data: refunds, error } = await supabase
+    .from('refunds')
+    .select('id, attendee_id, retreat_id, amount, reason, reason_detail, status, requested_at, processed_at')
+    .order('requested_at', { ascending: false })
+    .limit(500);
+
+  if (error) {
+    console.error('Error fetching refunds:', error);
+  }
+
+  const attendeeIds = [...new Set((refunds || []).map((r: any) => r.attendee_id).filter(Boolean))];
+  const retreatIds = [...new Set((refunds || []).map((r: any) => r.retreat_id).filter(Boolean))];
+
+  let profileMap: Record<string, { full_name: string | null; email: string | null }> = {};
+  let retreatMap: Record<string, { title_es: string | null; slug: string | null }> = {};
+
+  if (attendeeIds.length > 0) {
+    const { data: profiles } = await supabase.from('profiles').select('id, full_name, email').in('id', attendeeIds);
+    profileMap = (profiles || []).reduce((acc: Record<string, any>, p: any) => {
+      acc[p.id] = { full_name: p.full_name, email: p.email };
+      return acc;
+    }, {});
+  }
+  if (retreatIds.length > 0) {
+    const { data: retreats } = await supabase.from('retreats').select('id, title_es, slug').in('id', retreatIds);
+    retreatMap = (retreats || []).reduce((acc: Record<string, any>, t: any) => {
+      acc[t.id] = { title_es: t.title_es, slug: t.slug };
+      return acc;
+    }, {});
+  }
+
+  const list = (refunds || []).map((r: any) => {
+    const p = profileMap[r.attendee_id] || {};
+    const t = retreatMap[r.retreat_id] || {};
+    return {
+      id: r.id,
+      attendee: p.full_name || p.email || '—',
+      event: t.title_es || '—',
+      retreat_slug: t.slug,
+      amount: Number(r.amount || 0),
+      reason: r.reason || '—',
+      reason_detail: r.reason_detail,
+      status: r.status,
+      date: r.requested_at,
+      processed_at: r.processed_at,
+    };
+  });
+
+  const pending = list.filter((r: { status: string }) => r.status === 'pending').length;
+
   return (
     <div>
       <h1 className="font-serif text-3xl text-foreground mb-2">Reembolsos</h1>
-      <p className="text-sm text-[#7a6b5d] mb-8">{REFUNDS.filter(r => r.status === 'pending').length} pendientes de procesar</p>
-      <div className="bg-white border border-sand-200 rounded-2xl overflow-hidden">
-        <table className="w-full text-sm">
-          <thead><tr className="border-b border-sand-200 bg-sand-50">
-            <th className="text-left py-3 px-4 font-semibold text-[#7a6b5d]">ID</th>
-            <th className="text-left py-3 px-4 font-semibold text-[#7a6b5d]">Asistente</th>
-            <th className="text-left py-3 px-4 font-semibold text-[#7a6b5d] hidden md:table-cell">Retiro</th>
-            <th className="text-left py-3 px-4 font-semibold text-[#7a6b5d] hidden md:table-cell">Motivo</th>
-            <th className="text-right py-3 px-4 font-semibold text-[#7a6b5d]">Importe</th>
-            <th className="text-center py-3 px-4 font-semibold text-[#7a6b5d]">Estado</th>
-            <th className="text-right py-3 px-4 font-semibold text-[#7a6b5d]"></th>
-          </tr></thead>
-          <tbody>{REFUNDS.map((r) => (
-            <tr key={r.id} className="border-b border-sand-100 hover:bg-sand-50/50">
-              <td className="py-3 px-4 font-medium">{r.id}</td>
-              <td className="py-3 px-4">{r.attendee}</td>
-              <td className="py-3 px-4 text-[#7a6b5d] hidden md:table-cell">{r.event}</td>
-              <td className="py-3 px-4 text-[#7a6b5d] hidden md:table-cell">{r.reason}</td>
-              <td className="py-3 px-4 text-right font-semibold">{r.amount}€</td>
-              <td className="py-3 px-4 text-center"><span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${r.status === 'processed' ? 'bg-sage-100 text-sage-700' : 'bg-amber-100 text-amber-700'}`}>{r.status === 'processed' ? 'Procesado' : 'Pendiente'}</span></td>
-              <td className="py-3 px-4 text-right">{r.status === 'pending' && <button className="text-xs font-semibold text-terracotta-600 hover:underline">Procesar</button>}</td>
-            </tr>
-          ))}</tbody>
-        </table>
-      </div>
+      <p className="text-sm text-[#7a6b5d] mb-8">
+        {list.length} total · {pending} pendientes de procesar
+      </p>
+      <ReembolsosTableClient refunds={list} />
     </div>
   );
 }
