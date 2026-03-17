@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { MessageCircle, Search, Eye, AlertTriangle, Send, LifeBuoy, X } from 'lucide-react';
+import { MessageCircle, Search, Eye, AlertTriangle, Send, LifeBuoy, X, Trash2 } from 'lucide-react';
 
 interface AdminConversation {
   id: string;
@@ -47,6 +47,7 @@ export default function AdminMensajesPage() {
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [replyMsg, setReplyMsg] = useState('');
   const [sending, setSending] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchConversations = () =>
     fetch('/api/admin/messages')
@@ -95,6 +96,19 @@ export default function AdminMensajesPage() {
       }
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleDeleteMessage = async (messageId: string) => {
+    if (!confirm('¿Borrar este mensaje?')) return;
+    setDeletingId(messageId);
+    try {
+      const res = await fetch(`/api/admin/messages/${messageId}`, { method: 'DELETE' });
+      if (res.ok && selectedConv) {
+        openConversation(selectedConv);
+      }
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -255,13 +269,26 @@ export default function AdminMensajesPage() {
                 </div>
               ) : (
                 (convDetail?.messages || []).map((m: any) => {
+                  const isDeleting = deletingId === m.id;
+                  const deleteBtn = (
+                    <button
+                      key={`del-${m.id}`}
+                      onClick={(e) => { e.stopPropagation(); handleDeleteMessage(m.id); }}
+                      disabled={isDeleting}
+                      className="p-1.5 hover:bg-red-100 rounded-lg text-red-500 hover:text-red-600 transition-colors disabled:opacity-50"
+                      title="Borrar mensaje"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  );
                   if (m.message_type === 'system') {
                     return (
-                      <div key={m.id} className="flex justify-center my-2">
+                      <div key={m.id} className="flex justify-center items-center gap-1 my-2 group">
                         <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5 text-center">
                           <AlertTriangle size={12} className="inline mr-1 text-amber-500" />
                           <span className="text-[11px] text-amber-700">{m.content}</span>
                         </div>
+                        <span className="opacity-60 hover:opacity-100 transition-opacity">{deleteBtn}</span>
                       </div>
                     );
                   }
@@ -272,7 +299,8 @@ export default function AdminMensajesPage() {
                     ? (isFromUser ? (convDetail?.conversation?.user_profile?.full_name ?? 'Usuario') : 'Andrea - Soporte')
                     : (isFromUser ? (convDetail?.conversation?.user_profile?.full_name ?? 'Usuario') : (convDetail?.conversation?.organizer?.business_name ?? 'Organizador'));
                   return (
-                    <div key={m.id} className={`flex ${isFromUser ? 'justify-start' : 'justify-end'}`}>
+                    <div key={m.id} className={`flex ${isFromUser ? 'justify-start' : 'justify-end'} items-end gap-1 group`}>
+                      {isFromUser && <span className="opacity-60 hover:opacity-100 transition-opacity shrink-0">{deleteBtn}</span>}
                       <div className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 ${
                         isFromUser ? 'bg-sand-100 text-foreground rounded-bl-md' : 'bg-terracotta-500 text-white rounded-br-md'
                       }`}>
@@ -284,6 +312,7 @@ export default function AdminMensajesPage() {
                           {new Date(m.created_at).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
+                      {!isFromUser && <span className="opacity-60 hover:opacity-100 transition-opacity shrink-0">{deleteBtn}</span>}
                     </div>
                   );
                 })

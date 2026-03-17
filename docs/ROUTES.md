@@ -204,6 +204,7 @@ Protegido por middleware (role=admin). No indexado en buscadores.
 | POST | `/api/messages/support` | Crear/recuperar conversación de soporte con admin |
 | GET | `/api/admin/messages` | Listar todas las conversaciones (admin, incluye soporte) |
 | POST | `/api/admin/messages/support` | Admin crea/obtiene conversación de soporte con un usuario (targetUserId) |
+| DELETE | `/api/admin/messages/[messageId]` | Borrar mensaje (solo admin) |
 | POST | `/api/checkout` | Crear sesión de Stripe Checkout para reservar retiro |
 | POST | `/api/webhooks/stripe` | Webhook Stripe (checkout.session.completed, charge.refunded) |
 | PATCH | `/api/bookings/[id]` | Organizador confirma/rechaza reserva |
