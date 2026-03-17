@@ -1,7 +1,7 @@
 // /api/bookings/[id] — Organizer confirm/reject booking
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
-import { sendBookingConfirmedEmail } from '@/lib/email';
+import { sendBookingConfirmedEmail, sendBookingRejectedEmail } from '@/lib/email';
 import { issueRefund } from '@/lib/stripe';
 
 export async function PATCH(
@@ -115,6 +115,21 @@ export async function PATCH(
         });
       } catch (refundErr) {
         console.error('Refund failed:', refundErr);
+      }
+    }
+
+    if (attendee?.email) {
+      try {
+        await sendBookingRejectedEmail({
+          to: attendee.email,
+          locale,
+          bookingNumber: booking.booking_number,
+          eventTitle: locale === 'es' ? retreat?.title_es : (retreat?.title_en || retreat?.title_es),
+          reason: reason || undefined,
+          refundAmount: booking.platform_fee,
+        });
+      } catch (emailErr) {
+        console.error('Failed to send booking rejected email:', emailErr);
       }
     }
 

@@ -2,6 +2,7 @@
 // GET  /api/admin/retreats — Listar retiros con filtros (solo admin)
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
+import { sendRetreatApprovedEmail, sendRetreatRejectedEmail } from '@/lib/email';
 
 async function requireAdmin(supabase: Awaited<ReturnType<typeof createServerSupabase>>) {
   const { data: { user } } = await supabase.auth.getUser();
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
 
   const { data: retreat } = await admin
     .from('retreats')
-    .select('id, status, organizer_id, confirmed_bookings')
+    .select('id, slug, title_es, status, organizer_id, confirmed_bookings')
     .eq('id', retreatId)
     .single();
 
@@ -69,6 +70,44 @@ export async function POST(request: NextRequest) {
 
     if (updateErr) {
       return NextResponse.json({ error: updateErr.message }, { status: 500 });
+    }
+
+    // Enviar email al organizador
+    try {
+      const { data: orgProfile } = await admin
+        .from('organizer_profiles')
+        .select('user_id')
+        .eq('id', retreat.organizer_id)
+        .single();
+
+      if (orgProfile?.user_id) {
+        const { data: orgUser } = await admin
+          .from('profiles')
+          .select('email, preferred_locale')
+          .eq('id', orgProfile.user_id)
+          .single();
+
+        if (orgUser?.email) {
+          const locale = (orgUser.preferred_locale || 'es') as 'es' | 'en';
+          if (action === 'approve') {
+            await sendRetreatApprovedEmail({
+              to: orgUser.email,
+              locale,
+              eventTitle: retreat.title_es || 'Retiro',
+              eventSlug: retreat.slug || retreatId,
+            });
+          } else {
+            await sendRetreatRejectedEmail({
+              to: orgUser.email,
+              locale,
+              eventTitle: retreat.title_es || 'Retiro',
+              rejectionReason: rejectionReason || undefined,
+            });
+          }
+        }
+      }
+    } catch (emailErr) {
+      console.error('Failed to send retreat review email:', emailErr);
     }
 
     return NextResponse.json({

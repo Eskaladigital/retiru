@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { createAdminSupabase } from '@/lib/supabase/server';
-import { sendBookingConfirmedEmail, sendNewBookingToOrganizerEmail } from '@/lib/email';
+import { sendBookingConfirmedEmail, sendNewBookingToOrganizerEmail, sendBookingCancelledEmail } from '@/lib/email';
 import type Stripe from 'stripe';
 
 export async function POST(request: NextRequest) {
@@ -160,7 +160,12 @@ export async function POST(request: NextRequest) {
         if (paymentIntentId) {
           const { data: booking } = await admin
             .from('bookings')
-            .select('id, retreat_id, status')
+            .select(`
+              id, booking_number, retreat_id, attendee_id, organizer_id, status,
+              retreats!retreat_id(title_es, title_en),
+              profiles!attendee_id(email, preferred_locale),
+              organizer_profiles!organizer_id(user_id)
+            `)
             .eq('stripe_payment_intent_id', paymentIntentId)
             .single();
 
@@ -179,6 +184,50 @@ export async function POST(request: NextRequest) {
 
             if (booking.status === 'confirmed') {
               await admin.rpc('decrement_confirmed_bookings', { retreat_id_param: booking.retreat_id });
+            }
+
+            const retreat = booking.retreats as any;
+            const attendee = booking.profiles as any;
+            const orgProfile = booking.organizer_profiles as any;
+
+            if (attendee?.email) {
+              const locale = (attendee.preferred_locale || 'es') as 'es' | 'en';
+              try {
+                await sendBookingCancelledEmail({
+                  to: attendee.email,
+                  locale,
+                  bookingNumber: booking.booking_number,
+                  eventTitle: locale === 'es' ? retreat?.title_es : (retreat?.title_en || retreat?.title_es),
+                  cancelledBy: 'system',
+                  refundAmount,
+                });
+              } catch (emailErr) {
+                console.error('Failed to send cancellation email to attendee:', emailErr);
+              }
+            }
+
+            if (orgProfile?.user_id) {
+              const { data: orgUser } = await admin
+                .from('profiles')
+                .select('email, preferred_locale')
+                .eq('id', orgProfile.user_id)
+                .single();
+
+              if (orgUser?.email) {
+                const orgLocale = (orgUser.preferred_locale || 'es') as 'es' | 'en';
+                try {
+                  await sendBookingCancelledEmail({
+                    to: orgUser.email,
+                    locale: orgLocale,
+                    bookingNumber: booking.booking_number,
+                    eventTitle: retreat?.title_es || 'Retiro',
+                    cancelledBy: 'system',
+                    refundAmount,
+                  });
+                } catch (emailErr) {
+                  console.error('Failed to send cancellation email to organizer:', emailErr);
+                }
+              }
             }
           }
         }

@@ -1,6 +1,7 @@
 // POST /api/admin/center-claims — Aprobar o rechazar un claim (solo admin)
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
+import { sendClaimApprovedEmail, sendClaimRejectedEmail } from '@/lib/email';
 
 export async function POST(request: NextRequest) {
   const supabase = await createServerSupabase();
@@ -76,11 +77,48 @@ export async function POST(request: NextRequest) {
       .update({ claimed_by: claim.user_id, updated_at: now })
       .eq('id', claim.center_id);
   } else if (claim.status === 'approved' && (action === 'reject' || action === 'revert_to_pending')) {
-    // Quitar claimed_by del centro al desaprobar o rechazar un claim aprobado
     await admin
       .from('centers')
       .update({ claimed_by: null, updated_at: now })
       .eq('id', claim.center_id);
+  }
+
+  // Enviar email al usuario sobre el resultado del claim
+  if (action === 'approve' || action === 'reject') {
+    try {
+      const { data: claimUser } = await admin
+        .from('profiles')
+        .select('email, preferred_locale')
+        .eq('id', claim.user_id)
+        .single();
+
+      const { data: center } = await admin
+        .from('centers')
+        .select('name, slug')
+        .eq('id', claim.center_id)
+        .single();
+
+      if (claimUser?.email && center) {
+        const locale = (claimUser.preferred_locale || 'es') as 'es' | 'en';
+        if (action === 'approve') {
+          await sendClaimApprovedEmail({
+            to: claimUser.email,
+            locale,
+            centerName: center.name,
+            centerSlug: center.slug,
+          });
+        } else {
+          await sendClaimRejectedEmail({
+            to: claimUser.email,
+            locale,
+            centerName: center.name,
+            adminNotes: adminNotes || undefined,
+          });
+        }
+      }
+    } catch (emailErr) {
+      console.error('Failed to send claim notification email:', emailErr);
+    }
   }
 
   return NextResponse.json({

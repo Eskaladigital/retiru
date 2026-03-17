@@ -1,6 +1,7 @@
 // /api/retreats/[id] — Gestión de retiro por parte del propietario (PATCH, DELETE)
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
+import { sendRetreatPendingReviewEmail, sendRetreatCancelledToAttendeeEmail } from '@/lib/email';
 
 async function getOwnership(id: string) {
   const supabase = await createServerSupabase();
@@ -40,6 +41,40 @@ export async function POST(
 
   const { error } = await admin.from('retreats').update({ status: 'cancelled' }).eq('id', id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  try {
+    const { data: retreatDetail } = await admin
+      .from('retreats')
+      .select('title_es, title_en, organizer_profiles!organizer_id(business_name)')
+      .eq('id', id)
+      .single();
+
+    const { data: bookings } = await admin
+      .from('bookings')
+      .select('profiles!attendee_id(email, preferred_locale)')
+      .eq('retreat_id', id)
+      .in('status', ['confirmed', 'pending_payment', 'pending_confirmation']);
+
+    const orgName = (retreatDetail?.organizer_profiles as any)?.business_name || 'Organizador';
+
+    for (const b of bookings || []) {
+      const attendee = b.profiles as any;
+      if (!attendee?.email) continue;
+      const loc = (attendee.preferred_locale || 'es') as 'es' | 'en';
+      try {
+        await sendRetreatCancelledToAttendeeEmail({
+          to: attendee.email,
+          locale: loc,
+          eventTitle: loc === 'en' ? (retreatDetail?.title_en || retreatDetail?.title_es || 'Retreat') : (retreatDetail?.title_es || 'Retiro'),
+          organizerName: orgName,
+        });
+      } catch (emailErr) {
+        console.error('Failed to send cancellation email:', emailErr);
+      }
+    }
+  } catch (emailErr) {
+    console.error('Failed to send retreat cancellation emails:', emailErr);
+  }
 
   return NextResponse.json({ success: true, status: 'cancelled' });
 }
@@ -140,6 +175,24 @@ export async function PATCH(
         await admin.from('retreat_categories').insert(
           categories.map((catId: string) => ({ retreat_id: id, category_id: catId })),
         );
+      }
+    }
+
+    if (updateData.status === 'pending_review') {
+      try {
+        const { data: orgData } = await admin
+          .from('organizer_profiles')
+          .select('business_name')
+          .eq('id', orgProfile.id)
+          .single();
+
+        await sendRetreatPendingReviewEmail({
+          organizerName: orgData?.business_name || 'Organizador',
+          eventTitle: title_es || 'Retiro sin título',
+          retreatId: id,
+        });
+      } catch (emailErr) {
+        console.error('Failed to send pending review email:', emailErr);
       }
     }
 

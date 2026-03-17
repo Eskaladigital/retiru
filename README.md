@@ -297,6 +297,43 @@ Sistema de comunicación dentro de la plataforma entre usuarios y organizadores,
 
 ---
 
+## Emails transaccionales (Resend)
+
+Sistema de emails automáticos enviados por la plataforma en eventos clave. Todos bilingües (ES/EN) según `preferred_locale` del usuario.
+
+**Archivo central:** `src/lib/email/index.ts`
+
+| Email | Destinatario | Cuándo se envía | Disparado por |
+|-------|-------------|----------------|---------------|
+| `sendBookingConfirmedEmail` | Asistente | Tras pagar el 20% (reserva confirmada) | Webhook Stripe / Organizador confirma |
+| `sendNewBookingToOrganizerEmail` | Organizador | Cuando recibe una nueva reserva | Webhook Stripe |
+| `sendPaymentReminderEmail` | Asistente | 7 días antes del vencimiento del 80% | Cron diario (9:00) |
+| `sendClaimApprovedEmail` | Usuario (propietario) | Admin aprueba claim de centro | `/api/admin/center-claims` |
+| `sendClaimRejectedEmail` | Usuario (propietario) | Admin rechaza claim de centro | `/api/admin/center-claims` |
+| `sendRetreatApprovedEmail` | Organizador | Admin aprueba retiro (se publica) | `/api/admin/retreats` |
+| `sendRetreatRejectedEmail` | Organizador | Admin rechaza retiro (necesita cambios) | `/api/admin/retreats` |
+| `sendNewMessageEmail` | Usuario / Organizador | Nuevo mensaje en conversación o soporte | `/api/messages/conversations/[id]` |
+| `sendBookingRejectedEmail` | Asistente | Organizador rechaza su reserva | `/api/bookings/[id]` |
+| `sendBookingCancelledEmail` | Asistente + Organizador | Reserva cancelada / reembolso | Webhook Stripe (charge.refunded) |
+| Recordatorio pre-evento | Asistente | 7 y 2 días antes del retiro | Cron diario (10:00) |
+| Solicitud de reseña | Asistente | 2 días después del retiro | Cron diario (11:00) |
+| Broadcast del organizador | Asistentes del evento | Organizador envía mensaje masivo (opcional email) | `/api/organizer/events/[id]/broadcast` |
+| `sendWelcomeEmail` | Usuario | Primera vez que verifica email (signup) | `/api/auth/callback` |
+| `sendRetreatPendingReviewEmail` | Admin | Organizador envía retiro a revisión | `/api/retreats/[id]` (PATCH → pending_review) |
+| `sendBookingExpiredEmail` | Asistente | Reserva expirada por impago del 80% (SLA) | Cron diario (9:00) |
+| `sendRetreatCancelledToAttendeeEmail` | Asistentes del evento | Organizador cancela un retiro | `/api/retreats/[id]` (POST → cancel) |
+| `sendNewClaimPendingEmail` | Admin | Usuario solicita reclamar un centro (manual) | `/api/centers/claim` |
+| `sendPaymentOverdueToOrganizerEmail` | Organizador | Pago del 80% de un asistente ha vencido | Cron diario (9:00) |
+
+**Total: 19 emails transaccionales.**
+
+**Cron jobs (Vercel):** configurados en `vercel.json`:
+- `0 9 * * *` — recordatorios de pago del 80% + marcar overdue + expirar reservas SLA + notificar organizador
+- `0 10 * * *` — recordatorios pre-evento
+- `0 11 * * *` — solicitudes de reseña post-evento
+
+---
+
 ## Estructura del proyecto
 
 ```

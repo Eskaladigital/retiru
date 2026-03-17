@@ -1,6 +1,7 @@
 // POST /api/centers/claim — Reclamar un centro
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
+import { sendNewClaimPendingEmail } from '@/lib/email';
 
 export async function POST(request: NextRequest) {
   try {
@@ -77,6 +78,23 @@ export async function POST(request: NextRequest) {
         .from('centers')
         .update({ claimed_by: user.id, updated_at: new Date().toISOString() })
         .eq('id', centerId);
+    } else {
+      try {
+        const { data: profile } = await admin
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single();
+
+        await sendNewClaimPendingEmail({
+          userName: profile?.full_name || 'Usuario',
+          userEmail: user.email || '',
+          centerName: center.name || 'Centro',
+          centerId,
+        });
+      } catch (emailErr) {
+        console.error('Failed to send claim pending email:', emailErr);
+      }
     }
 
     return NextResponse.json({

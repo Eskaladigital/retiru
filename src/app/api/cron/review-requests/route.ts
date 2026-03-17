@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminSupabase } from '@/lib/supabase/server';
 import { Resend } from 'resend';
+import { buildReviewRequestHtml } from '@/lib/email';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = process.env.RESEND_FROM_EMAIL || 'hola@retiru.com';
@@ -63,22 +64,11 @@ export async function POST(request: NextRequest) {
           ? `¿Qué te ha parecido? — ${title}`
           : `How was it? — ${title}`;
 
-        const html = `
-          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 30px;">
-            <h1 style="color: #c85a30;">Retiru</h1>
-            <h2>${locale === 'es' ? '¡Esperamos que hayas disfrutado!' : 'We hope you enjoyed it!'}</h2>
-            <p>${locale === 'es'
-              ? `Tu experiencia en <strong>${title}</strong> ha terminado. ¿Nos cuentas qué te ha parecido?`
-              : `Your experience at <strong>${title}</strong> has ended. Would you like to share your thoughts?`}</p>
-            <p>${locale === 'es'
-              ? 'Tu opinión ayuda a otros viajeros y al organizador a mejorar.'
-              : 'Your review helps other travelers and the organizer improve.'}</p>
-            <a href="${APP_URL}/${locale === 'es' ? 'es' : 'en'}/${locale === 'es' ? 'retiro' : 'retreat'}/${retreat.slug}"
-               style="display: inline-block; background: #c85a30; color: white; text-decoration: none; padding: 14px 28px; border-radius: 8px; margin-top: 15px;">
-              ${locale === 'es' ? 'Dejar reseña' : 'Leave a review'}
-            </a>
-          </div>
-        `;
+        const html = buildReviewRequestHtml({
+          locale,
+          eventTitle: title,
+          retreatUrl: `${APP_URL}/${locale === 'es' ? 'es' : 'en'}/${locale === 'es' ? 'retiro' : 'retreat'}/${retreat.slug}`,
+        });
 
         try {
           await resend.emails.send({ from: FROM, to: attendee.email, subject, html });

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
+import { sendNewMessageEmail } from '@/lib/email';
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -162,6 +163,64 @@ export async function POST(req: NextRequest, ctx: Ctx) {
       [unreadField]: ((currentConv as any)?.[unreadField] ?? 0) + 1,
     })
     .eq('id', id);
+
+  // Enviar notificación por email al destinatario (fire-and-forget)
+  try {
+    const adminClient = createAdminSupabase();
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.retiru.com';
+
+    const { data: senderProfile } = await adminClient
+      .from('profiles')
+      .select('full_name')
+      .eq('id', user.id)
+      .single();
+    const senderName = senderProfile?.full_name || 'Retiru';
+
+    let recipientUserId: string | null = null;
+
+    if (isSupport) {
+      if (isAdmin) {
+        recipientUserId = conv.user_id;
+      }
+      // Users messaging support: no email to admin (admin checks dashboard)
+    } else {
+      if (isUser) {
+        const orgP = (conv as any).organizer_profiles;
+        recipientUserId = orgP?.user_id || null;
+      } else if (isOrganizer) {
+        recipientUserId = conv.user_id;
+      }
+    }
+
+    if (recipientUserId) {
+      const { data: recipient } = await adminClient
+        .from('profiles')
+        .select('email, preferred_locale')
+        .eq('id', recipientUserId)
+        .single();
+
+      if (recipient?.email) {
+        const locale = (recipient.preferred_locale || 'es') as 'es' | 'en';
+        const convUrl = `${appUrl}/${locale === 'es' ? 'es' : 'en'}/${locale === 'es' ? 'mensajes' : 'messages'}/${id}`;
+
+        let context: string | undefined;
+        if (isSupport) {
+          context = locale === 'es' ? 'Chat de soporte — Retiru' : 'Support chat — Retiru';
+        }
+
+        await sendNewMessageEmail({
+          to: recipient.email,
+          locale,
+          senderName: isAdmin ? 'Retiru — Soporte' : senderName,
+          messagePreview: content.trim(),
+          conversationUrl: convUrl,
+          context,
+        });
+      }
+    }
+  } catch (emailErr) {
+    console.error('Failed to send message notification email:', emailErr);
+  }
 
   return NextResponse.json({ message: msg });
 }

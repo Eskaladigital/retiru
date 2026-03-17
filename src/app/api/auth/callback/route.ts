@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { sendWelcomeEmail } from '@/lib/email';
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -46,7 +47,6 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('[auth/callback]', error.message);
-      // Redirigir a login con error
       const loginPath = locale === 'en' ? '/en/login' : '/es/login';
       const url = new URL(loginPath, request.url);
       url.searchParams.set('error', 'auth_failed');
@@ -56,9 +56,25 @@ export async function GET(request: NextRequest) {
     if (data?.user) {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('role')
+        .select('role, full_name, created_at')
         .eq('id', data.user.id)
         .single();
+
+      const isNewUser = profile?.created_at &&
+        (Date.now() - new Date(profile.created_at).getTime()) < 5 * 60 * 1000;
+
+      if (isNewUser && data.user.email) {
+        try {
+          await sendWelcomeEmail({
+            to: data.user.email,
+            locale: (locale as 'es' | 'en') || 'es',
+            fullName: profile?.full_name || data.user.user_metadata?.full_name || 'amigo/a',
+          });
+        } catch (err) {
+          console.error('[auth/callback] Welcome email failed:', err);
+        }
+      }
+
       if (profile?.role === 'admin') {
         return NextResponse.redirect(new URL('/administrator', request.url));
       }

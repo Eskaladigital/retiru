@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
 import { Resend } from 'resend';
+import { buildBroadcastHtml } from '@/lib/email';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = process.env.RESEND_FROM_EMAIL || 'hola@retiru.com';
@@ -111,18 +112,18 @@ export async function POST(
         const attendee = b.profiles as any;
         if (attendee?.email) {
           try {
+            const locale = (attendee.preferred_locale || 'es') as 'es' | 'en';
+            const html = buildBroadcastHtml({
+              locale,
+              organizerName: orgProfile.business_name || 'Organizador',
+              eventTitle: retreat.title_es,
+              message: message.trim(),
+            });
             await resend.emails.send({
               from: FROM,
               to: attendee.email,
-              subject: `Mensaje de ${orgProfile.business_name} — ${retreat.title_es}`,
-              html: `
-                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 30px;">
-                  <h1 style="color: #c85a30;">Retiru</h1>
-                  <h2>Mensaje de ${orgProfile.business_name}</h2>
-                  <p style="white-space: pre-line;">${message.trim()}</p>
-                  <p style="color: #999; font-size: 12px; margin-top: 20px;">Sobre: ${retreat.title_es}</p>
-                </div>
-              `,
+              subject: `${locale === 'es' ? 'Mensaje de' : 'Message from'} ${orgProfile.business_name} — ${retreat.title_es}`,
+              html,
             });
             emailsSent++;
           } catch {

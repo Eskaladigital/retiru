@@ -14,7 +14,7 @@ Plan de desarrollo para las funcionalidades críticas que generan dependencia (l
 | Sistema de reservas | **No funciona** | 10% |
 | CRM de asistentes | Solo modelo de datos | 5% |
 | Panel de pagos | Mock/placeholder | 5% |
-| Comunicación + automatizaciones | Mensajería 1:1 real, emails preparados sin usar | 40% |
+| Comunicación + automatizaciones | Mensajería 1:1 real, emails transaccionales activados | 70% |
 
 **Conclusión:** La infraestructura de BD está muy avanzada (tablas, enums, campos), pero la lógica de negocio y las interfaces están sin conectar.
 
@@ -81,13 +81,13 @@ Plan de desarrollo para las funcionalidades críticas que generan dependencia (l
 **Archivos afectados:**
 - `src/app/api/webhooks/stripe/route.ts` — implementar lógica real
 
-### 1.4 Activar emails transaccionales
+### 1.4 Activar emails transaccionales ✅
 
-**Problema:** Las funciones de email existen en `src/lib/email/index.ts` pero no se llaman nunca.
+**Estado:** Implementado. Todas las funciones de email se llaman desde los endpoints correspondientes.
 
-**Emails a activar tras `checkout.session.completed`:**
-1. `sendBookingConfirmedEmail(booking)` → al asistente
-2. `sendNewBookingToOrganizerEmail(booking)` → al organizador
+**Emails activos tras `checkout.session.completed`:**
+1. `sendBookingConfirmedEmail(booking)` → al asistente ✅
+2. `sendNewBookingToOrganizerEmail(booking)` → al organizador ✅
 
 **Dónde llamarlos:** Dentro del handler del webhook, después de actualizar el booking.
 
@@ -455,29 +455,23 @@ Al terminar este sprint:
 > **Prioridad:** MEDIA — no bloquea lanzamiento pero es el feature que mata a WhatsApp.
 > **Dependencias:** Sprint 1 (emails transaccionales) + Sprint 3 (asistentes reales).
 
-### 5.1 Emails automáticos del ciclo de vida
+### 5.1 Emails automáticos del ciclo de vida ✅ (mayoría implementados)
 
-**Emails ya definidos en código (solo falta activarlos):**
-1. `sendBookingConfirmedEmail` → al confirmar reserva (Sprint 1)
-2. `sendNewBookingToOrganizerEmail` → al organizador cuando recibe reserva (Sprint 1)
-3. `sendPaymentReminderEmail` → recordatorio del 80% (Sprint 4)
+**Emails activados:**
+1. ✅ `sendBookingConfirmedEmail` → al confirmar reserva (Webhook Stripe + organizador confirma)
+2. ✅ `sendNewBookingToOrganizerEmail` → al organizador cuando recibe reserva (Webhook Stripe)
+3. ✅ `sendPaymentReminderEmail` → recordatorio del 80% (Cron diario 9:00)
+4. ✅ Recordatorio pre-evento → 7 y 2 días antes (Cron diario 10:00, `/api/cron/event-reminders`)
+5. ✅ Solicitud de reseña → 2 días después (Cron diario 11:00, `/api/cron/review-requests`)
+6. ✅ `sendBookingCancelledEmail` → al asistente y al organizador (Webhook Stripe charge.refunded)
+7. ✅ `sendBookingRejectedEmail` → al asistente con motivo (`/api/bookings/[id]`)
+8. ✅ `sendClaimApprovedEmail` / `sendClaimRejectedEmail` → al usuario (`/api/admin/center-claims`)
+9. ✅ `sendRetreatApprovedEmail` / `sendRetreatRejectedEmail` → al organizador (`/api/admin/retreats`)
+10. ✅ `sendNewMessageEmail` → notificación al destinatario de mensajes y soporte (`/api/messages/conversations/[id]`)
 
-**Emails nuevos a crear:**
-4. **Recordatorio pre-evento** → X días antes del retiro (7d y 2d)
-   - Contenido: fecha, lugar, instrucciones, enlace al formulario si no lo ha completado
-5. **Instrucciones del organizador** → cuando el organizador las envía manualmente o se auto-disparan
-   - Cómo llegar, qué traer, normas, contacto de emergencia
-6. **Post-evento: solicitud de reseña** → 2 días después del retiro
-   - Enlace para dejar reseña en la plataforma
-7. **Formulario pendiente** → si el asistente no ha rellenado el formulario en 48h
-8. **Reserva cancelada** → al asistente y al organizador
-9. **Reserva rechazada** → al asistente (con motivo)
-
-**Archivos afectados:**
-- `src/lib/email/index.ts` — añadir nuevas funciones de email
-- Cron job: `/api/cron/event-reminders` — ejecutar diariamente, buscar eventos próximos
-- Cron job: `/api/cron/review-requests` — ejecutar diariamente, buscar eventos recién terminados
-- Templates HTML en `mailing/` o templates inline en las funciones de Resend
+**Emails pendientes (fase 2):**
+- **Instrucciones del organizador** → cuando el organizador las envía manualmente
+- **Formulario pendiente** → si el asistente no ha rellenado el formulario en 48h
 
 ### 5.2 Mensajes broadcast (organizador → todos los asistentes)
 
@@ -613,7 +607,7 @@ La plataforma está lista para operar con usuarios reales cuando:
 - [ ] **Sprint 1 completo** — se pueden hacer reservas con pago real
 - [ ] **Sprint 2 completo** — los organizadores pueden crear eventos completos con fotos
 - [ ] **Sprint 3 mínimo** — al menos la vista de asistentes real (sin formulario custom, puede ser fase 2)
-- [ ] Emails transaccionales funcionando (confirmación + nueva reserva)
+- [x] Emails transaccionales funcionando (confirmación, nueva reserva, claims, retiros, mensajes, cancelaciones)
 
 Los Sprints 4 y 5 pueden lanzarse después como mejoras incrementales.
 
