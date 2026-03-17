@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { MessageCircle, Search, Eye, AlertTriangle, Send, LifeBuoy } from 'lucide-react';
+import { MessageCircle, Search, Eye, AlertTriangle, Send, LifeBuoy, X } from 'lucide-react';
 
 interface AdminConversation {
   id: string;
@@ -138,87 +138,86 @@ export default function AdminMensajesPage() {
         />
       </div>
 
-      <div className="flex gap-6">
-        {/* Conversation list */}
-        <div className={`${selectedConv ? 'w-1/2' : 'w-full'} transition-all`}>
-          {loading ? (
-            <div className="space-y-3">
-              {[1, 2, 3, 4].map(i => <div key={i} className="h-16 bg-sand-100 animate-pulse rounded-xl" />)}
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="text-center py-16">
-              <MessageCircle size={48} className="mx-auto mb-4 text-sand-300" />
-              <p className="text-muted-foreground">No hay conversaciones{search ? ' que coincidan' : ''}</p>
-            </div>
-          ) : (
-            <div className="border border-sand-200 rounded-2xl overflow-hidden">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-sand-50 border-b border-sand-200">
-                    <th className="text-left px-4 py-3 font-semibold text-[#7a6b5d]">Usuario</th>
-                    <th className="text-left px-4 py-3 font-semibold text-[#7a6b5d]">Organizador</th>
-                    <th className="text-left px-4 py-3 font-semibold text-[#7a6b5d]">Retiro</th>
-                    <th className="text-left px-4 py-3 font-semibold text-[#7a6b5d]">Último msg</th>
-                    <th className="text-center px-4 py-3 font-semibold text-[#7a6b5d]">No leídos</th>
-                    <th className="px-4 py-3" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map(c => (
-                    <tr
-                      key={c.id}
-                      className={`border-b border-sand-100 hover:bg-sand-50 cursor-pointer transition-colors ${selectedConv === c.id ? 'bg-terracotta-50' : ''}`}
-                      onClick={() => openConversation(c.id)}
-                    >
-                      <td className="px-4 py-3">
-                        <div className="font-medium">{c.user_profile?.full_name ?? '—'}</div>
-                        <div className="text-xs text-[#a09383]">{c.user_profile?.email ?? ''}</div>
-                      </td>
-                      <td className="px-4 py-3">
-                        {c.is_support
-                          ? <span className="inline-flex items-center gap-1 text-xs font-semibold text-sage-700 bg-sage-100 px-2 py-0.5 rounded-full"><LifeBuoy size={12} /> Soporte</span>
-                          : (c.organizer?.business_name ?? '—')
-                        }
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-xs text-terracotta-600">{c.is_support ? 'Soporte' : (c.retreat?.title_es ?? '—')}</span>
-                      </td>
-                      <td className="px-4 py-3">
-                        {c.last_message ? (
-                          <div>
-                            <p className="truncate max-w-[200px] text-xs">{c.last_message.content}</p>
-                            <span className="text-[10px] text-[#a09383]">{timeAgo(c.last_message.created_at)}</span>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-[#a09383]">—</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        {c.total_unread > 0 ? (
-                          <span className="inline-flex items-center justify-center w-6 h-6 bg-terracotta-500 text-white text-[11px] font-bold rounded-full">
-                            {c.total_unread}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-[#a09383]">0</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <button className="p-1.5 hover:bg-sand-100 rounded-lg transition-colors" title="Ver conversación">
-                          <Eye size={16} className="text-[#7a6b5d]" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+      {/* Conversation list — always full width */}
+      {loading ? (
+        <div className="space-y-3">
+          {[1, 2, 3, 4].map(i => <div key={i} className="h-16 bg-sand-100 animate-pulse rounded-xl" />)}
         </div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-16">
+          <MessageCircle size={48} className="mx-auto mb-4 text-sand-300" />
+          <p className="text-muted-foreground">No hay conversaciones{search ? ' que coincidan' : ''}</p>
+        </div>
+      ) : (
+        <div className="border border-sand-200 rounded-2xl overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-sand-50 border-b border-sand-200">
+                <th className="text-left px-4 py-3 font-semibold text-[#7a6b5d]">Usuario</th>
+                <th className="text-left px-4 py-3 font-semibold text-[#7a6b5d]">Organizador</th>
+                <th className="text-left px-4 py-3 font-semibold text-[#7a6b5d]">Retiro</th>
+                <th className="text-left px-4 py-3 font-semibold text-[#7a6b5d]">Último msg</th>
+                <th className="text-center px-4 py-3 font-semibold text-[#7a6b5d]">No leídos</th>
+                <th className="px-4 py-3" />
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(c => (
+                <tr
+                  key={c.id}
+                  className={`border-b border-sand-100 hover:bg-sand-50 cursor-pointer transition-colors ${selectedConv === c.id ? 'bg-terracotta-50' : ''}`}
+                  onClick={() => openConversation(c.id)}
+                >
+                  <td className="px-4 py-3">
+                    <div className="font-medium">{c.user_profile?.full_name ?? '—'}</div>
+                    <div className="text-xs text-[#a09383]">{c.user_profile?.email ?? ''}</div>
+                  </td>
+                  <td className="px-4 py-3">
+                    {c.is_support
+                      ? <span className="inline-flex items-center gap-1 text-xs font-semibold text-sage-700 bg-sage-100 px-2 py-0.5 rounded-full"><LifeBuoy size={12} /> Soporte</span>
+                      : (c.organizer?.business_name ?? '—')
+                    }
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="text-xs text-terracotta-600">{c.is_support ? 'Soporte' : (c.retreat?.title_es ?? '—')}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {c.last_message ? (
+                      <div>
+                        <p className="truncate max-w-[200px] text-xs">{c.last_message.content}</p>
+                        <span className="text-[10px] text-[#a09383]">{timeAgo(c.last_message.created_at)}</span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-[#a09383]">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    {c.total_unread > 0 ? (
+                      <span className="inline-flex items-center justify-center w-6 h-6 bg-terracotta-500 text-white text-[11px] font-bold rounded-full">
+                        {c.total_unread}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-[#a09383]">0</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <button className="p-1.5 hover:bg-sand-100 rounded-lg transition-colors" title="Ver conversación">
+                      <Eye size={16} className="text-[#7a6b5d]" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-        {/* Conversation detail (side panel) */}
-        {selectedConv && (
-          <div className="w-1/2 border border-sand-200 rounded-2xl bg-white overflow-hidden flex flex-col" style={{ maxHeight: 'calc(100vh - 250px)' }}>
-            <div className="px-5 py-4 border-b border-sand-200 flex items-center justify-between shrink-0">
+      {/* Chat overlay — modal flotante */}
+      {selectedConv && (
+        <>
+          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => { setSelectedConv(null); setConvDetail(null); }} />
+          <div className="fixed bottom-6 right-6 z-50 w-[420px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-sand-200 flex flex-col" style={{ height: 'min(560px, calc(100vh - 100px))' }}>
+            <div className="px-5 py-4 border-b border-sand-200 flex items-center justify-between shrink-0 rounded-t-2xl bg-sand-50">
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold text-sm">
@@ -235,8 +234,12 @@ export default function AdminMensajesPage() {
                   }
                 </p>
               </div>
-              <button onClick={() => { setSelectedConv(null); setConvDetail(null); }} className="p-1.5 hover:bg-sand-100 rounded-lg transition-colors text-xs">
-                Cerrar
+              <button
+                onClick={() => { setSelectedConv(null); setConvDetail(null); }}
+                className="p-1.5 hover:bg-sand-200 rounded-lg transition-colors"
+                title="Cerrar"
+              >
+                <X size={18} className="text-[#7a6b5d]" />
               </button>
             </div>
 
@@ -244,6 +247,11 @@ export default function AdminMensajesPage() {
               {loadingDetail ? (
                 <div className="space-y-3">
                   {[1, 2, 3].map(i => <div key={i} className="h-10 bg-sand-100 animate-pulse rounded-xl w-2/3" />)}
+                </div>
+              ) : (convDetail?.messages || []).length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center py-8">
+                  <MessageCircle size={32} className="text-sand-300 mb-3" />
+                  <p className="text-xs text-[#a09383]">No hay mensajes todavía.<br />Escribe el primer mensaje.</p>
                 </div>
               ) : (
                 (convDetail?.messages || []).map((m: any) => {
@@ -265,14 +273,14 @@ export default function AdminMensajesPage() {
                     : (isFromUser ? (convDetail?.conversation?.user_profile?.full_name ?? 'Usuario') : (convDetail?.conversation?.organizer?.business_name ?? 'Organizador'));
                   return (
                     <div key={m.id} className={`flex ${isFromUser ? 'justify-start' : 'justify-end'}`}>
-                      <div className={`max-w-[80%] rounded-xl px-3 py-2 ${
-                        isFromUser ? 'bg-sand-100 text-foreground' : 'bg-sage-100 text-foreground'
+                      <div className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 ${
+                        isFromUser ? 'bg-sand-100 text-foreground rounded-bl-md' : 'bg-terracotta-500 text-white rounded-br-md'
                       }`}>
-                        <p className="text-[11px] font-semibold mb-0.5 text-[#a09383]">
+                        <p className={`text-[11px] font-semibold mb-0.5 ${isFromUser ? 'text-[#a09383]' : 'text-white/70'}`}>
                           {senderLabel}
                         </p>
                         <p className="text-xs whitespace-pre-wrap">{m.content}</p>
-                        <p className="text-[9px] mt-0.5 text-[#a09383]">
+                        <p className={`text-[9px] mt-0.5 ${isFromUser ? 'text-[#a09383]' : 'text-white/50'}`}>
                           {new Date(m.created_at).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
@@ -282,7 +290,7 @@ export default function AdminMensajesPage() {
               )}
             </div>
 
-            <div className="px-4 py-3 border-t border-sand-200 shrink-0">
+            <div className="px-4 py-3 border-t border-sand-200 shrink-0 rounded-b-2xl">
               {convDetail?.conversation?.is_support ? (
                 <div className="flex gap-2 items-end">
                   <textarea
@@ -291,15 +299,15 @@ export default function AdminMensajesPage() {
                     onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleAdminReply(); } }}
                     placeholder="Responder como Andrea..."
                     rows={1}
-                    className="flex-1 resize-none rounded-lg border border-sand-200 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-terracotta-300 bg-white"
+                    className="flex-1 resize-none rounded-xl border border-sand-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-terracotta-300 bg-white"
                     style={{ maxHeight: '80px' }}
                   />
                   <button
                     onClick={handleAdminReply}
                     disabled={!replyMsg.trim() || sending}
-                    className="p-2 rounded-lg bg-terracotta-500 text-white hover:bg-terracotta-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+                    className="p-2.5 rounded-xl bg-terracotta-500 text-white hover:bg-terracotta-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
                   >
-                    <Send size={14} />
+                    <Send size={16} />
                   </button>
                 </div>
               ) : (
@@ -307,8 +315,8 @@ export default function AdminMensajesPage() {
               )}
             </div>
           </div>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 }

@@ -7,6 +7,7 @@
 import { usePathname } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import SupportChatWidget from '@/components/chat/SupportChatWidget';
 import type { Locale } from '@/i18n/config';
 
 interface PublicShellProps {
@@ -23,6 +24,7 @@ export default function PublicShell({ user, children }: PublicShellProps) {
       <Header locale={locale} user={user} />
       <main className="min-h-[60vh]">{children}</main>
       <Footer locale={locale} />
+      <SupportChatWidget locale={locale} />
     </>
   );
 }

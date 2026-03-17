@@ -1,6 +1,73 @@
-// PATCH /api/retreats/[id] — Actualizar retiro (propietario)
+// /api/retreats/[id] — Gestión de retiro por parte del propietario (PATCH, DELETE)
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
+
+async function getOwnership(id: string) {
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: NextResponse.json({ error: 'No autenticado' }, { status: 401 }) };
+
+  const admin = createAdminSupabase();
+  const { data: orgProfile } = await admin.from('organizer_profiles').select('id').eq('user_id', user.id).single();
+  if (!orgProfile) return { error: NextResponse.json({ error: 'No tienes perfil de organizador' }, { status: 403 }) };
+
+  const { data: retreat } = await admin.from('retreats').select('id, organizer_id, status, confirmed_bookings').eq('id', id).single();
+  if (!retreat || retreat.organizer_id !== orgProfile.id) {
+    return { error: NextResponse.json({ error: 'Retiro no encontrado o no tienes permiso' }, { status: 404 }) };
+  }
+
+  return { user, admin, orgProfile, retreat };
+}
+
+// POST /api/retreats/[id] — Cancelar retiro (propietario)
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  const result = await getOwnership(id);
+  if ('error' in result) return result.error;
+  const { admin, retreat } = result;
+
+  const body = await request.json();
+  if (body.action !== 'cancel') {
+    return NextResponse.json({ error: 'Acción no válida' }, { status: 400 });
+  }
+
+  if (retreat.status === 'cancelled') {
+    return NextResponse.json({ error: 'El retiro ya está cancelado' }, { status: 400 });
+  }
+
+  const { error } = await admin.from('retreats').update({ status: 'cancelled' }).eq('id', id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  return NextResponse.json({ success: true, status: 'cancelled' });
+}
+
+// DELETE /api/retreats/[id] — Eliminar retiro (solo si no tiene reservas confirmadas)
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  const result = await getOwnership(id);
+  if ('error' in result) return result.error;
+  const { admin, retreat } = result;
+
+  if ((retreat.confirmed_bookings || 0) > 0) {
+    return NextResponse.json(
+      { error: 'No se puede eliminar un retiro con reservas confirmadas. Cancélalo primero.' },
+      { status: 400 },
+    );
+  }
+
+  await admin.from('retreat_categories').delete().eq('retreat_id', id);
+  await admin.from('retreat_images').delete().eq('retreat_id', id);
+  const { error } = await admin.from('retreats').delete().eq('id', id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  return NextResponse.json({ success: true });
+}
 
 export async function PATCH(
   request: NextRequest,
@@ -8,33 +75,9 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createServerSupabase();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
-    }
-
-    const admin = createAdminSupabase();
-
-    const { data: orgProfile } = await admin
-      .from('organizer_profiles')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
-
-    if (!orgProfile) {
-      return NextResponse.json({ error: 'No tienes perfil de organizador' }, { status: 403 });
-    }
-
-    const { data: existing } = await admin
-      .from('retreats')
-      .select('id, organizer_id')
-      .eq('id', id)
-      .single();
-
-    if (!existing || existing.organizer_id !== orgProfile.id) {
-      return NextResponse.json({ error: 'Retiro no encontrado o no tienes permiso' }, { status: 404 });
-    }
+    const result = await getOwnership(id);
+    if ('error' in result) return result.error;
+    const { admin, orgProfile } = result;
 
     const body = await request.json();
     const {

@@ -11,16 +11,56 @@ interface Props {
   destinations: Option[];
   /** Si se pasa, usa este endpoint en lugar de /api/retreats/[id] (ej. admin) */
   apiPath?: string;
+  /** Ocultar acciones de cancelar/eliminar (ej. en admin) */
+  hideActions?: boolean;
 }
 
 const inputCls = 'w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all';
 const textareaCls = `${inputCls} resize-none`;
 
-export function EditarEventoForm({ retreat, categories, destinations, apiPath }: Props) {
+export function EditarEventoForm({ retreat, categories, destinations, apiPath, hideActions }: Props) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [acting, setActing] = useState(false);
+
+  async function handleCancel() {
+    if (!confirm(`¿Cancelar el evento "${retreat.title_es}"? Los asistentes serán notificados.`)) return;
+    setActing(true);
+    setError('');
+    try {
+      const res = await fetch(apiPath || `/api/retreats/${retreat.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'cancel' }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setSuccess('Evento cancelado.');
+        router.refresh();
+      } else {
+        setError(data.error || 'Error al cancelar');
+      }
+    } catch { setError('Error de conexión'); }
+    finally { setActing(false); }
+  }
+
+  async function handleDelete() {
+    if (!confirm(`¿Eliminar definitivamente "${retreat.title_es}"? Esta acción no se puede deshacer.`)) return;
+    setActing(true);
+    setError('');
+    try {
+      const res = await fetch(apiPath || `/api/retreats/${retreat.id}`, { method: 'DELETE' });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        router.push('/es/mis-eventos');
+      } else {
+        setError(data.error || 'Error al eliminar');
+      }
+    } catch { setError('Error de conexión'); }
+    finally { setActing(false); }
+  }
 
   const existingCats = (retreat.retreat_categories || []).map((c: any) => c.category_id);
 
@@ -215,11 +255,11 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath }:
         </div>
       )}
 
-      <div className="flex gap-3 pt-4 border-t border-sand-200">
+      <div className="flex flex-wrap gap-3 pt-4 border-t border-sand-200">
         <button
           type="button"
           onClick={() => handleSave(false)}
-          disabled={saving}
+          disabled={saving || acting}
           className="bg-white border border-sand-300 text-foreground font-semibold px-6 py-3 rounded-xl text-sm hover:bg-sand-50 transition-colors disabled:opacity-50"
         >
           Guardar cambios
@@ -228,11 +268,33 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath }:
           <button
             type="button"
             onClick={() => handleSave(true)}
-            disabled={saving}
+            disabled={saving || acting}
             className="bg-terracotta-600 text-white font-semibold px-6 py-3 rounded-xl text-sm hover:bg-terracotta-700 transition-colors disabled:opacity-50"
           >
             {apiPath ? 'Publicar' : 'Enviar a revisión'}
           </button>
+        )}
+        {!hideActions && (
+          <div className="flex gap-2 ml-auto">
+            {!['cancelled', 'archived'].includes(retreat.status) && (
+              <button
+                type="button"
+                onClick={handleCancel}
+                disabled={saving || acting}
+                className="inline-flex items-center gap-1.5 border border-amber-300 text-amber-700 font-semibold px-5 py-3 rounded-xl text-sm hover:bg-amber-50 transition-colors disabled:opacity-50"
+              >
+                Cancelar evento
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={saving || acting}
+              className="inline-flex items-center gap-1.5 border border-red-300 text-red-700 font-semibold px-5 py-3 rounded-xl text-sm hover:bg-red-50 transition-colors disabled:opacity-50"
+            >
+              Eliminar
+            </button>
+          </div>
         )}
       </div>
     </div>

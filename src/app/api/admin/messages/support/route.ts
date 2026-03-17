@@ -2,9 +2,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
 
-const WELCOME_MSG =
-  'Hola, soy Andrea, responsable de atención al cliente de Retiru. ¿En qué puedo ayudarte?';
-
 export async function POST(req: NextRequest) {
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
@@ -50,7 +47,7 @@ export async function POST(req: NextRequest) {
       attendee_id: targetUserId,
       is_support: true,
       last_message_at: new Date().toISOString(),
-      attendee_unread: 1,
+      attendee_unread: 0,
       organizer_unread: 0,
       admin_unread: 0,
     })
@@ -58,14 +55,6 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  await admin.from('messages').insert({
-    conversation_id: conv.id,
-    sender_id: user.id,
-    content: WELCOME_MSG,
-    message_type: 'text',
-    is_read: false,
-  });
 
   return NextResponse.json({ conversation_id: conv.id, created: true });
 }

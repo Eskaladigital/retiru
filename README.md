@@ -279,19 +279,21 @@ Sistema de comunicación dentro de la plataforma entre usuarios y organizadores,
 - El admin puede ver y moderar todas las conversaciones desde `/administrator/mensajes`
 
 **Soporte (chat con admin):**
-- Cualquier usuario u organizador puede iniciar un chat de soporte desde su página de mensajes (botón "Contactar soporte")
+- Cualquier usuario u organizador puede iniciar un chat de soporte desde su página de mensajes (botón "Contactar soporte") o desde el **widget flotante** (burbuja abajo a la derecha, visible en todas las páginas públicas)
 - Un solo chat de soporte por usuario (si ya existe, se reutiliza)
 - El admin puede ver y responder chats de soporte desde `/administrator/mensajes` (como "Andrea, responsable de atención al cliente")
+- El admin puede iniciar conversaciones con cualquier usuario desde `/administrator/usuarios` o `/administrator/organizadores` (botón "Mensaje")
 - Las conversaciones de soporte se distinguen con `is_support = true` en la tabla `conversations`
 - Las conversaciones normales (usuario ↔ organizador) siguen en modo solo lectura para el admin
 
 **Arquitectura:**
 - Migraciones: `008_conversations_messaging.sql` (mensajería base) + `010_support_conversations.sql` (soporte)
-- API: `POST/GET /api/messages/conversations`, `GET/POST /api/messages/conversations/[id]`, `POST /api/messages/support`, `GET /api/admin/messages`
+- API: `POST/GET /api/messages/conversations`, `GET/POST /api/messages/conversations/[id]`, `POST /api/messages/support`, `GET /api/admin/messages`, `POST /api/admin/messages/support`
 - UI usuario: `/es/mensajes` (lista + botón soporte) y `/es/mensajes/[id]` (chat con burbujas)
+- UI usuario: widget de chat flotante en todas las páginas públicas (`SupportChatWidget`)
 - UI organizador: `/es/panel/mensajes` (lista + botón soporte)
-- UI admin: `/administrator/mensajes` (tabla + panel de lectura + respuesta en soporte)
-- Componente: `src/components/messaging/AskOrganizerButton.tsx`
+- UI admin: `/administrator/mensajes` (tabla + chat overlay flotante para soporte)
+- Componentes: `src/components/messaging/AskOrganizerButton.tsx`, `src/components/chat/SupportChatWidget.tsx`
 
 ---
 

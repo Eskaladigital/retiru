@@ -195,6 +195,8 @@ Protegido por middleware (role=admin). No indexado en buscadores.
 | PATCH | `/api/admin/retreats/[id]` | Editar retiro (admin) |
 | POST | `/api/retreats/create` | Crear retiro (auto-crea organizer_profile) |
 | PATCH | `/api/retreats/[id]` | Actualizar retiro (solo propietario) |
+| POST | `/api/retreats/[id]` | Cancelar retiro (propietario, action=cancel) |
+| DELETE | `/api/retreats/[id]` | Eliminar retiro (propietario, solo sin reservas confirmadas) |
 | GET | `/api/messages/conversations` | Listar conversaciones del usuario |
 | POST | `/api/messages/conversations` | Crear/recuperar conversación sobre un retiro |
 | GET | `/api/messages/conversations/[id]` | Obtener mensajes de una conversación |
