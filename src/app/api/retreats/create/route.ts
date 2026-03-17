@@ -24,10 +24,12 @@ export async function POST(request: NextRequest) {
       title_es, title_en, summary_es, summary_en,
       description_es, description_en,
       includes_es, includes_en,
+      excludes_es, excludes_en,
       start_date, end_date,
       total_price, max_attendees,
       destination_id, address,
       categories, confirmation_type, languages,
+      images, schedule, cancellation_policy,
     } = body;
 
     if (!title_es || !summary_es || !description_es || !start_date || !end_date || !total_price || !max_attendees) {
@@ -83,29 +85,41 @@ export async function POST(request: NextRequest) {
 
     const isVerifiedOrganizer = (publishedCount ?? 0) > 0;
 
+    const insertData: Record<string, unknown> = {
+      organizer_id: orgProfile!.id,
+      title_es,
+      title_en: title_en || null,
+      slug: retreatSlug,
+      summary_es,
+      summary_en: summary_en || null,
+      description_es,
+      description_en: description_en || null,
+      includes_es: includes_es || [],
+      includes_en: includes_en || [],
+      excludes_es: excludes_es || [],
+      excludes_en: excludes_en || [],
+      start_date,
+      end_date,
+      total_price: parseFloat(total_price),
+      max_attendees: parseInt(max_attendees, 10),
+      destination_id: destination_id || null,
+      address: address || null,
+      confirmation_type: confirmation_type || 'automatic',
+      languages: languages || ['es'],
+      status: 'draft',
+    };
+
+    if (schedule && Array.isArray(schedule) && schedule.length > 0) {
+      insertData.schedule = schedule;
+    }
+
+    if (cancellation_policy && typeof cancellation_policy === 'object') {
+      insertData.cancellation_policy = cancellation_policy;
+    }
+
     const { data: retreat, error: retErr } = await admin
       .from('retreats')
-      .insert({
-        organizer_id: orgProfile!.id,
-        title_es,
-        title_en: title_en || null,
-        slug: retreatSlug,
-        summary_es,
-        summary_en: summary_en || null,
-        description_es,
-        description_en: description_en || null,
-        includes_es: includes_es || [],
-        includes_en: includes_en || [],
-        start_date,
-        end_date,
-        total_price: parseFloat(total_price),
-        max_attendees: parseInt(max_attendees, 10),
-        destination_id: destination_id || null,
-        address: address || null,
-        confirmation_type: confirmation_type || 'automatic',
-        languages: languages || ['es'],
-        status: 'draft',
-      })
+      .insert(insertData)
       .select('id, slug')
       .single();
 
@@ -120,6 +134,17 @@ export async function POST(request: NextRequest) {
         category_id: catId,
       }));
       await admin.from('retreat_categories').insert(catRows);
+    }
+
+    // Guardar imágenes si se proporcionaron
+    if (images && Array.isArray(images) && images.length > 0) {
+      const imgRows = images.map((img: { url: string; is_cover: boolean }, i: number) => ({
+        retreat_id: retreat!.id,
+        url: img.url,
+        is_cover: img.is_cover || false,
+        sort_order: i,
+      }));
+      await admin.from('retreat_images').insert(imgRows);
     }
 
     return NextResponse.json({

@@ -198,3 +198,18 @@ Protegido por middleware (role=admin). No indexado en buscadores.
 | POST | `/api/messages/conversations/[id]` | Enviar mensaje en una conversación |
 | POST | `/api/messages/support` | Crear/recuperar conversación de soporte con admin |
 | GET | `/api/admin/messages` | Listar todas las conversaciones (admin, incluye soporte) |
+| POST | `/api/checkout` | Crear sesión de Stripe Checkout para reservar retiro |
+| POST | `/api/webhooks/stripe` | Webhook Stripe (checkout.session.completed, charge.refunded) |
+| PATCH | `/api/bookings/[id]` | Organizador confirma/rechaza reserva |
+| GET | `/api/bookings/[id]/form` | Obtener formulario post-reserva del asistente |
+| POST | `/api/bookings/[id]/form` | Guardar respuestas del formulario post-reserva |
+| GET | `/api/organizer/dashboard` | KPIs reales del organizador |
+| GET | `/api/organizer/attendees` | Listar todos los asistentes cross-evento |
+| GET | `/api/organizer/events/[id]/bookings` | Listar bookings de un evento |
+| GET | `/api/organizer/events/[id]/bookings/export` | Exportar asistentes a CSV |
+| PATCH | `/api/organizer/bookings/[id]/payment` | Marcar pago 80% como recibido |
+| POST | `/api/organizer/events/[id]/broadcast` | Enviar mensaje a todos los asistentes |
+| GET | `/api/organizer/events/[id]/communications` | Timeline de comunicaciones del evento |
+| POST | `/api/cron/payment-reminders` | Cron: recordatorios de pago del 80% |
+| POST | `/api/cron/event-reminders` | Cron: recordatorios pre-evento (7d y 2d) |
+| POST | `/api/cron/review-requests` | Cron: solicitar reseñas post-evento |

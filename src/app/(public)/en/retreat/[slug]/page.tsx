@@ -9,6 +9,7 @@ import { getRetreatBySlug } from '@/lib/data';
 import { generatePageMetadata, jsonLdEvent, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
 import { Star, MapPin, Calendar, Clock, Users, Globe, Shield, Zap, Heart, Share2, ChevronRight, Check, X as XIcon } from 'lucide-react';
 import AskOrganizerButton from '@/components/messaging/AskOrganizerButton';
+import ReserveButton from '@/components/booking/ReserveButton';
 
 const dateFmt = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1200&q=80';
@@ -351,9 +352,14 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
                   )}
                 </div>
 
-                <button className="btn-primary w-full py-4 text-base" disabled={r.available_spots === 0}>
-                  {r.available_spots === 0 ? 'Sold out' : `Book your spot · ${r.platform_fee}€`}
-                </button>
+                <ReserveButton
+                  retreatId={r.id}
+                  retreatSlug={r.slug}
+                  platformFee={r.platform_fee}
+                  availableSpots={r.available_spots}
+                  locale="en"
+                  className="w-full py-4 text-base"
+                />
 
                 <p className="mt-3 text-center text-xs text-muted-foreground">
                   <Shield size={12} className="inline mr-1" />
@@ -378,9 +384,15 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
           </div>
           <div className="flex items-center gap-2">
             <AskOrganizerButton retreatId={r.id} locale="en" compact />
-            <button className="btn-primary px-6 py-3 whitespace-nowrap" disabled={r.available_spots === 0}>
-              {r.available_spots === 0 ? 'Sold out' : `Book · ${r.platform_fee}€`}
-            </button>
+            <ReserveButton
+              retreatId={r.id}
+              retreatSlug={r.slug}
+              platformFee={r.platform_fee}
+              availableSpots={r.available_spots}
+              locale="en"
+              className="px-6 py-3 whitespace-nowrap"
+              compact
+            />
           </div>
         </div>
       </div>

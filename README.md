@@ -145,7 +145,8 @@ Ejecutar en el **SQL Editor** de Supabase (con service_role) en este orden:
 8. `supabase/migrations/008_conversations_messaging.sql` — mensajería interna
 9. `supabase/migrations/009_center_types_ayurveda_pilates.sql` — tipos de centro
 10. `supabase/migrations/010_support_conversations.sql` — soporte (chat con admin)
-11. `supabase/seed/001_categories_destinations.sql` — categorías y destinos
+11. `supabase/migrations/011_booking_rpc_functions.sql` — funciones RPC para gestión de bookings
+12. `supabase/seed/001_categories_destinations.sql` — categorías y destinos
 12. `supabase/seed/002_sample_retreats.sql` — usuario demo + 10 retiros de ejemplo
 13. `supabase/seed/003_sample_blog.sql` — 3 categorías de blog + 5 artículos
 

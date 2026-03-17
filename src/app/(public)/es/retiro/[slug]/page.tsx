@@ -9,6 +9,7 @@ import { getRetreatBySlug } from '@/lib/data';
 import { generatePageMetadata, jsonLdEvent, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
 import { Star, MapPin, Calendar, Clock, Users, Globe, Shield, Zap, Heart, Share2, ChevronRight, Check, X as XIcon } from 'lucide-react';
 import AskOrganizerButton from '@/components/messaging/AskOrganizerButton';
+import ReserveButton from '@/components/booking/ReserveButton';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -375,13 +376,18 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
                 </div>
 
                 {/* CTA */}
-                <button className="btn-primary w-full py-4 text-base" disabled={r.available_spots === 0}>
-                  {r.available_spots === 0 ? 'Agotado' : `Reservar plaza · ${r.platform_fee}€`}
-                </button>
+                <ReserveButton
+                  retreatId={r.id}
+                  retreatSlug={r.slug}
+                  platformFee={r.platform_fee}
+                  availableSpots={r.available_spots}
+                  locale="es"
+                  className="w-full py-4 text-base"
+                />
 
                 <p className="mt-3 text-center text-xs text-muted-foreground">
                   <Shield size={12} className="inline mr-1" />
-                  Pago seguro con Stripe · No se te cobrará aún
+                  Pago seguro con Stripe
                 </p>
 
                 <div className="mt-4">
@@ -402,9 +408,15 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
           </div>
           <div className="flex items-center gap-2">
             <AskOrganizerButton retreatId={r.id} locale="es" compact />
-            <button className="btn-primary px-6 py-3 whitespace-nowrap" disabled={r.available_spots === 0}>
-              {r.available_spots === 0 ? 'Agotado' : `Reservar · ${r.platform_fee}€`}
-            </button>
+            <ReserveButton
+              retreatId={r.id}
+              retreatSlug={r.slug}
+              platformFee={r.platform_fee}
+              availableSpots={r.available_spots}
+              locale="es"
+              className="px-6 py-3 whitespace-nowrap"
+              compact
+            />
           </div>
         </div>
       </div>

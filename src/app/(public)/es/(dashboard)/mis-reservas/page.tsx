@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { getBookingsForUser } from '@/lib/data';
 import { formatDateRange } from '@/lib/utils';
+import PaymentSuccessBanner from '@/components/booking/PaymentSuccessBanner';
 
 const STATUS: Record<string, { label: string; color: string }> = {
   confirmed: { label: 'Confirmada', color: 'bg-sage-100 text-sage-700' },
@@ -28,6 +29,7 @@ export default async function MisReservasPage() {
 
   return (
     <div>
+      <PaymentSuccessBanner />
       <h1 className="font-serif text-3xl text-foreground mb-2">Mis reservas</h1>
       <p className="text-sm text-[#7a6b5d] mb-8">{bookings.length} reserva{bookings.length !== 1 ? 's' : ''}</p>
 
