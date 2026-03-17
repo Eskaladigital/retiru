@@ -168,12 +168,13 @@ Localidades y categorías vienen de la base de datos.
 | Ruta | Archivo | Descripción |
 |------|---------|-------------|
 | `/administrator` | `app/administrator/page.tsx` | Dashboard admin |
-| `/administrator/usuarios` | `app/administrator/usuarios/page.tsx` | Gestión usuarios |
-| `/administrator/organizadores` | `app/administrator/organizadores/page.tsx` | Gestión organizadores |
-| `/administrator/retiros` | `app/administrator/retiros/page.tsx` | Gestión retiros (aprobar/rechazar) |
+| `/administrator/usuarios` | `app/administrator/usuarios/page.tsx` | Gestión usuarios (+ botón Mensaje para abrir chat de soporte) |
+| `/administrator/organizadores` | `app/administrator/organizadores/page.tsx` | Gestión organizadores (+ botón Mensaje para abrir chat de soporte) |
+| `/administrator/retiros` | `app/administrator/retiros/page.tsx` | Gestión retiros (ver, editar, aprobar, rechazar, cancelar, eliminar) |
+| `/administrator/retiros/[id]/editar` | `app/administrator/retiros/[id]/editar/page.tsx` | Editar retiro (admin) |
 | `/administrator/centros` | `app/administrator/centros/page.tsx` | Gestión centros |
 | `/administrator/claims` | `app/administrator/claims/page.tsx` | Gestión claims de centros |
-| `/administrator/mensajes` | `app/administrator/mensajes/page.tsx` | Moderación de conversaciones + respuesta en soporte |
+| `/administrator/mensajes` | `app/administrator/mensajes/page.tsx` | Moderación de conversaciones + respuesta en soporte. Parámetro `?open=convId` abre una conversación al cargar |
 | `/administrator/blog` | `app/administrator/blog/page.tsx` | Gestión blog |
 | `/administrator/tienda` | `app/administrator/tienda/page.tsx` | Gestión tienda |
 | `/administrator/reembolsos` | `app/administrator/reembolsos/page.tsx` | Reembolsos |
@@ -190,6 +191,8 @@ Protegido por middleware (role=admin). No indexado en buscadores.
 | POST | `/api/centers/claim` | Reclamar un centro (auto-aprueba si email coincide) |
 | GET | `/api/admin/center-claims` | Listar claims (admin) |
 | POST | `/api/admin/center-claims` | Aprobar/rechazar claim (admin) |
+| POST | `/api/admin/retreats` | Aprobar, rechazar, cancelar, archivar o eliminar retiro (admin) |
+| PATCH | `/api/admin/retreats/[id]` | Editar retiro (admin) |
 | POST | `/api/retreats/create` | Crear retiro (auto-crea organizer_profile) |
 | PATCH | `/api/retreats/[id]` | Actualizar retiro (solo propietario) |
 | GET | `/api/messages/conversations` | Listar conversaciones del usuario |
@@ -198,6 +201,7 @@ Protegido por middleware (role=admin). No indexado en buscadores.
 | POST | `/api/messages/conversations/[id]` | Enviar mensaje en una conversación |
 | POST | `/api/messages/support` | Crear/recuperar conversación de soporte con admin |
 | GET | `/api/admin/messages` | Listar todas las conversaciones (admin, incluye soporte) |
+| POST | `/api/admin/messages/support` | Admin crea/obtiene conversación de soporte con un usuario (targetUserId) |
 | POST | `/api/checkout` | Crear sesión de Stripe Checkout para reservar retiro |
 | POST | `/api/webhooks/stripe` | Webhook Stripe (checkout.session.completed, charge.refunded) |
 | PATCH | `/api/bookings/[id]` | Organizador confirma/rechaza reserva |

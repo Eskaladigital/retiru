@@ -37,6 +37,8 @@ const FILTER_OPTIONS: { value: FilterStatus; label: string }[] = [
   { value: 'draft', label: 'Borradores' },
   { value: 'published', label: 'Publicados' },
   { value: 'rejected', label: 'Rechazados' },
+  { value: 'cancelled', label: 'Cancelados' },
+  { value: 'archived', label: 'Archivados' },
 ];
 
 export function RetirosTableClient({ retreats }: { retreats: RetreatRow[] }) {
@@ -89,6 +91,33 @@ export function RetirosTableClient({ retreats }: { retreats: RetreatRow[] }) {
       } else {
         const data = await res.json();
         alert(data.error || 'Error al rechazar');
+      }
+    } catch {
+      alert('Error de conexión');
+    } finally {
+      setActing(null);
+    }
+  }
+
+  async function handleAction(retreatId: string, action: 'cancel' | 'archive' | 'delete') {
+    const messages = {
+      cancel: '¿Cancelar este retiro? Dejará de mostrarse al público.',
+      archive: '¿Archivar este retiro? Se ocultará pero se conservarán los datos.',
+      delete: '¿Eliminar definitivamente? Solo es posible si no tiene reservas activas.',
+    };
+    if (!confirm(messages[action])) return;
+    setActing(retreatId);
+    try {
+      const res = await fetch('/api/admin/retreats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ retreatId, action }),
+      });
+      if (res.ok) {
+        window.location.reload();
+      } else {
+        const data = await res.json();
+        alert(data.error || `Error al ${action}`);
       }
     } catch {
       alert('Error de conexión');
@@ -188,46 +217,56 @@ export function RetirosTableClient({ retreats }: { retreats: RetreatRow[] }) {
                         {new Date(r.created_at).toLocaleDateString('es')}
                       </td>
                       <td className="px-4 py-3">
-                        {r.status === 'pending_review' ? (
-                          <div className="flex gap-1.5 flex-wrap">
-                            <a
-                              href={`/administrator/retiros/preview/${r.slug}`}
-                              className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-sand-100 text-[#7a6b5d] hover:bg-sand-200 transition-colors"
-                            >
-                              Ver preview
-                            </a>
-                            <button
-                              onClick={() => handleApprove(r.id)}
-                              disabled={acting === r.id}
-                              className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50"
-                            >
-                              Aprobar
-                            </button>
-                            <button
-                              onClick={() => setRejectId(r.id)}
-                              disabled={acting === r.id}
-                              className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition-colors disabled:opacity-50"
-                            >
-                              Rechazar
-                            </button>
-                          </div>
-                        ) : r.status === 'published' ? (
+                        <div className="flex flex-wrap gap-1.5 items-center">
+                          {r.status === 'pending_review' && (
+                            <>
+                              <button
+                                onClick={() => handleApprove(r.id)}
+                                disabled={acting === r.id}
+                                className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50"
+                              >
+                                Aprobar
+                              </button>
+                              <button
+                                onClick={() => setRejectId(r.id)}
+                                disabled={acting === r.id}
+                                className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition-colors disabled:opacity-50"
+                              >
+                                Rechazar
+                              </button>
+                            </>
+                          )}
                           <a
-                            href={`/es/retiro/${r.slug}`}
-                            target="_blank"
-                            rel="noopener"
-                            className="text-xs font-semibold text-terracotta-600 hover:underline"
+                            href={r.status === 'published' ? `/es/retiro/${r.slug}` : `/administrator/retiros/preview/${r.slug}`}
+                            target={r.status === 'published' ? '_blank' : undefined}
+                            rel={r.status === 'published' ? 'noopener' : undefined}
+                            className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-sand-100 text-[#7a6b5d] hover:bg-sand-200 transition-colors"
                           >
                             Ver
                           </a>
-                        ) : (
                           <a
-                            href={`/administrator/retiros/preview/${r.slug}`}
-                            className="text-xs font-semibold text-terracotta-600 hover:underline"
+                            href={`/administrator/retiros/${r.id}/editar`}
+                            className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-terracotta-50 text-terracotta-700 hover:bg-terracotta-100 transition-colors"
                           >
-                            Ver preview
+                            Editar
                           </a>
-                        )}
+                          {!['cancelled', 'archived'].includes(r.status) && (
+                            <button
+                              onClick={() => handleAction(r.id, 'cancel')}
+                              disabled={acting === r.id}
+                              className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors disabled:opacity-50"
+                            >
+                              Cancelar
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleAction(r.id, 'delete')}
+                            disabled={acting === r.id}
+                            className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors disabled:opacity-50"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

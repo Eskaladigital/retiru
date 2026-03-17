@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { MessageCircle, Search, Eye, AlertTriangle, Send, LifeBuoy } from 'lucide-react';
 
 interface AdminConversation {
@@ -35,6 +36,9 @@ function timeAgo(iso: string): string {
 }
 
 export default function AdminMensajesPage() {
+  const searchParams = useSearchParams();
+  const openConvId = searchParams.get('open');
+
   const [conversations, setConversations] = useState<AdminConversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -53,6 +57,12 @@ export default function AdminMensajesPage() {
   useEffect(() => {
     fetchConversations().finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!openConvId || loading) return;
+    openConversation(openConvId);
+    window.history.replaceState({}, '', '/administrator/mensajes');
+  }, [openConvId, loading]);
 
   const openConversation = async (convId: string) => {
     setSelectedConv(convId);

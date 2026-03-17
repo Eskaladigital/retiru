@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Search, ChevronUp, ChevronDown, ChevronsUpDown, X, Trash2 } from 'lucide-react';
+import { Search, ChevronUp, ChevronDown, ChevronsUpDown, X, Trash2, MessageCircle } from 'lucide-react';
 
 interface UserRow {
   id: string;
@@ -95,6 +95,28 @@ export function UsuariosTableClient({ users, currentUserId }: { users: UserRow[]
   const [filterRole, setFilterRole] = useState('');
   const [page, setPage] = useState(0);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [messaging, setMessaging] = useState<string | null>(null);
+
+  async function handleMessage(userId: string) {
+    setMessaging(userId);
+    try {
+      const res = await fetch('/api/admin/messages/support', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetUserId: userId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.conversation_id) {
+        window.location.href = `/administrator/mensajes?open=${data.conversation_id}`;
+      } else {
+        alert(data.error || 'Error al abrir conversación');
+      }
+    } catch {
+      alert('Error de conexión');
+    } finally {
+      setMessaging(null);
+    }
+  }
 
   async function handleDelete(userId: string, email: string) {
     if (!confirm(`¿Eliminar al usuario ${email || userId}? Esta acción no se puede deshacer.`)) return;
@@ -236,19 +258,30 @@ export function UsuariosTableClient({ users, currentUserId }: { users: UserRow[]
                       </td>
                       <td className="py-3 px-4 text-[#7a6b5d] text-sm">{date}</td>
                       <td className="py-3 px-4 text-right">
-                        {u.id !== currentUserId ? (
+                        <div className="flex items-center justify-end gap-1">
                           <button
-                            onClick={() => handleDelete(u.id, u.email)}
-                            disabled={deleting === u.id}
-                            className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-50"
-                            title="Eliminar usuario"
+                            onClick={() => handleMessage(u.id)}
+                            disabled={messaging === u.id}
+                            className="inline-flex items-center gap-1 text-xs font-medium text-terracotta-600 hover:text-terracotta-700 hover:bg-terracotta-50 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                            title="Enviar mensaje"
                           >
-                            <Trash2 size={14} />
-                            Eliminar
+                            <MessageCircle size={14} />
+                            Mensaje
                           </button>
-                        ) : (
-                          <span className="text-xs text-[#999]">—</span>
-                        )}
+                          {u.id !== currentUserId ? (
+                            <button
+                              onClick={() => handleDelete(u.id, u.email)}
+                              disabled={deleting === u.id}
+                              className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                              title="Eliminar usuario"
+                            >
+                              <Trash2 size={14} />
+                              Eliminar
+                            </button>
+                          ) : (
+                            <span className="text-xs text-[#999]">—</span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );

@@ -9,12 +9,14 @@ interface Props {
   retreat: any;
   categories: Option[];
   destinations: Option[];
+  /** Si se pasa, usa este endpoint en lugar de /api/retreats/[id] (ej. admin) */
+  apiPath?: string;
 }
 
 const inputCls = 'w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all';
 const textareaCls = `${inputCls} resize-none`;
 
-export function EditarEventoForm({ retreat, categories, destinations }: Props) {
+export function EditarEventoForm({ retreat, categories, destinations, apiPath }: Props) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -76,7 +78,7 @@ export function EditarEventoForm({ retreat, categories, destinations }: Props) {
     setSuccess('');
 
     try {
-      const res = await fetch(`/api/retreats/${retreat.id}`, {
+      const res = await fetch(apiPath || `/api/retreats/${retreat.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -229,7 +231,7 @@ export function EditarEventoForm({ retreat, categories, destinations }: Props) {
             disabled={saving}
             className="bg-terracotta-600 text-white font-semibold px-6 py-3 rounded-xl text-sm hover:bg-terracotta-700 transition-colors disabled:opacity-50"
           >
-            Enviar a revisión
+            {apiPath ? 'Publicar' : 'Enviar a revisión'}
           </button>
         )}
       </div>

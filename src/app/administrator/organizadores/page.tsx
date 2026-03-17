@@ -25,6 +25,7 @@ export default async function AdminOrganizadoresPage() {
 
   const list = (orgs || []).map((o: any) => ({
     id: o.id,
+    user_id: o.profiles?.id ?? null,
     name: o.business_name,
     slug: o.slug,
     email: o.profiles?.email ?? null,
