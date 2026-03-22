@@ -6,6 +6,7 @@
 // ============================================================================
 
 import { createAdminSupabase } from '@/lib/supabase/server';
+import { translateCenterFieldsToEn } from '@/lib/openai/translate-center-en';
 
 // Vercel: 300s máx (Pro plan). Sin esto, timeout a 60s y solo se procesan ~8 centros.
 export const maxDuration = 300;
@@ -21,6 +22,8 @@ type CenterRow = {
   type?: string;
   services_es?: string[] | null;
   description_es?: string | null;
+  schedule_summary_es?: string | null;
+  price_range_es?: string | null;
 };
 
 async function fetchContext(center: CenterRow, serpKey: string): Promise<{ context: string; logs: string[] }> {
@@ -135,7 +138,7 @@ export async function POST(request: Request) {
 
   const { data: centers, error } = await supabase
     .from('centers')
-    .select('id, name, slug, city, province, type, services_es, description_es');
+    .select('id, name, slug, city, province, type, services_es, description_es, schedule_summary_es, price_range_es');
 
   if (error) {
     return new Response(
@@ -241,7 +244,37 @@ Reglas:
 
           if (updateError) throw updateError;
 
-          send('log', { type: 'detail', message: `  💾 Guardado en BD` });
+          send('log', { type: 'detail', message: `  💾 Guardado ES en BD` });
+
+          try {
+            send('log', { type: 'detail', message: `  🌐 Traduciendo a inglés...` });
+            const servicesEs = Array.isArray(center.services_es) ? center.services_es : [];
+            const enFields = await translateCenterFieldsToEn(
+              {
+                descriptionEs: description,
+                servicesEs,
+                scheduleSummaryEs: center.schedule_summary_es ?? null,
+                priceRangeEs: center.price_range_es ?? null,
+              },
+              openaiKey
+            );
+            const { error: enErr } = await supabase
+              .from('centers')
+              .update({
+                description_en: enFields.description_en,
+                services_en: enFields.services_en,
+                schedule_summary_en: enFields.schedule_summary_en,
+                price_range_en: enFields.price_range_en,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', center.id);
+            if (enErr) throw enErr;
+            send('log', { type: 'detail', message: `  💾 Traducción EN guardada` });
+          } catch (trErr) {
+            const msg = trErr instanceof Error ? trErr.message : String(trErr);
+            send('log', { type: 'error', message: `  ⚠️ Traducción EN fallida (ES guardado): ${msg}` });
+          }
+
           send('log', { type: 'success', message: `  ✅ ${center.name} — completado (${wordCount} palabras)` });
           okCount++;
         } catch (err) {

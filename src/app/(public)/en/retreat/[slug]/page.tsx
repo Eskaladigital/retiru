@@ -40,7 +40,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   return generatePageMetadata({
     title: `${retreat.title_en || retreat.title_es} — Retiru`,
-    description: retreat.summary_en || retreat.summary_es,
+    description:
+      retreat.summary_en ||
+      `${retreat.title_en || retreat.title_es}: wellness retreat in Spain — details and booking on Retiru.`,
     locale: 'en',
     path: `/en/retreat/${retreat.slug}`,
     altPath: `/es/retiro/${retreat.slug}`,
@@ -79,7 +81,9 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
 
   const eventLd = jsonLdEvent({
     name: r.title_en || r.title_es,
-    description: r.summary_en || r.summary_es,
+    description:
+      r.summary_en ||
+      `${r.title_en || r.title_es}: wellness retreat in Spain — book on Retiru.`,
     startDate: r.start_date,
     endDate: r.end_date,
     location,
@@ -171,9 +175,18 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
 
             <section className="mb-10">
               <h2 className="mb-4 font-serif text-2xl font-semibold">About this retreat</h2>
-              <div className="prose prose-sand text-muted-foreground leading-relaxed whitespace-pre-line text-sm">
-                {r.description_en || r.description_es}
-              </div>
+              {r.description_en ? (
+                <div className="prose prose-sand text-muted-foreground leading-relaxed whitespace-pre-line text-sm">
+                  {r.description_en}
+                </div>
+              ) : r.description_es ? (
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  We are adding an English description for this retreat.{' '}
+                  <Link href={`/es/retiro/${slug}`} className="font-semibold text-terracotta-600 hover:text-terracotta-700">
+                    View in Spanish
+                  </Link>
+                </p>
+              ) : null}
             </section>
 
             <section className="mb-10 grid gap-6 md:grid-cols-2">

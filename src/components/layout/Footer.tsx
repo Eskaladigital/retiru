@@ -5,6 +5,7 @@
 import Link from 'next/link';
 import type { Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n';
+import LocaleSwitchLink from '@/components/layout/LocaleSwitchLink';
 
 interface FooterProps {
   locale: Locale;
@@ -22,6 +23,8 @@ export default function Footer({ locale }: FooterProps) {
   const destinationsPath = locale === 'es' ? `${prefix}/destinos` : `${prefix}/destinations`;
   const forOrgPath = locale === 'es' ? `${prefix}/para-organizadores` : `${prefix}/for-organizers`;
   const helpPath = locale === 'es' ? `${prefix}/ayuda` : `${prefix}/help`;
+  const aboutPath = locale === 'es' ? `${prefix}/sobre-nosotros` : `${prefix}/about`;
+  const contactPath = locale === 'es' ? `${prefix}/contacto` : `${prefix}/contact`;
 
   return (
     <footer className="bg-[#2d2319] text-white/70">
@@ -60,9 +63,9 @@ export default function Footer({ locale }: FooterProps) {
               {t.footer.company}
             </h4>
             <ul className="space-y-2.5">
-              <li><Link href={`${prefix}/sobre-nosotros`} className="text-sm text-white/70 hover:text-white transition-colors">{t.footer.about}</Link></li>
+              <li><Link href={aboutPath} className="text-sm text-white/70 hover:text-white transition-colors">{t.footer.about}</Link></li>
               <li><Link href={helpPath} className="text-sm text-white/70 hover:text-white transition-colors">{t.nav.help}</Link></li>
-              <li><Link href={`${prefix}/contacto`} className="text-sm text-white/70 hover:text-white transition-colors">{t.footer.contact}</Link></li>
+              <li><Link href={contactPath} className="text-sm text-white/70 hover:text-white transition-colors">{t.footer.contact}</Link></li>
             </ul>
           </div>
 
@@ -86,9 +89,10 @@ export default function Footer({ locale }: FooterProps) {
             {t.footer.allRights.replace('{year}', String(year))}
           </p>
           <div className="flex items-center gap-6">
-            <Link href={`/${locale === 'es' ? 'en' : 'es'}`} className="text-[13px] text-white/50 hover:text-white transition-colors">
-              {locale === 'es' ? 'English' : 'Español'}
-            </Link>
+            <LocaleSwitchLink
+              locale={locale}
+              className="text-[13px] text-white/50 hover:text-white transition-colors"
+            />
           </div>
         </div>
         <div className="text-center text-white/40 text-xs md:text-sm leading-relaxed pt-4">

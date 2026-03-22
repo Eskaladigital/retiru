@@ -57,12 +57,16 @@ export default async function OrganizerPageEN({ params }: { params: Promise<{ sl
             <span>📅 {organizer.total_retreats ?? retreatList.length} retreats published</span>
             {organizer.languages?.length > 0 && <span>🌐 {organizer.languages.join(', ')}</span>}
           </div>
-          {organizer.description_en && (
+          {organizer.description_en ? (
             <p className="text-[15px] text-[#7a6b5d] leading-[1.7] max-w-2xl">{organizer.description_en}</p>
-          )}
-          {!organizer.description_en && organizer.description_es && (
-            <p className="text-[15px] text-[#7a6b5d] leading-[1.7] max-w-2xl">{organizer.description_es}</p>
-          )}
+          ) : organizer.description_es ? (
+            <p className="text-[15px] text-[#7a6b5d] leading-[1.7] max-w-2xl">
+              We are adding an English bio for this organizer.{' '}
+              <Link href={`/es/organizador/${slug}`} className="font-semibold text-terracotta-600 hover:text-terracotta-700">
+                View in Spanish
+              </Link>
+            </p>
+          ) : null}
           {(organizer.website || organizer.instagram) && (
             <div className="flex gap-4 mt-3 text-sm">
               {organizer.website && (

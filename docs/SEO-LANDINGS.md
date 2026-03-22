@@ -108,7 +108,8 @@ Las listas filtran por BD pero **no tienen contenido editorial único**. Para SE
 
 - `canonical` en todas las páginas.
 - `hreflang` para ES/EN alternativas.
-- `alternates` en metadata (ya implementado en `generatePageMetadata`).
+- `alternates` en metadata (ya implementado en `generatePageMetadata` y en posts del blog con `x-default` → versión ES).
+- `<html lang>`: dinámico `es` / `en` según ruta (`middleware` envía `x-retiru-locale`, `app/layout.tsx`).
 
 ### F. Internal linking
 
@@ -158,7 +159,7 @@ El sitemap se genera en build time con ISR (`revalidate = 3600`). Genera URLs **
 | Centros por provincia | `getCenterProvinces()` | `/es/centros-retiru/[slug]` | `/en/centers-retiru/[slug]` | Solo si hay >= 1 centro en la provincia |
 | Retiros individuales | `retreats` (published, vigente) | `/es/retiro/[slug]` | `/en/retreat/[slug]` | Siempre |
 | Retiros por destino | `getDestinationsWithRetreats()` | `/es/retiros-retiru/[slug]` | `/en/retreats-retiru/[slug]` | Solo si hay >= 1 retiro en el destino |
-| Blog | `blog_articles` (published) | `/es/blog/[slug]` | `/en/blog/[slug]` | Siempre |
+| Blog | `blog_articles` (published) | `/es/blog/[slug]` | `/en/blog/[slug_en \|\| slug]` | Siempre; canonical EN usa `slug_en` si existe; redirección 301 desde slug ES en `/en/blog/` |
 | Destinos | `destinations` (active) | `/es/destinos/[slug]` | `/en/destinations/[slug]` | Siempre |
 | Organizadores | `organizer_profiles` (verified) | `/es/organizador/[slug]` | `/en/organizer/[slug]` | Siempre |
 | Productos | `products` (active) | `/es/tienda/[slug]` | `/en/shop/[slug]` | Siempre |

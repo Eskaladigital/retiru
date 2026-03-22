@@ -13,6 +13,7 @@ import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
+import { translateCenterFieldsToEn } from './lib/translate-center-fields-en.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
@@ -211,7 +212,7 @@ async function generateDescription(center) {
 // ── Main ──
 const { data: centers } = await supabase
   .from('centers')
-  .select('id, name, slug, city, province, type, services_es, description_es, avg_rating, review_count, website, phone, address, google_place_id');
+  .select('id, name, slug, city, province, type, services_es, description_es, schedule_summary_es, price_range_es, avg_rating, review_count, website, phone, address, google_place_id');
 
 let toProcess = (centers || []).filter((c) => {
   if (FORCE) return true;
@@ -249,6 +250,29 @@ for (let i = 0; i < toProcess.length; i++) {
         updated_at: now,
       }).eq('id', c.id);
       if (upErr) throw upErr;
+
+      if (OPENAI_KEY) {
+        try {
+          const en = await translateCenterFieldsToEn(OPENAI_KEY, {
+            descriptionEs: desc,
+            servicesEs: Array.isArray(c.services_es) ? c.services_es : [],
+            scheduleSummaryEs: c.schedule_summary_es ?? null,
+            priceRangeEs: c.price_range_es ?? null,
+          });
+          await supabase
+            .from('centers')
+            .update({
+              description_en: en.description_en,
+              services_en: en.services_en,
+              schedule_summary_en: en.schedule_summary_en,
+              price_range_en: en.price_range_en,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', c.id);
+        } catch (enErr) {
+          console.log(`  [en] ${enErr.message}`);
+        }
+      }
     }
 
     const elapsed = ((Date.now() - t0) / 1000).toFixed(1);

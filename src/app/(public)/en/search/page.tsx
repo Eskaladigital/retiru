@@ -71,7 +71,7 @@ function SearchContent() {
         if (item.kind === 'retreat') {
           return (item.categories || []).some((cat: any) => (cat.name_en || cat.name_es || '').toLowerCase().includes(catFilter.toLowerCase()));
         }
-        const services: string[] = Array.isArray(item.services_en) ? item.services_en : Array.isArray(item.services_es) ? item.services_es : [];
+        const services: string[] = Array.isArray(item.services_en) ? item.services_en : [];
         return (item.type || '').toLowerCase().includes(catFilter.toLowerCase())
           || services.some((s: string) => s.toLowerCase().includes(catFilter.toLowerCase()));
       });
@@ -199,7 +199,7 @@ function RetreatCard({ item }: { item: any }) {
 
 function CenterCard({ item }: { item: any }) {
   const imgSrc = item.cover_url || (Array.isArray(item.images) && item.images[0]) || '';
-  const services: string[] = Array.isArray(item.services_en) ? item.services_en : Array.isArray(item.services_es) ? item.services_es : [];
+  const services: string[] = Array.isArray(item.services_en) ? item.services_en : [];
 
   return (
     <Link href={`/en/center/${item.slug}`} className="group bg-white rounded-2xl overflow-hidden border border-sand-200 transition-all duration-[350ms] hover:shadow-elevated hover:-translate-y-1">
@@ -228,9 +228,9 @@ function CenterCard({ item }: { item: any }) {
             {services.length > 3 && <span className="text-[10px] px-2 py-0.5 rounded-full bg-sand-100 text-[#a09383]">+{services.length - 3}</span>}
           </div>
         )}
-        {(item.price_range_en || item.price_range_es) && (
+        {item.price_range_en && (
           <div className="pt-3 border-t border-sand-200">
-            <span className="text-sm text-[#7a6b5d]">💰 {item.price_range_en || item.price_range_es}</span>
+            <span className="text-sm text-[#7a6b5d]">💰 {item.price_range_en}</span>
           </div>
         )}
       </div>

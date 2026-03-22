@@ -3,6 +3,7 @@
 // ============================================================================
 
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import './globals.css';
 import BackToTop from '@/components/ui/back-to-top';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
@@ -19,9 +20,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const h = await headers();
+  const lang = h.get('x-retiru-locale') === 'en' ? 'en' : 'es';
+
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang={lang} suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

@@ -17,6 +17,7 @@ import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
+import { translateCenterFieldsToEn } from './lib/translate-center-fields-en.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
@@ -233,7 +234,7 @@ async function generateDescription(center) {
 
 // ── Buscar el centro ──
 let query = supabase.from('centers').select(
-  'id, name, slug, city, province, type, services_es, description_es, avg_rating, review_count, website, phone, address, google_place_id'
+  'id, name, slug, city, province, type, services_es, description_es, schedule_summary_es, price_range_es, avg_rating, review_count, website, phone, address, google_place_id'
 );
 
 if (searchId) {
@@ -310,5 +311,30 @@ if (DRY_RUN) {
     process.exit(1);
   }
 
-  console.log(`✅ Descripción guardada: ${words} palabras (${elapsed}s)`);
+  console.log(`✅ Descripción ES guardada: ${words} palabras (${elapsed}s)`);
+
+  if (OPENAI_KEY) {
+    try {
+      const en = await translateCenterFieldsToEn(OPENAI_KEY, {
+        descriptionEs: desc,
+        servicesEs: Array.isArray(center.services_es) ? center.services_es : [],
+        scheduleSummaryEs: center.schedule_summary_es ?? null,
+        priceRangeEs: center.price_range_es ?? null,
+      });
+      const { error: enErr } = await supabase
+        .from('centers')
+        .update({
+          description_en: en.description_en,
+          services_en: en.services_en,
+          schedule_summary_en: en.schedule_summary_en,
+          price_range_en: en.price_range_en,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', center.id);
+      if (enErr) throw enErr;
+      console.log('✅ Traducción EN guardada');
+    } catch (e) {
+      console.log(`⚠ Traducción EN omitida: ${e.message}`);
+    }
+  }
 }

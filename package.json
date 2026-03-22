@@ -25,7 +25,10 @@
     "centers:infer-types-ai:update": "node scripts/infer-center-types-with-ai.mjs --update",
     "centers:sync-directorio": "node scripts/sync-directorio.mjs",
     "centers:sync-directorio:dry": "node scripts/sync-directorio.mjs --dry-run",
-    "centers:sync-directorio:update": "node scripts/sync-directorio.mjs --update-existing"
+    "centers:sync-directorio:update": "node scripts/sync-directorio.mjs --update-existing",
+    "centers:translate-en": "node scripts/translate-centers-en.mjs",
+    "blog:backfill-slugs-en": "node scripts/backfill-blog-slugs-en.mjs",
+    "blog:translate-en": "node scripts/translate-blog-articles-en.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

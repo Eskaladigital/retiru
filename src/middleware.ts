@@ -57,6 +57,15 @@ function isPublicPath(pathname: string): boolean {
   );
 }
 
+/** Para <html lang> en root layout (SEO / accesibilidad) */
+function withLocaleHeaders(request: NextRequest) {
+  const h = new Headers(request.headers);
+  const pathname = request.nextUrl.pathname;
+  const locale = pathname.startsWith('/en') ? 'en' : 'es';
+  h.set('x-retiru-locale', locale);
+  return h;
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -78,11 +87,11 @@ export async function middleware(request: NextRequest) {
   );
 
   if (!supabaseConfigured) {
-    return NextResponse.next();
+    return NextResponse.next({ request: { headers: withLocaleHeaders(request) } });
   }
 
   // 3. Create a SINGLE Supabase client for both session refresh and auth checks
-  let response = NextResponse.next({ request: { headers: request.headers } });
+  let response = NextResponse.next({ request: { headers: withLocaleHeaders(request) } });
 
   const supabase = createServerClient(supabaseUrl!, supabaseKey!, {
     cookies: {
@@ -91,12 +100,12 @@ export async function middleware(request: NextRequest) {
       },
       set(name: string, value: string, options: CookieOptions) {
         request.cookies.set({ name, value, ...options });
-        response = NextResponse.next({ request: { headers: request.headers } });
+        response = NextResponse.next({ request: { headers: withLocaleHeaders(request) } });
         response.cookies.set({ name, value, ...options });
       },
       remove(name: string, options: CookieOptions) {
         request.cookies.set({ name, value: '', ...options });
-        response = NextResponse.next({ request: { headers: request.headers } });
+        response = NextResponse.next({ request: { headers: withLocaleHeaders(request) } });
         response.cookies.set({ name, value: '', ...options });
       },
     },

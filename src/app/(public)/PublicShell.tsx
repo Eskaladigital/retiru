@@ -4,6 +4,7 @@
 // RETIRU · Shell público — Header + Footer (locale desde URL)
 // ============================================================================
 
+import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -18,6 +19,12 @@ interface PublicShellProps {
 export default function PublicShell({ user, children }: PublicShellProps) {
   const pathname = usePathname();
   const locale: Locale = pathname?.startsWith('/en') ? 'en' : 'es';
+
+  // Navegación cliente no vuelve a ejecutar el layout raíz: sincronizar <html lang> con la URL.
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    document.documentElement.lang = pathname?.startsWith('/en') ? 'en' : 'es';
+  }, [pathname]);
 
   return (
     <>

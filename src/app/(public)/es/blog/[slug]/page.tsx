@@ -40,6 +40,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       languages: {
         es: `${BASE_URL}/es/blog/${article.slug}`,
         en: `${BASE_URL}/en/blog/${enSlug}`,
+        'x-default': `${BASE_URL}/es/blog/${article.slug}`,
       },
     },
     openGraph: {
@@ -47,8 +48,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       description,
       url: `${BASE_URL}/es/blog/${article.slug}`,
       images: article.cover_image_url ? [article.cover_image_url] : undefined,
-      locale: 'es',
-      alternateLocale: 'en',
+      locale: 'es_ES',
+      alternateLocale: 'en_US',
     },
   };
 }

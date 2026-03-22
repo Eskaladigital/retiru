@@ -29,7 +29,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
   return generatePageMetadata({
     title: `${center.name} — ${center.type ? `${getCenterTypeLabel(center.type, 'en')} center` : 'Center'} in ${center.city || ''}`,
-    description: center.description_en?.slice(0, 160) || center.description_es?.slice(0, 160) || `${center.name}: wellness center in ${center.city}, ${center.province}.`,
+    description:
+      center.description_en?.slice(0, 160) ||
+      `${center.name} — wellness center${center.city ? ` in ${center.city}` : ''}${center.province ? `, ${center.province}` : ''}.`,
     locale: 'en',
     path: `/en/center/${slug}`,
     altPath: `/es/centro/${slug}`,
@@ -43,7 +45,7 @@ export default async function CenterDetailEN({ params }: Props) {
   const C = await getCenterBySlug(slug);
   if (!C) notFound();
 
-  const services: string[] = Array.isArray(C.services_en) ? C.services_en : Array.isArray(C.services_es) ? C.services_es : [];
+  const services: string[] = Array.isArray(C.services_en) ? C.services_en : [];
   const images: string[] = Array.isArray(C.images) ? C.images : [];
   const mainImage = C.cover_url || images[0] || '';
   const galleryImages = C.cover_url ? images : images.slice(1);
@@ -93,7 +95,16 @@ export default async function CenterDetailEN({ params }: Props) {
           {(C.description_en || C.description_es) && (
             <div className="mb-8">
               <h2 className="font-serif text-xl mb-3">About</h2>
-              <MarkdownContent content={C.description_en || C.description_es} />
+              {C.description_en ? (
+                <MarkdownContent content={C.description_en} />
+              ) : (
+                <div className="rounded-xl border border-sand-200 bg-sand-50/80 p-5 text-sm text-[#7a6b5d] leading-relaxed">
+                  <p className="mb-3">We are adding an English description for this center.</p>
+                  <Link href={`/es/centro/${slug}`} className="font-semibold text-terracotta-600 hover:text-terracotta-700">
+                    Read this profile in Spanish
+                  </Link>
+                </div>
+              )}
             </div>
           )}
 
@@ -109,19 +120,19 @@ export default async function CenterDetailEN({ params }: Props) {
             </div>
           )}
 
-          {/* Schedule & Prices */}
-          {(C.schedule_summary_en || C.schedule_summary_es || C.price_range_en || C.price_range_es) && (
+          {/* Schedule & Prices (solo EN — la traducción automática rellena estos campos) */}
+          {(C.schedule_summary_en || C.price_range_en) && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-              {(C.schedule_summary_en || C.schedule_summary_es) && (
+              {C.schedule_summary_en && (
                 <div className="bg-sand-50 border border-sand-200 rounded-xl p-5">
                   <h3 className="font-semibold text-sm mb-2">🕐 Schedule</h3>
-                  <p className="text-sm text-[#7a6b5d] leading-relaxed">{C.schedule_summary_en || C.schedule_summary_es}</p>
+                  <p className="text-sm text-[#7a6b5d] leading-relaxed">{C.schedule_summary_en}</p>
                 </div>
               )}
-              {(C.price_range_en || C.price_range_es) && (
+              {C.price_range_en && (
                 <div className="bg-sand-50 border border-sand-200 rounded-xl p-5">
                   <h3 className="font-semibold text-sm mb-2">💰 Prices</h3>
-                  <p className="text-sm text-[#7a6b5d] leading-relaxed">{C.price_range_en || C.price_range_es}</p>
+                  <p className="text-sm text-[#7a6b5d] leading-relaxed">{C.price_range_en}</p>
                 </div>
               )}
             </div>

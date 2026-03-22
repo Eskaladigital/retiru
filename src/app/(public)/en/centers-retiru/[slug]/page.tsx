@@ -93,8 +93,8 @@ export default async function CentersByProvincePageEN({ params }: { params: Prom
                       </div>
                     )}
                   </div>
-                  {(c.description_en || c.description_es) && (
-                    <p className="text-sm text-[#7a6b5d] leading-relaxed mt-2 line-clamp-2">{c.description_en || c.description_es}</p>
+                  {c.description_en && (
+                    <p className="text-sm text-[#7a6b5d] leading-relaxed mt-2 line-clamp-2">{c.description_en}</p>
                   )}
                   {Array.isArray(c.categories) && c.categories.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-3">

@@ -11,6 +11,7 @@ import { Menu, X, Globe, User, ChevronDown, MapPin, Compass, ShoppingBag, Heart,
 import { createClient } from '@/lib/supabase/client';
 import type { Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n';
+import LocaleSwitchLink from '@/components/layout/LocaleSwitchLink';
 
 interface HeaderProps {
   locale: Locale;
@@ -115,10 +116,10 @@ export default function Header({ locale, user }: HeaderProps) {
 
         {/* Right side */}
         <div className="hidden items-center gap-3 md:flex shrink-0">
-          <Link href={`/${altLocale}`} className="btn-ghost flex items-center gap-1 text-sm">
+          <LocaleSwitchLink locale={locale} className="btn-ghost flex items-center gap-1 text-sm">
             <Globe size={16} />
             {altLocale.toUpperCase()}
-          </Link>
+          </LocaleSwitchLink>
           {user ? (
             <div className="relative" ref={userMenuRef}>
               <button
@@ -248,10 +249,14 @@ export default function Header({ locale, user }: HeaderProps) {
             <hr className="my-3 border-sand-100" />
 
             <div className="flex flex-col gap-0.5">
-              <Link href={`/${altLocale}`} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]" onClick={closeMenu}>
+              <LocaleSwitchLink
+                locale={locale}
+                className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]"
+                onNavigate={closeMenu}
+              >
                 <span className="w-9 h-9 rounded-xl bg-sand-100 flex items-center justify-center"><Globe size={17} className="text-sand-500" /></span>
                 {altLocale === 'en' ? 'English' : 'Español'}
-              </Link>
+              </LocaleSwitchLink>
               {user ? (
                 <>
                   <Link href={`${prefix}/mis-reservas`} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]" onClick={closeMenu}>

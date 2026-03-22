@@ -94,11 +94,15 @@ npm run db:types         # Generar tipos TypeScript desde el esquema de Supabase
 npm run stripe:listen    # Escuchar webhooks de Stripe en local
 
 # Centros — descripciones IA (scraping web + Google Places + OpenAI, temp 0.2)
+# Tras generar ES, si hay OPENAI_API_KEY se traduce automáticamente a EN (description_en, services_en, horarios/precios).
 node scripts/generate-all-descriptions.mjs            # Generar descripciones faltantes
 node scripts/generate-all-descriptions.mjs --force    # Regenerar TODAS las descripciones
 node scripts/generate-all-descriptions.mjs --limit 10 # Solo N centros
 node scripts/generate-all-descriptions.mjs --dry-run  # Simular sin guardar
+npm run centers:translate-en                          # Solo traducir centros con ES y sin EN (o --force)
 npm run centers:vaciar-genericas                       # Vaciar descripciones genéricas
+npm run blog:backfill-slugs-en                        # Rellenar slug_en del blog desde title_en (opcional --dry-run)
+npm run blog:translate-en                             # Traducir posts publicados ES→EN (OpenAI); --force retraduce todo
 
 # Centros — emails
 npm run centers:emails        # Sincronizar emails desde CSV
@@ -436,14 +440,15 @@ Se han importado **~592 centros** de yoga, pilates, meditación, wellness y spa 
 | Importar centros desde `directorio.csv` | ✅ Completado | 592 centros |
 | Enriquecer descripciones con IA (scraping web + Google Places + OpenAI) | 🔄 En curso | ~857 centros total |
 | Buscar emails faltantes (CSV + SerpAPI) | 🔄 En curso | 416 con email, 176 sin email |
-| Generar descripciones en inglés | ⏳ Pendiente | Traducción automática tras completar ES |
+| Generar descripciones en inglés | ✅ Implementado | Tras cada descripción ES (API admin + scripts) se llama a GPT para EN; `npm run centers:translate-en` para rellenar histórico |
 
 **Scripts disponibles:**
 
 ```bash
-node scripts/generate-all-descriptions.mjs            # Generar descripciones faltantes
+node scripts/generate-all-descriptions.mjs            # Generar descripciones faltantes (+ traducción EN si hay OPENAI_API_KEY)
 node scripts/generate-all-descriptions.mjs --force    # Regenerar TODAS (scraping web + Google Places + OpenAI)
 node scripts/generate-all-descriptions.mjs --limit 5  # Solo N centros
+npm run centers:translate-en                            # Rellenar solo campos EN para centros ya en ES
 node scripts/count-generic-descriptions.mjs            # Contar descripciones genéricas
 node scripts/quick-stats.mjs                           # Estadísticas rápidas
 ```

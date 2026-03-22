@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Clock, Calendar, ArrowLeft, Share2, ChevronRight } from 'lucide-react';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { getBlogPostSlugs } from '@/lib/data';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { MarkdownContent } from '@/components/ui/markdown-content';
@@ -28,8 +28,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   if (!article) return {};
 
-  const title = (article as any).meta_title_en || (article as any).meta_title_es || article.title_en || article.title_es;
-  const description = (article as any).meta_description_en || (article as any).meta_description_es || article.excerpt_en || article.excerpt_es;
+  const title =
+    (article as any).meta_title_en ||
+    article.title_en ||
+    (article as any).meta_title_es ||
+    article.title_es;
+  const description =
+    (article as any).meta_description_en ||
+    article.excerpt_en ||
+    (article as any).meta_description_es ||
+    article.excerpt_es;
   const enSlug = article.slug_en || article.slug;
 
   return {
@@ -40,6 +48,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       languages: {
         es: `${BASE_URL}/es/blog/${article.slug}`,
         en: `${BASE_URL}/en/blog/${enSlug}`,
+        'x-default': `${BASE_URL}/es/blog/${article.slug}`,
       },
     },
     openGraph: {
@@ -47,8 +56,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       description,
       url: `${BASE_URL}/en/blog/${enSlug}`,
       images: article.cover_image_url ? [article.cover_image_url] : undefined,
-      locale: 'en',
-      alternateLocale: 'es',
+      locale: 'en_US',
+      alternateLocale: 'es_ES',
     },
   };
 }
@@ -65,6 +74,10 @@ export default async function BlogPostEN({ params }: { params: Promise<{ slug: s
     .single();
 
   if (!article) notFound();
+
+  if (article.slug_en && slug !== article.slug_en) {
+    redirect(`/en/blog/${article.slug_en}`);
+  }
 
   const { data: related } = await supabase
     .from('blog_articles')

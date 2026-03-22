@@ -91,8 +91,8 @@ export default function CentersClientEN({ centers }: CentersClientProps) {
   const filtered = useMemo(() => {
     let results = centers.filter(c => {
       const q = query.toLowerCase();
-      const services = Array.isArray(c.services_en) ? c.services_en : Array.isArray(c.services_es) ? c.services_es : [];
-      const desc = c.description_en || c.description_es || '';
+      const services = Array.isArray(c.services_en) ? c.services_en : [];
+      const desc = c.description_en || '';
       const matchesQuery = !q || c.name?.toLowerCase().includes(q) || desc.toLowerCase().includes(q) || c.city?.toLowerCase().includes(q) || services.some((s: string) => s.toLowerCase().includes(q));
       const matchesType = selectedType === 'All' || c.type === selectedType;
       const matchesProvince = selectedProvince === 'All' || c.province === selectedProvince;
@@ -260,9 +260,9 @@ export default function CentersClientEN({ centers }: CentersClientProps) {
         <>
           <div className="space-y-4">
             {paginated.map((c: any) => {
-            const services: string[] = Array.isArray(c.services_en) ? c.services_en : Array.isArray(c.services_es) ? c.services_es : [];
+            const services: string[] = Array.isArray(c.services_en) ? c.services_en : [];
             const imgSrc = c.cover_url || (Array.isArray(c.images) && c.images[0]) || '';
-            const rawDesc = c.description_en || c.description_es || '';
+            const rawDesc = c.description_en || '';
             const cardDesc = !rawDesc || isGenericDescription(rawDesc) ? '' : stripMarkdownForPreview(rawDesc);
             return (
               <Link
@@ -304,8 +304,8 @@ export default function CentersClientEN({ centers }: CentersClientProps) {
                     </div>
                   )}
                   <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-[#a09383]">
-                    {(c.schedule_summary_en || c.schedule_summary_es) && <span>🕐 {c.schedule_summary_en || c.schedule_summary_es}</span>}
-                    {(c.price_range_en || c.price_range_es) && <span>💰 {c.price_range_en || c.price_range_es}</span>}
+                    {c.schedule_summary_en && <span>🕐 {c.schedule_summary_en}</span>}
+                    {c.price_range_en && <span>💰 {c.price_range_en}</span>}
                   </div>
                 </div>
               </Link>
