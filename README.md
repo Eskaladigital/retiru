@@ -157,9 +157,10 @@ Ejecutar en el **SQL Editor** de Supabase (con service_role) en este orden:
 12. `supabase/migrations/012_centers_user_proposals.sql` — añade valor enum `pending_review` (solo esta sentencia; evita error 55P04)
 13. `supabase/migrations/013_centers_user_proposals_rls.sql` — columna `submitted_by`, índices y política RLS `ctr_submitted`
 14. `supabase/migrations/014_center_type_three_disciplines.sql` — enum `center_type`: solo `yoga`, `meditation`, `ayurveda`
-15. `supabase/seed/001_categories_destinations.sql` — categorías y destinos
-16. `supabase/seed/002_sample_retreats.sql` — usuario demo + 10 retiros de ejemplo
-17. `supabase/seed/003_sample_blog.sql` — 3 categorías de blog + 5 artículos
+15. `supabase/migrations/015_categories_retreat_ayurveda.sql` — categoría de retiro `ayurveda` (home y filtro `tipo`)
+16. `supabase/seed/001_categories_destinations.sql` — categorías y destinos
+17. `supabase/seed/002_sample_retreats.sql` — usuario demo + 10 retiros de ejemplo
+18. `supabase/seed/003_sample_blog.sql` — 3 categorías de blog + 5 artículos
 
 ### Capa de datos
 

@@ -6,6 +6,7 @@
 INSERT INTO categories (name_es, name_en, slug, icon, sort_order) VALUES
   ('Yoga', 'Yoga', 'yoga', '🧘', 1),
   ('Meditación', 'Meditation', 'meditacion', '🙏', 2),
+  ('Ayurveda', 'Ayurveda', 'ayurveda', '🪷', 11),
   ('Detox', 'Detox', 'detox', '🌿', 3),
   ('Naturaleza', 'Nature', 'naturaleza', '🏔️', 4),
   ('Gastronomía', 'Gastronomy', 'gastronomia', '🍷', 5),

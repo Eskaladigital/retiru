@@ -394,6 +394,8 @@ created_at          timestamptz DEFAULT now()
 
 ## 6. Resumen de tablas en Supabase
 
+**Retiro — categorías públicas:** el seed inicial no incluía fila `ayurveda` en `categories`. La migración `015_categories_retreat_ayurveda.sql` la inserta (`slug = ayurveda`) para la home “Explora por enfoque” y el filtro `?tipo=ayurveda`. Hasta aplicarla, el front usa un fallback sintético en `filterPublicRetreatCategories`.
+
 ### Tablas que DEBEN existir (según types actuales)
 
 | Tabla | Tipo TS | Estado |

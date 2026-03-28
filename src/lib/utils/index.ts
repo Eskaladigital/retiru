@@ -4,6 +4,7 @@
 
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import type { Category } from '@/types';
 
 /** Merge Tailwind classes without conflicts */
 export function cn(...inputs: ClassValue[]) {
@@ -126,9 +127,34 @@ export const VALID_CENTER_TYPE_SLUGS = ['yoga', 'meditation', 'ayurveda'] as con
 /** Categorías de retiro mostradas en home y filtros del listado público (fase inicial) */
 export const PUBLIC_RETREAT_CATEGORY_SLUGS = ['yoga', 'meditacion', 'ayurveda'] as const;
 
-export function filterPublicRetreatCategories<T extends { slug: string }>(categories: T[]): T[] {
+/** ID estable solo para fallback UI si la fila `ayurveda` aún no existe en BD (migración 015). */
+const AYURVEDA_FALLBACK_CATEGORY_ID = 'a0000000-0000-4000-8000-000000000001';
+
+/**
+ * Categorías de retiro públicas (yoga, meditación, ayurveda) en orden fijo para home y filtros.
+ * Si falta `ayurveda` en Supabase, se devuelve un objeto sintético hasta aplicar la migración 015.
+ */
+export function filterPublicRetreatCategories(categories: Category[]): Category[] {
   const bySlug = new Map(categories.map((c) => [c.slug, c]));
-  return PUBLIC_RETREAT_CATEGORY_SLUGS.map((s) => bySlug.get(s)).filter((c): c is T => c != null);
+  return PUBLIC_RETREAT_CATEGORY_SLUGS.map((slug) => {
+    const existing = bySlug.get(slug);
+    if (existing) return existing;
+    if (slug === 'ayurveda') {
+      return {
+        id: AYURVEDA_FALLBACK_CATEGORY_ID,
+        name_es: 'Ayurveda',
+        name_en: 'Ayurveda',
+        slug: 'ayurveda',
+        description_es: null,
+        description_en: null,
+        icon: '🪷',
+        cover_image_url: null,
+        sort_order: 11,
+        is_active: true,
+      };
+    }
+    throw new Error(`filterPublicRetreatCategories: falta categoría de retiro con slug "${slug}"`);
+  });
 }
 
 /** Tipos de centro en buscadores y filtros del directorio público (fase inicial) */
