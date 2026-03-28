@@ -339,6 +339,29 @@ export async function getShopProductSlugs(): Promise<string[]> {
   return getProductSlugs();
 }
 
+/** Misma tabla que `/es/tienda` y `/en/shop` (`shop_products`). Home: ocultar bloque si vacío. */
+export type HomeShopProductRow = {
+  id: string;
+  slug: string;
+  name_es: string;
+  name_en: string | null;
+  price: number;
+  compare_price: number | null;
+  images: unknown;
+};
+
+export async function getHomeShopProducts(limit = 4): Promise<HomeShopProductRow[]> {
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from('shop_products')
+    .select('id, slug, name_es, name_en, price, compare_price, images')
+    .eq('is_available', true)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) return [];
+  return (data ?? []) as HomeShopProductRow[];
+}
+
 /** Usar solo en generateStaticParams */
 export async function getDestinationSlugs(): Promise<string[]> {
   const supabase = createStaticSupabase();

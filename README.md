@@ -167,6 +167,7 @@ Ejecutar en el **SQL Editor** de Supabase (con service_role) en este orden:
 Las páginas consumen datos a través de `src/lib/data/index.ts`:
 
 - `getCategories(locale)`, `getDestinations(locale)`, `getDestinationBySlug(slug)`
+- `getHomeShopProducts(limit)` — productos `shop_products` para la home (misma tabla que `/es/tienda`)
 - `getPublishedRetreats(filters)`, `getRetreatBySlug(slug)`
 - `getOrganizerBySlug(slug)`, `getActiveCenters(filters)`, `getCenterBySlug(slug)`
 - `getCenterProvinces()` — provincias únicas con centros activos (para `generateStaticParams` y sitemap)
@@ -586,7 +587,7 @@ El admin tiene además acceso a `/administrator` desde el menú.
 ## Funcionalidades principales
 
 ### Front público
-- **Homepage** con H1 "Centros y retiros de yoga, meditación y ayurveda", sección "Dos mundos, un solo lugar" (Directorio + Retiros), HeroSearch (toggle Retiros/Centros), centros destacados, retiros populares y destinos desde Supabase
+- **Homepage** con H1 "Centros y retiros de yoga, meditación y ayurveda", sección "Dos mundos, un solo lugar" (Directorio + Retiros), HeroSearch (toggle Retiros/Centros), centros destacados, retiros populares y destinos desde Supabase; bloque **Tienda** solo si hay filas en `shop_products` con `is_available`
 - **Retiros** (`/retiros-retiru`): hero + buscador (texto, destino, fechas) + lista con filtros — datos desde Supabase
 - **Retiros por ciudad** (`/retiros-retiru/[slug]`): retiros filtrados por destino/ciudad
 - **Ficha de retiro** (`/retiro/[slug]`): galería, desglose de pagos, reseñas, CTA sticky — datos desde Supabase

@@ -6,7 +6,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { homeEN } from '@/lib/seo/page-metadata';
 import { ImageWithFallback } from '@/components/ui/image-with-fallback';
-import { getCategories, getDestinations, getPublishedRetreats } from '@/lib/data';
+import { getCategories, getDestinations, getHomeShopProducts, getPublishedRetreats } from '@/lib/data';
 import { filterPublicRetreatCategories } from '@/lib/utils';
 
 export const metadata: Metadata = homeEN;
@@ -55,10 +55,11 @@ const IconVerified = () => <svg className="w-[18px] h-[18px] text-sage-600" view
 const IconHeartsm = () => <svg className="w-[18px] h-[18px] text-sage-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>;
 
 export default async function HomePageEN() {
-  const [categories, destinations, { retreats }] = await Promise.all([
+  const [categories, destinations, { retreats }, shopProducts] = await Promise.all([
     getCategories('en'),
     getDestinations('en'),
     getPublishedRetreats({ limit: 3 }),
+    getHomeShopProducts(4),
   ]);
 
   const cats = filterPublicRetreatCategories(categories);
@@ -332,7 +333,7 @@ export default async function HomePageEN() {
           </div>
         </section>
 
-        {/* WELLNESS SHOP */}
+        {shopProducts.length > 0 && (
         <section className="bg-sand-100 py-12 md:py-16">
           <div className="container-wide">
             <div className="flex items-end justify-between mb-6 md:mb-8 gap-4 flex-wrap">
@@ -340,29 +341,43 @@ export default async function HomePageEN() {
               <Link href="/en/shop" className="text-[15px] font-semibold text-terracotta-600 inline-flex items-center gap-1.5 hover:gap-2.5 transition-all whitespace-nowrap">View shop <IconChevron /></Link>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { slug: 'yoga-mat-pro', name: 'Pro Yoga Mat 6mm', price: 49.90, comparePrice: 69.90, badge: 'Bestseller', img: 'https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=400&q=80' },
-                { slug: 'meditation-cushion-zafu', name: 'Zafu Meditation Cushion', price: 34.90, comparePrice: null, badge: null, img: 'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=400&q=80' },
-                { slug: 'cold-press-juicer', name: 'Cold Press Juicer', price: 129.00, comparePrice: null, badge: 'New', img: 'https://images.unsplash.com/photo-1622597467836-f3285f2131b8?w=400&q=80' },
-                { slug: 'essential-oils-set', name: 'Essential Oils Set (6 pack)', price: 39.90, comparePrice: 49.90, badge: 'Popular', img: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400&q=80' },
-              ].map(p => (
-                <Link key={p.slug} href={`/en/shop/${p.slug}`} className="group bg-white rounded-2xl border border-sand-200 overflow-hidden hover:shadow-soft hover:-translate-y-0.5 transition-all">
-                  <div className="relative aspect-square overflow-hidden bg-sand-50">
-                    <img src={p.img} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    {p.badge && <span className={`absolute top-2 left-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${p.badge === 'Bestseller' ? 'bg-terracotta-600 text-white' : p.badge === 'New' ? 'bg-sage-600 text-white' : 'bg-amber-400 text-amber-900'}`}>{p.badge}</span>}
-                  </div>
-                  <div className="p-4">
-                    <h3 className="text-sm font-semibold leading-tight mb-2 line-clamp-2 group-hover:text-terracotta-600 transition-colors">{p.name}</h3>
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg font-bold">{p.price.toFixed(2).replace('.', ',')}€</span>
-                      {p.comparePrice && <span className="text-sm text-[#a09383] line-through">{p.comparePrice.toFixed(2).replace('.', ',')}€</span>}
+              {shopProducts.map((p) => {
+                const imgs = Array.isArray(p.images) ? p.images : [];
+                const img = typeof imgs[0] === 'string' ? imgs[0] : null;
+                const name = p.name_en || p.name_es;
+                const discount = p.compare_price && p.compare_price > p.price
+                  ? Math.round((1 - p.price / p.compare_price) * 100)
+                  : 0;
+                return (
+                  <Link key={p.id} href={`/en/shop/${p.slug}`} className="group bg-white rounded-2xl border border-sand-200 overflow-hidden hover:shadow-soft hover:-translate-y-0.5 transition-all">
+                    <div className="relative aspect-square overflow-hidden bg-sand-50">
+                      {img ? (
+                        <img src={img} alt={name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-5xl bg-sage-50 text-sage-400">🛍️</div>
+                      )}
+                      {discount > 0 && (
+                        <span className="absolute top-2 left-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-red-500 text-white">
+                          -{discount}%
+                        </span>
+                      )}
                     </div>
-                  </div>
-                </Link>
-              ))}
+                    <div className="p-4">
+                      <h3 className="text-sm font-semibold leading-tight mb-2 line-clamp-2 group-hover:text-terracotta-600 transition-colors">{name}</h3>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold">{Number(p.price).toFixed(2)}€</span>
+                        {p.compare_price != null && p.compare_price > p.price && (
+                          <span className="text-sm text-[#a09383] line-through">{Number(p.compare_price).toFixed(2)}€</span>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </section>
+        )}
 
         {/* TESTIMONIALS */}
         <section className="py-12 md:py-16">
