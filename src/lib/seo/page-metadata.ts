@@ -81,8 +81,8 @@ export const helpES: Metadata = generatePageMetadata({
 });
 
 export const aboutES: Metadata = generatePageMetadata({
-  title: 'Sobre Retiru — Nuestra misión y equipo',
-  description: 'Retiru es la plataforma para descubrir retiros y centros de yoga, meditación y ayurveda en España. Conoce nuestra misión, modelo y equipo.',
+  title: 'Sobre nosotros — Andrea y Roi, fundadores de Retiru',
+  description: 'Andrea y Roi cuentan cómo nace Retiru: bienestar, viajes, Nueva Zelanda, formación en ayurveda en India y el sueño de conectar personas con retiros y centros en España.',
   locale: 'es',
   path: '/es/sobre-nosotros',
   altPath: '/en/about',
@@ -192,8 +192,8 @@ export const helpEN: Metadata = generatePageMetadata({
 });
 
 export const aboutEN: Metadata = generatePageMetadata({
-  title: 'About Retiru — Our mission and team',
-  description: 'Retiru is the platform for discovering yoga, meditation and ayurveda retreats and centers in Spain. Learn about our mission, model and team.',
+  title: 'About us — Andrea & Roi, founders of Retiru',
+  description: 'Andrea and Roi share how Retiru was born: wellbeing, travel, New Zealand, ayurveda training in India, and connecting people with retreats and centres in Spain.',
   locale: 'en',
   path: '/en/about',
   altPath: '/es/sobre-nosotros',

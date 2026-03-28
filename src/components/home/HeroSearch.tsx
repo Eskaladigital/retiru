@@ -46,7 +46,7 @@ const PROVINCES = [
 
 export default function HeroSearch() {
   const router = useRouter();
-  const [mode, setMode] = useState<SearchMode>('eventos');
+  const [mode, setMode] = useState<SearchMode>('centros');
 
   // Shared
   const [queryText, setQueryText] = useState('');
@@ -95,18 +95,6 @@ export default function HeroSearch() {
       <div className="flex items-center gap-1 mb-3 bg-sand-200/60 rounded-full p-1 w-fit mx-auto md:mx-0">
         <button
           type="button"
-          onClick={() => setMode('eventos')}
-          className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all ${
-            mode === 'eventos'
-              ? 'bg-white text-terracotta-700 shadow-sm'
-              : 'text-[#7a6b5d] hover:text-foreground'
-          }`}
-        >
-          <CalendarDays size={15} />
-          Retiros
-        </button>
-        <button
-          type="button"
           onClick={() => setMode('centros')}
           className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all ${
             mode === 'centros'
@@ -116,6 +104,18 @@ export default function HeroSearch() {
         >
           <Building2 size={15} />
           Centros
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode('eventos')}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+            mode === 'eventos'
+              ? 'bg-white text-terracotta-700 shadow-sm'
+              : 'text-[#7a6b5d] hover:text-foreground'
+          }`}
+        >
+          <CalendarDays size={15} />
+          Retiros
         </button>
       </div>
 

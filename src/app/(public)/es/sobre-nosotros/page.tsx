@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Heart, Users, Globe, Shield, Leaf, Target } from 'lucide-react';
 import { aboutES } from '@/lib/seo/page-metadata';
@@ -8,9 +9,9 @@ const VALUES = [
   { icon: Heart, title: 'Pasión por el bienestar', text: 'Creemos que todo el mundo merece desconectar, reconectar consigo mismo y vivir experiencias que transformen.' },
   { icon: Shield, title: 'Transparencia total', text: 'Desglosamos cada euro. Sin comisiones ocultas, sin letra pequeña. Tú sabes exactamente qué pagas y a quién.' },
   { icon: Users, title: 'Comunidad primero', text: 'Los organizadores son nuestro motor. Les damos herramientas gratuitas para que se centren en lo que mejor saben hacer.' },
-  { icon: Globe, title: 'España como destino', text: 'Ibiza, Mallorca, Sierra Nevada, Costa Brava... España tiene todo para ser la capital mundial de los retiros.' },
+  { icon: Globe, title: 'España como destino', text: 'Ibiza, Mallorca, Sierra Nevada, Costa Brava… España tiene todo para ser un referente de retiros y bienestar.' },
   { icon: Leaf, title: 'Impacto positivo', text: 'Promovemos retiros responsables, turismo sostenible y prácticas que cuidan tanto a las personas como al entorno.' },
-  { icon: Target, title: 'Excelencia accesible', text: 'Experiencias premium al alcance de todos. Desde escapadas de fin de semana hasta retiros inmersivos de dos semanas.' },
+  { icon: Target, title: 'Excelencia accesible', text: 'Experiencias que aportan valor al alcance de más personas. Desde escapadas de fin de semana hasta inmersivos más largos.' },
 ];
 
 const STATS = [
@@ -20,10 +21,6 @@ const STATS = [
   { value: '20 %', label: 'Cuota transparente al asistente' },
 ];
 
-const TEAM = [
-  { name: 'El equipo Retiru', role: 'Fundadores & Desarrollo', text: 'Somos un equipo pequeño pero apasionado, convencido de que la industria del bienestar en España necesitaba una plataforma hecha desde aquí, en nuestro idioma, y con nuestras reglas.' },
-];
-
 export default function SobreNosotrosPage() {
   return (
     <div>
@@ -31,11 +28,21 @@ export default function SobreNosotrosPage() {
       <section className="bg-gradient-to-b from-sage-50 to-white">
         <div className="container-wide py-16 md:py-20 text-center">
           <span className="inline-block text-xs font-bold uppercase tracking-[0.12em] text-sage-600 mb-4">Sobre nosotros</span>
-          <h1 className="font-serif text-[clamp(28px,4.5vw,48px)] text-foreground leading-[1.15] mb-4 max-w-3xl mx-auto">
-            Conectamos personas con experiencias que transforman
+          <h1 className="font-serif text-[clamp(28px,4.5vw,48px)] text-foreground leading-[1.15] mb-6 max-w-3xl mx-auto">
+            Andrea y Roi
           </h1>
+          <div className="relative w-[min(280px,85vw)] aspect-square mx-auto mb-8 rounded-2xl overflow-hidden shadow-lg ring-1 ring-sand-200/80">
+            <Image
+              src="/images/andrea_y_roi.jpg"
+              alt="Andrea y Roi, fundadores de Retiru"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 85vw, 280px"
+              priority
+            />
+          </div>
           <p className="text-[#7a6b5d] text-lg max-w-2xl mx-auto leading-relaxed">
-            Retiru nace para ser el puente entre quienes buscan desconectar y quienes crean espacios para hacerlo posible. Somos el marketplace de retiros y centros de yoga, meditación y ayurveda en español.
+            Somos una pareja de trotamundos unida por algo más que el destino: una profunda pasión por el bienestar, la comunidad y las experiencias que transforman.
           </p>
         </div>
       </section>
@@ -46,16 +53,25 @@ export default function SobreNosotrosPage() {
           <h2 className="font-serif text-2xl md:text-3xl mb-6">Nuestra historia</h2>
           <div className="space-y-4 text-[15px] text-[#7a6b5d] leading-[1.8]">
             <p>
-              España alberga más de 500 retiros activos, pero hasta ahora la mayoría se vendían en inglés, en plataformas extranjeras que cobraban entre un 20 % y un 30 % de comisión al organizador. Los creadores de experiencias españoles no tenían una herramienta en su idioma que los tratara bien.
+              Nos conocimos hace unos años, y desde entonces emprendimos juntos un camino de aprendizaje y descubrimiento. Yoga, ayurveda, cocina consciente… cada formación, cada encuentro y cada viaje ha ido dando forma a nuestra manera de entender la vida: más presente, más conectada, más auténtica.
             </p>
             <p>
-              Retiru nació de una pregunta sencilla: <strong>¿por qué no existe un "Airbnb de los retiros" hecho en España, en español, y que no cobre comisión al organizador?</strong>
+              El último año marcó un antes y un después. Vivimos en una furgoneta recorriendo Nueva Zelanda, colaborando en cursos de yoga, retiros y eventos comunitarios. Allí no solo aprendimos nuevas disciplinas, sino también nuevas formas de vivir, de compartir y de cuidarnos. Nos empapamos de ideas, de inspiración y de personas que, como nosotros, creen en un estilo de vida más consciente.
             </p>
             <p>
-              Nuestra respuesta fue crear una plataforma donde publicar es gratis, donde el organizador recibe el 80 % del precio directamente del asistente, y donde el panel de gestión es tan completo que nadie quiera volver a Excel y WhatsApp.
+              A nuestra vuelta, el viaje continuó en Kerala, India, cuna del ayurveda, donde nos formamos en masajes ayurvédicos tradicionales. Esta experiencia nos permitió profundizar aún más en el conocimiento del cuerpo, la energía y el equilibrio, integrando prácticas ancestrales que hoy forman parte de nuestra filosofía de vida.
+            </p>
+            <p className="font-medium text-foreground">
+              Con todo ese bagaje nace Retiru.
             </p>
             <p>
-              El asistente paga a Retiru solo un 20 % como cuota de intermediación y gestión de reserva. Eso es todo. Sin sorpresas, sin costes ocultos, con desglose siempre visible.
+              Creamos este espacio con la intención de explorar y dar visibilidad al mundo del bienestar en la península, conectando a personas con retiros, centros y experiencias que realmente aportan valor. Queremos acercar el wellness a más gente, porque creemos firmemente que cuidarse no debería ser un lujo ni algo secundario, sino una prioridad.
+            </p>
+            <p>
+              Retiru es también nuestro primer paso hacia un sueño mayor: algún día, no muy lejano, crear nuestro propio rincón wellness en la costa del Levante. Un lugar donde las personas puedan parar, reconectar y sentirse en casa.
+            </p>
+            <p>
+              Esto es solo el comienzo. Y nos encanta que estés aquí para formar parte del camino.
             </p>
           </div>
         </div>
@@ -95,21 +111,28 @@ export default function SobreNosotrosPage() {
       <section className="bg-sage-50">
         <div className="container-wide py-12">
           <h2 className="font-serif text-2xl md:text-3xl mb-8 text-center">El equipo</h2>
-          {TEAM.map((m) => (
-            <div key={m.name} className="max-w-2xl mx-auto text-center">
-              <div className="w-20 h-20 bg-sage-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <span className="text-3xl font-serif text-sage-700">R</span>
-              </div>
-              <h3 className="font-semibold text-lg text-foreground">{m.name}</h3>
-              <p className="text-sm text-sage-600 mb-3">{m.role}</p>
-              <p className="text-[15px] text-[#7a6b5d] leading-relaxed">{m.text}</p>
-            </div>
-          ))}
+          <div className="max-w-2xl mx-auto text-center">
+            <h3 className="font-semibold text-lg text-foreground">Andrea y Roi</h3>
+            <p className="text-sm text-sage-600 mb-3">Fundadores de Retiru</p>
+            <p className="text-[15px] text-[#7a6b5d] leading-relaxed">
+              Construimos Retiru desde la experiencia en el camino, con ganas de que el bienestar sea más visible y accesible en la península.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Modelo */}
+      <section className="container-wide py-12">
+        <div className="bg-sand-100 rounded-2xl p-8 md:p-10 max-w-3xl mx-auto">
+          <h2 className="font-serif text-2xl text-foreground mb-4">Nuestro modelo</h2>
+          <p className="text-[15px] text-[#7a6b5d] leading-[1.8]">
+            El asistente paga a Retiru un 20 % como cuota de gestión de reserva al reservar. El 80 % restante lo paga directamente al organizador. A los organizadores no les cobramos comisión: su panel, CRM, mensajería y analíticas son 100 % gratuitos.
+          </p>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="container-wide py-12">
+      <section className="container-wide pb-12">
         <div className="bg-gradient-to-br from-terracotta-600 to-terracotta-700 rounded-3xl p-10 md:p-14 text-center text-white">
           <h2 className="font-serif text-2xl md:text-3xl mb-3">¿Listo para tu próxima experiencia?</h2>
           <p className="text-white/80 mb-6 max-w-xl mx-auto">Descubre retiros y centros en los destinos más bonitos de España. Especializados en yoga, meditación y ayurveda.</p>
