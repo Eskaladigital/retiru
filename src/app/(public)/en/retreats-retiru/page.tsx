@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { categoriesEN } from '@/lib/seo/page-metadata';
 import { getPublishedRetreats, getCategories, getDestinations } from '@/lib/data';
+import { filterPublicRetreatCategories } from '@/lib/utils';
 
 export const metadata: Metadata = categoriesEN;
 
@@ -36,14 +37,14 @@ export default async function CategoriesPageEN() {
               Retreats &amp; getaways
             </h1>
             <p className="text-lg text-[#7a6b5d] leading-[1.7] mb-9 max-w-[480px]">
-              Discover yoga, meditation, nature, gastronomy retreats and much more across Spain.
+              Discover yoga, meditation and ayurveda retreats and events across Spain.
             </p>
           </div>
         </div>
       </section>
 
       <Suspense>
-        <EventsClientEN retreats={retreats} categories={categories} destinations={destinations} />
+        <EventsClientEN retreats={retreats} categories={filterPublicRetreatCategories(categories)} destinations={destinations} />
       </Suspense>
     </>
   );

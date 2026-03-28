@@ -43,10 +43,10 @@ export default async function BlogPageEN() {
         <div className="container-wide py-14 md:py-18 text-center">
           <span className="inline-block text-xs font-bold uppercase tracking-[0.12em] text-terracotta-600 mb-3">Blog</span>
           <h1 className="font-serif text-[clamp(32px,5vw,52px)] text-foreground leading-[1.15] mb-3">
-            Inspiration &amp; wellness
+            Yoga, meditation &amp; ayurveda
           </h1>
           <p className="text-[#7a6b5d] text-lg max-w-xl mx-auto leading-relaxed">
-            Guides, tips and destinations to make every retreat a transformative experience.
+            Guides and ideas for your practice and your retreats.
           </p>
         </div>
       </section>
@@ -151,7 +151,7 @@ export default async function BlogPageEN() {
       {/* Empty state */}
       {(!articles || articles.length === 0) && (
         <section className="container-wide mb-16 text-center py-12">
-          <p className="text-[#7a6b5d] text-lg">We&apos;ll be publishing articles about retreats and wellness soon.</p>
+          <p className="text-[#7a6b5d] text-lg">We&apos;ll be publishing articles about yoga, meditation and ayurveda soon.</p>
         </section>
       )}
 
@@ -160,7 +160,7 @@ export default async function BlogPageEN() {
         <div className="container-wide py-14">
           <div className="max-w-xl mx-auto text-center">
             <h2 className="font-serif text-2xl md:text-3xl mb-3">Don&apos;t miss a thing</h2>
-            <p className="text-[#7a6b5d] mb-6">Get the best wellness, retreat and destination articles delivered to your inbox every week.</p>
+            <p className="text-[#7a6b5d] mb-6">Get yoga, meditation and ayurveda articles in your inbox every week.</p>
             <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
               <input
                 type="email"

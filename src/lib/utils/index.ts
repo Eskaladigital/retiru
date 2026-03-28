@@ -110,60 +110,53 @@ export function getInitials(name: string): string {
 
 export const CENTER_TYPE_LABELS_ES: Record<string, string> = {
   yoga: 'Yoga',
-  pilates: 'Pilates',
   meditation: 'Meditación',
   ayurveda: 'Ayurveda',
-  spa: 'Spa',
-  wellness: 'Wellness',
-  yoga_meditation: 'Yoga + Meditación',
-  wellness_spa: 'Wellness + Spa',
-  multidisciplinary: 'Multidisciplinar',
 };
 
 export const CENTER_TYPE_LABELS_EN: Record<string, string> = {
   yoga: 'Yoga',
-  pilates: 'Pilates',
   meditation: 'Meditation',
   ayurveda: 'Ayurveda',
-  spa: 'Spa',
-  wellness: 'Wellness',
-  yoga_meditation: 'Yoga + Meditation',
-  wellness_spa: 'Wellness + Spa',
-  multidisciplinary: 'Multidisciplinary',
 };
 
-/** Tipos válidos para filtros (excluye retiro y otros no deseados) */
-export const VALID_CENTER_TYPE_SLUGS = [
-  'yoga', 'pilates', 'meditation', 'ayurveda', 'spa', 'wellness',
-  'yoga_meditation', 'wellness_spa', 'multidisciplinary',
-] as const;
+/** Tipos válidos para filtros del directorio (fase 1: tres disciplinas) */
+export const VALID_CENTER_TYPE_SLUGS = ['yoga', 'meditation', 'ayurveda'] as const;
 
-/** Opciones para el buscador/filtro de centros (ES) — orden alfabético */
+/** Categorías de retiro mostradas en home y filtros del listado público (fase inicial) */
+export const PUBLIC_RETREAT_CATEGORY_SLUGS = ['yoga', 'meditacion', 'ayurveda'] as const;
+
+export function filterPublicRetreatCategories<T extends { slug: string }>(categories: T[]): T[] {
+  const bySlug = new Map(categories.map((c) => [c.slug, c]));
+  return PUBLIC_RETREAT_CATEGORY_SLUGS.map((s) => bySlug.get(s)).filter((c): c is T => c != null);
+}
+
+/** Tipos de centro en buscadores y filtros del directorio público (fase inicial) */
+export const PUBLIC_DIRECTORY_CENTER_TYPE_SLUGS = ['yoga', 'meditation', 'ayurveda'] as const;
+
+export function centerFilterOptionsPublic(locale: 'es' | 'en'): { slug: string; label: string }[] {
+  const all = locale === 'es' ? CENTER_FILTER_OPTIONS_ES : CENTER_FILTER_OPTIONS_EN;
+  const first = all[0];
+  const rest = PUBLIC_DIRECTORY_CENTER_TYPE_SLUGS.map((slug) => all.find((o) => o.slug === slug)).filter(
+    (o): o is { slug: string; label: string } => o != null,
+  );
+  return [first, ...rest];
+}
+
+/** Opciones para el buscador/filtro de centros (ES) */
 export const CENTER_FILTER_OPTIONS_ES = [
   { slug: '', label: 'Todos los tipos' },
   { slug: 'ayurveda', label: 'Ayurveda' },
   { slug: 'meditation', label: 'Meditación' },
-  { slug: 'multidisciplinary', label: 'Multidisciplinar' },
-  { slug: 'pilates', label: 'Pilates' },
-  { slug: 'spa', label: 'Spa' },
-  { slug: 'wellness', label: 'Wellness' },
-  { slug: 'wellness_spa', label: 'Wellness + Spa' },
   { slug: 'yoga', label: 'Yoga' },
-  { slug: 'yoga_meditation', label: 'Yoga + Meditación' },
 ];
 
-/** Opciones para el buscador/filtro de centros (EN) — orden alfabético */
+/** Opciones para el buscador/filtro de centros (EN) */
 export const CENTER_FILTER_OPTIONS_EN = [
   { slug: '', label: 'All types' },
   { slug: 'ayurveda', label: 'Ayurveda' },
   { slug: 'meditation', label: 'Meditation' },
-  { slug: 'multidisciplinary', label: 'Multidisciplinary' },
-  { slug: 'pilates', label: 'Pilates' },
-  { slug: 'spa', label: 'Spa' },
-  { slug: 'wellness', label: 'Wellness' },
-  { slug: 'wellness_spa', label: 'Wellness + Spa' },
   { slug: 'yoga', label: 'Yoga' },
-  { slug: 'yoga_meditation', label: 'Yoga + Meditation' },
 ];
 
 /** Devuelve la etiqueta formateada para un tipo de centro */

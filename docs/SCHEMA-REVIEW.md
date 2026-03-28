@@ -261,7 +261,19 @@ ALTER TABLE organizer_profiles ADD COLUMN phone text;
 
 ---
 
-### 2.2 Product — MEDIA
+### 2.2 Centers — propuestas de usuario (✅ migraciones `012_centers_user_proposals.sql` + `013_centers_user_proposals_rls.sql`; 012 solo añade el enum, 013 el resto — requisito de PostgreSQL)
+
+| Campo / tipo | Uso |
+|--------------|-----|
+| `center_status` incluye `pending_review` | Centro propuesto por usuario, no visible en directorio público |
+| `submitted_by uuid` → `profiles(id)` | Quien envió la propuesta; al aprobar, admin asigna `claimed_by` y `status = active` |
+| RLS `ctr_submitted` | El proponente puede hacer `SELECT` de su fila en `pending_review` |
+
+**`center_type` (enum en `centers.type`):** tras la migración `014_center_type_three_disciplines.sql` solo existen `yoga`, `meditation`, `ayurveda`. Reclasificación masiva: `npm run centers:reclassify-three:update` (antes de aplicar 014 en producción, con el enum antiguo aún presente).
+
+---
+
+### 2.3 Product — MEDIA
 
 | Campo faltante | Página | Propuesta |
 |----------------|--------|-----------|

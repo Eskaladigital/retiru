@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { homeEN } from '@/lib/seo/page-metadata';
 import { ImageWithFallback } from '@/components/ui/image-with-fallback';
 import { getCategories, getDestinations, getPublishedRetreats } from '@/lib/data';
+import { filterPublicRetreatCategories } from '@/lib/utils';
 
 export const metadata: Metadata = homeEN;
 
@@ -14,14 +15,7 @@ export const metadata: Metadata = homeEN;
 const CAT_IMAGES: Record<string, string> = {
   yoga: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&q=80',
   meditacion: 'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=400&q=80',
-  naturaleza: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80',
-  detox: 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=400&q=80',
-  gastronomia: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&q=80',
-  aventura: 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=400&q=80',
-  wellness: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=400&q=80',
-  silencio: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&q=80',
-  'arte-creatividad': 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=400&q=80',
-  'desarrollo-personal': 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=400&q=80',
+  ayurveda: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400&q=80',
 };
 
 const DEST_IMAGES: Record<string, string> = {
@@ -67,7 +61,7 @@ export default async function HomePageEN() {
     getPublishedRetreats({ limit: 3 }),
   ]);
 
-  const cats = categories.slice(0, 6);
+  const cats = filterPublicRetreatCategories(categories);
   const dests = destinations.slice(0, 5);
   const popularRetreats = retreats.slice(0, 3);
 
@@ -81,26 +75,33 @@ export default async function HomePageEN() {
           </div>
           <div className="container-wide relative z-10 pt-24 pb-12 md:py-20">
             <div className="max-w-[620px] md:max-w-[900px]">
-              <div className="inline-flex items-center gap-2 bg-sage-50 border border-sage-200 text-sage-700 text-[13px] font-semibold px-4 py-1.5 rounded-full mb-6 animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)_forwards]">
-                <span className="w-1.5 h-1.5 bg-sage-400 rounded-full animate-[float_2s_ease-in-out_infinite]" />
-                500+ retreats in Spain
+              <div className="flex flex-wrap gap-2 mb-6 animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)_forwards]">
+                <div className="inline-flex items-center gap-2 bg-sage-50 border border-sage-200 text-sage-700 text-[13px] font-semibold px-4 py-1.5 rounded-full">
+                  <span className="w-1.5 h-1.5 bg-sage-400 rounded-full animate-[float_2s_ease-in-out_infinite]" />
+                  850+ centers in Spain
+                </div>
+                <div className="inline-flex items-center gap-2 bg-terracotta-50 border border-terracotta-200 text-terracotta-700 text-[13px] font-semibold px-4 py-1.5 rounded-full">
+                  <span className="w-1.5 h-1.5 bg-terracotta-400 rounded-full animate-[float_2s_ease-in-out_infinite_0.5s]" />
+                  500+ retreats
+                </div>
               </div>
-              <h1 className="font-serif text-[clamp(36px,6vw,60px)] leading-[1.2] tracking-[-0.01em] text-foreground mb-2 max-w-[560px] animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)_0.1s_forwards] opacity-0">
-                Find your{' '}
-                <span className="inline-flex items-baseline gap-[3px]">
-                  <span className="text-terracotta-700 tracking-[-0.02em]">retiru</span>
-                  <span className="w-[0.35em] h-[0.35em] bg-terracotta-600 rounded-full animate-[float_3s_ease-in-out_infinite] -mb-0.5" />
-                </span>
+              <h1 className="font-serif text-[clamp(36px,6vw,60px)] leading-[1.15] tracking-[-0.01em] text-foreground mb-2 max-w-[600px] animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)_0.1s_forwards] opacity-0">
+                <span className="text-terracotta-700 tracking-[-0.02em]">Yoga</span>,{' '}
+                <span className="text-sage-700 tracking-[-0.02em]">meditation</span>{' '}
+                &amp;{' '}
+                <span className="text-amber-700 tracking-[-0.02em]">ayurveda</span>{' '}
+                centers &amp; retreats
+                <span className="inline-block w-[0.3em] h-[0.3em] bg-terracotta-600 rounded-full animate-[float_3s_ease-in-out_infinite] ml-1 -mb-0.5" />
               </h1>
-              <p className="font-serif text-[clamp(18px,3vw,28px)] text-terracotta-600 tracking-wide mb-5 animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)_0.15s_forwards] opacity-0">
-                Retreats &amp; wellness centers
+              <p className="font-serif text-[clamp(18px,3vw,26px)] text-[#7a6b5d] tracking-wide mb-5 animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)_0.15s_forwards] opacity-0">
+                The directory and booking platform you need
               </p>
-              <p className="text-lg text-[#7a6b5d] leading-[1.7] mb-9 max-w-[480px] animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)_0.2s_forwards] opacity-0">
-                Discover yoga, meditation, nature and wellness experiences in the most special corners of Spain.
+              <p className="text-lg text-[#7a6b5d] leading-[1.7] mb-9 max-w-[500px] animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)_0.2s_forwards] opacity-0">
+                Find centers near you or book transformative retreats and getaways across Spain. Everything in one place.
               </p>
               <div className="bg-white border border-sand-300 rounded-2xl p-2 shadow-elevated animate-[scaleIn_0.6s_cubic-bezier(0.16,1,0.3,1)_0.4s_forwards] opacity-0">
                 <form action="/en/search" className="flex flex-col md:flex-row md:items-center gap-2">
-                  <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sand-100 transition-colors"><IconSearch /><input name="q" type="text" placeholder="Yoga, meditation, detox..." className="w-full bg-transparent text-[15px] text-foreground outline-none placeholder:text-[#a09383] font-sans" /></div>
+                  <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sand-100 transition-colors"><IconSearch /><input name="q" type="text" placeholder="Yoga, meditation, ayurveda..." className="w-full bg-transparent text-[15px] text-foreground outline-none placeholder:text-[#a09383] font-sans" /></div>
                   <div className="hidden md:block w-px h-8 bg-sand-200" />
                   <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sand-100 transition-colors"><svg className="w-5 h-5 text-[#a09383] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg><input name="destination" type="text" placeholder="Where?" className="w-full bg-transparent text-[15px] text-foreground outline-none placeholder:text-[#a09383] font-sans" /></div>
                   <div className="hidden md:block w-px h-8 bg-sand-200" />
@@ -119,14 +120,52 @@ export default async function HomePageEN() {
           </div>
         </section>
 
+        {/* TWO PILLARS — Centers + Retreats */}
+        <section className="py-12 md:py-16 bg-white">
+          <div className="container-wide">
+            <div className="text-center mb-8 md:mb-10">
+              <h2 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground">Two worlds, one place</h2>
+              <p className="text-base text-[#7a6b5d] mt-2 max-w-[520px] mx-auto">Retiru combines the largest center directory with a retreat booking platform</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto">
+              <Link href="/en/centers-retiru" className="group relative rounded-3xl overflow-hidden bg-gradient-to-br from-sage-800 to-sage-900 p-8 md:p-10 text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated">
+                <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+                <div className="relative z-10">
+                  <div className="w-12 h-12 bg-white/15 rounded-xl flex items-center justify-center mb-5">
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                  </div>
+                  <h3 className="font-serif text-2xl md:text-[28px] mb-2">Center directory</h3>
+                  <p className="text-[15px] text-white/80 leading-relaxed mb-5">850+ verified yoga, meditation and ayurveda centers across Spain. Find yours near home.</p>
+                  <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-white/90 group-hover:gap-2.5 transition-all">
+                    Explore centers <IconChevron />
+                  </span>
+                </div>
+              </Link>
+              <Link href="/en/retreats-retiru" className="group relative rounded-3xl overflow-hidden bg-gradient-to-br from-terracotta-600 to-terracotta-700 p-8 md:p-10 text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated">
+                <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+                <div className="relative z-10">
+                  <div className="w-12 h-12 bg-white/15 rounded-xl flex items-center justify-center mb-5">
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+                  </div>
+                  <h3 className="font-serif text-2xl md:text-[28px] mb-2">Retreats &amp; getaways</h3>
+                  <p className="text-[15px] text-white/80 leading-relaxed mb-5">Book yoga, meditation and ayurveda retreats with transparent pricing. Secure payments and instant confirmation.</p>
+                  <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-white/90 group-hover:gap-2.5 transition-all">
+                    Explore retreats <IconChevron />
+                  </span>
+                </div>
+              </Link>
+            </div>
+          </div>
+        </section>
+
         {/* CATEGORIES */}
-        <section className="py-12 md:py-16">
+        <section className="py-12 md:py-16 bg-sand-50">
           <div className="container-wide">
             <div className="flex items-end justify-between mb-6 md:mb-8 gap-4 flex-wrap">
-              <div><h2 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground">Explore by retreat type</h2><p className="text-base text-[#7a6b5d] mt-2 max-w-[480px]">Find the type of retreat that best connects with you</p></div>
+              <div><h2 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground">Explore by focus</h2><p className="text-base text-[#7a6b5d] mt-2 max-w-[480px]">Yoga, meditation or ayurveda — choose your path</p></div>
               <Link href="/en/retreats-retiru" className="text-[15px] font-semibold text-terracotta-600 inline-flex items-center gap-1.5 hover:gap-2.5 transition-all whitespace-nowrap">View all <IconChevron /></Link>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 lg:gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-5 max-w-4xl mx-auto">
               {cats.map((c) => (
                 <Link key={c.slug} href={`/en/retreats-retiru?tipo=${c.slug}`} className="group relative rounded-2xl overflow-hidden aspect-[3/4] cursor-pointer transition-transform duration-[400ms] hover:-translate-y-1">
                   <ImageWithFallback
@@ -139,6 +178,36 @@ export default async function HomePageEN() {
                   <div className="absolute bottom-0 left-0 right-0 p-5">
                     <div className="text-[28px] mb-2 drop-shadow-md">{c.icon || '✨'}</div>
                     <h3 className="font-serif text-lg text-white">{c.name_en || c.name_es}</h3>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* FEATURED CENTERS */}
+        <section className="py-12 md:py-16 bg-white">
+          <div className="container-wide">
+            <div className="flex items-end justify-between mb-6 md:mb-8 gap-4 flex-wrap">
+              <div><h2 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground">Featured centers</h2><p className="text-base text-[#7a6b5d] mt-2 max-w-[480px]">Yoga, meditation &amp; ayurveda directory across Spain</p></div>
+              <Link href="/en/centers-retiru" className="text-[15px] font-semibold text-terracotta-600 inline-flex items-center gap-1.5 hover:gap-2.5 transition-all whitespace-nowrap">View directory <IconChevron /></Link>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {[
+                { slug: 'yoga-sala-madrid', name: 'Yoga Sala Madrid', type: 'Yoga', city: 'Madrid', rating: 4.9, reviews: 87, services: ['Hatha', 'Vinyasa', 'Ashtanga'], img: 'https://images.unsplash.com/photo-1545389336-cf090694435e?w=500&q=80' },
+                { slug: 'espacio-zen-barcelona', name: 'Espacio Zen Barcelona', type: 'Meditation', city: 'Barcelona', rating: 4.8, reviews: 63, services: ['Zen', 'Mindfulness', 'Vipassana'], img: 'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=500&q=80' },
+                { slug: 'om-yoga-sevilla', name: 'Om Yoga Sevilla', type: 'Yoga', city: 'Seville', rating: 4.9, reviews: 112, services: ['Kundalini', 'Hatha', 'Training'], img: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=500&q=80' },
+              ].map((c) => (
+                <Link key={c.slug} href={`/en/center/${c.slug}`} className="group bg-white rounded-2xl overflow-hidden border border-sand-200 hover:shadow-elevated hover:-translate-y-1 transition-all duration-[350ms]">
+                  <div className="relative aspect-[16/10] overflow-hidden">
+                    <img src={c.img} alt={c.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <div className="absolute top-3 left-3 flex gap-1.5"><span className="text-[10px] font-bold uppercase tracking-wider bg-sage-700 text-white px-2 py-0.5 rounded-full">Center</span><span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm">{c.type}</span></div>
+                    <span className="absolute top-3 right-3 text-[10px] font-bold bg-amber-400 text-amber-900 px-2 py-0.5 rounded-full">⭐ Featured</span>
+                  </div>
+                  <div className="p-5">
+                    <div className="flex items-center justify-between mb-2 text-[13px]"><span className="text-[#7a6b5d] flex items-center gap-1"><IconPin /> {c.city}</span><span className="font-semibold flex items-center gap-1"><IconStar /> {c.rating} <span className="font-normal text-[#a09383]">({c.reviews})</span></span></div>
+                    <h3 className="font-serif text-lg leading-[1.3] mb-2">{c.name}</h3>
+                    <div className="flex flex-wrap gap-1">{c.services.map(s => <span key={s} className="text-[10px] px-2 py-0.5 rounded-full bg-sand-100 text-[#7a6b5d]">{s}</span>)}</div>
                   </div>
                 </Link>
               ))}
@@ -202,10 +271,10 @@ export default async function HomePageEN() {
         {/* HOW IT WORKS */}
         <section className="py-12 md:py-16 bg-white">
           <div className="container-wide">
-            <div className="text-center mb-8 md:mb-10"><h2 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground">How does it work?</h2><p className="text-base text-[#7a6b5d] mt-2">Booking your retreat is simple and transparent</p></div>
+            <div className="text-center mb-8 md:mb-10"><h2 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground">How does it work?</h2><p className="text-base text-[#7a6b5d] mt-2">Find centers near you or book your next retreat</p></div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-6">
               {[
-                { n: 1, t: 'Explore', d: 'Search hundreds of retreats by category, destination, date or price. Filter by what matters most to you.' },
+                { n: 1, t: 'Explore', d: 'Browse our center directory or discover retreats by destination, date or discipline.' },
                 { n: 2, t: 'Book your spot', d: 'Pay only 20% as a booking fee to secure your spot. 100% secure process with Stripe.' },
                 { n: 3, t: 'Coordinate', d: 'Chat directly with the organizer. Fill in the questionnaire and prepare your experience.' },
                 { n: 4, t: 'Live the experience', d: 'Pay the remaining 80% to the organizer before the retreat and enjoy a transformative experience.' },
@@ -263,41 +332,11 @@ export default async function HomePageEN() {
           </div>
         </section>
 
-        {/* WELLNESS CENTERS */}
-        <section className="py-12 md:py-16">
-          <div className="container-wide">
-            <div className="flex items-end justify-between mb-6 md:mb-8 gap-4 flex-wrap">
-              <div><h2 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground">Wellness centers</h2><p className="text-base text-[#7a6b5d] mt-2 max-w-[480px]">Yoga, meditation, wellness and spa across Spain</p></div>
-              <Link href="/en/centers-retiru" className="text-[15px] font-semibold text-terracotta-600 inline-flex items-center gap-1.5 hover:gap-2.5 transition-all whitespace-nowrap">View directory <IconChevron /></Link>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {[
-                { slug: 'yoga-sala-madrid', name: 'Yoga Sala Madrid', type: 'Yoga', city: 'Madrid', rating: 4.9, reviews: 87, services: ['Hatha', 'Vinyasa', 'Ashtanga'], img: 'https://images.unsplash.com/photo-1545389336-cf090694435e?w=500&q=80' },
-                { slug: 'espacio-zen-barcelona', name: 'Espacio Zen Barcelona', type: 'Meditation', city: 'Barcelona', rating: 4.8, reviews: 63, services: ['Zen', 'Mindfulness', 'Silence'], img: 'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=500&q=80' },
-                { slug: 'om-yoga-sevilla', name: 'Om Yoga Sevilla', type: 'Yoga', city: 'Seville', rating: 4.9, reviews: 112, services: ['Kundalini', 'Hatha', 'Training'], img: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=500&q=80' },
-              ].map((c) => (
-                <Link key={c.slug} href={`/en/center/${c.slug}`} className="group bg-white rounded-2xl overflow-hidden border border-sand-200 hover:shadow-elevated hover:-translate-y-1 transition-all duration-[350ms]">
-                  <div className="relative aspect-[16/10] overflow-hidden">
-                    <img src={c.img} alt={c.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                    <div className="absolute top-3 left-3 flex gap-1.5"><span className="text-[10px] font-bold uppercase tracking-wider bg-sage-700 text-white px-2 py-0.5 rounded-full">Center</span><span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm">{c.type}</span></div>
-                    <span className="absolute top-3 right-3 text-[10px] font-bold bg-amber-400 text-amber-900 px-2 py-0.5 rounded-full">⭐ Featured</span>
-                  </div>
-                  <div className="p-5">
-                    <div className="flex items-center justify-between mb-2 text-[13px]"><span className="text-[#7a6b5d] flex items-center gap-1"><IconPin /> {c.city}</span><span className="font-semibold flex items-center gap-1"><IconStar /> {c.rating} <span className="font-normal text-[#a09383]">({c.reviews})</span></span></div>
-                    <h3 className="font-serif text-lg leading-[1.3] mb-2">{c.name}</h3>
-                    <div className="flex flex-wrap gap-1">{c.services.map(s => <span key={s} className="text-[10px] px-2 py-0.5 rounded-full bg-sand-100 text-[#7a6b5d]">{s}</span>)}</div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* WELLNESS SHOP */}
         <section className="bg-sand-100 py-12 md:py-16">
           <div className="container-wide">
             <div className="flex items-end justify-between mb-6 md:mb-8 gap-4 flex-wrap">
-              <div><h2 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground">Wellness <span className="text-terracotta-600">shop</span></h2><p className="text-base text-[#7a6b5d] mt-2 max-w-[480px]">Curated products for your practice and wellbeing</p></div>
+              <div><h2 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground">Retiru <span className="text-terracotta-600">shop</span></h2><p className="text-base text-[#7a6b5d] mt-2 max-w-[480px]">Products for your yoga, meditation and ayurveda practice</p></div>
               <Link href="/en/shop" className="text-[15px] font-semibold text-terracotta-600 inline-flex items-center gap-1.5 hover:gap-2.5 transition-all whitespace-nowrap">View shop <IconChevron /></Link>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

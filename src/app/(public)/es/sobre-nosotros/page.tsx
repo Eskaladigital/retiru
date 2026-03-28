@@ -35,7 +35,7 @@ export default function SobreNosotrosPage() {
             Conectamos personas con experiencias que transforman
           </h1>
           <p className="text-[#7a6b5d] text-lg max-w-2xl mx-auto leading-relaxed">
-            Retiru nace para ser el puente entre quienes buscan desconectar y quienes crean espacios para hacerlo posible. Somos el marketplace de retiros y escapadas de bienestar líder en español.
+            Retiru nace para ser el puente entre quienes buscan desconectar y quienes crean espacios para hacerlo posible. Somos el marketplace de retiros y centros de yoga, meditación y ayurveda en español.
           </p>
         </div>
       </section>
@@ -112,7 +112,7 @@ export default function SobreNosotrosPage() {
       <section className="container-wide py-12">
         <div className="bg-gradient-to-br from-terracotta-600 to-terracotta-700 rounded-3xl p-10 md:p-14 text-center text-white">
           <h2 className="font-serif text-2xl md:text-3xl mb-3">¿Listo para tu próxima experiencia?</h2>
-          <p className="text-white/80 mb-6 max-w-xl mx-auto">Descubre cientos de retiros en los destinos más bonitos de España. Yoga, meditación, gastronomía, aventura y mucho más.</p>
+          <p className="text-white/80 mb-6 max-w-xl mx-auto">Descubre retiros y centros en los destinos más bonitos de España. Especializados en yoga, meditación y ayurveda.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/es/buscar" className="inline-flex items-center justify-center gap-2 bg-white text-terracotta-700 font-semibold px-8 py-3.5 rounded-xl hover:bg-white/90 transition-colors">
               Explorar retiros

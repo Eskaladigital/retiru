@@ -2,7 +2,7 @@
 const REVIEWS = [
   { name: 'Laura M.', event: 'Retiro Yoga Ibiza', date: 'May 2025', rating: 5, text: 'Una experiencia increíble. Los instructores son maravillosos.', replied: true },
   { name: 'Javier P.', event: 'Retiro Yoga Ibiza', date: 'Abr 2025', rating: 5, text: 'Superó todas mis expectativas. Volveré seguro.', replied: false },
-  { name: 'Sarah K.', event: 'Wellness Retreat', date: 'Mar 2025', rating: 4, text: 'Great retreat! Only wish it was a bit longer.', replied: false },
+  { name: 'Sarah K.', event: 'Retiro de meditación', date: 'Mar 2025', rating: 4, text: 'Great retreat! Only wish it was a bit longer.', replied: false },
 ];
 export default function ResenasPage() {
   return (

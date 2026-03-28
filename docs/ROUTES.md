@@ -89,7 +89,7 @@ Parámetros opcionales en registro: `?redirect=/ruta&claim=true` (redirige tras 
 | `/es/mensajes` | `app/es/(dashboard)/mensajes/page.tsx` | Bandeja de mensajes (+ botón soporte) |
 | `/es/mensajes/[id]` | `app/es/(dashboard)/mensajes/[id]/page.tsx` | Conversación individual (chat / soporte) |
 | `/es/perfil` | `app/es/(dashboard)/perfil/page.tsx` | Datos personales, avatar |
-| `/es/mis-centros` | `app/es/(dashboard)/mis-centros/page.tsx` | Centros reclamados |
+| `/es/mis-centros` | `app/es/(dashboard)/mis-centros/page.tsx` | Centros reclamados, propuestas pendientes, reclamar / proponer nuevo |
 | `/es/mis-eventos` | `app/es/(dashboard)/mis-eventos/page.tsx` | Eventos/retiros creados |
 | `/es/mis-eventos/nuevo` | `app/es/(dashboard)/mis-eventos/nuevo/page.tsx` | Wizard para crear evento |
 | `/es/mis-eventos/[id]` | `app/es/(dashboard)/mis-eventos/[id]/page.tsx` | Editar evento existente |
@@ -123,10 +123,11 @@ Cualquier usuario logueado (incluido admin) accede a estas secciones desde el me
 | Ruta | Descripción |
 |------|-------------|
 | `/es/centros-yoga/[slug]` | Centros de yoga en [ciudad] |
-| `/es/centros-spa/[slug]` | Centros de spa en [ciudad] |
+| `/es/centros-meditacion/[slug]` | Centros de meditación en [ciudad] |
+| `/es/centros-ayurveda/[slug]` | Centros de ayurveda en [ciudad] |
 | `/es/retiros-yoga/[slug]` | Retiros de yoga en [ciudad] |
 | `/es/retiros-gastronomia/[slug]` | Retiros gastronómicos en [ciudad] |
-| ... | Más tipos según categorías de la BD |
+| ... | Más tipos de retiro según categorías de la BD |
 
 Localidades y categorías vienen de la base de datos.
 
@@ -166,10 +167,11 @@ Localidades y categorías vienen de la base de datos.
 | Carpeta | Ejemplo URL |
 |---------|-------------|
 | `centros-yoga/[slug]/` | /centros-yoga/murcia |
-| `centros-spa/[slug]/` | /centros-spa/madrid |
+| `centros-meditacion/[slug]/` | /centros-meditacion/madrid |
+| `centros-ayurveda/[slug]/` | /centros-ayurveda/valencia |
 | `retiros-yoga/[slug]/` | /retiros-yoga/ibiza |
 | `retiros-gastronomia/[slug]/` | /retiros-gastronomia/madrid |
-| ... | Más según categorías BD |
+| ... | Más según categorías de retiros en BD |
 
 ---
 
@@ -199,6 +201,7 @@ Protegido por middleware (role=admin). No indexado en buscadores.
 | Método | Ruta | Descripción |
 |--------|------|-------------|
 | POST | `/api/centers/claim` | Reclamar un centro (auto-aprueba si email coincide) |
+| POST | `/api/centers/propose` | Proponer centro nuevo desde Google Maps (queda `pending_review`; usuario autenticado) |
 | GET | `/api/admin/center-claims` | Listar claims (admin) |
 | POST | `/api/admin/center-claims` | Aprobar/rechazar claim (admin) |
 | POST | `/api/admin/retreats` | Aprobar, rechazar, cancelar, archivar o eliminar retiro (admin) |

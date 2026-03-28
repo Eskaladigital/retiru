@@ -31,9 +31,10 @@ export type NotificationType =
   | 'payment_reminder' | 'payment_received' | 'sla_warning' | 'sla_expired'
   | 'review_received' | 'message_new' | 'retreat_approved' | 'retreat_rejected'
   | 'penalty_received' | 'general';
-export type CenterStatus = 'active' | 'inactive' | 'pending_payment' | 'expired';
+export type CenterStatus = 'active' | 'inactive' | 'pending_payment' | 'pending_review' | 'expired';
 export type CenterPlan = 'basic' | 'featured';
-export type CenterType = 'yoga' | 'pilates' | 'meditation' | 'ayurveda' | 'wellness' | 'spa' | 'yoga_meditation' | 'wellness_spa' | 'multidisciplinary';
+/** Tipos de centro (fase 1 directorio): solo estas tres disciplinas */
+export type CenterType = 'yoga' | 'meditation' | 'ayurveda';
 export type ProductStatus = 'active' | 'draft' | 'out_of_stock';
 export type OrderStatus = 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
 export type InvoiceStatus = 'draft' | 'issued' | 'paid' | 'voided';
@@ -483,6 +484,8 @@ export interface Center {
   review_count: number;
   view_count: number;
   claimed_by: string | null;
+  /** Usuario que propuso el centro (pendiente de revisión admin) */
+  submitted_by: string | null;
   created_at: string;
   updated_at: string;
   description_ai_generated_at: string | null;

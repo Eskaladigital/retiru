@@ -18,8 +18,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { provinceName } = await getCentersByProvince(slug);
   const name = provinceName || slug;
   return {
-    title: `Centros de bienestar en ${name} | Retiru`,
-    description: `Encuentra centros de yoga, meditación, wellness y spa en ${name}. Directorio verificado con reseñas reales.`,
+    title: `Centros de yoga, meditación y ayurveda en ${name} | Retiru`,
+    description: `Encuentra centros de yoga, meditación y ayurveda en ${name}. Directorio verificado con reseñas reales.`,
     alternates: { languages: { es: `/es/centros-retiru/${slug}`, en: `/en/centers-retiru/${slug}` } },
   };
 }
@@ -50,7 +50,7 @@ export default async function CentrosPorProvinciaPage({ params }: { params: Prom
           <div className="max-w-[620px]">
             <h1 className="font-serif text-[clamp(32px,5vw,48px)] text-foreground mb-4">Centros en {provinceName}</h1>
             <p className="text-lg text-[#7a6b5d] mb-6">
-              {centers.length} centro{centers.length !== 1 ? 's' : ''} de yoga, meditación, wellness y spa en {provinceName}
+              {centers.length} centro{centers.length !== 1 ? 's' : ''} de yoga, meditación y ayurveda en {provinceName}
             </p>
             <div className="bg-white border border-sand-300 rounded-2xl p-2 shadow-elevated max-w-2xl">
               <CentrosSearch />

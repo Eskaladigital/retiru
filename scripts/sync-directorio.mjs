@@ -133,16 +133,14 @@ function extractCity(address, province) {
   return province || 'España';
 }
 
-// ─── Mapear categoría CSV → center_type ────────────────────────────────────
 function mapType(categoria) {
   const c = (categoria || '').toLowerCase();
-  if (c.includes('spa')) return 'spa';
-  if (c.includes('pilates') && c.includes('yoga')) return 'yoga_meditation';
-  if (c.includes('pilates')) return 'yoga_meditation';
-  if (c.includes('yoga')) return 'yoga';
-  if (c.includes('ayurveda') || c.includes('meditación') || c.includes('meditation')) return 'meditation';
-  if (c.includes('wellness')) return 'wellness';
-  return 'multidisciplinary';
+  if (c.includes('ayurveda')) return 'ayurveda';
+  if (c.includes('meditación') || c.includes('meditation')) return 'meditation';
+  if (c.includes('spa')) return 'meditation';
+  if (c.includes('pilates') || c.includes('yoga')) return 'yoga';
+  if (c.includes('wellness')) return 'yoga';
+  return 'yoga';
 }
 
 // Construye el objeto de columnas del directorio desde una fila CSV

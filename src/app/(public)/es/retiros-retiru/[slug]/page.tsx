@@ -17,8 +17,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const dest = await getDestinationBySlug(slug);
   const name = dest?.name_es || slug;
   return {
-    title: `Retiros y escapadas en ${name} | Retiru`,
-    description: `Descubre retiros de yoga, meditación, naturaleza y bienestar en ${name}. Reserva tu plaza con transparencia total.`,
+    title: `Retiros en ${name} | Retiru`,
+    description: `Descubre retiros y eventos de yoga, meditación y ayurveda en ${name}. Reserva tu plaza con transparencia total.`,
     alternates: { languages: { es: `/es/retiros-retiru/${slug}`, en: `/en/retreats-retiru/${slug}` } },
   };
 }

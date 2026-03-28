@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { getCenterTypeLabel } from '@/lib/utils';
 
 const TYPES_FILTER = ['Todos', 'Retiros', 'Centros'];
-const CAT_FILTER = ['Yoga', 'Meditación', 'Wellness', 'Spa', 'Detox', 'Gastronomía', 'Aventura', 'Naturaleza'];
+const CAT_FILTER = ['Yoga', 'Meditación', 'Ayurveda'];
 
 export default function BuscarPage() {
   return <Suspense fallback={<div className="container-wide py-8 text-[#a09383]">Cargando...</div>}><BuscarContent /></Suspense>;
@@ -87,13 +87,13 @@ function BuscarContent() {
   return (
     <div className="container-wide py-8">
       <h1 className="font-serif text-3xl text-foreground mb-2">Buscar</h1>
-      <p className="text-[#7a6b5d] mb-6">Encuentra retiros y centros de bienestar en toda España</p>
+      <p className="text-[#7a6b5d] mb-6">Encuentra retiros y centros de yoga, meditación y ayurveda en toda España</p>
 
       {/* Search bar */}
       <div className="flex gap-3 mb-6">
         <div className="relative flex-1">
           <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#a09383]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          <input type="text" value={query} onChange={e => setQuery(e.target.value)} placeholder="Yoga en Madrid, retiro detox, spa Murcia..." className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all" />
+          <input type="text" value={query} onChange={e => setQuery(e.target.value)} placeholder="Yoga en Madrid, retiro de meditación, ayurveda..." className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all" />
         </div>
       </div>
 

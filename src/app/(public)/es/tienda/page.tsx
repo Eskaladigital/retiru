@@ -1,4 +1,4 @@
-// /es/tienda — Tienda online de productos wellness
+// /es/tienda — Tienda (yoga, meditación, ayurveda)
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { shopES } from '@/lib/seo/page-metadata';
@@ -9,9 +9,7 @@ export const metadata: Metadata = shopES;
 const CATEGORIES = [
   { slug: 'yoga', name: 'Yoga', icon: '🧘' },
   { slug: 'meditacion', name: 'Meditación', icon: '🧠' },
-  { slug: 'nutricion', name: 'Nutrición', icon: '🥤' },
-  { slug: 'ropa', name: 'Ropa & Accesorios', icon: '👕' },
-  { slug: 'bienestar', name: 'Bienestar', icon: '🌿' },
+  { slug: 'ayurveda', name: 'Ayurveda', icon: '🌿' },
 ];
 
 export default async function TiendaPage() {
@@ -25,8 +23,8 @@ export default async function TiendaPage() {
   return (
     <div className="container-wide py-12">
       <div className="mb-10">
-        <h1 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground mb-2">Tienda <span className="text-terracotta-600">wellness</span></h1>
-        <p className="text-[#7a6b5d] max-w-xl">Productos seleccionados para acompañarte en tu práctica, tu bienestar y tu día a día</p>
+        <h1 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground mb-2">Tienda <span className="text-terracotta-600">Retiru</span></h1>
+        <p className="text-[#7a6b5d] max-w-xl">Productos para tu práctica de yoga, meditación y ayurveda</p>
       </div>
 
       {/* Categories */}

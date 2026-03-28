@@ -127,7 +127,7 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
                 <div className="w-10 h-10 bg-sage-100 rounded-full flex items-center justify-center text-sm font-bold text-sage-700">ER</div>
                 <div>
                   <p className="text-sm font-semibold text-foreground">Equipo Retiru</p>
-                  <p className="text-xs text-[#a09383]">El equipo de contenido de Retiru, apasionados del bienestar y los viajes transformadores.</p>
+                  <p className="text-xs text-[#a09383]">El equipo de contenido de Retiru — yoga, meditación y ayurveda.</p>
                 </div>
               </div>
               <button className="flex items-center gap-1.5 text-sm text-[#7a6b5d] hover:text-terracotta-600 transition-colors">

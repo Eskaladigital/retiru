@@ -22,7 +22,19 @@ export type CenterRow = {
   cover_url?: string | null;
   images?: string[];
   email?: string | null;
+  submitted_by?: string | null;
 };
+
+function exportStatusLabel(status: string): string {
+  switch (status) {
+    case 'active': return 'Activo';
+    case 'pending_review': return 'Propuesta usuario';
+    case 'pending_payment': return 'Pago pendiente';
+    case 'inactive': return 'Inactivo';
+    case 'expired': return 'Caducado';
+    default: return status || '—';
+  }
+}
 
 function getMainImage(c: CenterRow): string {
   return c.cover_url || (Array.isArray(c.images) && c.images[0]) || '';
@@ -61,7 +73,7 @@ function exportCSV(list: CenterRow[]) {
     c.city || '',
     c.province || '',
     c.plan === 'featured' ? 'Destacado' : 'Básico',
-    c.status === 'active' ? 'Activo' : 'Pago pendiente',
+    exportStatusLabel(c.status),
     getMRR(c),
     hasDesc(c) ? 'Sí' : 'No',
   ]);
@@ -83,7 +95,7 @@ function exportExcel(list: CenterRow[]) {
     Ciudad: c.city || '',
     Provincia: c.province || '',
     Plan: c.plan === 'featured' ? 'Destacado' : 'Básico',
-    Estado: c.status === 'active' ? 'Activo' : 'Pago pendiente',
+    Estado: exportStatusLabel(c.status),
     MRR: getMRR(c),
     'Tiene descripción': hasDesc(c) ? 'Sí' : 'No',
   }));
@@ -127,6 +139,32 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
   };
 
   const handleToggleStatus = async (c: CenterRow) => {
+    if (c.status === 'pending_review') {
+      if (!window.confirm(
+        `¿Aprobar la propuesta "${c.name}"?\n\nSe publicará el centro y se asignará al usuario que la envió como titular.`,
+      )) return;
+      setToggling(c.id);
+      try {
+        const supabase = createClient();
+        const { error } = await supabase
+          .from('centers')
+          .update({
+            status: 'active',
+            claimed_by: c.submitted_by || null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', c.id);
+        if (error) {
+          alert(`Error al aprobar: ${error.message}`);
+        } else {
+          router.refresh();
+        }
+      } finally {
+        setToggling(null);
+      }
+      return;
+    }
+
     const isActive = c.status === 'active';
     const action = isActive ? 'despublicar' : 'publicar';
     if (!window.confirm(`¿${isActive ? 'Despublicar' : 'Publicar'} "${c.name}"?`)) return;
@@ -262,7 +300,10 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
         <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setPage(0); }} className={selectClasses}>
           <option value="">Todos los estados</option>
           <option value="active">Activo</option>
-          <option value="payment_pending">Pago pendiente</option>
+          <option value="pending_review">Propuesta de usuario</option>
+          <option value="pending_payment">Pago pendiente</option>
+          <option value="inactive">Inactivo</option>
+          <option value="expired">Caducado</option>
         </select>
         <select value={filterType} onChange={(e) => { setFilterType(e.target.value); setPage(0); }} className={selectClasses}>
           <option value="">Todos los tipos</option>
@@ -336,8 +377,14 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
                         {c.type ? <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-sage-50 text-sage-700">{getCenterTypeLabel(c.type)}</span> : '—'}
                       </td>
                       <td className="py-3 px-4 text-center">
-                        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${c.status === 'active' ? 'bg-sage-100 text-sage-700' : 'bg-red-100 text-red-600'}`}>
-                          {c.status === 'active' ? 'Activo' : 'Pendiente'}
+                        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                          c.status === 'active'
+                            ? 'bg-sage-100 text-sage-700'
+                            : c.status === 'pending_review'
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-red-100 text-red-600'
+                        }`}>
+                          {exportStatusLabel(c.status)}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-right font-semibold">{getMRR(c)}€</td>
@@ -357,19 +404,34 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
                           >
                             <Pencil size={15} />
                           </Link>
-                          <a
-                            href={`/es/centro/${c.slug}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="Ver ficha pública"
-                            className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-sage-600 hover:bg-sage-50 transition-colors"
-                          >
-                            <ExternalLink size={15} />
-                          </a>
+                          {c.status === 'active' ? (
+                            <a
+                              href={`/es/centro/${c.slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Ver ficha pública"
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-sage-600 hover:bg-sage-50 transition-colors"
+                            >
+                              <ExternalLink size={15} />
+                            </a>
+                          ) : (
+                            <span
+                              title="Ficha pública solo cuando el centro está activo"
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-[#ddd] cursor-not-allowed"
+                            >
+                              <ExternalLink size={15} />
+                            </span>
+                          )}
                           <button
                             onClick={() => handleToggleStatus(c)}
                             disabled={toggling === c.id}
-                            title={c.status === 'active' ? 'Despublicar' : 'Publicar'}
+                            title={
+                              c.status === 'pending_review'
+                                ? 'Aprobar propuesta y publicar'
+                                : c.status === 'active'
+                                  ? 'Despublicar'
+                                  : 'Publicar'
+                            }
                             className={`inline-flex items-center justify-center w-8 h-8 rounded-lg transition-colors disabled:opacity-40 ${
                               c.status === 'active'
                                 ? 'text-amber-500 hover:text-amber-700 hover:bg-amber-50'

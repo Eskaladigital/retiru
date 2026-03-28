@@ -8,35 +8,35 @@ import type { Metadata } from 'next';
 // ─── ES pages ───────────────────────────────────────────────────────────────
 
 export const homeES: Metadata = generatePageMetadata({
-  title: 'Retiru — Retiros, Centros de Bienestar y Tienda Wellness en España',
-  description: 'Descubre y reserva retiros de yoga, meditación, naturaleza y wellness en España. Directorio de centros y tienda de productos de bienestar. Sin comisiones para organizadores.',
+  title: 'Retiru — Retiros y centros de yoga, meditación y ayurveda en España',
+  description: 'Descubre y reserva retiros y eventos de yoga, meditación y ayurveda en España. Directorio de centros especializado y tienda. Sin comisiones para organizadores.',
   locale: 'es',
   path: '/es',
   altPath: '/en',
-  keywords: ['retiros españa', 'retiro yoga', 'retiro meditación', 'centros yoga', 'wellness españa', 'escapadas bienestar', 'productos wellness'],
+  keywords: ['retiros españa', 'retiro yoga', 'retiro meditación', 'ayurveda españa', 'centros yoga', 'retiros ayurveda'],
 });
 
 export const searchES: Metadata = generatePageMetadata({
-  title: 'Buscar retiros y centros de bienestar en España',
-  description: 'Busca y filtra retiros de yoga, meditación, detox, naturaleza y centros de bienestar en toda España. Reserva online con confirmación inmediata.',
+  title: 'Buscar retiros y centros de yoga, meditación y ayurveda',
+  description: 'Busca y filtra retiros y centros de yoga, meditación y ayurveda en toda España. Reserva online con confirmación inmediata.',
   locale: 'es',
   path: '/es/buscar',
   altPath: '/en/search',
-  keywords: ['buscar retiros', 'retiros yoga españa', 'retiros meditación', 'centros bienestar', 'buscar centros yoga'],
+  keywords: ['buscar retiros', 'retiros yoga españa', 'retiros meditación', 'ayurveda españa', 'buscar centros yoga'],
 });
 
 export const categoriesES: Metadata = generatePageMetadata({
-  title: 'Retiros y escapadas — Yoga, Meditación, Naturaleza, Detox y más',
-  description: 'Explora retiros y escapadas por tipo: yoga, meditación, naturaleza, gastronomía, detox, aventura, wellness y creatividad. Encuentra tu experiencia ideal en España.',
+  title: 'Retiros y eventos — Yoga, meditación y ayurveda',
+  description: 'Explora retiros y eventos de yoga, meditación y ayurveda en España. Encuentra tu experiencia ideal.',
   locale: 'es',
   path: '/es/retiros-retiru',
   altPath: '/en/retreats-retiru',
-  keywords: ['retiros escapadas', 'tipos retiros', 'retiro yoga', 'retiro meditación', 'retiro naturaleza', 'retiro detox'],
+  keywords: ['retiros yoga', 'retiros meditación', 'retiros ayurveda', 'eventos yoga españa'],
 });
 
 export const destinationsES: Metadata = generatePageMetadata({
   title: 'Destinos para retiros en España — Ibiza, Mallorca, Costa Brava y más',
-  description: 'Los mejores destinos para retiros y escapadas de bienestar en España: Ibiza, Mallorca, Costa Brava, Sierra Nevada, País Vasco, Lanzarote y más.',
+  description: 'Los mejores destinos para retiros de yoga, meditación y ayurveda en España: Ibiza, Mallorca, Costa Brava, Sierra Nevada, País Vasco, Lanzarote y más.',
   locale: 'es',
   path: '/es/destinos',
   altPath: '/en/destinations',
@@ -44,31 +44,31 @@ export const destinationsES: Metadata = generatePageMetadata({
 });
 
 export const centersES: Metadata = generatePageMetadata({
-  title: 'Directorio de centros de yoga, meditación, wellness y spa en España',
-  description: 'Encuentra los mejores centros de yoga, meditación, wellness y spa en toda España. Horarios, precios, reseñas y contacto directo.',
+  title: 'Directorio de centros de yoga, meditación y ayurveda en España',
+  description: 'Encuentra centros de yoga, meditación y ayurveda en toda España. Horarios, precios, reseñas y contacto directo.',
   locale: 'es',
   path: '/es/centros-retiru',
   altPath: '/en/centers-retiru',
-  keywords: ['centros yoga españa', 'centros meditación', 'centros wellness', 'spa españa', 'directorio yoga'],
+  keywords: ['centros yoga españa', 'centros meditación', 'ayurveda españa', 'directorio yoga'],
 });
 
 export const shopES: Metadata = generatePageMetadata({
-  title: 'Tienda wellness — Esterillas, accesorios y productos de bienestar',
-  description: 'Tienda online de productos de bienestar: esterillas de yoga, cojines de meditación, extractores de zumos, ropa orgánica y más. Envío gratis desde 50€.',
+  title: 'Tienda Retiru — Productos para yoga, meditación y ayurveda',
+  description: 'Tienda online: esterillas de yoga, cojines de meditación, aceites y accesorios para tu práctica. Envío gratis desde 50€.',
   locale: 'es',
   path: '/es/tienda',
   altPath: '/en/shop',
   ogType: 'website',
-  keywords: ['tienda yoga', 'esterilla yoga', 'accesorios meditación', 'productos wellness', 'tienda bienestar'],
+  keywords: ['tienda yoga', 'esterilla yoga', 'accesorios meditación', 'ayurveda productos', 'tienda retiru'],
 });
 
 export const forOrganizersES: Metadata = generatePageMetadata({
   title: 'Para centros y organizadores — Únete a Retiru gratis',
-  description: 'Si tienes un centro de bienestar, aparece en nuestro directorio gratis. Si organizas retiros, publica y gestiona tus retiros con un panel completo sin comisiones.',
+  description: 'Centros de yoga, meditación y ayurveda: aparece en nuestro directorio gratis. Organizadores: publica y gestiona retiros con un panel completo sin comisiones.',
   locale: 'es',
   path: '/es/para-organizadores',
   altPath: '/en/for-organizers',
-  keywords: ['publicar retiros', 'directorio centros yoga', 'organizar retiros', 'plataforma retiros gratis', 'centros wellness españa'],
+  keywords: ['publicar retiros', 'directorio centros yoga', 'organizar retiros', 'plataforma retiros gratis', 'ayurveda españa'],
 });
 
 export const helpES: Metadata = generatePageMetadata({
@@ -82,7 +82,7 @@ export const helpES: Metadata = generatePageMetadata({
 
 export const aboutES: Metadata = generatePageMetadata({
   title: 'Sobre Retiru — Nuestra misión y equipo',
-  description: 'Retiru es la plataforma líder para descubrir retiros, centros y productos de bienestar en España. Conoce nuestra misión, modelo y equipo.',
+  description: 'Retiru es la plataforma para descubrir retiros y centros de yoga, meditación y ayurveda en España. Conoce nuestra misión, modelo y equipo.',
   locale: 'es',
   path: '/es/sobre-nosotros',
   altPath: '/en/about',
@@ -97,12 +97,12 @@ export const contactES: Metadata = generatePageMetadata({
 });
 
 export const blogES: Metadata = generatePageMetadata({
-  title: 'Blog — Artículos sobre yoga, meditación, bienestar y retiros',
-  description: 'Lee nuestros artículos sobre yoga, meditación, bienestar, nutrición y experiencias de retiros en España.',
+  title: 'Blog — Yoga, meditación, ayurveda y retiros',
+  description: 'Artículos sobre yoga, meditación, ayurveda y experiencias de retiros en España.',
   locale: 'es',
   path: '/es/blog',
   altPath: '/en/blog',
-  keywords: ['blog yoga', 'blog meditación', 'blog bienestar', 'artículos retiros'],
+  keywords: ['blog yoga', 'blog meditación', 'ayurveda blog', 'artículos retiros'],
 });
 
 export const loginES: Metadata = generatePageMetadata({
@@ -126,26 +126,26 @@ export const registerES: Metadata = generatePageMetadata({
 // ─── EN pages ───────────────────────────────────────────────────────────────
 
 export const homeEN: Metadata = generatePageMetadata({
-  title: 'Retiru — Retreats, Wellness Centers & Shop in Spain',
-  description: 'Discover and book yoga, meditation, nature and wellness retreats in Spain. Wellness center directory and shop. Free for organizers.',
+  title: 'Retiru — Yoga, meditation & ayurveda retreats and centers in Spain',
+  description: 'Discover and book yoga, meditation and ayurveda retreats and events in Spain. Specialized center directory and shop. Free for organizers.',
   locale: 'en',
   path: '/en',
   altPath: '/es',
-  keywords: ['retreats spain', 'yoga retreat', 'meditation retreat', 'wellness centers', 'wellness spain', 'wellness getaway'],
+  keywords: ['retreats spain', 'yoga retreat', 'meditation retreat', 'ayurveda spain', 'yoga centers spain'],
 });
 
 export const searchEN: Metadata = generatePageMetadata({
-  title: 'Search retreats and wellness centers in Spain',
-  description: 'Search and filter yoga, meditation, detox, nature retreats and wellness centers across Spain. Book online with instant confirmation.',
+  title: 'Search yoga, meditation and ayurveda retreats and centers',
+  description: 'Search and filter yoga, meditation and ayurveda retreats and centers across Spain. Book online with instant confirmation.',
   locale: 'en',
   path: '/en/search',
   altPath: '/es/buscar',
-  keywords: ['search retreats', 'yoga retreats spain', 'meditation retreats', 'wellness centers', 'find yoga centers'],
+  keywords: ['search retreats', 'yoga retreats spain', 'meditation retreats', 'ayurveda spain', 'find yoga centers'],
 });
 
 export const categoriesEN: Metadata = generatePageMetadata({
-  title: 'Retreats & getaways — Yoga, Meditation, Nature, Detox & more',
-  description: 'Explore retreats and getaways by type: yoga, meditation, nature, gastronomy, detox, adventure, wellness and creativity. Find your ideal experience in Spain.',
+  title: 'Retreats & events — Yoga, meditation & ayurveda',
+  description: 'Explore yoga, meditation and ayurveda retreats and events in Spain. Find your ideal experience.',
   locale: 'en',
   path: '/en/retreats-retiru',
   altPath: '/es/retiros-retiru',
@@ -153,23 +153,23 @@ export const categoriesEN: Metadata = generatePageMetadata({
 
 export const destinationsEN: Metadata = generatePageMetadata({
   title: 'Retreat destinations in Spain — Ibiza, Mallorca, Costa Brava & more',
-  description: 'The best destinations for retreats and wellness getaways in Spain: Ibiza, Mallorca, Costa Brava, Sierra Nevada, Basque Country, Lanzarote and more.',
+  description: 'The best destinations for yoga, meditation and ayurveda retreats in Spain: Ibiza, Mallorca, Costa Brava, Sierra Nevada, Basque Country, Lanzarote and more.',
   locale: 'en',
   path: '/en/destinations',
   altPath: '/es/destinos',
 });
 
 export const centersEN: Metadata = generatePageMetadata({
-  title: 'Yoga, meditation, wellness & spa centers directory in Spain',
-  description: 'Find the best yoga, meditation, wellness and spa centers across Spain. Schedules, prices, reviews and direct contact.',
+  title: 'Yoga, meditation & ayurveda centers directory in Spain',
+  description: 'Find yoga, meditation and ayurveda centers across Spain. Schedules, prices, reviews and direct contact.',
   locale: 'en',
   path: '/en/centers-retiru',
   altPath: '/es/centros-retiru',
 });
 
 export const shopEN: Metadata = generatePageMetadata({
-  title: 'Wellness shop — Mats, accessories & wellness products',
-  description: 'Online wellness product store: yoga mats, meditation cushions, juicers, organic apparel and more. Free shipping from 50€.',
+  title: 'Retiru shop — Yoga, meditation & ayurveda products',
+  description: 'Online store: yoga mats, meditation cushions, oils and accessories for your practice. Free shipping from 50€.',
   locale: 'en',
   path: '/en/shop',
   altPath: '/es/tienda',
@@ -177,7 +177,7 @@ export const shopEN: Metadata = generatePageMetadata({
 
 export const forOrganizersEN: Metadata = generatePageMetadata({
   title: 'For centers & organizers — Join Retiru for free',
-  description: 'If you have a wellness center, appear in our directory for free. If you organize retreats, publish and manage your retreats with a complete panel. No commissions.',
+  description: 'Yoga, meditation and ayurveda centers: list in our directory for free. Organizers: publish and manage retreats with a complete panel. No commissions.',
   locale: 'en',
   path: '/en/for-organizers',
   altPath: '/es/para-organizadores',
@@ -193,7 +193,7 @@ export const helpEN: Metadata = generatePageMetadata({
 
 export const aboutEN: Metadata = generatePageMetadata({
   title: 'About Retiru — Our mission and team',
-  description: 'Retiru is the leading platform for discovering retreats, centers and wellness products in Spain. Learn about our mission, model and team.',
+  description: 'Retiru is the platform for discovering yoga, meditation and ayurveda retreats and centers in Spain. Learn about our mission, model and team.',
   locale: 'en',
   path: '/en/about',
   altPath: '/es/sobre-nosotros',
@@ -208,8 +208,8 @@ export const contactEN: Metadata = generatePageMetadata({
 });
 
 export const blogEN: Metadata = generatePageMetadata({
-  title: 'Blog — Articles about yoga, meditation, wellness and retreats',
-  description: 'Read our articles about yoga, meditation, wellness, nutrition and retreat experiences in Spain.',
+  title: 'Blog — Yoga, meditation, ayurveda and retreats',
+  description: 'Articles about yoga, meditation, ayurveda and retreat experiences in Spain.',
   locale: 'en',
   path: '/en/blog',
   altPath: '/es/blog',

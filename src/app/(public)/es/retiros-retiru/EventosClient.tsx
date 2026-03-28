@@ -122,7 +122,7 @@ export default function EventosClient({ retreats, categories, destinations }: Ev
             type="text"
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Buscar por nombre, destino, tipo de retiro..."
+            placeholder="Buscar por nombre, destino, yoga, meditación, ayurveda..."
             className="w-full pl-11 pr-4 py-3 rounded-xl border border-sand-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-terracotta-300 focus:border-terracotta-400 transition-all"
           />
           {query && (
@@ -275,9 +275,9 @@ export default function EventosClient({ retreats, categories, destinations }: Ev
       <div className="mt-12 rounded-2xl border border-sage-200 bg-sage-50 p-6 md:p-8 flex flex-col md:flex-row items-center gap-6">
         <div className="flex-1">
           <p className="text-xs font-bold uppercase tracking-widest text-sage-600 mb-2">También te puede interesar</p>
-          <h3 className="font-serif text-xl md:text-2xl text-foreground mb-2">¿Tienes un centro de bienestar?</h3>
+          <h3 className="font-serif text-xl md:text-2xl text-foreground mb-2">¿Tienes un centro de yoga, meditación o ayurveda?</h3>
           <p className="text-sm text-[#7a6b5d] leading-relaxed max-w-lg">
-            Si además de organizar retiros tienes un centro de yoga, meditación, wellness o spa,
+            Si además de organizar retiros tienes un centro de yoga, meditación o ayurveda,
             puedes aparecer en nuestro directorio para que miles de personas te encuentren.
           </p>
         </div>
@@ -292,8 +292,8 @@ export default function EventosClient({ retreats, categories, destinations }: Ev
 
       {/* CTA */}
       <div className="mt-6 bg-gradient-to-br from-terracotta-600 to-terracotta-700 rounded-2xl p-8 md:p-10 text-white text-center">
-        <h2 className="font-serif text-2xl mb-3">¿Organizas retiros o escapadas?</h2>
-        <p className="text-white/80 max-w-lg mx-auto mb-6">Publica tus retiros gratis en Retiru. Panel de gestión completo, sin comisiones.</p>
+        <h2 className="font-serif text-2xl mb-3">¿Organizas retiros de yoga, meditación o ayurveda?</h2>
+        <p className="text-white/80 max-w-lg mx-auto mb-6">Publica tus retiros y eventos gratis en Retiru. Panel de gestión completo, sin comisiones.</p>
         <Link href="/es/para-organizadores#organizadores" className="inline-flex bg-white text-terracotta-700 font-bold px-8 py-3 rounded-xl hover:-translate-y-0.5 hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)] transition-all text-sm">
           Empieza gratis
         </Link>

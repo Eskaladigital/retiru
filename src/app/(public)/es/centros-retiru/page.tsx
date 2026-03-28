@@ -18,7 +18,7 @@ export default async function CentrosPage() {
         <div className="absolute inset-0 z-0">
           <img
             src="https://images.unsplash.com/photo-1545389336-cf090694435e?w=1920&q=80"
-            alt="Centro de yoga y bienestar"
+            alt="Centro de yoga y meditación"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-[rgba(254,253,251,0.95)] via-[rgba(254,253,251,0.85)] md:via-[rgba(254,253,251,0.85)] to-[rgba(254,253,251,0.2)] max-md:bg-gradient-to-b max-md:from-[rgba(254,253,251,0.93)] max-md:via-[rgba(254,253,251,0.8)] max-md:to-[rgba(254,253,251,0.4)]" />
@@ -33,7 +33,7 @@ export default async function CentrosPage() {
               Directorio de centros
             </h1>
             <p className="text-lg text-[#7a6b5d] leading-[1.7] mb-9 max-w-[480px]">
-              Encuentra los mejores centros de yoga, meditación, wellness y spa en toda España.
+              Encuentra centros de yoga, meditación y ayurveda en toda España.
             </p>
             <div className="bg-white border border-sand-300 rounded-2xl p-2 shadow-elevated">
               <CentrosSearch />

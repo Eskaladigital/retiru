@@ -16,14 +16,14 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: 'Retiru — Retreats, Centers & Wellness in Spain',
+    default: 'Retiru — Yoga, meditation & ayurveda retreats and centers',
     template: '%s | Retiru',
   },
-  description: 'Discover and book the best yoga, meditation, nature and wellness retreats in Spain. Wellness center directory and shop. Free for organizers.',
+  description: 'Discover and book yoga, meditation and ayurveda retreats and events in Spain. Specialized center directory and shop. Free for organizers.',
   metadataBase: new URL(SITE_URL),
   applicationName: 'Retiru',
   authors: [{ name: 'Retiru', url: SITE_URL }],
-  keywords: ['retreats spain', 'yoga retreat', 'meditation retreat', 'wellness getaway', 'yoga centers spain', 'wellness spain', 'nature retreats', 'mindfulness', 'spa spain'],
+  keywords: ['retreats spain', 'yoga retreat', 'meditation retreat', 'ayurveda spain', 'yoga centers spain', 'meditation spain', 'ayurveda retreat'],
   alternates: {
     canonical: `${SITE_URL}/en`,
     languages: {
@@ -37,15 +37,15 @@ export const metadata: Metadata = {
     locale: 'en_US',
     alternateLocale: 'es_ES',
     siteName: 'Retiru',
-    title: 'Retiru — Retreats, Centers & Wellness in Spain',
-    description: 'Discover and book the best yoga, meditation, nature and wellness retreats in Spain.',
+    title: 'Retiru — Yoga, meditation & ayurveda retreats and centers',
+    description: 'Discover and book yoga, meditation and ayurveda retreats and events in Spain.',
     url: `${SITE_URL}/en`,
-    images: [{ url: `${SITE_URL}/og-default.jpg`, width: 1200, height: 630, alt: 'Retiru — Retreats & Wellness in Spain' }],
+    images: [{ url: `${SITE_URL}/og-default.jpg`, width: 1200, height: 630, alt: 'Retiru — Yoga, meditation & ayurveda' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Retiru — Retreats, Centers & Wellness in Spain',
-    description: 'Discover and book the best yoga, meditation, nature and wellness retreats in Spain.',
+    title: 'Retiru — Yoga, meditation & ayurveda retreats and centers',
+    description: 'Discover and book yoga, meditation and ayurveda retreats and events in Spain.',
     site: '@retiru_es',
     creator: '@retiru_es',
     images: [`${SITE_URL}/og-default.jpg`],

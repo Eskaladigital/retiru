@@ -27,12 +27,12 @@ const ORGANIZER_FEATURES = [
 
 const FAQS = [
   { q: 'Is it really free for organizers?', a: 'Yes. We don\'t charge any commission or subscription to organizers. Our revenue comes from the 20% the attendee pays as a booking management fee.' },
-  { q: 'How does the center directory work?', a: 'Your center appears in our directory with a full profile: photos, services, hours, location and reviews. Users can find you by searching by area, discipline type or name. If your center is already on Retiru, you can claim it from its listing to manage it yourself.' },
+  { q: 'How does the center directory work?', a: 'Your center appears in our directory with a full profile: photos, services, hours, location and reviews. Users can find you by area, discipline type or name. If your center is already on Retiru, claim it from its listing. If it is not listed, logged-in users can propose it from "My centers"; our team reviews it before publication.' },
   { q: 'How much does a directory listing cost?', a: 'We currently offer 6 months of free membership to selected centers. After that period, we\'ll assess the impact with you and you can continue with an affordable monthly fee.' },
   { q: 'Can I be both a center and an organizer?', a: 'Yes. If you\'re a center that organizes retreats or events, you can have your directory listing and also publish events with all the panel tools.' },
   { q: 'How do I get paid?', a: 'When someone books a retreat, they pay 20% to Retiru. You collect the remaining 80% directly from the attendee before the retreat, by bank transfer or your preferred method.' },
   { q: 'Do I need to get verified to publish retreats?', a: 'No documents required. Simply create your account, create your first retreat and our team will review it within 24-48h. Once your first retreat is approved, you become a verified organizer and can keep publishing.' },
-  { q: 'How do I claim my center?', a: 'If your center is already in our directory, search for it on Retiru and click "Claim this center". If you don\'t have an account, we\'ll guide you to create one. Our team will verify you\'re the owner and grant you access to edit your listing.' },
+  { q: 'How do I claim or add my center?', a: 'If your center is already listed, search for it and use "Claim this center" (or sign up first). If it is not listed, sign in, go to "My centers", choose "Propose new center" and pick the place in Google Maps; we review the proposal and, once approved, you can manage the listing.' },
   { q: 'What if an attendee cancels?', a: 'You configure your cancellation policy per retreat. Retiru handles refunds automatically according to that policy.' },
 ];
 
@@ -51,7 +51,7 @@ export default function ForOrganizersPageEN() {
             <span className="text-terracotta-400">with Retiru</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-sage-300 leading-relaxed">
-            Whether you run a yoga, meditation, wellness or spa center, or you organize retreats and getaways,
+            Whether you run a yoga, meditation or ayurveda center, or you organize retreats and events in that space,
             Retiru is your platform. No commissions. No subscriptions.
           </p>
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
@@ -76,7 +76,7 @@ export default function ForOrganizersPageEN() {
             Put your center on the map
           </h2>
           <p className="text-[#7a6b5d] max-w-2xl mb-12">
-            If you have a yoga, meditation, pilates, wellness, spa or any wellness-focused space,
+            If you have a yoga, meditation or ayurveda center,
             we include you in our directory so thousands of people can find you.
           </p>
 
@@ -95,7 +95,7 @@ export default function ForOrganizersPageEN() {
               <h3 className="font-serif text-2xl font-bold mb-3">Is your center already on Retiru?</h3>
               <p className="text-sage-300 leading-relaxed max-w-lg">
                 Search for your center in our directory and claim it to manage your listing, respond to reviews and publish events.
-                Not listed yet? Contact us and we&apos;ll add you for free.
+                Not listed yet? Sign in and propose it from &quot;My centers&quot; (we review before publishing) or contact us for help.
               </p>
             </div>
             <div className="flex flex-col gap-3 shrink-0">
@@ -115,13 +115,13 @@ export default function ForOrganizersPageEN() {
         <div className="container-wide">
           <div className="flex items-center gap-3 mb-2">
             <span className="text-2xl">✨</span>
-            <span className="text-sm font-bold uppercase tracking-widest text-terracotta-500">For retreat organizers</span>
+            <span className="text-sm font-bold uppercase tracking-widest text-terracotta-500">For organizers</span>
           </div>
           <h2 className="font-serif text-3xl font-bold md:text-4xl mb-3">
-            Publish your retreats <span className="text-terracotta-600">100% free</span>
+            Publish your retreats or events <span className="text-terracotta-600">100% free</span>
           </h2>
           <p className="text-[#7a6b5d] max-w-2xl mb-12">
-            If you create retreats, getaways, workshops or wellness experiences, Retiru gives you a
+            If you create yoga, meditation or ayurveda retreats and events, Retiru gives you a
             complete management panel without charging you a single euro.
           </p>
 
@@ -175,8 +175,8 @@ export default function ForOrganizersPageEN() {
           <h2 className="mb-12 text-center font-serif text-3xl font-bold">How does it work for organizers?</h2>
           <div className="space-y-8">
             {[
-              { s: '01', t: 'Create your account', d: 'Sign up with your email and verify your account. Any user can create retreats from their dashboard.' },
-              { s: '02', t: 'Create your first retreat', d: 'Use our step-by-step wizard to create your retreat or getaway. Add photos, schedule, prices and configure your cancellation policy.' },
+              { s: '01', t: 'Create your account', d: 'Sign up with your email and verify your account. Any user can create retreats or other events from their dashboard.' },
+              { s: '02', t: 'Create your first retreat or event', d: 'Use our step-by-step wizard to create your retreat or another event. Add photos, schedule, prices and configure your cancellation policy.' },
               { s: '03', t: 'We review & publish', d: 'Our team reviews your first retreat within 24-48h to ensure quality. Once approved, it goes live and you become a verified organizer.' },
               { s: '04', t: 'Receive bookings & get paid', d: 'Attendees pay 20% to Retiru to secure their spot. You collect the remaining 80% directly from the attendee before the retreat. No intermediaries.' },
             ].map(({ s, t, d }) => (
@@ -215,7 +215,7 @@ export default function ForOrganizersPageEN() {
         <div className="container-narrow">
           <h2 className="font-serif text-3xl md:text-4xl font-bold">Join Retiru</h2>
           <p className="mx-auto mt-4 max-w-lg text-terracotta-100">
-            Whether you&apos;re a wellness center or a retreat organizer, Retiru gives you the tools
+            Whether you&apos;re a yoga, meditation or ayurveda center or an organizer in that space, Retiru gives you the tools
             and visibility you need. Free.
           </p>
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">

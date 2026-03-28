@@ -1,4 +1,4 @@
-// /en/shop — Wellness shop (EN)
+// /en/shop — Shop (yoga, meditation, ayurveda)
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { shopEN } from '@/lib/seo/page-metadata';
@@ -9,9 +9,7 @@ export const metadata: Metadata = shopEN;
 const CATEGORIES = [
   { slug: 'yoga', name: 'Yoga', icon: '🧘' },
   { slug: 'meditation', name: 'Meditation', icon: '🧠' },
-  { slug: 'nutrition', name: 'Nutrition', icon: '🥤' },
-  { slug: 'apparel', name: 'Apparel & Accessories', icon: '👕' },
-  { slug: 'wellness', name: 'Wellness', icon: '🌿' },
+  { slug: 'ayurveda', name: 'Ayurveda', icon: '🌿' },
 ];
 
 export default async function ShopPageEN() {
@@ -25,8 +23,8 @@ export default async function ShopPageEN() {
   return (
     <div className="container-wide py-12">
       <div className="mb-10">
-        <h1 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground mb-2">Wellness <span className="text-terracotta-600">shop</span></h1>
-        <p className="text-[#7a6b5d] max-w-xl">Curated products to support your practice, wellbeing and daily life</p>
+        <h1 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground mb-2">Retiru <span className="text-terracotta-600">shop</span></h1>
+        <p className="text-[#7a6b5d] max-w-xl">Products for your yoga, meditation and ayurveda practice</p>
       </div>
 
       <div className="flex flex-wrap gap-2 mb-8">

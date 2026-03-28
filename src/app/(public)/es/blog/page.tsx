@@ -38,10 +38,10 @@ export default async function BlogPage() {
         <div className="container-wide py-14 md:py-18 text-center">
           <span className="inline-block text-xs font-bold uppercase tracking-[0.12em] text-terracotta-600 mb-3">Blog</span>
           <h1 className="font-serif text-[clamp(32px,5vw,52px)] text-foreground leading-[1.15] mb-3">
-            Inspiración y bienestar
+            Yoga, meditación y ayurveda
           </h1>
           <p className="text-[#7a6b5d] text-lg max-w-xl mx-auto leading-relaxed">
-            Guías, consejos y destinos para que cada retiro sea una experiencia transformadora.
+            Guías, consejos e ideas para tu práctica y tus retiros.
           </p>
         </div>
       </section>
@@ -146,7 +146,7 @@ export default async function BlogPage() {
       {/* Empty state */}
       {(!articles || articles.length === 0) && (
         <section className="container-wide mb-16 text-center py-12">
-          <p className="text-[#7a6b5d] text-lg">Próximamente publicaremos artículos sobre retiros y bienestar.</p>
+          <p className="text-[#7a6b5d] text-lg">Próximamente publicaremos artículos sobre yoga, meditación y ayurveda.</p>
         </section>
       )}
 
@@ -155,7 +155,7 @@ export default async function BlogPage() {
         <div className="container-wide py-14">
           <div className="max-w-xl mx-auto text-center">
             <h2 className="font-serif text-2xl md:text-3xl mb-3">No te pierdas nada</h2>
-            <p className="text-[#7a6b5d] mb-6">Recibe cada semana los mejores artículos sobre bienestar, retiros y destinos directamente en tu email.</p>
+            <p className="text-[#7a6b5d] mb-6">Recibe cada semana artículos sobre yoga, meditación y ayurveda en tu email.</p>
             <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
               <input
                 type="email"

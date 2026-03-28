@@ -122,17 +122,15 @@ function inferServicesFromCategoria(categoria) {
   return ['Yoga', 'Pilates', 'Wellness'];
 }
 
-// ─── Mapear categoría CSV → center_type ────────────────────────────────────
+// ─── Mapear categoría CSV → center_type (solo yoga | meditation | ayurveda) ─
 function mapType(categoria) {
   const c = (categoria || '').toLowerCase();
-  if (c.includes('spa')) return 'spa';
   if (c.includes('ayurveda')) return 'ayurveda';
-  if (c.includes('pilates') && c.includes('yoga')) return 'yoga_meditation';
-  if (c.includes('pilates')) return 'pilates';
-  if (c.includes('yoga')) return 'yoga';
   if (c.includes('meditación') || c.includes('meditation')) return 'meditation';
-  if (c.includes('wellness')) return 'wellness';
-  return 'multidisciplinary';
+  if (c.includes('spa')) return 'meditation';
+  if (c.includes('pilates') || c.includes('yoga')) return 'yoga';
+  if (c.includes('wellness')) return 'yoga';
+  return 'yoga';
 }
 
 // ─── Construir objeto centro con todas las columnas del CSV (para INSERT) ─────

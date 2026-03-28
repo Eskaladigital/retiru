@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AddCenterModal } from './AddCenterModal';
+import { AddCenterFromMapsModal } from '@/components/centers/AddCenterFromMapsModal';
 
 export function AddCenterButton() {
   const [open, setOpen] = useState(false);
@@ -16,10 +16,11 @@ export function AddCenterButton() {
       >
         + Añadir centro
       </button>
-      <AddCenterModal
+      <AddCenterFromMapsModal
         open={open}
         onClose={() => setOpen(false)}
         onCreated={() => router.refresh()}
+        variant="admin"
       />
     </>
   );

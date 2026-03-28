@@ -2,6 +2,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
 
+const CENTER_TYPES_ALLOWED = new Set(['yoga', 'meditation', 'ayurveda']);
+
+function normalizeCenterType(t: unknown): 'yoga' | 'meditation' | 'ayurveda' {
+  const s = typeof t === 'string' ? t : '';
+  return CENTER_TYPES_ALLOWED.has(s) ? (s as 'yoga' | 'meditation' | 'ayurveda') : 'yoga';
+}
+
 function slugify(text: string): string {
   return text
     .toLowerCase()
@@ -73,7 +80,7 @@ export async function POST(request: NextRequest) {
     longitude: longitude || null,
     website: website || null,
     phone: phone || null,
-    type: type || 'multidisciplinary',
+    type: normalizeCenterType(type),
     status: 'active',
     plan: 'basic',
     google_place_id: google_place_id || null,

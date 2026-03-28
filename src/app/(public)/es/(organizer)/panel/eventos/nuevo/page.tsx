@@ -52,7 +52,7 @@ export default function NuevoEventoPage() {
         </div>
         <div>
           <label className="block text-sm font-medium text-foreground mb-1.5">Categorías *</label>
-          <div className="flex flex-wrap gap-2">{['Yoga', 'Meditación', 'Naturaleza', 'Detox', 'Gastronomía', 'Aventura', 'Wellness', 'Creatividad'].map((c) => (
+          <div className="flex flex-wrap gap-2">{['Yoga', 'Meditación', 'Ayurveda'].map((c) => (
             <label key={c} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-sand-300 text-sm cursor-pointer hover:border-terracotta-300 hover:bg-terracotta-50 transition-colors">
               <input type="checkbox" className="w-3.5 h-3.5 rounded border-sand-300 text-terracotta-600" /> {c}
             </label>

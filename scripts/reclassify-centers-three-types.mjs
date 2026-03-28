@@ -1,20 +1,19 @@
 #!/usr/bin/env node
 /**
- * RETIRU · Inferir tipo de centro con IA (OpenAI) — LEGACY (9 tipos)
+ * RETIRU · Reclasificar centros solo en yoga | meditation | ayurveda (OpenAI)
  *
- * El directorio en fase 1 solo usa yoga | meditation | ayurveda.
- * Usa en su lugar: `npm run centers:reclassify-three` y la migración 014.
+ * Usa .env.local: OPENAI_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
  *
- * La IA recibe: tipo actual, servicios (Google), descripción (que ella misma escribió),
- * nombre, search_terms, google_types. Con todo eso determina la categoría correcta.
+ * Orden recomendado en producción:
+ *   1) Este script con --update (con enum antiguo aún en BD; yoga/meditation/ayurveda ya existen)
+ *   2) Migración 014_center_type_three_disciplines.sql
+ *   3) Desplegar código que solo conoce los tres tipos
  *
- * Uso: node scripts/infer-center-types-with-ai.mjs [--limit N] [--dry-run] [--update]
- *   --limit N   Procesar solo los primeros N centros (para pruebas)
- *   --dry-run   Generar CSV de propuestas sin modificar BD
- *   --update    Aplicar cambios a la BD (solo si el enum aún incluye los 9 valores legacy)
+ * Uso:
+ *   node scripts/reclassify-centers-three-types.mjs [--limit N] [--dry-run] [--update] [--active-only]
  */
 
-import { readFileSync, existsSync, writeFileSync } from 'fs';
+import { writeFileSync, readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
@@ -22,7 +21,7 @@ import { createClient } from '@supabase/supabase-js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
 
-const VALID_TYPES = ['yoga', 'pilates', 'meditation', 'ayurveda', 'spa', 'wellness', 'yoga_meditation', 'wellness_spa', 'multidisciplinary'];
+const VALID_TYPES = ['yoga', 'meditation', 'ayurveda'];
 
 function loadEnvLocal() {
   const envPath = join(root, '.env.local');
@@ -43,27 +42,17 @@ function loadEnvLocal() {
   });
 }
 
-const SYSTEM_PROMPT = `Eres un clasificador experto para Retiru, directorio de centros de yoga, pilates, ayurveda, meditación y wellness en España.
+const SYSTEM_PROMPT = `Eres un clasificador para Retiru (directorio de centros en España). Cada centro debe tener UNA sola categoría principal entre exactamente estas tres:
 
-Tu tarea: determinar la CATEGORÍA PRINCIPAL de cada centro. Es decir, qué hace el centro COMO ESPECIALIDAD, no qué ofrece como complemento.
+- **yoga**: El foco principal es enseñanza o práctica de yoga (asanas, escuelas de yoga, shala, hatha, vinyasa, kundalini, yin, etc.). Incluye centros donde el yoga es claramente el eje aunque también haya pilates u otras actividades secundarias.
+- **meditation**: El foco principal es meditación, mindfulness, retiros de silencio, templos budistas, prácticas contemplativas, sound healing como eje (no como spa de lujo).
+- **ayurveda**: El foco principal es medicina o terapias ayurvédicas (consultas dosha, panchakarma, tratamientos abhyanga/shirodhara como especialidad del centro).
 
-REGLAS CRÍTICAS:
-1. **Centro de Pilates** = El pilates es el FOCO principal. Clases de pilates, reformer, mat pilates como actividad estrella.
-2. **Gimnasio / Alto rendimiento** que ofrece pilates como una clase más = NO es pilates. Es "multidisciplinary" o "wellness".
-3. **Centro de Yoga** = El yoga es el FOCO principal. Escuelas de yoga, clases de hatha/vinyasa/kundalini como actividad estrella.
-4. **Gimnasio** que tiene yoga como una clase más = NO es yoga. Es "multidisciplinary" o "wellness".
-5. **Ayurveda** = Tratamientos ayurvédicos, masajes abhyanga, shirodhara, consultas dosha como FOCO principal.
-6. **Spa** = Circuito termal, baños árabes, tratamientos de bienestar como FOCO principal.
-7. **Meditación** = Prácticas de meditación, mindfulness, retiros de silencio como FOCO principal.
-8. **Wellness** = Centro de bienestar genérico sin especialidad clara (fisio, osteopatía, masajes, algo de yoga/pilates).
-9. **yoga_meditation** = Centro que combina yoga Y meditación como pilares igual de importantes.
-10. **wellness_spa** = Centro que combina wellness y spa como pilares.
-11. **multidisciplinary** = Gimnasio, centro deportivo, centro de fitness que ofrece varias disciplinas sin especialidad en yoga/pilates/ayurveda.
-
-La DESCRIPCIÓN es clave: fue escrita por IA basándose en la web del centro y reseñas. Si la descripción dice "gimnasio de alto rendimiento", "crossfit", "entrenamiento funcional" como foco, NO es pilates aunque ofrezca pilates.
-
-Responde ÚNICAMENTE con una de estas palabras (en minúsculas, sin puntos ni explicación):
-yoga | pilates | meditation | ayurveda | spa | wellness | yoga_meditation | wellness_spa | multidisciplinary`;
+REGLAS:
+1. Si el centro es un gimnasio, crossfit o fitness genérico sin especialidad clara en yoga/meditación/ayurveda, elige la opción **más cercana** por la descripción: yoga si hay clases de yoga relevantes; meditation si el texto habla de mindfulness/retiros; si no encaja, **yoga** como comodín solo si hay cualquier señal de práctica corporal consciente; si es puro spa hotel sin enseñanza, **meditation** (bienestar contemplativo/relax profundo).
+2. Pilates puro sin yoga como foco → **yoga** (práctica corporal consciente en el mismo eje que Retiru en esta fase).
+3. Spa/termal sin enseñanza → **meditation** si el énfasis es relax/contemplación; si hay yoga en la descripción → **yoga**.
+4. Responde **solo** una palabra en minúsculas: yoga | meditation | ayurveda (sin puntos ni explicación).`;
 
 async function inferTypeWithAI(center, openaiKey) {
   const context = [
@@ -74,7 +63,7 @@ async function inferTypeWithAI(center, openaiKey) {
     `## Tipos Google: ${center.google_types || '(ninguno)'}`,
     `## Búsqueda con la que se encontró: ${center.search_terms || '(ninguno)'}`,
     '',
-    '## Descripción del centro (escrita por IA a partir de web y reseñas):',
+    '## Descripción del centro:',
     (center.description_es || '(sin descripción)').slice(0, 2500),
   ].join('\n');
 
@@ -85,9 +74,9 @@ async function inferTypeWithAI(center, openaiKey) {
       model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: `Determina la categoría principal de este centro:\n\n${context}` },
+        { role: 'user', content: `Clasifica este centro en una sola categoría:\n\n${context}` },
       ],
-      max_tokens: 50,
+      max_tokens: 20,
       temperature: 0.1,
     }),
   });
@@ -100,15 +89,13 @@ async function inferTypeWithAI(center, openaiKey) {
   const data = await res.json();
   const raw = (data.choices?.[0]?.message?.content || '').trim().toLowerCase();
 
-  // Extraer la primera palabra que coincida con un tipo válido
   for (const t of VALID_TYPES) {
     if (raw === t || raw.startsWith(t + ' ') || raw.startsWith(t + '\n') || raw.startsWith(t + '.')) return t;
   }
-  // Fallback: buscar cualquier tipo en la respuesta
   for (const t of VALID_TYPES) {
     if (raw.includes(t)) return t;
   }
-  return 'multidisciplinary';
+  return 'yoga';
 }
 
 async function main() {
@@ -130,16 +117,19 @@ async function main() {
   const LIMIT = limitIdx !== -1 ? parseInt(args[limitIdx + 1], 10) : 0;
   const DRY_RUN = args.includes('--dry-run');
   const UPDATE = args.includes('--update') && !DRY_RUN;
+  const ACTIVE_ONLY = args.includes('--active-only');
 
-  console.log('\n═══ INFERIR TIPOS DE CENTRO CON IA ═══');
-  console.log('La IA analiza: tipo actual, servicios (Google), descripción, nombre, search_terms');
-  console.log('Objetivo: afinar categoría (ej: gimnasio con pilates → multidisciplinary)\n');
+  console.log('\n═══ RECLASIFICAR CENTROS (yoga | meditation | ayurveda) ═══\n');
+  if (ACTIVE_ONLY) console.log('Solo centros con status=active\n');
 
-  const { data: centers, error } = await supabase
+  let query = supabase
     .from('centers')
-    .select('id, name, slug, type, services_es, description_es, search_terms, google_types, city, province')
-    .eq('status', 'active')
+    .select('id, name, slug, type, services_es, description_es, search_terms, google_types, city, province, status')
     .order('name');
+
+  if (ACTIVE_ONLY) query = query.eq('status', 'active');
+
+  const { data: centers, error } = await query;
 
   if (error) {
     console.error('❌ Error cargando centros:', error.message);
@@ -149,10 +139,10 @@ async function main() {
   let toProcess = centers || [];
   if (LIMIT > 0) toProcess = toProcess.slice(0, LIMIT);
 
-  console.log(`Centros a procesar: ${toProcess.length}${LIMIT ? ` (limitado a ${LIMIT})` : ''}`);
-  if (DRY_RUN) console.log('DRY RUN — se generará CSV de propuestas, no se modificará la BD');
-  else if (UPDATE) console.log('UPDATE — se aplicarán cambios a la BD');
-  else console.log('Por defecto: solo reporte. Usa --update para aplicar.\n');
+  console.log(`Centros a procesar: ${toProcess.length}${LIMIT ? ` (limit=${LIMIT})` : ''}`);
+  if (DRY_RUN) console.log('DRY RUN — CSV solamente, sin BD');
+  else if (UPDATE) console.log('UPDATE — se escribirá type en Supabase');
+  else console.log('Solo reporte. Usa --update para aplicar.\n');
 
   const results = [];
   let ok = 0;
@@ -172,9 +162,10 @@ async function main() {
         id: c.id,
         name: c.name,
         slug: c.slug,
+        status: c.status,
         type_actual: c.type,
         type_propuesto: proposed,
-        changed: changed,
+        changed,
       });
 
       if (!DRY_RUN && UPDATE && changed) {
@@ -186,7 +177,7 @@ async function main() {
       }
 
       const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
-      const badge = changed ? '→ ' + proposed : '=';
+      const badge = changed ? `→ ${proposed}` : '=';
       console.log(`${badge} (${elapsed}s)`);
       ok++;
     } catch (err) {
@@ -199,6 +190,7 @@ async function main() {
         slug: c.slug,
         type_actual: c.type,
         type_propuesto: null,
+        changed: false,
         error: err.message,
       });
 
@@ -215,25 +207,26 @@ async function main() {
   console.log('\n═══ RESULTADO ═══');
   console.log(`✓ ${ok} procesados | ✗ ${errCount} errores | ${changedCount} cambios propuestos | ${totalTime} min`);
 
-  // CSV de reporte
   const csvLines = [
-    'Nombre,Slug,Tipo_actual,Tipo_propuesto,Cambia',
+    'Nombre,Slug,Estado,Tipo_actual,Tipo_propuesto,Cambia',
     ...results.map((r) =>
       [
         `"${(r.name || '').replace(/"/g, '""')}"`,
         r.slug,
+        r.status ?? '',
         r.type_actual || '',
         r.type_propuesto || r.error || '',
         r.changed ? 'Sí' : 'No',
-      ].join(',')
+      ].join(','),
     ),
   ];
-  const reportPath = join(root, 'centros-tipos-ia-propuesta.csv');
+  const reportPath = join(root, 'centros-tres-tipos-ia.csv');
   writeFileSync(reportPath, '\ufeff' + csvLines.join('\n'), 'utf8');
-  console.log(`\n📄 Reporte guardado en: centros-tipos-ia-propuesta.csv`);
+  console.log(`\n📄 Reporte: centros-tres-tipos-ia.csv`);
 
   if (!UPDATE && changedCount > 0) {
-    console.log('\n   Revisa el CSV y ejecuta con --update para aplicar los cambios.');
+    console.log('\n   Revisa el CSV y ejecuta: npm run centers:reclassify-three -- --update');
+    console.log('   Luego aplica la migración 014_center_type_three_disciplines.sql en Supabase.\n');
   }
   console.log('');
 }

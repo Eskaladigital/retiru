@@ -1,6 +1,6 @@
 # RETIRU — Marketplace de Retiros y Escapadas
 
-Plataforma web bilingüe (ES/EN) donde las personas descubren y reservan retiros y escapadas (yoga, detox, gastronomía, naturaleza, meditación, wellness, aventura) y los organizadores publican y gestionan sus retiros de forma gratuita.
+Plataforma web bilingüe (ES/EN) donde las personas descubren y reservan retiros y eventos centrados en **yoga, meditación y ayurveda**, y los organizadores publican y gestionan sus retiros de forma gratuita.
 
 > "Airbnb de los retiros" — pensado para España y el mercado hispanohablante.
 
@@ -111,14 +111,18 @@ npm run centers:emails-csv    # Solo desde directorio.csv
 # Centros — claims
 npm run centers:claim-tokens                              # Generar tokens de reclamación
 
-# Centros — tipos y agrupación (Yoga, Pilates, Meditación, Ayurveda, Wellness, Spa)
-npm run centers:group-types                               # Analizar y generar reporte CSV (centros-agrupacion-propuesta.csv)
-npm run centers:group-types:update                        # Aplicar cambios a la BD (requiere migración 009)
+# Centros — tipos (solo yoga, meditación, ayurveda en directorio)
+npm run centers:group-types                               # Reporte CSV (reglas + directorio)
+npm run centers:group-types:update                        # Aplicar a BD (enum de 3 valores, migración 014)
 
-# Centros — inferir tipo con IA (afinar clasificación usando descripciones)
-npm run centers:infer-types-ai                           # Analizar con OpenAI, generar centros-tipos-ia-propuesta.csv
-npm run centers:infer-types-ai -- --limit 20              # Probar con 20 centros
-npm run centers:infer-types-ai:update                     # Aplicar cambios a la BD (tras revisar el CSV)
+# Centros — reclasificar con IA en los 3 tipos (OpenAI; antes de migración 014 en prod)
+npm run centers:reclassify-three                          # CSV centros-tres-tipos-ia.csv
+npm run centers:reclassify-three -- --limit 20
+npm run centers:reclassify-three:update
+
+# Legacy (9 tipos; no usar tras migración 014)
+npm run centers:infer-types-ai
+npm run centers:infer-types-ai:update
 
 # Centros — estadísticas
 node scripts/quick-stats.mjs              # Resumen rápido (descripciones + emails)
@@ -150,9 +154,12 @@ Ejecutar en el **SQL Editor** de Supabase (con service_role) en este orden:
 9. `supabase/migrations/009_center_types_ayurveda_pilates.sql` — tipos de centro
 10. `supabase/migrations/010_support_conversations.sql` — soporte (chat con admin)
 11. `supabase/migrations/011_booking_rpc_functions.sql` — funciones RPC para gestión de bookings
-12. `supabase/seed/001_categories_destinations.sql` — categorías y destinos
-12. `supabase/seed/002_sample_retreats.sql` — usuario demo + 10 retiros de ejemplo
-13. `supabase/seed/003_sample_blog.sql` — 3 categorías de blog + 5 artículos
+12. `supabase/migrations/012_centers_user_proposals.sql` — añade valor enum `pending_review` (solo esta sentencia; evita error 55P04)
+13. `supabase/migrations/013_centers_user_proposals_rls.sql` — columna `submitted_by`, índices y política RLS `ctr_submitted`
+14. `supabase/migrations/014_center_type_three_disciplines.sql` — enum `center_type`: solo `yoga`, `meditation`, `ayurveda`
+15. `supabase/seed/001_categories_destinations.sql` — categorías y destinos
+16. `supabase/seed/002_sample_retreats.sql` — usuario demo + 10 retiros de ejemplo
+17. `supabase/seed/003_sample_blog.sql` — 3 categorías de blog + 5 artículos
 
 ### Capa de datos
 
@@ -201,7 +208,7 @@ Las APIs `/api/retreats`, `/api/centers` y `/api/catalog` exponen datos para bú
 | `/es/mensajes` | Bandeja de mensajes (conversaciones con organizadores + soporte) |
 | `/es/mensajes/[id]` | Conversación individual (burbujas de chat) |
 | `/es/perfil` | Datos personales, avatar, contraseña |
-| `/es/mis-centros` | Centros reclamados (o CTA para buscar y reclamar) |
+| `/es/mis-centros` | Centros reclamados, propuestas pendientes, reclamar o proponer centro nuevo |
 | `/es/mis-eventos` | Lista de eventos/retiros creados |
 | `/es/mis-eventos/nuevo` | Formulario wizard para crear evento |
 | `/es/mis-eventos/[id]` | Editar evento existente |
@@ -327,6 +334,7 @@ Sistema de emails automáticos enviados por la plataforma en eventos clave. Todo
 | `sendBookingExpiredEmail` | Asistente | Reserva expirada por impago del 80% (SLA) | Cron diario (9:00) |
 | `sendRetreatCancelledToAttendeeEmail` | Asistentes del evento | Organizador cancela un retiro | `/api/retreats/[id]` (POST → cancel) |
 | `sendNewClaimPendingEmail` | Admin | Usuario solicita reclamar un centro (manual) | `/api/centers/claim` |
+| `sendNewCenterProposalEmail` | Admin | Usuario propone un centro nuevo (pendiente revisión) | `/api/centers/propose` |
 | `sendPaymentOverdueToOrganizerEmail` | Organizador | Pago del 80% de un asistente ha vencido | Cron diario (9:00) |
 
 **Total: 19 emails transaccionales.**
@@ -467,12 +475,14 @@ El dueño de un centro puede vincularse como propietario verificado mediante:
 
 1. **Link mágico (email):** el email de bienvenida contiene un token único que auto-aprueba el claim.
 2. **Email match:** si el email del usuario registrado coincide con el del centro, se auto-aprueba.
-3. **Solicitud manual:** el botón "Reclamar este centro" en la ficha pública crea un claim pendiente que un admin revisa.
+3. **Solicitud manual:** el botón "Reclamar este centro" en la ficha pública crea un claim **pending** que un admin revisa. Si los emails no coinciden, **no** hay rechazo automático: solo pasa a revisión humana. Un claim **rejected** solo lo marca un admin (o se reabre a pending si el usuario vuelve a reclamar desde la ficha).
+4. **Proponer centro nuevo:** desde `/es/mis-centros`, el usuario busca el establecimiento en Google Maps (mismo flujo que el admin al crear centro). Se crea un registro en `centers` con `status = pending_review` y `submitted_by = user_id`. El admin aprueba en `/administrator/centros` (icono publicar): pasa a `active` y se asigna `claimed_by` al proponente.
 
-**Tablas:** `center_claims` (claim con estado pending/approved/rejected) + `claim_tokens` (tokens para links mágicos).
+**Tablas:** `center_claims` (claim con estado pending/approved/rejected) + `claim_tokens` (tokens para links mágicos). Propuestas: filas en `centers` con `status = pending_review` y `submitted_by`.
 
 **API (claims):**
 - `POST /api/centers/claim` — crear claim (auto-aprueba si email coincide)
+- `POST /api/centers/propose` — proponer centro nuevo (usuario autenticado; queda pendiente de revisión)
 - `GET/POST /api/admin/center-claims` — listar/aprobar/rechazar claims (solo admin)
 
 **API (eventos/retiros del usuario):**
@@ -526,14 +536,14 @@ user_role: 'attendee' | 'organizer' | 'admin'
 |---|---|---|---|
 | **Visitante** | Sin cuenta | Navega sin registrarse | Buscar, ver retiros, centros, blog, tienda |
 | **Asistente** | `attendee` | Se registra con email | Reservar retiros, gestionar perfil, reclamar centros |
-| **Propietario de centro** | `attendee` | Reclama un centro (claim aprobado en `center_claims`) | Todo lo de asistente + editar su centro, publicar eventos |
+| **Propietario de centro** | `attendee` | Reclama un centro (claim aprobado) o propuesta aprobada por admin (`centers.claimed_by`) | Todo lo de asistente + editar su centro, publicar eventos |
 | **Organizador** | `organizer` | Crea su primer evento y el admin lo aprueba | Todo lo de asistente + crear/gestionar retiros (ya sin aprobación previa) |
 | **Admin** | `admin` | Asignado manualmente | Todo + panel `/administrator`, modera claims, retiros, centros |
 
 ### Flujo de promoción de rol
 
 1. **Registro**: todo usuario nuevo se crea como `attendee`.
-2. **Reclamar centro**: un `attendee` puede reclamar un centro. El admin aprueba/rechaza el claim. Si se aprueba, el usuario puede editar su centro pero sigue siendo `attendee` (se identifica como propietario por la relación en `center_claims`).
+2. **Reclamar o proponer centro**: un `attendee` puede reclamar un centro existente (claim revisado en `center_claims`) o proponer uno nuevo (`POST /api/centers/propose`, revisión en `/administrator/centros`). Si se aprueba, `centers.claimed_by` apunta al usuario y puede editar la ficha; sigue siendo `attendee`.
 3. **Crear primer evento**: cualquier `attendee` puede crear un retiro/evento desde "Mis eventos". Al crear el primero:
    - Se auto-crea un `organizer_profile` vinculado al usuario.
    - El retiro se guarda como `draft` y pasa a `pending_review`.
@@ -559,7 +569,7 @@ Cualquier usuario logueado (incluido el admin) tiene acceso a:
 
 1. **Mis reservas** — reservas como asistente
 2. **Mi perfil** — datos personales, avatar, contraseña
-3. **Mis centros** — centros reclamados; si no tiene, CTA para buscar y reclamar
+3. **Mis centros** — centros reclamados, propuestas en revisión, CTA para reclamar en el directorio o proponer centro nuevo (Google Maps)
 4. **Mis eventos** — retiros/eventos creados; formulario wizard para crear nuevos
 
 El admin tiene además acceso a `/administrator` desde el menú.
@@ -575,7 +585,7 @@ El admin tiene además acceso a `/administrator` desde el menú.
 ## Funcionalidades principales
 
 ### Front público
-- **Homepage** con H1 "Encuentra tu retiro", HeroSearch (toggle Retiros/Centros), categorías, retiros populares y destinos desde Supabase
+- **Homepage** con H1 "Centros y retiros de yoga, meditación y ayurveda", sección "Dos mundos, un solo lugar" (Directorio + Retiros), HeroSearch (toggle Retiros/Centros), centros destacados, retiros populares y destinos desde Supabase
 - **Retiros** (`/retiros-retiru`): hero + buscador (texto, destino, fechas) + lista con filtros — datos desde Supabase
 - **Retiros por ciudad** (`/retiros-retiru/[slug]`): retiros filtrados por destino/ciudad
 - **Ficha de retiro** (`/retiro/[slug]`): galería, desglose de pagos, reseñas, CTA sticky — datos desde Supabase
@@ -593,7 +603,7 @@ El admin tiene además acceso a `/administrator` desde el menú.
 - **Mis reservas**: reservas como asistente con estados visuales (datos desde BD)
 - **Mensajes**: bandeja de conversaciones con organizadores + botón "Contactar soporte" para chat con admin
 - **Mi perfil**: datos personales, avatar, contraseña
-- **Mis centros**: centros reclamados; si no tiene, CTA para buscar y reclamar desde el directorio
+- **Mis centros**: centros reclamados y propuestas pendientes; reclamar desde el directorio o proponer centro nuevo
 - **Mis eventos**: lista de retiros/eventos creados con imagen, estado, ocupación
   - Wizard de creación en 4 pasos (Información, Detalles, Incluye, Precio)
   - Edición de eventos existentes con publicación desde borrador
@@ -605,7 +615,7 @@ El admin tiene además acceso a `/administrator` desde el menú.
 - **Usuarios** — tabla con todos los perfiles (buscador, filtro por rol)
 - **Organizadores** — gestión de organizadores verificados (datos desde `organizer_profiles`)
 - **Retiros** — gestión de retiros (aprobar/rechazar los `pending_review`, ver todos)
-- **Centros** — gestión de centros (buscador, filtros, exportar CSV/Excel, generar descripciones IA, editar, ver ficha pública, despublicar/publicar, eliminar)
+- **Centros** — gestión de centros (buscador, filtros, exportar CSV/Excel, generar descripciones IA, editar, ver ficha pública, despublicar/publicar, aprobar propuestas de usuario `pending_review` → `active` + titular, eliminar)
 - **Claims** — gestión de reclamaciones de centros (aprobar/rechazar)
 - **Mensajes** — moderación de conversaciones usuario-organizador + lectura y respuesta en chats de soporte (como "Andrea")
 - Gestión de tienda (productos, categorías, pedidos)

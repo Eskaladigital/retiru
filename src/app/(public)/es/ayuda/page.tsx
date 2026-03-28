@@ -18,7 +18,7 @@ const SECTIONS = [
     { q: '¿Mis retiros pasan revisión?', a: 'Tu primer retiro se revisa para garantizar la calidad (24-48h). Una vez verificado como organizador, los siguientes retiros se publican directamente.' },
   ]},
   { title: 'Para centros', items: [
-    { q: '¿Cómo reclamo mi centro?', a: 'Busca tu centro en el directorio de Retiru y haz clic en "Reclamar este centro". Si no tienes cuenta, te guiaremos para crearla. Verificamos que eres el propietario y te damos acceso para editar tu ficha.' },
+    { q: '¿Cómo reclamo o propongo mi centro?', a: 'Si ya está en el directorio, búscalo y usa «Reclamar este centro». Si no aparece, inicia sesión, ve a «Mis centros» y «Proponer nuevo centro»: eliges el lugar en Google Maps y nuestro equipo revisa la propuesta antes de publicarla.' },
     { q: '¿Cuánto cuesta estar en el directorio?', a: 'Ofrecemos 6 meses de membresía gratuita a los centros seleccionados. Tras ese periodo, evaluaremos el impacto contigo.' },
     { q: '¿Qué puedo hacer una vez reclame mi centro?', a: 'Podrás editar tu ficha (fotos, descripción, horarios, servicios), responder a reseñas y publicar retiros y eventos desde tu perfil.' },
   ]},

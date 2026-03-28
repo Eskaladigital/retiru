@@ -942,6 +942,49 @@ export async function sendNewClaimPendingEmail(
   });
 }
 
+// ─── New center proposal (user) → admin ───────────────────────────────────────
+
+export async function sendNewCenterProposalEmail(options: {
+  userName: string;
+  userEmail: string;
+  centerName: string;
+  city: string;
+  province: string;
+  centerId: string;
+}) {
+  const { userName, userEmail, centerName, city, province, centerId } = options;
+  const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'contacto@retiru.com';
+
+  const body = [
+    paragraph(`Un usuario ha propuesto un <strong>nuevo centro</strong> desde el directorio (pendiente de tu revisi&oacute;n).`),
+    infoBox([
+      infoLine('Centro', centerName),
+      infoLine('Ubicaci&oacute;n', `${city}, ${province}`),
+      infoLine('ID', centerId),
+      infoLine('Usuario', `${userName} — ${userEmail}`),
+    ].join('')),
+    paragraph('Rev&iacute;salo en la lista de centros (estado &laquo;Propuesta pendiente&raquo;) y aprueba o rechaza.'),
+  ].join('');
+
+  const html = emailLayout({
+    locale: 'es',
+    preheader: `Nueva propuesta: ${centerName}`,
+    title: 'Nueva propuesta de centro',
+    body,
+    cta: {
+      href: `${APP_URL}/administrator/centros`,
+      label: 'Ver centros',
+    },
+  });
+
+  return resend.emails.send({
+    from: FROM,
+    to: ADMIN_EMAIL,
+    subject: `📍 Nueva propuesta de centro: ${centerName}`,
+    html,
+  });
+}
+
 // ─── Payment Overdue → organizer ────────────────────────────────────────────
 
 export async function sendPaymentOverdueToOrganizerEmail(

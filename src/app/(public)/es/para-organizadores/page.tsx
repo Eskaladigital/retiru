@@ -19,7 +19,7 @@ const CENTER_BENEFITS = [
   { icon: Star, title: 'Reseñas verificadas', desc: 'Los usuarios pueden valorar tu centro. Las buenas reseñas te dan más visibilidad.' },
   { icon: BadgeCheck, title: 'Sello de centro verificado', desc: 'Un badge de verificación transmite confianza a potenciales clientes.' },
   { icon: Phone, title: 'Contacto directo', desc: 'Los interesados te contactan sin intermediarios: teléfono, email, web y redes.' },
-  { icon: CalendarPlus, title: 'Publica retiros', desc: 'Además del directorio, publica retiros y escapadas desde tu perfil de centro.' },
+  { icon: CalendarPlus, title: 'Publica retiros', desc: 'Además del directorio, publica retiros o eventos desde tu perfil de centro.' },
 ];
 
 const ORGANIZER_FEATURES = [
@@ -33,12 +33,12 @@ const ORGANIZER_FEATURES = [
 
 const FAQS = [
   { q: '¿De verdad es gratis para organizadores?', a: 'Sí. No cobramos comisión ni suscripción al organizador. Nuestros ingresos vienen del 20% que paga el asistente como cuota de gestión.' },
-  { q: '¿Cómo funciona el directorio de centros?', a: 'Tu centro aparece en nuestro directorio con ficha completa: fotos, servicios, horarios, ubicación y reseñas. Los usuarios pueden encontrarte buscando por zona, tipo de disciplina o nombre. Si tu centro ya está en Retiru, puedes reclamarlo desde su ficha para gestionarlo tú mismo.' },
+  { q: '¿Cómo funciona el directorio de centros?', a: 'Tu centro aparece en nuestro directorio con ficha completa: fotos, servicios, horarios, ubicación y reseñas. Los usuarios pueden encontrarte buscando por zona, tipo de disciplina o nombre. Si tu centro ya está en Retiru, puedes reclamarlo desde su ficha. Si no aparece, con cuenta iniciada puedes proponerlo desde «Mis centros»; nuestro equipo lo revisa antes de publicarlo.' },
   { q: '¿Cuánto cuesta aparecer en el directorio?', a: 'Actualmente ofrecemos 6 meses de membresía gratuita a los centros seleccionados. Tras ese periodo, evaluaremos el impacto contigo y podrás continuar con una cuota mensual asequible.' },
-  { q: '¿Puedo ser centro y organizador a la vez?', a: 'Sí. Si eres un centro que organiza retiros o escapadas, puedes tener tu ficha en el directorio y además publicar retiros con todas las herramientas del panel.' },
+  { q: '¿Puedo ser centro y organizador a la vez?', a: 'Sí. Si eres un centro que organiza retiros u otros eventos, puedes tener tu ficha en el directorio y además publicarlos con todas las herramientas del panel.' },
   { q: '¿Cómo cobro a mis asistentes?', a: 'Cuando alguien reserva un retiro, paga el 20% a Retiru. Tú cobras el 80% restante directamente al asistente antes del retiro, por transferencia o el método que prefieras.' },
   { q: '¿Necesito verificarme para publicar retiros?', a: 'No necesitas subir documentos. Simplemente crea tu cuenta, crea tu primer retiro y nuestro equipo lo revisará en 24-48h. Una vez aprobado tu primer retiro, te conviertes en organizador verificado y puedes seguir publicando.' },
-  { q: '¿Cómo reclamo mi centro?', a: 'Si tu centro ya está en nuestro directorio, busca tu centro en Retiru y haz clic en "Reclamar este centro". Si no tienes cuenta, te guiaremos para crear una. Nuestro equipo verificará que eres el propietario y te dará acceso para editar tu ficha.' },
+  { q: '¿Cómo reclamo o doy de alta mi centro?', a: 'Si tu centro ya está en el directorio, búscalo y usa «Reclamar este centro» (o regístrate si aún no tienes cuenta). Si no está listado, entra en «Mis centros» tras iniciar sesión, elige «Proponer nuevo centro» y localiza el lugar en Google Maps; enviaremos la propuesta a revisión y, al aprobarla, podrás gestionar la ficha.' },
   { q: '¿Y si un asistente cancela?', a: 'Tú configuras tu política de cancelación por retiro. Retiru gestiona los reembolsos automáticamente según esa política.' },
 ];
 
@@ -57,7 +57,7 @@ export default function ParaOrganizadoresPage() {
             <span className="text-terracotta-400">con Retiru</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-sage-300 leading-relaxed">
-            Si tienes un centro de yoga, meditación, wellness o spa, o si organizas retiros y escapadas,
+            Si tienes un centro de yoga, meditación o ayurveda, o si organizas retiros y eventos de ese tipo,
             Retiru es tu plataforma. Sin comisiones. Sin suscripciones.
           </p>
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
@@ -65,7 +65,7 @@ export default function ParaOrganizadoresPage() {
               Soy un centro
             </a>
             <a href="#organizadores" className="btn-primary bg-white/10 hover:bg-white/20 border border-white/20 px-8 py-4 text-base text-white">
-              Organizo retiros
+              Organizo retiros o eventos
             </a>
           </div>
         </div>
@@ -82,7 +82,7 @@ export default function ParaOrganizadoresPage() {
             Pon tu centro en el mapa
           </h2>
           <p className="text-muted-foreground max-w-2xl mb-12">
-            Si tienes un centro de yoga, meditación, pilates, wellness, spa o cualquier espacio dedicado al bienestar,
+            Si tienes un centro de yoga, meditación o ayurveda,
             te incluimos en nuestro directorio para que miles de personas te encuentren.
           </p>
 
@@ -104,7 +104,7 @@ export default function ParaOrganizadoresPage() {
               <h3 className="font-serif text-2xl font-bold mb-3">¿Tu centro ya está en Retiru?</h3>
               <p className="text-sage-300 leading-relaxed max-w-lg">
                 Busca tu centro en nuestro directorio y reclámalo para gestionar tu ficha, responder reseñas y publicar eventos.
-                Si aún no estás, contáctanos y te incluimos gratis.
+                Si no aparece, inicia sesión y propón el centro desde «Mis centros» (lo revisamos antes de publicarlo) o escríbenos y te ayudamos.
               </p>
             </div>
             <div className="flex flex-col gap-3 shrink-0">
@@ -131,13 +131,13 @@ export default function ParaOrganizadoresPage() {
         <div className="container-wide">
           <div className="flex items-center gap-3 mb-2">
             <Sparkles size={28} className="text-terracotta-600" />
-            <span className="text-sm font-bold uppercase tracking-widest text-terracotta-500">Para organizadores de retiros</span>
+            <span className="text-sm font-bold uppercase tracking-widest text-terracotta-500">Para organizadores</span>
           </div>
           <h2 className="font-serif text-3xl font-bold md:text-4xl mb-3">
-            Publica tus retiros <span className="text-terracotta-600">100% gratis</span>
+            Publica tus retiros o eventos <span className="text-terracotta-600">100% gratis</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mb-12">
-            Si creas retiros, escapadas, talleres o experiencias de bienestar, Retiru te da un panel
+            Si creas retiros o eventos de yoga, meditación o ayurveda, Retiru te da un panel
             de gestión completo sin cobrarte ni un euro.
           </p>
 
@@ -195,8 +195,8 @@ export default function ParaOrganizadoresPage() {
           <h2 className="mb-12 text-center font-serif text-3xl font-bold">¿Cómo funciona para organizadores?</h2>
           <div className="space-y-8">
             {[
-              { step: '01', title: 'Crea tu cuenta', desc: 'Regístrate con tu email y verifica tu cuenta. Cualquier usuario puede crear retiros desde su panel.' },
-              { step: '02', title: 'Crea tu primer retiro', desc: 'Usa nuestro wizard paso a paso para crear tu retiro o escapada. Añade fotos, programa, precios y configura tu política de cancelación.' },
+              { step: '01', title: 'Crea tu cuenta', desc: 'Regístrate con tu email y verifica tu cuenta. Cualquier usuario puede crear retiros u otros eventos desde su panel.' },
+              { step: '02', title: 'Crea tu primer retiro', desc: 'Usa nuestro wizard paso a paso para crear tu retiro o evento. Añade fotos, programa, precios y configura tu política de cancelación.' },
               { step: '03', title: 'Revisamos y publicamos', desc: 'Nuestro equipo revisa tu primer retiro en 24-48h para asegurar la calidad. Una vez aprobado, se publica y te conviertes en organizador verificado.' },
               { step: '04', title: 'Recibe reservas y cobra', desc: 'Los asistentes pagan el 20% a Retiru para asegurar su plaza. Tú cobras el 80% restante directamente al asistente antes del retiro. Sin intermediarios.' },
             ].map(({ step, title, desc }) => (
@@ -237,7 +237,7 @@ export default function ParaOrganizadoresPage() {
         <div className="container-narrow">
           <h2 className="font-serif text-3xl font-bold md:text-4xl">Únete a Retiru</h2>
           <p className="mx-auto mt-4 max-w-lg text-terracotta-100">
-            Ya seas un centro de bienestar o un organizador de retiros, Retiru te da las herramientas
+            Ya seas un centro de yoga, meditación o ayurveda o un organizador de retiros en ese ámbito, Retiru te da las herramientas
             y la visibilidad que necesitas. Gratis.
           </p>
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">

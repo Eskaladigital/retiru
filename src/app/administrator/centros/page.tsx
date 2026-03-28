@@ -10,13 +10,14 @@ export default async function AdminCentrosPage() {
   const supabase = createAdminSupabase();
   const { data: centers } = await supabase
     .from('centers')
-    .select('id, name, slug, city, province, plan, status, type, price_monthly, created_at, description_es, cover_url, images, email')
+    .select('id, name, slug, city, province, plan, status, type, price_monthly, created_at, description_es, cover_url, images, email, submitted_by')
     .order('name')
     .limit(5000);
 
   const list = (centers || []) as CenterRow[];
   const totalMRR = list.reduce((s: number, c) => s + (c.plan === 'featured' ? 65 : c.plan === 'basic' ? 50 : 0), 0);
   const sinDescripcion = list.filter((c) => !c.description_es || c.description_es.trim().length < 80);
+  const propuestasPendientes = list.filter((c) => c.status === 'pending_review').length;
 
   return (
     <div>
@@ -25,6 +26,9 @@ export default async function AdminCentrosPage() {
           <h1 className="font-serif text-3xl text-foreground">Centros</h1>
           <p className="text-sm text-[#7a6b5d] mt-1">
             {list.length} centros · MRR: {totalMRR}€/mes
+            {propuestasPendientes > 0 && (
+              <span className="ml-2 font-semibold text-amber-700">· {propuestasPendientes} propuesta{propuestasPendientes === 1 ? '' : 's'} de usuario pendiente{propuestasPendientes === 1 ? '' : 's'}</span>
+            )}
             {sinDescripcion.length > 0 && (
               <span className="ml-2 text-amber-600">· {sinDescripcion.length} sin descripción</span>
             )}

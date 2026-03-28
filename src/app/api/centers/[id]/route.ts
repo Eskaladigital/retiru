@@ -2,6 +2,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
 
+const CENTER_TYPES_ALLOWED = new Set(['yoga', 'meditation', 'ayurveda']);
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -59,6 +61,13 @@ export async function PATCH(
     for (const field of ALLOWED_FIELDS) {
       if (body[field] !== undefined) {
         updateData[field] = body[field];
+      }
+    }
+
+    if (updateData.type !== undefined) {
+      const t = typeof updateData.type === 'string' ? updateData.type : '';
+      if (!CENTER_TYPES_ALLOWED.has(t)) {
+        return NextResponse.json({ error: 'Tipo de centro no válido' }, { status: 400 });
       }
     }
 

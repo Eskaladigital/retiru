@@ -154,7 +154,7 @@ export function MisEventosClient({ retreats: initial }: { retreats: Retreat[] })
           <p className="text-4xl mb-4">📅</p>
           <h3 className="font-serif text-xl mb-2">Aún no has creado ningún evento</h3>
           <p className="text-sm text-[#7a6b5d] mb-6 max-w-md mx-auto">
-            Crea retiros, talleres, masterclasses o escapadas. Publica tu primer evento y empieza a recibir reservas.
+            Crea retiros o eventos de yoga, meditación o ayurveda. Publica tu primer evento y empieza a recibir reservas.
           </p>
           <Link href="/es/mis-eventos/nuevo" className="inline-flex bg-terracotta-600 text-white font-semibold px-6 py-3 rounded-xl hover:bg-terracotta-700 transition-colors text-sm">
             Crear mi primer evento

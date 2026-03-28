@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title: `${retreat.title_en || retreat.title_es} — Retiru`,
     description:
       retreat.summary_en ||
-      `${retreat.title_en || retreat.title_es}: wellness retreat in Spain — details and booking on Retiru.`,
+      `${retreat.title_en || retreat.title_es}: yoga, meditation or ayurveda retreat in Spain — details and booking on Retiru.`,
     locale: 'en',
     path: `/en/retreat/${retreat.slug}`,
     altPath: `/es/retiro/${retreat.slug}`,
@@ -52,7 +52,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       'retreat',
       (retreat.title_en || retreat.title_es).toLowerCase(),
       retreat.destination?.name_en?.toLowerCase() ?? retreat.destination?.name_es?.toLowerCase() ?? 'spain',
-      'wellness',
+      'yoga',
+      'meditation',
+      'ayurveda',
       ...(retreat.categories?.map((c) => (c.name_en || c.name_es).toLowerCase()) ?? []),
     ],
   });
@@ -83,7 +85,7 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
     name: r.title_en || r.title_es,
     description:
       r.summary_en ||
-      `${r.title_en || r.title_es}: wellness retreat in Spain — book on Retiru.`,
+      `${r.title_en || r.title_es}: yoga, meditation or ayurveda retreat in Spain — book on Retiru.`,
     startDate: r.start_date,
     endDate: r.end_date,
     location,

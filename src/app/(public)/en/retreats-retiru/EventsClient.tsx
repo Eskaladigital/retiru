@@ -123,7 +123,7 @@ export default function EventsClientEN({ retreats, categories, destinations }: E
             type="text"
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Search by name, destination, type of retreat..."
+            placeholder="Search by name, destination, yoga, meditation, ayurveda..."
             className="w-full pl-11 pr-4 py-3 rounded-xl border border-sand-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-terracotta-300 focus:border-terracotta-400 transition-all"
           />
           {query && (
@@ -272,9 +272,9 @@ export default function EventsClientEN({ retreats, categories, destinations }: E
       <div className="mt-12 rounded-2xl border border-sage-200 bg-sage-50 p-6 md:p-8 flex flex-col md:flex-row items-center gap-6">
         <div className="flex-1">
           <p className="text-xs font-bold uppercase tracking-widest text-sage-600 mb-2">You might also be interested</p>
-          <h3 className="font-serif text-xl md:text-2xl text-foreground mb-2">Do you have a wellness center?</h3>
+          <h3 className="font-serif text-xl md:text-2xl text-foreground mb-2">Do you have a yoga, meditation or ayurveda center?</h3>
           <p className="text-sm text-[#7a6b5d] leading-relaxed max-w-lg">
-            If you also run a yoga, meditation, wellness or spa center,
+            If you also run a yoga, meditation or ayurveda center,
             you can appear in our directory so thousands of people can find you.
           </p>
         </div>
@@ -284,8 +284,8 @@ export default function EventsClientEN({ retreats, categories, destinations }: E
       </div>
 
       <div className="mt-6 bg-gradient-to-br from-terracotta-600 to-terracotta-700 rounded-2xl p-8 md:p-10 text-white text-center">
-        <h2 className="font-serif text-2xl mb-3">Do you organize retreats or getaways?</h2>
-        <p className="text-white/80 max-w-lg mx-auto mb-6">Publish your retreats for free on Retiru. Complete management panel, no commissions.</p>
+        <h2 className="font-serif text-2xl mb-3">Do you organize yoga, meditation or ayurveda retreats?</h2>
+        <p className="text-white/80 max-w-lg mx-auto mb-6">Publish your retreats and events for free on Retiru. Complete management panel, no commissions.</p>
         <Link href="/en/for-organizers#organizers" className="inline-flex bg-white text-terracotta-700 font-bold px-8 py-3 rounded-xl hover:-translate-y-0.5 hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)] transition-all text-sm">Start for free</Link>
       </div>
     </div>

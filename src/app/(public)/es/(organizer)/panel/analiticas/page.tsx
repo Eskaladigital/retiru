@@ -29,7 +29,7 @@ export default function AnaliticasPage() {
         <div className="bg-white border border-sand-200 rounded-2xl p-6">
           <h3 className="font-serif text-lg mb-4">Top retiros</h3>
           <div className="space-y-3">
-            {[{ name: 'Retiro Yoga Ibiza', views: 834, bookings: 13 }, { name: 'Wellness Retreat', views: 411, bookings: 8 }].map((e, i) => (
+            {[{ name: 'Retiro Yoga Ibiza', views: 834, bookings: 13 }, { name: 'Retiro meditación Sierra', views: 411, bookings: 8 }].map((e, i) => (
               <div key={i} className="flex justify-between text-sm"><span>{e.name}</span><span className="text-[#7a6b5d]">{e.views} visitas · {e.bookings} reservas</span></div>
             ))}
           </div>

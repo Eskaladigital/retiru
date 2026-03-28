@@ -17,8 +17,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { provinceName } = await getCentersByProvince(slug);
   const name = provinceName || slug;
   return {
-    title: `Wellness centers in ${name} | Retiru`,
-    description: `Find yoga, meditation, wellness and spa centers in ${name}. Verified directory with real reviews.`,
+    title: `Yoga, meditation & ayurveda centers in ${name} | Retiru`,
+    description: `Find yoga, meditation and ayurveda centers in ${name}. Verified directory with real reviews.`,
     alternates: { languages: { es: `/es/centros-retiru/${slug}`, en: `/en/centers-retiru/${slug}` } },
   };
 }

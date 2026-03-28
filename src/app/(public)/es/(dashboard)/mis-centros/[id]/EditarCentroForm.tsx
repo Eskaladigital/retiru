@@ -24,7 +24,7 @@ export function EditarCentroForm({ center }: Props) {
     name: center.name || '',
     description_es: center.description_es || '',
     description_en: center.description_en || '',
-    type: center.type || 'multidisciplinary',
+    type: center.type || 'yoga',
     cover_url: center.cover_url || '',
     logo_url: center.logo_url || '',
     website: center.website || '',

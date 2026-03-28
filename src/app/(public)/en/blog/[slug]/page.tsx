@@ -142,7 +142,7 @@ export default async function BlogPostEN({ params }: { params: Promise<{ slug: s
                 <div className="w-10 h-10 bg-sage-100 rounded-full flex items-center justify-center text-sm font-bold text-sage-700">RT</div>
                 <div>
                   <p className="text-sm font-semibold text-foreground">Retiru Team</p>
-                  <p className="text-xs text-[#a09383]">The Retiru content team, passionate about wellness and transformative travel.</p>
+                  <p className="text-xs text-[#a09383]">The Retiru content team — yoga, meditation and ayurveda.</p>
                 </div>
               </div>
               <button className="flex items-center gap-1.5 text-sm text-[#7a6b5d] hover:text-terracotta-600 transition-colors">

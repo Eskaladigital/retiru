@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${center.name} — ${center.type ? `${getCenterTypeLabel(center.type, 'en')} center` : 'Center'} in ${center.city || ''}`,
     description:
       center.description_en?.slice(0, 160) ||
-      `${center.name} — wellness center${center.city ? ` in ${center.city}` : ''}${center.province ? `, ${center.province}` : ''}.`,
+      `${center.name} — yoga, meditation or ayurveda center${center.city ? ` in ${center.city}` : ''}${center.province ? `, ${center.province}` : ''}.`,
     locale: 'en',
     path: `/en/center/${slug}`,
     altPath: `/es/centro/${slug}`,

@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Search, SlidersHorizontal, X, MapPin, Star, ChevronDown, CalendarDays } from 'lucide-react';
-import { isGenericDescription, stripMarkdownForPreview, CENTER_FILTER_OPTIONS_EN, getCenterTypeLabel, VALID_CENTER_TYPE_SLUGS } from '@/lib/utils';
+import { isGenericDescription, stripMarkdownForPreview, CENTER_FILTER_OPTIONS_EN, getCenterTypeLabel, VALID_CENTER_TYPE_SLUGS, PUBLIC_DIRECTORY_CENTER_TYPE_SLUGS } from '@/lib/utils';
 
 const SORT_OPTIONS = [
   { value: 'relevance', label: 'Relevance' },
@@ -45,7 +45,9 @@ export default function CentersClientEN({ centers }: CentersClientProps) {
   const TYPES = useMemo(() => {
     const fromCenters = Array.from(new Set(centers.map((c) => c.type).filter(Boolean)));
     const valid = fromCenters.filter((t) => VALID_CENTER_TYPE_SLUGS.includes(t as any));
-    const ordered = CENTER_FILTER_OPTIONS_EN.filter((o) => o.slug && valid.includes(o.slug)).map((o) => ({ value: o.slug, label: o.label }));
+    const ordered = CENTER_FILTER_OPTIONS_EN.filter(
+      (o) => o.slug && valid.includes(o.slug) && (PUBLIC_DIRECTORY_CENTER_TYPE_SLUGS as readonly string[]).includes(o.slug),
+    ).map((o) => ({ value: o.slug, label: o.label }));
     return [{ value: 'All', label: 'All' }, ...ordered];
   }, [centers]);
 
@@ -379,8 +381,8 @@ export default function CentersClientEN({ centers }: CentersClientProps) {
       </div>
 
       <div className="mt-6 bg-gradient-to-br from-sage-800 to-sage-900 rounded-2xl p-8 md:p-10 text-white text-center">
-        <h2 className="font-serif text-2xl mb-3">Own a yoga, meditation or wellness center?</h2>
-        <p className="text-white/80 max-w-lg mx-auto mb-6">Appear in Spain&apos;s most visited wellness directory. Thousands of people search for centers near them every month.</p>
+        <h2 className="font-serif text-2xl mb-3">Own a yoga, meditation or ayurveda center?</h2>
+        <p className="text-white/80 max-w-lg mx-auto mb-6">Appear in Spain&apos;s directory for yoga, meditation and ayurveda. Thousands of people search for centers every month.</p>
         <Link href="/en/for-organizers#centers" className="inline-flex bg-white text-sage-800 font-bold px-8 py-3 rounded-xl hover:-translate-y-0.5 hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)] transition-all text-sm">
           List my center
         </Link>

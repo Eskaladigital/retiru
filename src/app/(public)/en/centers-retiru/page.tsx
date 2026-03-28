@@ -16,7 +16,7 @@ export default async function CentersPageEN() {
         <div className="absolute inset-0 z-0">
           <img
             src="https://images.unsplash.com/photo-1545389336-cf090694435e?w=1920&q=80"
-            alt="Yoga and wellness center"
+            alt="Yoga and meditation center"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-[rgba(254,253,251,0.95)] via-[rgba(254,253,251,0.85)] md:via-[rgba(254,253,251,0.85)] to-[rgba(254,253,251,0.2)] max-md:bg-gradient-to-b max-md:from-[rgba(254,253,251,0.93)] max-md:via-[rgba(254,253,251,0.8)] max-md:to-[rgba(254,253,251,0.4)]" />
@@ -31,7 +31,7 @@ export default async function CentersPageEN() {
               Centers Directory
             </h1>
             <p className="text-lg text-[#7a6b5d] leading-[1.7] mb-9 max-w-[480px]">
-              Find the best yoga, meditation, wellness and spa centers across Spain.
+              Find yoga, meditation and ayurveda centers across Spain.
             </p>
           </div>
         </div>

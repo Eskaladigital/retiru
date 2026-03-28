@@ -32,14 +32,8 @@ type PlaceData = {
 
 const CENTER_TYPES: { value: CenterType; label: string }[] = [
   { value: 'yoga', label: 'Yoga' },
-  { value: 'pilates', label: 'Pilates' },
   { value: 'meditation', label: 'Meditación' },
   { value: 'ayurveda', label: 'Ayurveda' },
-  { value: 'wellness', label: 'Wellness' },
-  { value: 'spa', label: 'Spa' },
-  { value: 'yoga_meditation', label: 'Yoga + Meditación' },
-  { value: 'wellness_spa', label: 'Wellness + Spa' },
-  { value: 'multidisciplinary', label: 'Multidisciplinar' },
 ];
 
 function extractAddressComponent(components: google.maps.GeocoderAddressComponent[], type: string): string {
@@ -48,12 +42,11 @@ function extractAddressComponent(components: google.maps.GeocoderAddressComponen
 
 function guessType(types: string[]): CenterType {
   const t = types.join(' ').toLowerCase();
-  if (t.includes('spa')) return 'spa';
   if (t.includes('ayurveda')) return 'ayurveda';
-  if (t.includes('pilates')) return 'pilates';
   if (t.includes('yoga')) return 'yoga';
-  if (t.includes('gym') || t.includes('fitness')) return 'wellness';
-  return 'multidisciplinary';
+  if (t.includes('pilates') || t.includes('gym') || t.includes('fitness')) return 'yoga';
+  if (t.includes('spa') || t.includes('meditation') || t.includes('temple')) return 'meditation';
+  return 'yoga';
 }
 
 function priceLevelLabel(level: number | undefined): string {
@@ -61,10 +54,18 @@ function priceLevelLabel(level: number | undefined): string {
   return ['Gratis', '$', '$$', '$$$', '$$$$'][level] || '—';
 }
 
-export function AddCenterModal({ open, onClose, onCreated }: {
+export type AddCenterFromMapsVariant = 'admin' | 'user';
+
+export function AddCenterFromMapsModal({
+  open,
+  onClose,
+  onCreated,
+  variant = 'admin',
+}: {
   open: boolean;
   onClose: () => void;
   onCreated: () => void;
+  variant?: AddCenterFromMapsVariant;
 }) {
   const [step, setStep] = useState<'search' | 'preview'>('search');
   const [place, setPlace] = useState<PlaceData | null>(null);
@@ -74,6 +75,8 @@ export function AddCenterModal({ open, onClose, onCreated }: {
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const attrRef = useRef<HTMLDivElement>(null);
+
+  const isUser = variant === 'user';
 
   useEffect(() => {
     if (!open) return;
@@ -171,14 +174,15 @@ export function AddCenterModal({ open, onClose, onCreated }: {
     setSaving(true);
     setError('');
     try {
-      const res = await fetch('/api/admin/centers', {
+      const url = isUser ? '/api/centers/propose' : '/api/admin/centers';
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(place),
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || 'Error al crear el centro');
+        setError(data.error || (isUser ? 'No se pudo enviar la propuesta' : 'Error al crear el centro'));
         setSaving(false);
         return;
       }
@@ -195,17 +199,17 @@ export function AddCenterModal({ open, onClose, onCreated }: {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <h2 className="text-lg font-semibold text-gray-900">
-            {step === 'search' ? 'Buscar centro en Google Maps' : 'Confirmar nuevo centro'}
+            {step === 'search'
+              ? (isUser ? 'Buscar tu centro en Google Maps' : 'Buscar centro en Google Maps')
+              : (isUser ? 'Confirmar propuesta' : 'Confirmar nuevo centro')}
           </h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 transition">
+          <button type="button" onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 transition">
             <X className="w-5 h-5 text-gray-400" />
           </button>
         </div>
 
-        {/* Search step */}
         {step === 'search' && (
           <div className="p-6">
             <div className="relative">
@@ -225,16 +229,16 @@ export function AddCenterModal({ open, onClose, onCreated }: {
               </div>
             )}
             <p className="mt-3 text-xs text-gray-400">
-              Escribe el nombre del centro y selecciona de la lista de sugerencias.
+              {isUser
+                ? 'Selecciona el establecimiento correcto. Un administrador validará la propuesta antes de publicarla.'
+                : 'Escribe el nombre del centro y selecciona de la lista de sugerencias.'}
             </p>
             <div ref={attrRef}></div>
           </div>
         )}
 
-        {/* Preview step */}
         {step === 'preview' && place && (
           <div className="p-6 space-y-5">
-            {/* Name */}
             <div>
               <p className="text-xl font-bold text-gray-900">{place.name}</p>
               <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
@@ -243,7 +247,6 @@ export function AddCenterModal({ open, onClose, onCreated }: {
               </p>
             </div>
 
-            {/* Rating */}
             {place.avg_rating > 0 && (
               <div className="flex items-center gap-2">
                 <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
@@ -252,7 +255,6 @@ export function AddCenterModal({ open, onClose, onCreated }: {
               </div>
             )}
 
-            {/* Details grid */}
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div className="bg-gray-50 rounded-lg p-3">
                 <p className="text-xs text-gray-400 mb-0.5">Ciudad</p>
@@ -272,7 +274,6 @@ export function AddCenterModal({ open, onClose, onCreated }: {
               </div>
             </div>
 
-            {/* Contact */}
             <div className="space-y-2 text-sm">
               {place.website && (
                 <a href={place.website} target="_blank" rel="noopener noreferrer"
@@ -298,7 +299,6 @@ export function AddCenterModal({ open, onClose, onCreated }: {
               )}
             </div>
 
-            {/* Type selector */}
             <div>
               <label className="block text-xs text-gray-400 mb-1.5">Tipo de centro</label>
               <select
@@ -312,7 +312,6 @@ export function AddCenterModal({ open, onClose, onCreated }: {
               </select>
             </div>
 
-            {/* Google metadata */}
             <details className="text-xs text-gray-400">
               <summary className="cursor-pointer hover:text-gray-600">Datos de Google</summary>
               <div className="mt-2 space-y-1 bg-gray-50 rounded-lg p-3">
@@ -323,28 +322,30 @@ export function AddCenterModal({ open, onClose, onCreated }: {
               </div>
             </details>
 
-            {/* Error */}
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
                 {error}
               </div>
             )}
 
-            {/* Actions */}
             <div className="flex gap-3 pt-2">
               <button
+                type="button"
                 onClick={() => { setStep('search'); setPlace(null); setError(''); autocompleteRef.current = null; }}
                 className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
               >
                 Buscar otro
               </button>
               <button
+                type="button"
                 onClick={handleSave}
                 disabled={saving}
                 className="flex-1 py-2.5 bg-terracotta-600 text-white rounded-xl text-sm font-semibold hover:bg-terracotta-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                {saving ? 'Guardando...' : 'Añadir centro'}
+                {saving
+                  ? (isUser ? 'Enviando...' : 'Guardando...')
+                  : (isUser ? 'Enviar propuesta' : 'Añadir centro')}
               </button>
             </div>
           </div>

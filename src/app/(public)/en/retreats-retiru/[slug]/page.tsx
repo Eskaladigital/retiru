@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const name = dest?.name_en || dest?.name_es || slug;
   return {
     title: `Retreats in ${name} | Retiru`,
-    description: `Discover yoga, meditation, nature and wellness retreats in ${name}. Book with full transparency.`,
+    description: `Discover yoga, meditation and ayurveda retreats and events in ${name}. Book with full transparency.`,
     alternates: { languages: { es: `/es/retiros-retiru/${slug}`, en: `/en/retreats-retiru/${slug}` } },
   };
 }

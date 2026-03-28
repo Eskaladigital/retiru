@@ -36,7 +36,12 @@ export async function POST(request: NextRequest) {
       .select('id, status')
       .eq('center_id', centerId)
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
+
+    const userEmail = (user.email || '').toLowerCase().trim();
+    const centerEmail = (center.email || '').toLowerCase().trim();
+    // Solo auto-aprueba si ambos emails existen y son iguales. Si no coinciden → siempre pending (nunca rejected aquí).
+    const emailMatch = !!(userEmail && centerEmail && userEmail === centerEmail);
 
     if (existing) {
       if (existing.status === 'pending') {
@@ -45,11 +50,57 @@ export async function POST(request: NextRequest) {
       if (existing.status === 'approved') {
         return NextResponse.json({ error: 'Ya eres el propietario de este centro' }, { status: 409 });
       }
-    }
+      if (existing.status === 'rejected') {
+        const now = new Date().toISOString();
+        const { data: claim, error: updErr } = await admin
+          .from('center_claims')
+          .update({
+            status: emailMatch ? 'approved' : 'pending',
+            method: emailMatch ? 'email_match' : 'manual_request',
+            notes: notes || null,
+            admin_notes: null,
+            reviewed_by: null,
+            reviewed_at: emailMatch ? now : null,
+          })
+          .eq('id', existing.id)
+          .select()
+          .single();
 
-    const userEmail = user.email?.toLowerCase().trim();
-    const centerEmail = center.email?.toLowerCase().trim();
-    const emailMatch = !!(userEmail && centerEmail && userEmail === centerEmail);
+        if (updErr) throw updErr;
+
+        if (emailMatch) {
+          await admin
+            .from('centers')
+            .update({ claimed_by: user.id, updated_at: now })
+            .eq('id', centerId);
+        } else {
+          try {
+            const { data: profile } = await admin
+              .from('profiles')
+              .select('full_name')
+              .eq('id', user.id)
+              .single();
+
+            await sendNewClaimPendingEmail({
+              userName: profile?.full_name || 'Usuario',
+              userEmail: user.email || '',
+              centerName: center.name || 'Centro',
+              centerId,
+            });
+          } catch (emailErr) {
+            console.error('Failed to send claim pending email:', emailErr);
+          }
+        }
+
+        return NextResponse.json({
+          claim,
+          autoApproved: emailMatch,
+          message: emailMatch
+            ? '¡Centro reclamado! Tu email coincide con el del centro.'
+            : 'Solicitud reenviada. Un administrador la revisará pronto.',
+        });
+      }
+    }
 
     const claimData = {
       center_id: centerId,

@@ -4,7 +4,9 @@ import { useState } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { useRouter } from 'next/navigation';
 import { MapPin, Search, ChevronDown, Check, Building2 } from 'lucide-react';
-import { CENTER_FILTER_OPTIONS_ES } from '@/lib/utils';
+import { centerFilterOptionsPublic } from '@/lib/utils';
+
+const CENTER_TYPE_OPTIONS = centerFilterOptionsPublic('es');
 
 const CITIES = [
   { slug: '', name: 'Toda España' },
@@ -21,7 +23,7 @@ const CITIES = [
 export default function CentrosSearch() {
   const router = useRouter();
   const [queryText, setQueryText] = useState('');
-  const [centerType, setCenterType] = useState(CENTER_FILTER_OPTIONS_ES[0]);
+  const [centerType, setCenterType] = useState(CENTER_TYPE_OPTIONS[0]);
   const [typeOpen, setTypeOpen] = useState(false);
   const [city, setCity] = useState(CITIES[0]);
   const [cityOpen, setCityOpen] = useState(false);
@@ -65,7 +67,7 @@ export default function CentrosSearch() {
           <Popover.Portal>
             <Popover.Content className="z-50 rounded-2xl border border-sand-200 bg-white shadow-elevated w-[220px] max-h-[300px] overflow-y-auto" side="bottom" align="start" sideOffset={2}>
               <div className="p-1.5">
-                {CENTER_FILTER_OPTIONS_ES.map((t) => (
+                {CENTER_TYPE_OPTIONS.map((t) => (
                   <button key={t.slug || '__all__'} type="button" onClick={() => { setCenterType(t); setTypeOpen(false); }} className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[14px] ${centerType.slug === t.slug ? 'bg-sage-50 text-sage-700 font-semibold' : 'text-foreground hover:bg-sand-50'}`}>
                     {centerType.slug === t.slug && <Check className="w-3.5 h-3.5 text-sage-600 shrink-0" />}
                     {centerType.slug !== t.slug && <span className="w-3.5 shrink-0" />}

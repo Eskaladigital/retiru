@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 const EVENTS = [
   { id: '1', title: 'Retiro de Yoga y Meditación frente al mar', status: 'published', dates: '15–20 Jun 2026', bookings: 13, maxAttendees: 16, price: 790, img: 'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=300&q=80' },
-  { id: '2', title: 'Wellness & Spa Retreat en Ibiza', status: 'published', dates: '1–7 Jul 2026', bookings: 8, maxAttendees: 12, price: 1100, img: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=300&q=80' },
+  { id: '2', title: 'Retiro de ayurveda en Ibiza', status: 'published', dates: '1–7 Jul 2026', bookings: 8, maxAttendees: 12, price: 1100, img: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=300&q=80' },
   { id: '3', title: 'Retiro de Meditación Silenciosa', status: 'draft', dates: '15–18 Sep 2026', bookings: 0, maxAttendees: 10, price: 480, img: 'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=300&q=80' },
 ];
 

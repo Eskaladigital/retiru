@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Search, SlidersHorizontal, X, MapPin, Star, ChevronDown, CalendarDays } from 'lucide-react';
-import { isGenericDescription, stripMarkdownForPreview, CENTER_FILTER_OPTIONS_ES, getCenterTypeLabel, VALID_CENTER_TYPE_SLUGS } from '@/lib/utils';
+import { isGenericDescription, stripMarkdownForPreview, CENTER_FILTER_OPTIONS_ES, getCenterTypeLabel, VALID_CENTER_TYPE_SLUGS, PUBLIC_DIRECTORY_CENTER_TYPE_SLUGS } from '@/lib/utils';
 
 const SORT_OPTIONS = [
   { value: 'relevance', label: 'Relevancia' },
@@ -45,7 +45,9 @@ export default function CentrosClient({ centers }: CentrosClientProps) {
   const TYPES = useMemo(() => {
     const fromCenters = Array.from(new Set(centers.map((c) => c.type).filter(Boolean)));
     const valid = fromCenters.filter((t) => VALID_CENTER_TYPE_SLUGS.includes(t as any));
-    const ordered = CENTER_FILTER_OPTIONS_ES.filter((o) => o.slug && valid.includes(o.slug)).map((o) => ({ value: o.slug, label: o.label }));
+    const ordered = CENTER_FILTER_OPTIONS_ES.filter(
+      (o) => o.slug && valid.includes(o.slug) && (PUBLIC_DIRECTORY_CENTER_TYPE_SLUGS as readonly string[]).includes(o.slug),
+    ).map((o) => ({ value: o.slug, label: o.label }));
     return [{ value: 'Todos', label: 'Todos' }, ...ordered];
   }, [centers]);
 
@@ -362,7 +364,7 @@ export default function CentrosClient({ centers }: CentrosClientProps) {
 
       {/* CTA */}
       <div className="mt-6 bg-gradient-to-br from-sage-800 to-sage-900 rounded-2xl p-8 md:p-10 text-white text-center">
-        <h2 className="font-serif text-2xl mb-3">¿Tienes un centro de yoga, meditación o wellness?</h2>
+        <h2 className="font-serif text-2xl mb-3">¿Tienes un centro de yoga, meditación o ayurveda?</h2>
         <p className="text-white/80 max-w-lg mx-auto mb-6">Aparece en el directorio más visitado de España. Miles de personas buscan centros cerca de ellos cada mes.</p>
         <Link href="/es/para-organizadores#centros" className="inline-flex bg-white text-sage-800 font-bold px-8 py-3 rounded-xl hover:-translate-y-0.5 hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)] transition-all text-sm">
           Quiero aparecer en el directorio

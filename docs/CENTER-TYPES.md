@@ -1,90 +1,53 @@
-# Tipos de centros — Agrupación y categorización
+# Tipos de centros (directorio)
 
-Documentación de la lógica de agrupación de los ~858 centros del directorio.
+**Fase actual:** solo tres valores en BD y en la web: `yoga`, `meditation`, `ayurveda`.
 
----
+| Slug BD     | Etiqueta ES   | Etiqueta EN  |
+|-------------|---------------|--------------|
+| yoga        | Yoga          | Yoga         |
+| meditation  | Meditación    | Meditation   |
+| ayurveda    | Ayurveda      | Ayurveda     |
 
-## Categorías objetivo
-
-| Slug BD    | Etiqueta UI   |
-|------------|---------------|
-| yoga       | Yoga          |
-| pilates    | Pilates       |
-| meditation | Meditación    |
-| ayurveda   | Ayurveda      |
-| spa        | Spa           |
-| multidisciplinary | Multidisciplinar |
-
-Wellness no se usa como categoría principal (es genérico). Se mantienen tipos compuestos: `yoga_meditation`, `wellness_spa`.
+La columna `categories` (`text[]`) en `centers` sigue siendo libre para etiquetas auxiliares; no sustituye al `type`.
 
 ---
 
-## Campos utilizados para la agrupación
+## Reclasificación con IA (OpenAI)
 
-Fuentes de verdad (en orden de prioridad):
-
-- **search_terms** (Búsqueda del CSV) — Cómo encontramos el centro ("centro pilates" → pilates)
-- **directorio.csv** — Categoría original por nombre+provincia
-- **google_types** (Tipos Google) — Lo que devuelve la API de Google (spa, yoga_studio)
-- **name** — Nombre del centro
-- **services_es** + **description_es** — Último recurso, solo keywords específicos (NO wellness)
-
----
-
-## Lógica de inferencia (categoría principal)
-
-1. **search_terms (Búsqueda)** — Si contiene "pilates", "yoga", "ayurveda", "spa", "meditación" → tipo correspondiente.
-
-2. **CSV Categoría** — Si hay match nombre+provincia en directorio.csv, usar su Categoría.
-
-3. **google_types** — Si contiene "spa" → spa; "yoga_studio" → yoga.
-
-4. **Nombre** — Si contiene ayurveda, pilates, yoga, spa.
-
-5. **Puntuación por keywords** (description + services_es) — Solo términos específicos (NO wellness/bienestar):
-   - **ayurveda**: ayurveda, ayurvédico, abhyanga, shirodhara, udvartana, kansu
-   - **pilates**: pilates, reformer, mat pilates
-   - **yoga**: yoga, ashtanga, vinyasa, hatha, kundalini, yin, acroyoga
-   - **meditation**: meditación, mindfulness, gong, cuencos tibetanos, sound bath, reiki
-   - **spa**: spa, baños árabes, termal, hidro, sauna, jacuzzi, circuito termal
-
-6. **Fallback** — type actual mapeado, o multidisciplinary.
-
----
-
-## Servicios 1, 2 y 3
-
-- **Solo datos reales**: se usan `services_es` (filtrando Wellness/Bienestar).
-- No se inventan servicios desde la descripción.
-- Se añade la categoría principal como primer servicio si no está ya.
-
----
-
-## Scripts de clasificación
-
-### 1. group-centers-by-type (reglas + directorio + Google)
+Antes de **reducir el enum** en Postgres, ejecutar el script para que cada centro quede en uno de los tres tipos (mientras el enum antiguo siga existiendo, los valores `yoga`, `meditation` y `ayurveda` ya son válidos):
 
 ```bash
-npm run centers:group-types        # Reporte CSV (centros-agrupacion-propuesta.csv)
-npm run centers:group-types:update  # Aplicar a BD
+npm run centers:reclassify-three              # CSV centros-tres-tipos-ia.csv
+npm run centers:reclassify-three -- --limit 20
+npm run centers:reclassify-three:update       # Escribir en Supabase
 ```
 
-Usa: directorio.csv, search_terms, google_types, nombre, services_es, descripción.
+Requiere `OPENAI_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` en `.env.local`.
 
-### 2. infer-center-types-with-ai (OpenAI)
+Opcional: `--active-only` para procesar solo `status = active`.
 
-La IA recibe tipo actual, servicios (Google), descripción (que ella misma escribió), nombre, search_terms. Con todo eso determina la categoría correcta. Útil para afinar: ej. gimnasio de alto rendimiento que ofrece pilates → multidisciplinary, no pilates.
-
-```bash
-npm run centers:infer-types-ai           # Reporte CSV (centros-tipos-ia-propuesta.csv)
-npm run centers:infer-types-ai -- --limit 20   # Probar con 20 centros
-npm run centers:infer-types-ai:update    # Aplicar a BD (tras revisar)
-```
-
-Requiere `OPENAI_API_KEY` en .env.local.
+Luego aplicar en Supabase la migración **`014_center_type_three_disciplines.sql`**.
 
 ---
 
-## Migración
+## Agrupación por reglas (sin IA)
 
-La migración `009_center_types_ayurveda_pilates.sql` añade los valores `pilates` y `ayurveda` al enum `center_type`. Ejecutar en Supabase antes de usar `--update`.
+```bash
+npm run centers:group-types
+npm run centers:group-types:update
+```
+
+Usa `directorio.csv`, `search_terms`, `google_types`, nombre, servicios y descripción. Los tipos de salida son solo los tres anteriores.
+
+---
+
+## Scripts legacy
+
+`npm run centers:infer-types-ai` clasificaba en 9 tipos antiguos; ya no encaja con el enum reducido. Usar `centers:reclassify-three`.
+
+---
+
+## Migraciones relacionadas
+
+- `009_center_types_ayurveda_pilates.sql` — histórico (amplió el enum en instalaciones antiguas).
+- `014_center_type_three_disciplines.sql` — enum final de tres valores.

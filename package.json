@@ -23,6 +23,8 @@
     "centers:group-types:update": "node scripts/group-centers-by-type.mjs --update",
     "centers:infer-types-ai": "node scripts/infer-center-types-with-ai.mjs",
     "centers:infer-types-ai:update": "node scripts/infer-center-types-with-ai.mjs --update",
+    "centers:reclassify-three": "node scripts/reclassify-centers-three-types.mjs",
+    "centers:reclassify-three:update": "node scripts/reclassify-centers-three-types.mjs --update",
     "centers:sync-directorio": "node scripts/sync-directorio.mjs",
     "centers:sync-directorio:dry": "node scripts/sync-directorio.mjs --dry-run",
     "centers:sync-directorio:update": "node scripts/sync-directorio.mjs --update-existing",

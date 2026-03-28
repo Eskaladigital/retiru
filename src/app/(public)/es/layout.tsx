@@ -15,16 +15,16 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: 'Retiru — Retiros, Centros y Bienestar en España',
+    default: 'Retiru — Retiros y centros de yoga, meditación y ayurveda',
     template: '%s | Retiru',
   },
-  description: 'Descubre y reserva los mejores retiros de yoga, meditación, naturaleza y wellness en España. Directorio de centros de bienestar y tienda wellness. Sin comisiones para organizadores.',
+  description: 'Descubre y reserva retiros y eventos de yoga, meditación y ayurveda en España. Directorio de centros especializado y tienda. Sin comisiones para organizadores.',
   metadataBase: new URL(SITE_URL),
   applicationName: 'Retiru',
   authors: [{ name: 'Retiru', url: SITE_URL }],
   generator: 'Next.js',
   referrer: 'origin-when-cross-origin',
-  keywords: ['retiros españa', 'retiro yoga', 'retiro meditación', 'escapadas bienestar', 'centros yoga españa', 'wellness españa', 'retiros naturaleza', 'mindfulness', 'spa españa'],
+  keywords: ['retiros españa', 'retiro yoga', 'retiro meditación', 'ayurveda españa', 'centros yoga españa', 'retiros ayurveda', 'meditación españa'],
   alternates: {
     canonical: `${SITE_URL}/es`,
     languages: {
@@ -38,15 +38,15 @@ export const metadata: Metadata = {
     locale: 'es_ES',
     alternateLocale: 'en_US',
     siteName: 'Retiru',
-    title: 'Retiru — Retiros, Centros y Bienestar en España',
-    description: 'Descubre y reserva los mejores retiros de yoga, meditación, naturaleza y wellness en España.',
+    title: 'Retiru — Retiros y centros de yoga, meditación y ayurveda',
+    description: 'Descubre y reserva retiros y eventos de yoga, meditación y ayurveda en España.',
     url: `${SITE_URL}/es`,
-    images: [{ url: `${SITE_URL}/og-default.jpg`, width: 1200, height: 630, alt: 'Retiru — Retiros y Bienestar en España' }],
+    images: [{ url: `${SITE_URL}/og-default.jpg`, width: 1200, height: 630, alt: 'Retiru — Yoga, meditación y ayurveda' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Retiru — Retiros, Centros y Bienestar en España',
-    description: 'Descubre y reserva los mejores retiros de yoga, meditación, naturaleza y wellness en España.',
+    title: 'Retiru — Retiros y centros de yoga, meditación y ayurveda',
+    description: 'Descubre y reserva retiros y eventos de yoga, meditación y ayurveda en España.',
     site: '@retiru_es',
     creator: '@retiru_es',
     images: [`${SITE_URL}/og-default.jpg`],

@@ -64,7 +64,7 @@ export default function EventosSearch() {
           type="text"
           value={queryText}
           onChange={(e) => setQueryText(e.target.value)}
-          placeholder="Yoga, meditación, detox..."
+          placeholder="Yoga, meditación, ayurveda..."
           className="w-full bg-transparent text-[15px] text-foreground outline-none placeholder:text-[#a09383] font-sans"
         />
       </div>

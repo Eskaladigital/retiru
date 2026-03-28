@@ -7,6 +7,7 @@ import { es } from 'date-fns/locale';
 import * as Popover from '@radix-ui/react-popover';
 import { useRouter } from 'next/navigation';
 import { MapPin, Search, ChevronDown, Check, X, Building2, CalendarDays } from 'lucide-react';
+import { centerFilterOptionsPublic } from '@/lib/utils';
 
 type SearchMode = 'eventos' | 'centros';
 
@@ -22,14 +23,7 @@ const DESTINATIONS = [
   { slug: 'priorat', name: 'Priorat' },
 ];
 
-const CENTER_TYPES = [
-  { slug: '', name: 'Todos los tipos' },
-  { slug: 'yoga', name: 'Yoga' },
-  { slug: 'meditacion', name: 'Meditación' },
-  { slug: 'pilates', name: 'Pilates' },
-  { slug: 'wellness', name: 'Wellness' },
-  { slug: 'spa', name: 'Spa' },
-];
+const CENTER_TYPES = centerFilterOptionsPublic('es').map((o) => ({ slug: o.slug, name: o.label }));
 
 const PROVINCES = [
   { slug: '', name: 'Toda España' },
@@ -134,7 +128,7 @@ export default function HeroSearch() {
             type="text"
             value={queryText}
             onChange={(e) => setQueryText(e.target.value)}
-            placeholder={mode === 'eventos' ? 'Yoga, meditación, detox...' : 'Nombre del centro, disciplina...'}
+            placeholder={mode === 'eventos' ? 'Yoga, meditación, ayurveda...' : 'Nombre del centro, disciplina...'}
             className="w-full bg-transparent text-[15px] text-foreground outline-none placeholder:text-[#a09383] font-sans"
           />
         </div>

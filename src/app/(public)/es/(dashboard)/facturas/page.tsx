@@ -2,7 +2,7 @@
 export default function FacturasPage() {
   const INVOICES = [
     { id: 'INV-2026-001', date: '12 Mar 2026', concept: 'Cuota gestión — Retiro Yoga Ibiza', amount: 158, status: 'paid' },
-    { id: 'INV-2026-002', date: '15 Mar 2026', concept: 'Cuota gestión — Escapada Detox Grazalema', amount: 90, status: 'paid' },
+    { id: 'INV-2026-002', date: '15 Mar 2026', concept: 'Cuota gestión — Retiro yoga Grazalema', amount: 90, status: 'paid' },
   ];
 
   return (
