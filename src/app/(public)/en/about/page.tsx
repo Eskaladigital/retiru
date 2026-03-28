@@ -185,21 +185,34 @@ export default function AboutPageEN() {
       {/* Who we are */}
       <section className="bg-gradient-to-b from-white to-sage-50/40">
         <div className="container-wide py-12 md:py-16">
-          <div className="max-w-2xl mx-auto rounded-[2rem] border border-sand-200 bg-white/90 backdrop-blur-sm px-8 py-10 md:px-12 md:py-12 text-center shadow-sm">
-            <span className="text-xs font-bold uppercase tracking-[0.12em] text-sage-600">Who we are</span>
-            <h2 className="font-serif text-2xl md:text-3xl text-foreground mt-3 mb-5">Two people, one shared project</h2>
-            <p className="text-[15px] text-[#7a6b5d] leading-[1.85]">
-              Behind Retiru is a story of learning, travel and practice — and a drive to build something honest,
-              useful and beautiful for the world of wellbeing. If you&apos;d like to say hello or share an idea, you can{' '}
-              <Link href="/en/contact" className="text-sage-700 font-medium underline underline-offset-2 hover:text-sage-800">
-                get in touch
-              </Link>
-              .
-            </p>
-            <p className="mt-8 text-foreground font-medium">
-              Andrea &amp; Roi
-              <span className="text-[#7a6b5d] font-normal"> · Founders of Retiru</span>
-            </p>
+          <div className="max-w-4xl mx-auto rounded-[2rem] border border-sand-200 bg-white/90 backdrop-blur-sm shadow-sm overflow-hidden">
+            <div className="grid md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.1fr)]">
+              <div className="relative aspect-[3/4] md:aspect-auto md:min-h-[min(520px,70vh)] w-full bg-sand-100">
+                <Image
+                  src="/images/andrea_y_roi_2.jpeg"
+                  alt="Andrea and Roi outdoors, founders of Retiru"
+                  fill
+                  className="object-cover object-[center_25%]"
+                  sizes="(max-width: 768px) 100vw, 400px"
+                />
+              </div>
+              <div className="px-8 py-10 md:px-10 md:py-12 lg:px-12 flex flex-col justify-center text-center md:text-left">
+                <span className="text-xs font-bold uppercase tracking-[0.12em] text-sage-600">Who we are</span>
+                <h2 className="font-serif text-2xl md:text-3xl text-foreground mt-3 mb-5">Two people, one shared project</h2>
+                <p className="text-[15px] text-[#7a6b5d] leading-[1.85]">
+                  Behind Retiru is a story of learning, travel and practice — and a drive to build something honest,
+                  useful and beautiful for the world of wellbeing. If you&apos;d like to say hello or share an idea, you can{' '}
+                  <Link href="/en/contact" className="text-sage-700 font-medium underline underline-offset-2 hover:text-sage-800">
+                    get in touch
+                  </Link>
+                  .
+                </p>
+                <p className="mt-8 text-foreground font-medium">
+                  Andrea &amp; Roi
+                  <span className="text-[#7a6b5d] font-normal"> · Founders of Retiru</span>
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
