@@ -26,53 +26,109 @@ const STATS = [
 export default function AboutPageEN() {
   return (
     <div>
-      <section className="bg-gradient-to-b from-sage-50 to-white">
-        <div className="container-wide py-16 md:py-20 text-center">
-          <span className="inline-block text-xs font-bold uppercase tracking-[0.12em] text-sage-600 mb-4">About us</span>
-          <h1 className="font-serif text-[clamp(28px,4.5vw,48px)] text-foreground leading-[1.15] mb-6 max-w-3xl mx-auto">
-            Andrea &amp; Roi
-          </h1>
-          <div className="relative w-[min(280px,85vw)] aspect-square mx-auto mb-8 rounded-2xl overflow-hidden shadow-lg ring-1 ring-sand-200/80">
-            <Image
-              src="/images/andrea_y_roi.jpg"
-              alt="Andrea and Roi, founders of Retiru"
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 85vw, 280px"
-              priority
-            />
-          </div>
-          <p className="text-[#7a6b5d] text-lg max-w-2xl mx-auto leading-relaxed">
-            We&apos;re a couple of nomads united by something more than fate: a deep passion for wellbeing, community and experiences that transform.
-          </p>
-        </div>
-      </section>
+      {/* Hero */}
+      <section className="bg-gradient-to-b from-sage-50 via-white to-white">
+        <div className="container-wide py-16 md:py-24">
+          <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+            <div className="text-center lg:text-left">
+              <span className="inline-block text-xs font-bold uppercase tracking-[0.12em] text-sage-600 mb-4">
+                About us
+              </span>
+              <h1 className="font-serif text-[clamp(32px,5vw,56px)] text-foreground leading-[1.08] mb-5 max-w-3xl mx-auto lg:mx-0">
+                Andrea &amp; Roi
+              </h1>
+              <p className="text-[#7a6b5d] text-lg md:text-[19px] max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+                We&apos;re a couple of nomads united by something more than fate: a deep passion for
+                wellbeing, community and experiences that transform.
+              </p>
+              <div className="flex flex-wrap justify-center lg:justify-start gap-3 mt-7">
+                <span className="rounded-full bg-white border border-sand-200 px-4 py-2 text-sm text-[#7a6b5d] shadow-sm">
+                  New Zealand
+                </span>
+                <span className="rounded-full bg-white border border-sand-200 px-4 py-2 text-sm text-[#7a6b5d] shadow-sm">
+                  Kerala
+                </span>
+                <span className="rounded-full bg-white border border-sand-200 px-4 py-2 text-sm text-[#7a6b5d] shadow-sm">
+                  Levante Coast
+                </span>
+              </div>
+            </div>
 
-      <section className="container-wide py-12">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="font-serif text-2xl md:text-3xl mb-6">Our story</h2>
-          <div className="space-y-4 text-[15px] text-[#7a6b5d] leading-[1.8]">
-            <p>
-              We met a few years ago, and since then we&apos;ve walked a path of learning and discovery together. Yoga, ayurveda, conscious cooking… every training, every encounter and every journey has shaped how we understand life: more present, more connected, more authentic.
-            </p>
-            <p>
-              The last year was a turning point. We lived in a van travelling New Zealand, collaborating on yoga courses, retreats and community events. There we didn&apos;t just learn new disciplines, but new ways of living, sharing and caring for ourselves. We soaked up ideas, inspiration and people who, like us, believe in a more conscious lifestyle.
-            </p>
-            <p>
-              When we returned, the journey continued in Kerala, India — the cradle of ayurveda — where we trained in traditional ayurvedic massage. That experience let us go deeper into the body, energy and balance, integrating ancestral practices that are now part of our philosophy of life.
-            </p>
-            <p className="font-medium text-foreground">With all of that behind us, Retiru was born.</p>
-            <p>
-              We created this space to explore and give visibility to wellbeing across the peninsula, connecting people with retreats, centres and experiences that truly add value. We want to bring wellness to more people, because we firmly believe that caring for yourself shouldn&apos;t be a luxury or an afterthought — it should be a priority.
-            </p>
-            <p>
-              Retiru is also our first step toward a bigger dream: someday, not too far off, to create our own wellness corner on the Levante coast. A place where people can pause, reconnect and feel at home.
-            </p>
-            <p>This is only the beginning. We&apos;re so glad you&apos;re here to be part of the journey.</p>
+            <div className="relative w-full max-w-md lg:max-w-none mx-auto">
+              <div className="absolute inset-0 bg-terracotta-100 rounded-[2rem] blur-3xl opacity-60 scale-95" aria-hidden />
+              <div className="relative aspect-square overflow-hidden rounded-[2rem] shadow-[0_24px_70px_rgba(92,67,45,0.18)] ring-1 ring-sand-200/80">
+                <Image
+                  src="/images/andrea_y_roi.jpg"
+                  alt="Andrea and Roi, founders of Retiru"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 90vw, 42vw"
+                  priority
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
+      {/* Our story */}
+      <section className="container-wide py-12 md:py-16">
+        <div className="max-w-4xl mx-auto bg-white rounded-[2rem] border border-sand-200/80 shadow-sm p-7 md:p-10 lg:p-12">
+          <div className="mb-8">
+            <span className="text-xs font-bold uppercase tracking-[0.12em] text-terracotta-600">Our story</span>
+            <h2 className="font-serif text-2xl md:text-4xl text-foreground mt-3">
+              A project born on the road
+            </h2>
+          </div>
+          <div className="space-y-5 text-[15px] md:text-[16px] text-[#7a6b5d] leading-[1.9]">
+            <p>
+              We met a few years ago, and since then we&apos;ve walked a path of learning, discovery
+              and personal growth together. Yoga, ayurveda, conscious cooking… every training, every
+              journey and every encounter has shaped how we understand life: more present, more
+              connected and more authentic.
+            </p>
+            <p>
+              The last year was a turning point. We lived in a van travelling New Zealand, collaborating
+              on yoga courses, retreats and community events. There we didn&apos;t just learn new
+              disciplines, but new ways of living, sharing and caring for ourselves. It was a deeply
+              inspiring time, surrounded by people who, like us, believe in a more conscious lifestyle.
+            </p>
+            <p>
+              When we returned, the journey continued in Kerala, India — the cradle of ayurveda — where
+              we trained in traditional ayurvedic massage. That experience let us go deeper into the
+              body, energy and balance, integrating ancestral knowledge that is now part of our
+              philosophy of life.
+            </p>
+            <div className="py-3">
+              <p className="font-serif text-2xl md:text-3xl text-foreground text-center">
+                With all of that behind us, Retiru was born.
+              </p>
+            </div>
+            <p>
+              We created Retiru to give visibility to wellbeing across the peninsula and to connect more
+              people with retreats, centres and experiences that truly add value. We want to bridge the
+              gap between those who seek to take care of themselves and the projects that promote a more
+              conscious, healthy and connected way of living.
+            </p>
+            <p>
+              We believe wellbeing shouldn&apos;t play second fiddle in our lives. Quite the opposite:
+              it should be a priority. That&apos;s why Retiru isn&apos;t just a search engine for
+              retreats and centres — it&apos;s also an invitation to pause, reconnect and find spaces
+              that do us good.
+            </p>
+            <p>
+              This project is also our first step toward a bigger dream: someday, not too far off, to
+              create our own wellness corner on the Levante coast. A place where people can rest,
+              reconnect and feel at home.
+            </p>
+            <p>
+              This is only the beginning, and we&apos;re so glad you&apos;re here to be part of the journey.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats */}
       <section className="bg-sand-100">
         <div className="container-wide py-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -86,6 +142,7 @@ export default function AboutPageEN() {
         </div>
       </section>
 
+      {/* Values */}
       <section className="container-wide py-12">
         <h2 className="font-serif text-2xl md:text-3xl mb-8 text-center">Our values</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -101,6 +158,7 @@ export default function AboutPageEN() {
         </div>
       </section>
 
+      {/* Team */}
       <section className="bg-sage-50">
         <div className="container-wide py-12">
           <h2 className="font-serif text-2xl md:text-3xl mb-8 text-center">The team</h2>
@@ -108,35 +166,37 @@ export default function AboutPageEN() {
             <h3 className="font-semibold text-lg text-foreground">Andrea &amp; Roi</h3>
             <p className="text-sm text-sage-600 mb-3">Founders of Retiru</p>
             <p className="text-[15px] text-[#7a6b5d] leading-relaxed">
-              We build Retiru from life on the road, with a drive to make wellbeing more visible and accessible across the peninsula.
+              Behind Retiru is a shared story of learning, travel, practice and a drive to build
+              something honest, useful and beautiful for the world of wellbeing.
             </p>
           </div>
         </div>
       </section>
 
+      {/* Model */}
       <section className="container-wide py-12">
-        <div className="bg-sand-100 rounded-2xl p-8 md:p-10 max-w-3xl mx-auto mb-12">
+        <div className="bg-sand-100 rounded-2xl p-8 md:p-10 max-w-3xl mx-auto">
           <h2 className="font-serif text-2xl text-foreground mb-4">Our model</h2>
           <p className="text-[15px] text-[#7a6b5d] leading-[1.8]">
-            Guests pay Retiru a 20% booking management fee when they book. The remaining 80% goes directly to the organizer. We never charge organizers — their dashboard, CRM, messaging and analytics are 100% free.
+            Guests pay Retiru a 20% booking management fee when they book. The remaining 80% goes
+            directly to the organizer. We never charge organizers — their dashboard, CRM, messaging
+            and analytics are 100% free.
           </p>
         </div>
+      </section>
+
+      {/* CTA */}
+      <section className="container-wide pb-12">
         <div className="bg-gradient-to-br from-terracotta-600 to-terracotta-700 rounded-3xl p-10 md:p-14 text-center text-white">
           <h2 className="font-serif text-2xl md:text-3xl mb-3">Ready for your next experience?</h2>
           <p className="text-white/80 mb-6 max-w-xl mx-auto">
             Discover retreats and centres in Spain&apos;s most beautiful destinations. Yoga, meditation and ayurveda.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link
-              href="/en/search"
-              className="inline-flex items-center justify-center gap-2 bg-white text-terracotta-700 font-semibold px-8 py-3.5 rounded-xl hover:bg-white/90 transition-colors"
-            >
+            <Link href="/en/search" className="inline-flex items-center justify-center gap-2 bg-white text-terracotta-700 font-semibold px-8 py-3.5 rounded-xl hover:bg-white/90 transition-colors">
               Explore retreats
             </Link>
-            <Link
-              href="/en/for-organizers"
-              className="inline-flex items-center justify-center gap-2 border-2 border-white/30 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-white/10 transition-colors"
-            >
+            <Link href="/en/for-organizers" className="inline-flex items-center justify-center gap-2 border-2 border-white/30 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-white/10 transition-colors">
               For organizers
             </Link>
           </div>

@@ -25,53 +25,103 @@ export default function SobreNosotrosPage() {
   return (
     <div>
       {/* Hero */}
-      <section className="bg-gradient-to-b from-sage-50 to-white">
-        <div className="container-wide py-16 md:py-20 text-center">
-          <span className="inline-block text-xs font-bold uppercase tracking-[0.12em] text-sage-600 mb-4">Sobre nosotros</span>
-          <h1 className="font-serif text-[clamp(28px,4.5vw,48px)] text-foreground leading-[1.15] mb-6 max-w-3xl mx-auto">
-            Andrea y Roi
-          </h1>
-          <div className="relative w-[min(280px,85vw)] aspect-square mx-auto mb-8 rounded-2xl overflow-hidden shadow-lg ring-1 ring-sand-200/80">
-            <Image
-              src="/images/andrea_y_roi.jpg"
-              alt="Andrea y Roi, fundadores de Retiru"
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 85vw, 280px"
-              priority
-            />
+      <section className="bg-gradient-to-b from-sage-50 via-white to-white">
+        <div className="container-wide py-16 md:py-24">
+          <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+            <div className="text-center lg:text-left">
+              <span className="inline-block text-xs font-bold uppercase tracking-[0.12em] text-sage-600 mb-4">
+                Sobre nosotros
+              </span>
+              <h1 className="font-serif text-[clamp(32px,5vw,56px)] text-foreground leading-[1.08] mb-5 max-w-3xl mx-auto lg:mx-0">
+                Andrea y Roi
+              </h1>
+              <p className="text-[#7a6b5d] text-lg md:text-[19px] max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+                Somos una pareja de trotamundos unida por algo más que el destino: una profunda pasión por
+                el bienestar, la comunidad y las experiencias que transforman.
+              </p>
+              <div className="flex flex-wrap justify-center lg:justify-start gap-3 mt-7">
+                <span className="rounded-full bg-white border border-sand-200 px-4 py-2 text-sm text-[#7a6b5d] shadow-sm">
+                  Nueva Zelanda
+                </span>
+                <span className="rounded-full bg-white border border-sand-200 px-4 py-2 text-sm text-[#7a6b5d] shadow-sm">
+                  Kerala
+                </span>
+                <span className="rounded-full bg-white border border-sand-200 px-4 py-2 text-sm text-[#7a6b5d] shadow-sm">
+                  Costa del Levante
+                </span>
+              </div>
+            </div>
+
+            <div className="relative w-full max-w-md lg:max-w-none mx-auto">
+              <div className="absolute inset-0 bg-terracotta-100 rounded-[2rem] blur-3xl opacity-60 scale-95" aria-hidden />
+              <div className="relative aspect-square overflow-hidden rounded-[2rem] shadow-[0_24px_70px_rgba(92,67,45,0.18)] ring-1 ring-sand-200/80">
+                <Image
+                  src="/images/andrea_y_roi.jpg"
+                  alt="Andrea y Roi, fundadores de Retiru"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 90vw, 42vw"
+                  priority
+                />
+              </div>
+            </div>
           </div>
-          <p className="text-[#7a6b5d] text-lg max-w-2xl mx-auto leading-relaxed">
-            Somos una pareja de trotamundos unida por algo más que el destino: una profunda pasión por el bienestar, la comunidad y las experiencias que transforman.
-          </p>
         </div>
       </section>
 
       {/* Nuestra historia */}
-      <section className="container-wide py-12">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="font-serif text-2xl md:text-3xl mb-6">Nuestra historia</h2>
-          <div className="space-y-4 text-[15px] text-[#7a6b5d] leading-[1.8]">
+      <section className="container-wide py-12 md:py-16">
+        <div className="max-w-4xl mx-auto bg-white rounded-[2rem] border border-sand-200/80 shadow-sm p-7 md:p-10 lg:p-12">
+          <div className="mb-8">
+            <span className="text-xs font-bold uppercase tracking-[0.12em] text-terracotta-600">Nuestra historia</span>
+            <h2 className="font-serif text-2xl md:text-4xl text-foreground mt-3">
+              Un proyecto nacido del camino
+            </h2>
+          </div>
+          <div className="space-y-5 text-[15px] md:text-[16px] text-[#7a6b5d] leading-[1.9]">
             <p>
-              Nos conocimos hace unos años, y desde entonces emprendimos juntos un camino de aprendizaje y descubrimiento. Yoga, ayurveda, cocina consciente… cada formación, cada encuentro y cada viaje ha ido dando forma a nuestra manera de entender la vida: más presente, más conectada, más auténtica.
+              Nos conocimos hace unos años y, desde entonces, hemos recorrido juntos un camino de
+              aprendizaje, descubrimiento y crecimiento personal. Yoga, ayurveda, cocina consciente...
+              cada formación, cada viaje y cada encuentro ha ido dando forma a nuestra manera de entender
+              la vida: más presente, más conectada y más auténtica.
             </p>
             <p>
-              El último año marcó un antes y un después. Vivimos en una furgoneta recorriendo Nueva Zelanda, colaborando en cursos de yoga, retiros y eventos comunitarios. Allí no solo aprendimos nuevas disciplinas, sino también nuevas formas de vivir, de compartir y de cuidarnos. Nos empapamos de ideas, de inspiración y de personas que, como nosotros, creen en un estilo de vida más consciente.
+              El último año marcó un antes y un después en nuestra historia. Vivimos en una furgoneta
+              recorriendo Nueva Zelanda, colaborando en cursos de yoga, retiros y eventos comunitarios.
+              Allí no solo aprendimos nuevas disciplinas, sino también nuevas formas de vivir, compartir y
+              cuidarnos. Fue una etapa profundamente inspiradora, rodeados de personas que, como
+              nosotros, creen en un estilo de vida más consciente.
             </p>
             <p>
-              A nuestra vuelta, el viaje continuó en Kerala, India, cuna del ayurveda, donde nos formamos en masajes ayurvédicos tradicionales. Esta experiencia nos permitió profundizar aún más en el conocimiento del cuerpo, la energía y el equilibrio, integrando prácticas ancestrales que hoy forman parte de nuestra filosofía de vida.
+              A nuestra vuelta, el viaje continuó en Kerala, India, cuna del ayurveda, donde nos formamos
+              en masajes ayurvédicos tradicionales. Esta experiencia nos permitió profundizar aún más en el
+              conocimiento del cuerpo, la energía y el equilibrio, integrando saberes ancestrales que hoy
+              forman parte de nuestra filosofía de vida.
             </p>
-            <p className="font-medium text-foreground">
-              Con todo ese bagaje nace Retiru.
+            <div className="py-3">
+              <p className="font-serif text-2xl md:text-3xl text-foreground text-center">
+                Con todo ese bagaje nació Retiru.
+              </p>
+            </div>
+            <p>
+              Creamos Retiru con el deseo de dar visibilidad al mundo del bienestar en la península y de
+              conectar a más personas con retiros, centros y experiencias que realmente aportan valor.
+              Queremos facilitar el encuentro entre quienes buscan cuidarse y los proyectos que promueven
+              una forma de vivir más consciente, saludable y conectada.
             </p>
             <p>
-              Creamos este espacio con la intención de explorar y dar visibilidad al mundo del bienestar en la península, conectando a personas con retiros, centros y experiencias que realmente aportan valor. Queremos acercar el wellness a más gente, porque creemos firmemente que cuidarse no debería ser un lujo ni algo secundario, sino una prioridad.
+              Creemos que el bienestar no debería ocupar un lugar secundario en nuestras vidas. Al
+              contrario: debería ser una prioridad. Por eso, Retiru no es solo un buscador de retiros y
+              centros, sino también una invitación a parar, reconectar y encontrar espacios que nos hagan
+              bien.
             </p>
             <p>
-              Retiru es también nuestro primer paso hacia un sueño mayor: algún día, no muy lejano, crear nuestro propio rincón wellness en la costa del Levante. Un lugar donde las personas puedan parar, reconectar y sentirse en casa.
+              Este proyecto es, además, el primer paso hacia un sueño mayor: crear algún día nuestro propio
+              rincón wellness en la costa del Levante. Un lugar donde las personas puedan descansar,
+              reconectar y sentirse en casa.
             </p>
             <p>
-              Esto es solo el comienzo. Y nos encanta que estés aquí para formar parte del camino.
+              Esto es solo el comienzo, y nos encanta que estés aquí para formar parte del camino.
             </p>
           </div>
         </div>
@@ -115,7 +165,8 @@ export default function SobreNosotrosPage() {
             <h3 className="font-semibold text-lg text-foreground">Andrea y Roi</h3>
             <p className="text-sm text-sage-600 mb-3">Fundadores de Retiru</p>
             <p className="text-[15px] text-[#7a6b5d] leading-relaxed">
-              Construimos Retiru desde la experiencia en el camino, con ganas de que el bienestar sea más visible y accesible en la península.
+              Detrás de Retiru hay una historia compartida de aprendizaje, viajes, práctica y ganas de
+              construir algo honesto, útil y bonito para el mundo del bienestar.
             </p>
           </div>
         </div>
