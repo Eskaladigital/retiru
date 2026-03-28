@@ -58,7 +58,7 @@ export default function AboutPageEN() {
               <div className="absolute inset-0 bg-terracotta-100 rounded-[2rem] blur-3xl opacity-60 scale-95" aria-hidden />
               <div className="relative aspect-square overflow-hidden rounded-[2rem] shadow-[0_24px_70px_rgba(92,67,45,0.18)] ring-1 ring-sand-200/80">
                 <Image
-                  src="/images/andrea_y_roi.jpg"
+                  src="/images/andrea_y_roi_2.jpeg"
                   alt="Andrea and Roi, founders of Retiru"
                   fill
                   className="object-cover"
@@ -189,8 +189,8 @@ export default function AboutPageEN() {
             <div className="grid md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.1fr)]">
               <div className="relative aspect-[3/4] md:aspect-auto md:min-h-[min(520px,70vh)] w-full bg-sand-100">
                 <Image
-                  src="/images/andrea_y_roi_2.jpeg"
-                  alt="Andrea and Roi outdoors, founders of Retiru"
+                  src="/images/andrea_y_roi.jpg"
+                  alt="Andrea and Roi, founders of Retiru"
                   fill
                   className="object-cover object-[center_25%]"
                   sizes="(max-width: 768px) 100vw, 400px"
