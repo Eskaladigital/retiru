@@ -87,7 +87,7 @@ export default function Header({ locale, user }: HeaderProps) {
       <nav className="container-wide flex h-16 items-center justify-between md:h-[72px]">
         {/* Logo */}
         <Link href={prefix} className="flex items-center">
-          <Image src="/Logo_retiru.png" alt="Retiru" width={100} height={36} className="h-8 w-auto" priority />
+          <Image src="/Logo_retiru_transparente.png" alt="Retiru" width={100} height={36} className="h-8 w-auto" priority />
         </Link>
 
         {/* Desktop Nav */}
@@ -203,7 +203,7 @@ export default function Header({ locale, user }: HeaderProps) {
           {/* Header del panel */}
           <div className="flex items-center justify-between px-5 h-16 border-b border-sand-100 shrink-0">
             <Link href={prefix} className="flex items-center" onClick={closeMenu}>
-              <Image src="/Logo_retiru.png" alt="Retiru" width={80} height={28} className="h-6 w-auto" />
+              <Image src="/Logo_retiru_transparente.png" alt="Retiru" width={80} height={28} className="h-6 w-auto" />
             </Link>
             <button
               onClick={closeMenu}
