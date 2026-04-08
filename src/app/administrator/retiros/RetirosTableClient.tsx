@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { ImageOff } from 'lucide-react';
 import { EmailLink } from '@/components/ui/email-link';
 
 interface RetreatRow {
   id: string;
   title_es: string;
   slug: string;
+  cover_image_url: string | null;
   status: string;
   total_price: number;
   max_attendees: number;
@@ -178,19 +180,37 @@ export function RetirosTableClient({ retreats }: { retreats: RetreatRow[] }) {
                   return (
                     <tr key={r.id} className="hover:bg-sand-50/50 transition-colors">
                       <td className="px-4 py-3">
-                        <a
-                          href={r.status === 'published' ? `/es/retiro/${r.slug}` : `/administrator/retiros/preview/${r.slug}`}
-                          target={r.status === 'published' ? '_blank' : undefined}
-                          rel={r.status === 'published' ? 'noopener' : undefined}
-                          className="text-terracotta-600 hover:underline font-medium line-clamp-2"
-                        >
-                          {r.title_es}
-                        </a>
-                        {r.rejection_reason && (
-                          <span className="block text-xs text-red-500 mt-0.5 truncate max-w-[220px]" title={r.rejection_reason}>
-                            Motivo: {r.rejection_reason}
-                          </span>
-                        )}
+                        <div className="flex items-center gap-3">
+                          <div className="w-14 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-sand-100 border border-sand-200">
+                            {r.cover_image_url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={r.cover_image_url}
+                                alt=""
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-[#a09383]">
+                                <ImageOff size={16} />
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <a
+                              href={r.status === 'published' ? `/es/retiro/${r.slug}` : `/administrator/retiros/preview/${r.slug}`}
+                              target={r.status === 'published' ? '_blank' : undefined}
+                              rel={r.status === 'published' ? 'noopener' : undefined}
+                              className="text-terracotta-600 hover:underline font-medium line-clamp-2"
+                            >
+                              {r.title_es}
+                            </a>
+                            {r.rejection_reason && (
+                              <span className="block text-xs text-red-500 mt-0.5 truncate max-w-[220px]" title={r.rejection_reason}>
+                                Motivo: {r.rejection_reason}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </td>
                       <td className="px-4 py-3 hidden md:table-cell">
                         <span className="font-medium text-xs">{r.organizer_name || '—'}</span>

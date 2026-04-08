@@ -6,6 +6,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getRetreatBySlug } from '@/lib/data';
+import { createStaticSupabase } from '@/lib/supabase/server';
 import { generatePageMetadata, jsonLdEvent, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
 import { Star, MapPin, Calendar, Clock, Users, Globe, Shield, Zap, Heart, Share2, ChevronRight, Check, X as XIcon } from 'lucide-react';
 import AskOrganizerButton from '@/components/messaging/AskOrganizerButton';
@@ -83,6 +84,18 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
 
   const minViable = r.min_attendees ?? 1;
   const confirmedCount = r.confirmed_bookings ?? 0;
+
+  let reservedCount = 0;
+  if (minViable > 1) {
+    const sb = createStaticSupabase();
+    const { count } = await sb
+      .from('bookings')
+      .select('id', { count: 'exact', head: true })
+      .eq('retreat_id', r.id)
+      .eq('status', 'reserved_no_payment');
+    reservedCount = count ?? 0;
+  }
+  const minReached = (confirmedCount + reservedCount) >= minViable;
 
   const eventLd = jsonLdEvent({
     name: r.title_en || r.title_es,
@@ -321,7 +334,9 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
               <div className="rounded-2xl border border-sand-200 bg-white p-6 shadow-elevated">
                 <div className="mb-6 text-center">
                   <p className="text-3xl font-bold text-foreground">{r.total_price}€ <span className="text-base font-normal text-muted-foreground">/ person</span></p>
-                  <p className="text-xs text-muted-foreground mt-1">Single payment · All inclusive</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {minReached ? 'Single payment · All inclusive' : 'Reserve without payment · Pay when minimum is reached'}
+                  </p>
                 </div>
 
                 <div className="mb-6 space-y-3 text-sm">
@@ -353,11 +368,14 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
                   )}
                   {minViable > 1 && (
                     <div className="rounded-lg bg-sand-50 border border-sand-200/80 p-3 text-xs text-muted-foreground leading-relaxed">
-                      <strong className="text-foreground">Minimum participants:</strong> {minViable}. The organizer treats the retreat as viable once this number is reached.
-                      {confirmedCount >= minViable ? (
-                        <span className="block mt-1.5 text-sage-700 font-medium">Current confirmed bookings already meet this minimum.</span>
+                      <strong className="text-foreground">Minimum participants:</strong> {minViable}.
+                      {minReached ? (
+                        <span className="block mt-1.5 text-sage-700 font-medium">The minimum has been met. This retreat will take place.</span>
                       ) : (
-                        <span className="block mt-1.5">If it is not reached, the event may be cancelled or rescheduled—check with the organizer or the cancellation policy.</span>
+                        <>
+                          <span className="block mt-1.5">{confirmedCount + reservedCount} of {minViable} spots reserved.</span>
+                          <span className="block mt-1 text-terracotta-600 font-medium">Reserve your spot with no payment commitment. You only pay once the minimum is reached.</span>
+                        </>
                       )}
                     </div>
                   )}
@@ -368,13 +386,16 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
                   retreatSlug={r.slug}
                   totalPrice={r.total_price}
                   availableSpots={r.available_spots}
+                  minReached={minReached}
                   locale="en"
                   className="w-full py-4 text-base"
                 />
 
                 <p className="mt-3 text-center text-xs text-muted-foreground">
                   <Shield size={12} className="inline mr-1" />
-                  Secure payment with Stripe · Refund per cancellation policy
+                  {minReached
+                    ? 'Secure payment with Stripe · Refund per cancellation policy'
+                    : 'Free reservation · You only pay when the retreat is confirmed'}
                 </p>
 
                 <div className="mt-4">
@@ -400,6 +421,7 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
               retreatSlug={r.slug}
               totalPrice={r.total_price}
               availableSpots={r.available_spots}
+              minReached={minReached}
               locale="en"
               className="px-6 py-3 whitespace-nowrap"
               compact

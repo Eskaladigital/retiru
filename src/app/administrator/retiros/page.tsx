@@ -12,7 +12,8 @@ export default async function AdminRetirosPage() {
     .select(`
       id, title_es, slug, status, total_price, max_attendees, confirmed_bookings,
       start_date, end_date, created_at, published_at, reviewed_at, rejection_reason,
-      organizer_id
+      organizer_id,
+      retreat_images ( url, is_cover, sort_order )
     `)
     .order('created_at', { ascending: false })
     .limit(2000);
@@ -43,11 +44,26 @@ export default async function AdminRetirosPage() {
     }
   }
 
-  const enriched = list.map((r) => ({
-    ...r,
-    organizer_name: organizerMap[r.organizer_id]?.business_name || null,
-    organizer_email: organizerMap[r.organizer_id]?.email || null,
-  }));
+  function coverUrlFromRetreat(r: {
+    retreat_images?: { url: string; is_cover: boolean; sort_order?: number }[] | null;
+  }): string | null {
+    const imgs = r.retreat_images;
+    if (!imgs?.length) return null;
+    const cover = imgs.find((i) => i.is_cover);
+    if (cover?.url) return cover.url;
+    const sorted = [...imgs].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+    return sorted[0]?.url ?? null;
+  }
+
+  const enriched = list.map((r) => {
+    const { retreat_images: _ri, ...rest } = r;
+    return {
+      ...rest,
+      cover_image_url: coverUrlFromRetreat(r),
+      organizer_name: organizerMap[r.organizer_id]?.business_name || null,
+      organizer_email: organizerMap[r.organizer_id]?.email || null,
+    };
+  });
 
   const pending = list.filter((r) => r.status === 'pending_review').length;
   const published = list.filter((r) => r.status === 'published').length;

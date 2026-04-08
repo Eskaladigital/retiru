@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Menu, X, Globe, User, ChevronDown, MapPin, Compass, ShoppingBag, Heart, BookOpen, LogOut, Shield, MessageCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
@@ -85,9 +86,8 @@ export default function Header({ locale, user }: HeaderProps) {
     >
       <nav className="container-wide flex h-16 items-center justify-between md:h-[72px]">
         {/* Logo */}
-        <Link href={prefix} className="flex items-center gap-[3px]">
-          <span className="font-serif text-[28px] text-terracotta-700 tracking-[-0.02em]">retiru</span>
-          <span className="w-2 h-2 bg-terracotta-600 rounded-full animate-[float_3s_ease-in-out_infinite] -mb-0.5" />
+        <Link href={prefix} className="flex items-center">
+          <Image src="/Logo_retiru.png" alt="Retiru" width={100} height={36} className="h-8 w-auto" priority />
         </Link>
 
         {/* Desktop Nav */}
@@ -202,9 +202,8 @@ export default function Header({ locale, user }: HeaderProps) {
         >
           {/* Header del panel */}
           <div className="flex items-center justify-between px-5 h-16 border-b border-sand-100 shrink-0">
-            <Link href={prefix} className="flex items-center gap-[3px]" onClick={closeMenu}>
-              <span className="font-serif text-[22px] text-terracotta-700 tracking-[-0.02em]">retiru</span>
-              <span className="w-1.5 h-1.5 bg-terracotta-600 rounded-full -mb-0.5" />
+            <Link href={prefix} className="flex items-center" onClick={closeMenu}>
+              <Image src="/Logo_retiru.png" alt="Retiru" width={80} height={28} className="h-6 w-auto" />
             </Link>
             <button
               onClick={closeMenu}

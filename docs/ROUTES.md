@@ -233,5 +233,6 @@ Protegido por middleware (role=admin). No indexado en buscadores.
 | POST | `/api/organizer/events/[id]/broadcast` | Enviar mensaje a todos los asistentes |
 | GET | `/api/organizer/events/[id]/communications` | Timeline de comunicaciones del evento |
 | POST | `/api/cron/payment-reminders` | Cron: no-op con pago 100 % (antes recordatorio del 80 %) |
+| POST | `/api/cron/payment-deadlines` | Cron: procesa plazos de pago de reservas sin pago — gracia +24h y cancelación automática |
 | POST | `/api/cron/event-reminders` | Cron: recordatorios pre-evento (7d y 2d) |
 | POST | `/api/cron/review-requests` | Cron: solicitar reseñas post-evento |

@@ -9,6 +9,7 @@ interface ReserveButtonProps {
   retreatSlug: string;
   totalPrice: number;
   availableSpots: number;
+  minReached: boolean;
   locale?: 'es' | 'en';
   className?: string;
   compact?: boolean;
@@ -19,19 +20,27 @@ export default function ReserveButton({
   retreatSlug,
   totalPrice,
   availableSpots,
+  minReached,
   locale = 'es',
   className = '',
   compact = false,
 }: ReserveButtonProps) {
   const [loading, setLoading] = useState(false);
+  const [reserved, setReserved] = useState(false);
   const router = useRouter();
   const soldOut = availableSpots === 0;
 
-  const label = soldOut
-    ? (locale === 'es' ? 'Agotado' : 'Sold out')
-    : compact
+  function getLabel() {
+    if (soldOut) return locale === 'es' ? 'Agotado' : 'Sold out';
+    if (!minReached) {
+      return compact
+        ? (locale === 'es' ? 'Reservar plaza' : 'Reserve spot')
+        : (locale === 'es' ? 'Reservar plaza (sin pago)' : 'Reserve spot (no payment)');
+    }
+    return compact
       ? `${locale === 'es' ? 'Reservar' : 'Book'} · ${totalPrice}€`
       : `${locale === 'es' ? 'Reservar plaza' : 'Book your spot'} · ${totalPrice}€`;
+  }
 
   async function handleReserve() {
     if (soldOut || loading) return;
@@ -60,6 +69,14 @@ export default function ReserveButton({
         return;
       }
 
+      if (data.reserved) {
+        setReserved(true);
+        setTimeout(() => {
+          router.push(`/${locale}/${locale === 'es' ? 'mis-reservas' : 'my-bookings'}`);
+        }, 3000);
+        return;
+      }
+
       if (data.url) {
         window.location.href = data.url;
       }
@@ -70,6 +87,18 @@ export default function ReserveButton({
     }
   }
 
+  if (reserved) {
+    return (
+      <div className={`text-center rounded-xl bg-sage-50 border border-sage-200 p-4 ${className}`}>
+        <p className="text-sage-700 font-semibold text-sm">
+          {locale === 'es'
+            ? 'Plaza reservada. Te avisaremos cuando se alcance el mínimo para confirmar con el pago.'
+            : 'Spot reserved. We\u2019ll notify you when the minimum is reached so you can confirm with payment.'}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <button
       onClick={handleReserve}
@@ -78,7 +107,7 @@ export default function ReserveButton({
     >
       {loading
         ? (locale === 'es' ? 'Procesando…' : 'Processing…')
-        : label}
+        : getLabel()}
     </button>
   );
 }

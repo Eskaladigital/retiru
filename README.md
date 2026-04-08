@@ -583,9 +583,24 @@ Cualquier usuario logueado (incluido el admin) tiene acceso a:
 1. **Mis reservas** — reservas como asistente
 2. **Mi perfil** — datos personales, avatar, contraseña
 3. **Mis centros** — centros reclamados, propuestas en revisión, CTA para reclamar en el directorio o proponer centro nuevo (Google Maps)
-4. **Mis eventos** — retiros/eventos creados; wizard para crear/editar con **plazas máximas** (`max_attendees`) y **mínimo viable** (`min_attendees`): umbral de inscritos confirmados a partir del cual el organizador da el retiro por celebrable; en ficha pública se muestra si el mínimo es mayor que 1
+4. **Mis eventos** — retiros/eventos creados; wizard para crear/editar con **plazas máximas** (`max_attendees`) y **mínimo viable** (`min_attendees`): umbral de inscritos a partir del cual el organizador se compromete a celebrar el retiro; en ficha pública se muestra progreso de reservas si el mínimo es mayor que 1
 
 El admin tiene además acceso a `/administrator` desde el menú.
+
+### Flujo de reserva con mínimo viable ("crowdfunding de plazas")
+
+Cuando un retiro tiene `min_attendees > 1`:
+
+1. **Reserva sin pago** — Los primeros asistentes reservan plaza sin pagar. Estado: `reserved_no_payment`.
+2. **Mínimo alcanzado** — Cuando `confirmed_bookings + reserved_no_payment >= min_attendees`:
+   - Se calcula un deadline de pago: `min(ahora + 72h, start_date - 24h)`.
+   - Se envía email a todos los inscritos con enlace de pago y plazo.
+   - Se notifica al organizador que el mínimo se ha cumplido y se compromete a celebrar el evento.
+3. **Pago por los inscritos** — Cada inscrito paga vía Stripe antes del deadline. Si paga, su booking pasa a `pending_payment` → Stripe webhook → `confirmed`/`pending_confirmation` (flujo normal).
+4. **Gracia si no paga** — Si vence el deadline sin pagar, se da +24h extra con un recordatorio por email. Si aún no paga, la reserva se cancela automáticamente (`cancelled_by_attendee`).
+5. **Nuevos asistentes tras el mínimo** — Pagan al instante vía Stripe (flujo estándar).
+
+El cron `/api/cron/payment-deadlines` (cada hora) gestiona la gracia y cancelación automática.
 
 ### Flujo de autenticación
 

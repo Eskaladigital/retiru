@@ -957,3 +957,187 @@ export async function sendNewCenterProposalEmail(options: {
 export async function sendPaymentOverdueToOrganizerEmail(_options: EmailOptions & { eventTitle: string; attendeeName: string; bookingNumber: string; dueDate: string }) {
   return null;
 }
+
+// ─── Min Viable Reached → attendee (pay now) ────────────────────────────────
+
+export async function sendMinViableReachedEmail(
+  options: EmailOptions & {
+    eventTitle: string;
+    bookingNumber: string;
+    deadline: string;
+    payUrl: string;
+    totalPrice: number;
+  }
+) {
+  const { to, locale, eventTitle, bookingNumber, deadline, payUrl, totalPrice } = options;
+
+  const subject = t(locale,
+    `¡Mínimo alcanzado! Confirma tu plaza — ${eventTitle}`,
+    `Minimum reached! Confirm your spot — ${eventTitle}`
+  );
+
+  const body = [
+    paragraph(t(locale,
+      `<strong>${eventTitle}</strong> ha alcanzado el n&uacute;mero m&iacute;nimo de participantes. El retiro se celebrar&aacute;.`,
+      `<strong>${eventTitle}</strong> has reached the minimum number of participants. The retreat will take place.`
+    )),
+    paragraph(t(locale,
+      `Para confirmar tu plaza, realiza el pago de <strong>${totalPrice}&euro;</strong> antes del <strong>${deadline}</strong>.`,
+      `To confirm your spot, complete your payment of <strong>&euro;${totalPrice}</strong> before <strong>${deadline}</strong>.`
+    )),
+    infoBox([
+      infoLine(t(locale, 'N&ordm; de reserva', 'Booking number'), bookingNumber),
+      infoLine(t(locale, 'Importe', 'Amount'), `${totalPrice}&euro;`),
+      infoLine(t(locale, 'Fecha l&iacute;mite', 'Deadline'), deadline),
+    ].join('')),
+    paragraph(t(locale,
+      'Si no pagas antes de la fecha l&iacute;mite, tu plaza se liberar&aacute; autom&aacute;ticamente.',
+      'If you do not pay before the deadline, your spot will be released automatically.'
+    )),
+  ].join('');
+
+  const html = emailLayout({
+    locale, preheader: subject,
+    title: t(locale, '&iexcl;Tu retiro va a celebrarse!', 'Your retreat is happening!'),
+    body,
+    cta: { href: payUrl, label: t(locale, 'Pagar ahora', 'Pay now') },
+  });
+
+  return resend.emails.send({ from: FROM, to, subject, html });
+}
+
+// ─── Min Viable Reached → organizer ─────────────────────────────────────────
+
+export async function sendMinViableReachedToOrganizerEmail(
+  options: EmailOptions & {
+    eventTitle: string;
+    minAttendees: number;
+    reservedCount: number;
+    deadline: string;
+  }
+) {
+  const { to, locale, eventTitle, minAttendees, reservedCount, deadline } = options;
+
+  const subject = t(locale,
+    `¡Mínimo viable alcanzado! — ${eventTitle}`,
+    `Minimum viable reached! — ${eventTitle}`
+  );
+
+  const body = [
+    paragraph(t(locale,
+      `Tu retiro <strong>${eventTitle}</strong> ha alcanzado el m&iacute;nimo de <strong>${minAttendees}</strong> participantes (${reservedCount} inscritos).`,
+      `Your retreat <strong>${eventTitle}</strong> has reached the minimum of <strong>${minAttendees}</strong> participants (${reservedCount} enrolled).`
+    )),
+    paragraph(t(locale,
+      `Los inscritos tienen hasta el <strong>${deadline}</strong> para confirmar con el pago. Recuerda que, al alcanzar el m&iacute;nimo viable, te comprometes a celebrar el evento.`,
+      `Enrolled attendees have until <strong>${deadline}</strong> to confirm with payment. Remember that by reaching the minimum, you commit to holding the event.`
+    )),
+  ].join('');
+
+  const html = emailLayout({
+    locale, preheader: subject,
+    title: t(locale, '&iexcl;M&iacute;nimo viable alcanzado!', 'Minimum viable reached!'),
+    body,
+    cta: {
+      href: `${APP_URL}/${t(locale, 'es/mis-eventos', 'en/my-events')}`,
+      label: t(locale, 'Ver mi evento', 'View my event'),
+    },
+  });
+
+  return resend.emails.send({ from: FROM, to, subject, html });
+}
+
+// ─── Payment Deadline Grace Reminder → attendee ─────────────────────────────
+
+export async function sendPaymentDeadlineReminderEmail(
+  options: EmailOptions & {
+    eventTitle: string;
+    bookingNumber: string;
+    newDeadline: string;
+    payUrl: string;
+    totalPrice: number;
+  }
+) {
+  const { to, locale, eventTitle, bookingNumber, newDeadline, payUrl, totalPrice } = options;
+
+  const subject = t(locale,
+    `Última oportunidad para pagar — ${eventTitle}`,
+    `Last chance to pay — ${eventTitle}`
+  );
+
+  const body = [
+    paragraph(t(locale,
+      `El plazo original para pagar tu reserva en <strong>${eventTitle}</strong> ha vencido. Tienes <strong>24 horas m&aacute;s</strong> para completar el pago.`,
+      `The original deadline to pay for your booking at <strong>${eventTitle}</strong> has passed. You have <strong>24 more hours</strong> to complete your payment.`
+    )),
+    infoBox([
+      infoLine(t(locale, 'N&ordm; de reserva', 'Booking number'), bookingNumber),
+      infoLine(t(locale, 'Importe', 'Amount'), `${totalPrice}&euro;`),
+      infoLine(t(locale, 'Nuevo plazo', 'New deadline'), newDeadline),
+    ].join('')),
+    paragraph(t(locale,
+      'Si no pagas antes de este nuevo plazo, tu plaza se cancelar&aacute; autom&aacute;ticamente y se liberar&aacute;.',
+      'If you do not pay before this new deadline, your spot will be automatically cancelled and released.'
+    )),
+  ].join('');
+
+  const html = emailLayout({
+    locale, preheader: subject,
+    title: t(locale, '&Uacute;ltima oportunidad', 'Last chance'),
+    body,
+    cta: { href: payUrl, label: t(locale, 'Pagar ahora', 'Pay now') },
+  });
+
+  return resend.emails.send({ from: FROM, to, subject, html });
+}
+
+// ─── Reservation Confirmed (no payment yet) → attendee ─────────────────────
+
+export async function sendReservationConfirmedEmail(
+  options: EmailOptions & {
+    eventTitle: string;
+    bookingNumber: string;
+    minAttendees: number;
+    currentReserved: number;
+  }
+) {
+  const { to, locale, eventTitle, bookingNumber, minAttendees, currentReserved } = options;
+
+  const remaining = minAttendees - currentReserved;
+
+  const subject = t(locale,
+    `Plaza reservada — ${eventTitle}`,
+    `Spot reserved — ${eventTitle}`
+  );
+
+  const body = [
+    paragraph(t(locale,
+      `Tu plaza en <strong>${eventTitle}</strong> ha sido reservada. A&uacute;n no se requiere pago.`,
+      `Your spot at <strong>${eventTitle}</strong> has been reserved. No payment required yet.`
+    )),
+    infoBox([
+      infoLine(t(locale, 'N&ordm; de reserva', 'Booking number'), bookingNumber),
+      infoLine(t(locale, 'Inscritos', 'Enrolled'), `${currentReserved} / ${minAttendees} ${t(locale, 'm&iacute;nimo', 'minimum')}`),
+    ].join('')),
+    paragraph(t(locale,
+      remaining > 0
+        ? `Faltan <strong>${remaining}</strong> inscritos m&aacute;s para alcanzar el m&iacute;nimo. Cuando se alcance, te enviaremos un enlace de pago para confirmar tu plaza.`
+        : 'El m&iacute;nimo ya est&aacute; alcanzado. Recibir&aacute;s pronto un enlace para confirmar con el pago.',
+      remaining > 0
+        ? `<strong>${remaining}</strong> more enrollments needed to reach the minimum. Once reached, we'll send you a payment link to confirm your spot.`
+        : 'The minimum has been reached. You will receive a payment link shortly to confirm your spot.'
+    )),
+  ].join('');
+
+  const html = emailLayout({
+    locale, preheader: subject,
+    title: t(locale, 'Plaza reservada (sin pago)', 'Spot reserved (no payment)'),
+    body,
+    cta: {
+      href: `${APP_URL}/${t(locale, 'es/mis-reservas', 'en/my-bookings')}`,
+      label: t(locale, 'Ver mi reserva', 'View my booking'),
+    },
+  });
+
+  return resend.emails.send({ from: FROM, to, subject, html });
+}

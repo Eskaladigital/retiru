@@ -33,6 +33,20 @@ export default async function MisEventosPage() {
     retreats = data || [];
   }
 
+  // Count reserved_no_payment bookings per retreat
+  const retreatIds = retreats.map((r: any) => r.id);
+  const reservedMap: Record<string, number> = {};
+  if (retreatIds.length > 0) {
+    const { data: reservedRows } = await admin
+      .from('bookings')
+      .select('retreat_id')
+      .in('retreat_id', retreatIds)
+      .eq('status', 'reserved_no_payment');
+    for (const row of reservedRows || []) {
+      reservedMap[row.retreat_id] = (reservedMap[row.retreat_id] || 0) + 1;
+    }
+  }
+
   const list = retreats.map((r: any) => ({
     id: r.id,
     slug: r.slug,
@@ -43,6 +57,7 @@ export default async function MisEventosPage() {
     max_attendees: r.max_attendees,
     min_attendees: r.min_attendees ?? 1,
     confirmed_bookings: r.confirmed_bookings || 0,
+    reserved_bookings: reservedMap[r.id] || 0,
     total_price: r.total_price,
     cover: r.retreat_images?.find((i: any) => i.is_cover)?.url || r.retreat_images?.[0]?.url || null,
   }));

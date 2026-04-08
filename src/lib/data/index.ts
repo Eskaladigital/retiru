@@ -525,7 +525,7 @@ export async function getBookingsForUser(userId: string) {
   const { data, error } = await supabase
     .from('bookings')
     .select(`
-      id, booking_number, status, total_price, platform_fee, organizer_amount, created_at,
+      id, booking_number, status, total_price, platform_fee, organizer_amount, created_at, payment_deadline,
       retreats!retreat_id(id, title_es, title_en, slug, start_date, end_date, retreat_images(url, is_cover)),
       organizer_profiles!organizer_id(id, business_name, slug)
     `)
@@ -541,6 +541,7 @@ export async function getBookingsForUser(userId: string) {
     platform_fee: number;
     organizer_amount: number;
     created_at: string;
+    payment_deadline: string | null;
     retreats: { id: string; title_es: string; title_en: string; slug: string; start_date: string; end_date: string; retreat_images?: { url: string; is_cover: boolean }[] } | null;
     organizer_profiles: { id: string; business_name: string; slug: string } | null;
   }>;

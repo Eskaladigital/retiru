@@ -14,6 +14,7 @@ interface Retreat {
   max_attendees: number;
   min_attendees: number;
   confirmed_bookings: number;
+  reserved_bookings: number;
   total_price: number;
   cover: string | null;
 }
@@ -84,8 +85,10 @@ export function MisEventosClient({ retreats: initial }: { retreats: Retreat[] })
         <div className="space-y-3">
           {retreats.map((r) => {
             const s = STATUS_MAP[r.status] || STATUS_MAP.draft;
-            const occupancy = r.max_attendees ? Math.round((r.confirmed_bookings / r.max_attendees) * 100) : 0;
-            const minOk = (r.min_attendees ?? 1) <= 1 || r.confirmed_bookings >= (r.min_attendees ?? 1);
+            const totalEnrolled = r.confirmed_bookings + r.reserved_bookings;
+            const occupancy = r.max_attendees ? Math.round((totalEnrolled / r.max_attendees) * 100) : 0;
+            const confirmedPct = r.max_attendees ? Math.round((r.confirmed_bookings / r.max_attendees) * 100) : 0;
+            const minOk = (r.min_attendees ?? 1) <= 1 || totalEnrolled >= (r.min_attendees ?? 1);
             const dateStr = r.start_date
               ? `${new Date(r.start_date).toLocaleDateString('es', { day: 'numeric', month: 'short' })}${r.end_date ? ` – ${new Date(r.end_date).toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}`
               : 'Sin fecha';
@@ -115,18 +118,19 @@ export function MisEventosClient({ retreats: initial }: { retreats: Retreat[] })
                       <div className="flex justify-between text-xs mb-1">
                         <span className="text-[#a09383]">Ocupación</span>
                         <span className="font-semibold">
-                          {r.confirmed_bookings}/{r.max_attendees || 0}
+                          {r.confirmed_bookings} conf.{r.reserved_bookings > 0 && <> + {r.reserved_bookings} res.</>}/{r.max_attendees || 0}
                           {(r.min_attendees ?? 1) > 1 && (
                             <span className="font-normal text-[#a09383]"> · mín. {r.min_attendees}</span>
                           )}
                         </span>
                       </div>
-                      <div className="h-2 bg-sand-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-terracotta-500 rounded-full transition-all" style={{ width: `${occupancy}%` }} />
+                      <div className="h-2 bg-sand-200 rounded-full overflow-hidden relative">
+                        <div className="absolute inset-y-0 left-0 bg-sage-500 rounded-full transition-all" style={{ width: `${confirmedPct}%` }} />
+                        <div className="absolute inset-y-0 left-0 bg-terracotta-400/40 rounded-full transition-all" style={{ width: `${occupancy}%` }} />
                       </div>
                       {(r.min_attendees ?? 1) > 1 && (
                         <p className={`text-[11px] mt-1 ${minOk ? 'text-sage-700' : 'text-amber-700'}`}>
-                          {minOk ? 'Mínimo viable alcanzado' : `Faltan ${(r.min_attendees ?? 1) - r.confirmed_bookings} para el mínimo`}
+                          {minOk ? 'Mínimo viable alcanzado' : `Faltan ${(r.min_attendees ?? 1) - totalEnrolled} para el mínimo`}
                         </p>
                       )}
                     </div>
