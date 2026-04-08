@@ -3,13 +3,15 @@
 
 import { Suspense, useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { EmailLink } from '@/components/ui/email-link';
+import { registerSchemaEn } from '@/lib/validations';
 
 function RegisterFormEN() {
   const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -18,7 +20,6 @@ function RegisterFormEN() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/en';
   const isClaim = searchParams.get('claim') === 'true';
@@ -27,19 +28,29 @@ function RegisterFormEN() {
     e.preventDefault();
     setError(null);
 
-    if (!fullName.trim()) { setError('Name is required.'); return; }
-    if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
-    if (password !== confirmPassword) { setError('Passwords do not match.'); return; }
+    const parsed = registerSchemaEn.safeParse({
+      full_name: fullName.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      password,
+      confirm_password: confirmPassword,
+    });
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? 'Please check the form.');
+      return;
+    }
     if (!acceptTerms) { setError('You must accept the terms and privacy policy.'); return; }
+
+    const { full_name: fullNameOk, email: emailOk, phone: phoneOk, password: passwordOk } = parsed.data;
 
     setLoading(true);
     try {
       const supabase = createClient();
       const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
+        email: emailOk,
+        password: passwordOk,
         options: {
-          data: { full_name: fullName.trim() },
+          data: { full_name: fullNameOk, phone: phoneOk },
           emailRedirectTo: `${window.location.origin}/api/auth/callback?locale=en&redirect=${encodeURIComponent(redirect)}`,
         },
       });
@@ -83,8 +94,8 @@ function RegisterFormEN() {
             <h2 className="font-serif text-2xl mb-2">Check your email</h2>
             <p className="text-sm text-[#7a6b5d] mb-4">
               We&apos;ve sent a verification link to{' '}
-              <EmailLink email={email} className="font-semibold text-foreground hover:text-terracotta-600 hover:underline break-all">
-                {email}
+              <EmailLink email={email.trim()} className="font-semibold text-foreground hover:text-terracotta-600 hover:underline break-all">
+                {email.trim()}
               </EmailLink>
               . Click it to activate your account.
             </p>
@@ -131,6 +142,23 @@ function RegisterFormEN() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
+                disabled={loading}
+                className="w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all disabled:opacity-60"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">
+                Phone <span className="text-terracotta-600">*</span>
+                <span className="text-xs font-normal text-[#a09383] ml-1">(required, min. 9 digits)</span>
+              </label>
+              <input
+                type="tel"
+                placeholder="e.g. +44 7700 900000"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+                aria-required="true"
+                autoComplete="tel"
                 disabled={loading}
                 className="w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all disabled:opacity-60"
               />

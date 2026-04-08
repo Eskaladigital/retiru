@@ -1,6 +1,7 @@
 // /api/profile — Perfil del usuario autenticado (actualización)
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase/server';
+import { signupPhoneHasMinDigits } from '@/lib/validations';
 
 const MAX_NAME = 200;
 const MAX_PHONE = 50;
@@ -43,6 +44,16 @@ export async function PATCH(request: NextRequest) {
     }
     if (full_name.length > MAX_NAME) {
       return NextResponse.json({ error: 'Nombre demasiado largo' }, { status: 400 });
+    }
+
+    if (!phone) {
+      return NextResponse.json({ error: 'El teléfono es obligatorio' }, { status: 400 });
+    }
+    if (!signupPhoneHasMinDigits(phone)) {
+      return NextResponse.json(
+        { error: 'Introduce un teléfono válido (al menos 9 dígitos)' },
+        { status: 400 },
+      );
     }
 
     const updatePayload: Record<string, unknown> = {

@@ -546,7 +546,7 @@ user_role: 'attendee' | 'organizer' | 'admin'
 | Tipo funcional | Rol en BD | Cómo se llega | Capacidades |
 |---|---|---|---|
 | **Visitante** | Sin cuenta | Navega sin registrarse | Buscar, ver retiros, centros, blog, tienda |
-| **Asistente** | `attendee` | Se registra con email | Reservar retiros, gestionar perfil, reclamar centros |
+| **Asistente** | `attendee` | Se registra con email y teléfono obligatorio | Reservar retiros, gestionar perfil, reclamar centros |
 | **Propietario de centro** | `attendee` | Reclama un centro (claim aprobado) o propuesta aprobada por admin (`centers.claimed_by`) | Todo lo de asistente + editar su centro, publicar eventos |
 | **Organizador** | `organizer` | Crea su primer evento y el admin lo aprueba | Todo lo de asistente + crear/gestionar retiros (ya sin aprobación previa) |
 | **Admin** | `admin` | Asignado manualmente | Todo + panel `/administrator`, modera claims, retiros, centros |
@@ -588,7 +588,7 @@ El admin tiene además acceso a `/administrator` desde el menú.
 ### Flujo de autenticación
 
 - **Solo email/contraseña** (Google OAuth desactivado por ahora).
-- Registro → email de verificación → clic en enlace → cuenta activa → login.
+- Registro (nombre, **teléfono obligatorio**, email, contraseña) → email de verificación → clic en enlace → cuenta activa → login. El teléfono se guarda en `profiles.phone` vía metadatos de Supabase y el trigger `handle_new_user`.
 - Si el usuario intenta reclamar un centro sin estar logueado, se le redirige a **registro** (no a login) con `redirect` al centro. Si ya tiene cuenta, puede ir a login desde el registro.
 
 ---

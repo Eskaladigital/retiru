@@ -10,13 +10,35 @@ export const loginSchema = z.object({
   password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres'),
 });
 
+/** Teléfono en registro: obligatorio, al menos 9 dígitos (admite +, espacios, guiones). */
+export function signupPhoneHasMinDigits(value: string): boolean {
+  return value.replace(/\D/g, '').length >= 9;
+}
+
 export const registerSchema = z.object({
   full_name: z.string().min(2, 'Nombre demasiado corto').max(100),
   email: z.string().email('Email no válido'),
+  phone: z.string().trim().min(1, 'El teléfono es obligatorio').refine(signupPhoneHasMinDigits, {
+    message: 'Introduce un teléfono válido (al menos 9 dígitos)',
+  }),
   password: z.string().min(8, 'Mínimo 8 caracteres'),
   confirm_password: z.string(),
 }).refine((data) => data.password === data.confirm_password, {
   message: 'Las contraseñas no coinciden',
+  path: ['confirm_password'],
+});
+
+/** Misma regla que `registerSchema`, mensajes en inglés para `/en/register`. */
+export const registerSchemaEn = z.object({
+  full_name: z.string().min(2, 'Name is too short').max(100),
+  email: z.string().email('Invalid email'),
+  phone: z.string().trim().min(1, 'Phone number is required').refine(signupPhoneHasMinDigits, {
+    message: 'Enter a valid phone number (at least 9 digits)',
+  }),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  confirm_password: z.string(),
+}).refine((data) => data.password === data.confirm_password, {
+  message: 'Passwords do not match',
   path: ['confirm_password'],
 });
 

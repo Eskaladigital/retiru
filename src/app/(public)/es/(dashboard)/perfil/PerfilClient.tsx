@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Camera } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { EmailLink } from '@/components/ui/email-link';
+import { signupPhoneHasMinDigits } from '@/lib/validations';
 
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 const AVATAR_ACCEPT = ['image/jpeg', 'image/png', 'image/webp'] as const;
@@ -70,10 +71,23 @@ export function PerfilClient({ initial }: { initial: PerfilInitial }) {
     }
   }
 
+  function phoneInvalidMessage(): string | null {
+    const t = phone.trim();
+    if (!t) return 'El teléfono es obligatorio.';
+    if (!signupPhoneHasMinDigits(t)) return 'Introduce un teléfono válido (al menos 9 dígitos).';
+    return null;
+  }
+
   async function onAvatarFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
+
+    const phoneErr = phoneInvalidMessage();
+    if (phoneErr) {
+      setBanner({ type: 'err', text: phoneErr });
+      return;
+    }
 
     if (!(AVATAR_ACCEPT as readonly string[]).includes(file.type)) {
       setBanner({ type: 'err', text: 'Formato no válido. Usa JPG, PNG o WebP.' });
@@ -135,6 +149,11 @@ export function PerfilClient({ initial }: { initial: PerfilInitial }) {
   async function removeAvatar() {
     if (!avatarUrl) return;
     if (!confirm('¿Quitar la foto de perfil?')) return;
+    const phoneErr = phoneInvalidMessage();
+    if (phoneErr) {
+      setBanner({ type: 'err', text: phoneErr });
+      return;
+    }
     setUploadingAvatar(true);
     setBanner(null);
     try {
@@ -156,6 +175,11 @@ export function PerfilClient({ initial }: { initial: PerfilInitial }) {
   async function onSave(e: React.FormEvent) {
     e.preventDefault();
     setBanner(null);
+    const phoneErr = phoneInvalidMessage();
+    if (phoneErr) {
+      setBanner({ type: 'err', text: phoneErr });
+      return;
+    }
     setSaving(true);
     try {
       await persistProfile(
@@ -270,7 +294,8 @@ export function PerfilClient({ initial }: { initial: PerfilInitial }) {
           </div>
           <div>
             <label htmlFor="perfil-tel" className="block text-sm font-medium text-foreground mb-1.5">
-              Teléfono
+              Teléfono <span className="text-terracotta-600">*</span>
+              <span className="text-xs font-normal text-[#a09383] ml-1">(obligatorio)</span>
             </label>
             <input
               id="perfil-tel"
@@ -278,6 +303,9 @@ export function PerfilClient({ initial }: { initial: PerfilInitial }) {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+34 600 000 000"
+              required
+              aria-required="true"
+              autoComplete="tel"
               className="w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all"
             />
           </div>

@@ -3,13 +3,15 @@
 
 import { Suspense, useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { EmailLink } from '@/components/ui/email-link';
+import { registerSchema } from '@/lib/validations';
 
 function RegistroForm() {
   const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -18,7 +20,6 @@ function RegistroForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/es';
   const isClaim = searchParams.get('claim') === 'true';
@@ -27,19 +28,29 @@ function RegistroForm() {
     e.preventDefault();
     setError(null);
 
-    if (!fullName.trim()) { setError('El nombre es obligatorio.'); return; }
-    if (password.length < 8) { setError('La contraseña debe tener al menos 8 caracteres.'); return; }
-    if (password !== confirmPassword) { setError('Las contraseñas no coinciden.'); return; }
+    const parsed = registerSchema.safeParse({
+      full_name: fullName.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      password,
+      confirm_password: confirmPassword,
+    });
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? 'Revisa los datos del formulario.');
+      return;
+    }
     if (!acceptTerms) { setError('Debes aceptar los términos y la política de privacidad.'); return; }
+
+    const { full_name: fullNameOk, email: emailOk, phone: phoneOk, password: passwordOk } = parsed.data;
 
     setLoading(true);
     try {
       const supabase = createClient();
       const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
+        email: emailOk,
+        password: passwordOk,
         options: {
-          data: { full_name: fullName.trim() },
+          data: { full_name: fullNameOk, phone: phoneOk },
           emailRedirectTo: `${window.location.origin}/api/auth/callback?locale=es&redirect=${encodeURIComponent(redirect)}`,
         },
       });
@@ -83,8 +94,8 @@ function RegistroForm() {
             <h2 className="font-serif text-2xl mb-2">Revisa tu email</h2>
             <p className="text-sm text-[#7a6b5d] mb-4">
               Hemos enviado un enlace de verificación a{' '}
-              <EmailLink email={email} className="font-semibold text-foreground hover:text-terracotta-600 hover:underline break-all">
-                {email}
+              <EmailLink email={email.trim()} className="font-semibold text-foreground hover:text-terracotta-600 hover:underline break-all">
+                {email.trim()}
               </EmailLink>
               . Haz clic en él para activar tu cuenta.
             </p>
@@ -131,6 +142,23 @@ function RegistroForm() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
+                disabled={loading}
+                className="w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all disabled:opacity-60"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">
+                Teléfono <span className="text-terracotta-600">*</span>
+                <span className="text-xs font-normal text-[#a09383] ml-1">(obligatorio, mín. 9 dígitos)</span>
+              </label>
+              <input
+                type="tel"
+                placeholder="Ej. +34 600 000 000"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+                aria-required="true"
+                autoComplete="tel"
                 disabled={loading}
                 className="w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all disabled:opacity-60"
               />

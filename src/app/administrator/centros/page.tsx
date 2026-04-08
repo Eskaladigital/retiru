@@ -8,11 +8,29 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminCentrosPage() {
   const supabase = createAdminSupabase();
-  const { data: centers } = await supabase
+  // Sin `images`: arrays grandes por fila disparan el tamaño de la respuesta y pueden provocar timeout
+  // o carga eterna del loading del layout. La tabla solo usa `cover_url` para la miniatura.
+  const { data: centers, error } = await supabase
     .from('centers')
-    .select('id, name, slug, city, province, plan, status, type, price_monthly, created_at, description_es, cover_url, images, email, submitted_by')
+    .select('id, name, slug, city, province, plan, status, type, price_monthly, description_es, cover_url, email, submitted_by')
     .order('name')
     .limit(5000);
+
+  if (error) {
+    return (
+      <div>
+        <h1 className="font-serif text-3xl text-foreground mb-2">Centros</h1>
+        <div className="rounded-2xl border border-red-200 bg-red-50 text-red-800 px-5 py-4 text-sm max-w-2xl">
+          <p className="font-semibold mb-1">No se pudieron cargar los centros</p>
+          <p className="font-mono text-xs break-all opacity-90">{error.message}</p>
+          <p className="mt-3 text-[#7a6b5d]">
+            Revisa que exista la variable <code className="bg-white/80 px-1 rounded">SUPABASE_SERVICE_ROLE_KEY</code> en el entorno del servidor y que las migraciones de la tabla{' '}
+            <code className="bg-white/80 px-1 rounded">centers</code> estén aplicadas (p. ej. columna <code className="bg-white/80 px-1 rounded">submitted_by</code>).
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const list = (centers || []) as CenterRow[];
   const totalMRR = list.reduce((s: number, c) => s + (c.plan === 'featured' ? 65 : c.plan === 'basic' ? 50 : 0), 0);

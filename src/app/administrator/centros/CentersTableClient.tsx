@@ -4,7 +4,6 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Download, FileSpreadsheet, Search, ChevronUp, ChevronDown, ChevronsUpDown, X, Pencil, ExternalLink, Trash2, EyeOff, Eye } from 'lucide-react';
-import * as XLSX from 'xlsx';
 import { createClient } from '@/lib/supabase/client';
 import { CENTER_FILTER_OPTIONS_ES, getCenterTypeLabel } from '@/lib/utils';
 
@@ -20,7 +19,6 @@ export type CenterRow = {
   price_monthly?: number;
   description_es?: string | null;
   cover_url?: string | null;
-  images?: string[];
   email?: string | null;
   submitted_by?: string | null;
 };
@@ -37,7 +35,7 @@ function exportStatusLabel(status: string): string {
 }
 
 function getMainImage(c: CenterRow): string {
-  return c.cover_url || (Array.isArray(c.images) && c.images[0]) || '';
+  return c.cover_url || '';
 }
 
 function getMRR(c: CenterRow): number {
@@ -87,7 +85,8 @@ function exportCSV(list: CenterRow[]) {
   URL.revokeObjectURL(url);
 }
 
-function exportExcel(list: CenterRow[]) {
+async function exportExcel(list: CenterRow[]) {
+  const XLSX = await import('xlsx');
   const data = list.map((c) => ({
     Imagen: getMainImage(c) || '',
     Centro: c.name,
@@ -279,7 +278,8 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
           <Download size={16} /> CSV
         </button>
         <button
-          onClick={() => exportExcel(sorted)}
+          type="button"
+          onClick={() => void exportExcel(sorted)}
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-sand-200 text-sm font-medium text-[#7a6b5d] hover:bg-sand-50 transition-colors"
         >
           <FileSpreadsheet size={16} /> Excel
