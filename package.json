@@ -32,7 +32,8 @@
     "blog:backfill-slugs-en": "node scripts/backfill-blog-slugs-en.mjs",
     "blog:translate-en": "node scripts/translate-blog-articles-en.mjs",
     "blog:import-csv": "node scripts/import-blog-csv.mjs",
-    "blog:import-csv:push": "node scripts/import-blog-csv.mjs --push"
+    "blog:import-csv:push": "node scripts/import-blog-csv.mjs --push",
+    "retreats:push-alma-nomada": "node scripts/push-alma-nomada-content.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

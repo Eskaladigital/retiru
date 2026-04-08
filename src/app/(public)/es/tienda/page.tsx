@@ -7,9 +7,9 @@ import { createServerSupabase } from '@/lib/supabase/server';
 export const metadata: Metadata = shopES;
 
 const CATEGORIES = [
-  { slug: 'yoga', name: 'Yoga', icon: '🧘' },
-  { slug: 'meditacion', name: 'Meditación', icon: '🧠' },
-  { slug: 'ayurveda', name: 'Ayurveda', icon: '🌿' },
+  { slug: 'yoga', name: 'Yoga' },
+  { slug: 'meditacion', name: 'Meditación' },
+  { slug: 'ayurveda', name: 'Ayurveda' },
 ];
 
 export default async function TiendaPage() {
@@ -32,19 +32,9 @@ export default async function TiendaPage() {
         <button className="px-4 py-2 rounded-full text-sm font-medium bg-terracotta-600 text-white border border-terracotta-600">Todos</button>
         {CATEGORIES.map(c => (
           <button key={c.slug} className="px-4 py-2 rounded-full text-sm font-medium bg-white border border-sand-300 text-[#7a6b5d] hover:border-terracotta-300 hover:text-terracotta-600 transition-colors">
-            {c.icon} {c.name}
+            {c.name}
           </button>
         ))}
-      </div>
-
-      {/* Featured banner */}
-      <div className="bg-gradient-to-r from-terracotta-50 to-sand-100 border border-terracotta-200 rounded-2xl p-6 md:p-8 mb-8 flex flex-col md:flex-row items-center gap-6">
-        <div className="flex-1">
-          <span className="text-xs font-bold uppercase tracking-wider text-terracotta-600">Envío gratis a partir de 50€</span>
-          <h2 className="font-serif text-2xl mt-2">Equipamiento esencial para tu práctica</h2>
-          <p className="text-sm text-[#7a6b5d] mt-2">Esterillas, cojines, bloques y todo lo que necesitas. Calidad premium a precios justos.</p>
-        </div>
-        <div className="text-6xl">🧘‍♀️</div>
       </div>
 
       {/* Products grid */}
@@ -75,10 +65,34 @@ export default async function TiendaPage() {
           })}
         </div>
       ) : (
-        <div className="text-center py-16">
-          <p className="text-lg text-[#7a6b5d]">No hay productos disponibles en este momento.</p>
-          <p className="text-sm text-[#a09383] mt-2">Vuelve pronto, estamos preparando novedades.</p>
-        </div>
+        <section className="py-20 md:py-28">
+          <div className="max-w-2xl mx-auto text-center">
+            <span className="inline-block text-xs font-bold uppercase tracking-[0.2em] text-terracotta-600 mb-4">Tienda Retiru</span>
+            <h2 className="font-serif text-[clamp(26px,3.5vw,38px)] text-foreground leading-tight mb-5">Próximamente disponible</h2>
+            <div className="w-12 h-px bg-terracotta-300 mx-auto mb-6" />
+            <p className="text-[#7a6b5d] text-base md:text-lg leading-relaxed mb-4">
+              Estamos preparando una selección cuidada de productos para tu práctica: esterillas, cojines, bloques,
+              aceites y todo lo que necesitas para llevar tu bienestar a otro nivel.
+            </p>
+            <p className="text-[#a09383] text-sm leading-relaxed mb-10">
+              Calidad premium, precios justos y envío gratis a partir de 50€. Muy pronto aquí.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link
+                href="/es/retiros"
+                className="inline-flex items-center justify-center px-6 py-3 rounded-full text-sm font-semibold bg-terracotta-600 text-white hover:bg-terracotta-700 transition-colors"
+              >
+                Explorar retiros
+              </Link>
+              <Link
+                href="/es/contacto"
+                className="inline-flex items-center justify-center px-6 py-3 rounded-full text-sm font-semibold border border-sand-300 text-[#7a6b5d] hover:border-terracotta-300 hover:text-terracotta-600 transition-colors"
+              >
+                Contactar
+              </Link>
+            </div>
+          </div>
+        </section>
       )}
     </div>
   );

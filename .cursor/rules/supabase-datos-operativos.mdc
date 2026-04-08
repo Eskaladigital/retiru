@@ -1,0 +1,34 @@
+---
+description: Contenido en Supabase (retiros, eventos, textos) se actualiza con scripts/API, no con migraciones SQL copiables
+alwaysApply: true
+---
+
+# Datos operativos en Supabase (no migraciones SQL)
+
+## Qué va en `supabase/migrations/*.sql`
+
+Solo **estructura y políticas**: tablas, columnas, índices, RLS, funciones, enums, buckets y permisos de Storage.
+
+## Qué no va en migraciones
+
+- Textos y campos de contenido de **retiros** (`description_*`, `includes_*`, `schedule`, `summary_*`, etc.)
+- Correcciones puntuales de **un evento** o filas concretas de negocio
+- Seeds masivos que el usuario pide aplicar “ya” en el proyecto enlazado a `.env.local`
+
+Para eso: **script Node** en `scripts/` que lea `.env.local`, use `@supabase/supabase-js` con `SUPABASE_SERVICE_ROLE_KEY`, y haga `insert`/`update`/`upsert`. Añadir `npm run …` en `package.json` cuando el script sea reutilizable.
+
+## Cuando el usuario pide actualizar un retiro o evento
+
+1. **Ejecutar** el script (o crearlo y ejecutarlo), no entregar SQL para que el usuario lo pegue en el dashboard.
+2. Si no existe script genérico, crear uno específico o extender uno existente siguiendo el patrón de `scripts/push-alma-nomada-content.mjs` / `scripts/import-blog-csv.mjs --push`.
+3. No pedir al usuario que copie migraciones SQL de contenido.
+
+## Textos públicos de retiros y eventos
+
+- **No incluir nunca** en `summary_*`, `description_*`, `meta_description_*`, `includes_*`, `excludes_*`, `schedule` ni ningún campo visible en ficha: **teléfonos móviles**, **emails de contacto** ni datos directos del organizador para saltarse Retiru.
+- Los nombres de facilitación / equipo están bien; el canal de contacto es siempre la **ficha en Retiru** (reserva, «Preguntar al organizador», etc.).
+
+## Seguridad
+
+- Nunca volcar claves de `.env.local` en el chat.
+- La service role solo en scripts locales o servidor; no en el cliente.

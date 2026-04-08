@@ -41,8 +41,15 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error('[storage/retreat-images]', error);
+      const msg = error.message || '';
+      const isBucketMissing =
+        /Bucket not found|not found|does not exist/i.test(msg) || msg.includes('404');
       return NextResponse.json(
-        { error: error.message || 'No se pudo guardar la imagen en el bucket.' },
+        {
+          error: isBucketMissing
+            ? 'El bucket «retreat-images» no existe en este proyecto Supabase. En el panel: SQL → ejecuta la migración supabase/migrations/025_storage_retreat_images_bucket_ensure.sql (o crea el bucket «retreat-images» como público en Storage).'
+            : msg || 'No se pudo guardar la imagen en el bucket.',
+        },
         { status: 502 },
       );
     }

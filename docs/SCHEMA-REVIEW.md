@@ -2,6 +2,8 @@
 
 Auditoría completa de todas las páginas (usuario, organizador, admin, públicas) contra los tipos definidos en `src/types/index.ts`.
 
+**Orden de migraciones en Supabase:** el esquema “oficial” es la carpeta `supabase/migrations/` aplicada en orden numérico. Varios cambios van en **dos archivos seguidos** (enums + uso en la siguiente migración); no ejecutar solo la segunda. Detalle y tabla de pares: `README.md` → sección *Base de datos (Supabase)*.
+
 ---
 
 ## Resumen ejecutivo

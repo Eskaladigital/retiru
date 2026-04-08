@@ -7,9 +7,9 @@ import { createServerSupabase } from '@/lib/supabase/server';
 export const metadata: Metadata = shopEN;
 
 const CATEGORIES = [
-  { slug: 'yoga', name: 'Yoga', icon: '🧘' },
-  { slug: 'meditation', name: 'Meditation', icon: '🧠' },
-  { slug: 'ayurveda', name: 'Ayurveda', icon: '🌿' },
+  { slug: 'yoga', name: 'Yoga' },
+  { slug: 'meditation', name: 'Meditation' },
+  { slug: 'ayurveda', name: 'Ayurveda' },
 ];
 
 export default async function ShopPageEN() {
@@ -23,24 +23,17 @@ export default async function ShopPageEN() {
   return (
     <div className="container-wide py-12">
       <div className="mb-10">
-        <h1 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground mb-2">Retiru <span className="text-terracotta-600">shop</span></h1>
+        <h1 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground mb-2">Retiru <span className="text-terracotta-600">Shop</span></h1>
         <p className="text-[#7a6b5d] max-w-xl">Products for your yoga, meditation and ayurveda practice</p>
       </div>
 
       <div className="flex flex-wrap gap-2 mb-8">
         <button className="px-4 py-2 rounded-full text-sm font-medium bg-terracotta-600 text-white border border-terracotta-600">All</button>
         {CATEGORIES.map(c => (
-          <button key={c.slug} className="px-4 py-2 rounded-full text-sm font-medium bg-white border border-sand-300 text-[#7a6b5d] hover:border-terracotta-300 hover:text-terracotta-600 transition-colors">{c.icon} {c.name}</button>
+          <button key={c.slug} className="px-4 py-2 rounded-full text-sm font-medium bg-white border border-sand-300 text-[#7a6b5d] hover:border-terracotta-300 hover:text-terracotta-600 transition-colors">
+            {c.name}
+          </button>
         ))}
-      </div>
-
-      <div className="bg-gradient-to-r from-terracotta-50 to-sand-100 border border-terracotta-200 rounded-2xl p-6 md:p-8 mb-8 flex flex-col md:flex-row items-center gap-6">
-        <div className="flex-1">
-          <span className="text-xs font-bold uppercase tracking-wider text-terracotta-600">Free shipping on orders over 50€</span>
-          <h2 className="font-serif text-2xl mt-2">Essential gear for your practice</h2>
-          <p className="text-sm text-[#7a6b5d] mt-2">Mats, cushions, blocks and everything you need. Premium quality at fair prices.</p>
-        </div>
-        <div className="text-6xl">🧘‍♀️</div>
       </div>
 
       {products && products.length > 0 ? (
@@ -70,10 +63,34 @@ export default async function ShopPageEN() {
           })}
         </div>
       ) : (
-        <div className="text-center py-16">
-          <p className="text-lg text-[#7a6b5d]">No products available at the moment.</p>
-          <p className="text-sm text-[#a09383] mt-2">Check back soon, we&apos;re preparing new arrivals.</p>
-        </div>
+        <section className="py-20 md:py-28">
+          <div className="max-w-2xl mx-auto text-center">
+            <span className="inline-block text-xs font-bold uppercase tracking-[0.2em] text-terracotta-600 mb-4">Retiru Shop</span>
+            <h2 className="font-serif text-[clamp(26px,3.5vw,38px)] text-foreground leading-tight mb-5">Coming soon</h2>
+            <div className="w-12 h-px bg-terracotta-300 mx-auto mb-6" />
+            <p className="text-[#7a6b5d] text-base md:text-lg leading-relaxed mb-4">
+              We&apos;re curating a selection of products for your practice: mats, cushions, blocks,
+              oils and everything you need to take your wellbeing to the next level.
+            </p>
+            <p className="text-[#a09383] text-sm leading-relaxed mb-10">
+              Premium quality, fair prices and free shipping on orders over 50€. Very soon right here.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link
+                href="/en/retreats"
+                className="inline-flex items-center justify-center px-6 py-3 rounded-full text-sm font-semibold bg-terracotta-600 text-white hover:bg-terracotta-700 transition-colors"
+              >
+                Explore retreats
+              </Link>
+              <Link
+                href="/en/contact"
+                className="inline-flex items-center justify-center px-6 py-3 rounded-full text-sm font-semibold border border-sand-300 text-[#7a6b5d] hover:border-terracotta-300 hover:text-terracotta-600 transition-colors"
+              >
+                Contact us
+              </Link>
+            </div>
+          </div>
+        </section>
       )}
     </div>
   );

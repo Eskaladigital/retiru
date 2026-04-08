@@ -1,6 +1,8 @@
 -- ============================================================================
 -- RETIRU · Migración 022 — Flujo "reserva sin pago" hasta mínimo viable
 -- Añade status reserved_no_payment, columnas de deadline y reminder en bookings.
+-- NOTA: El índice parcial que usa el nuevo enum value va en la migración 023
+-- porque PostgreSQL no permite usar un enum value recién añadido en la misma TX.
 -- ============================================================================
 
 -- 1. Nuevo valor en el enum booking_status
@@ -11,7 +13,3 @@ ALTER TABLE bookings ADD COLUMN IF NOT EXISTS payment_deadline TIMESTAMPTZ;
 
 -- 3. Flag para controlar si ya se envió el recordatorio de gracia (+24h)
 ALTER TABLE bookings ADD COLUMN IF NOT EXISTS payment_reminder_sent BOOLEAN NOT NULL DEFAULT false;
-
--- 4. Índice parcial para contar rápidamente reservas sin pago por retiro
-CREATE INDEX IF NOT EXISTS idx_bk_reserved
-  ON bookings(retreat_id) WHERE status = 'reserved_no_payment';

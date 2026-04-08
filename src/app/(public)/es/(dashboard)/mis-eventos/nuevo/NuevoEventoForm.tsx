@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Upload, X, GripVertical, Plus, Trash2 } from 'lucide-react';
+import { OrganizerPriceBreakdown } from '@/components/organizer/OrganizerPriceBreakdown';
 
 interface Option { id: string; name: string; slug: string }
 
@@ -28,9 +29,9 @@ async function uploadRetreatImageViaApi(file: File): Promise<string> {
         'No se pudo subir la imagen. Comprueba el bucket «retreat-images» en Supabase y que SUPABASE_SERVICE_ROLE_KEY esté definida en el servidor (p. ej. Vercel).',
       );
     }
-    if (/Bucket not found|not found/i.test(msg)) {
+    if (/Bucket not found|not found|does not exist/i.test(msg) || msg.includes('404')) {
       throw new Error(
-        'El bucket «retreat-images» no existe en este proyecto. Créalo o aplica las migraciones de Storage.',
+        'El bucket «retreat-images» no existe en Supabase. En el panel: SQL → ejecuta la migración 025_storage_retreat_images_bucket_ensure.sql (carpeta supabase/migrations), o crea el bucket «retreat-images» como público en Storage.',
       );
     }
     throw new Error(msg.startsWith('Error') ? msg : `Error al subir una imagen: ${msg}`);
@@ -772,11 +773,17 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
         {/* ═══ Step 4: Precio ═══ */}
         {step === 4 && (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Precio por persona (€) *</label>
-                <input type="number" min="50" value={form.total_price} onChange={(e) => set('total_price', e.target.value)} placeholder="790" className={inputCls} />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Precio por persona (€) *</label>
+              <input type="number" min="50" value={form.total_price} onChange={(e) => set('total_price', e.target.value)} placeholder="790" className={`${inputCls} max-w-xs`} />
+              <p className="text-xs text-[#7a6b5d] mt-1.5 leading-relaxed max-w-2xl">
+                Es el precio <strong className="text-foreground">público y final</strong> por asistente (lo que pagan en Retiru). La comisión de la plataforma está incluida en esa cifra; el desglose muestra tu parte y la de Retiru.
+              </p>
+            </div>
+            <div className="mt-3">
+              <OrganizerPriceBreakdown priceInput={form.total_price} />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">Plazas máximas *</label>
                 <input type="number" min="1" value={form.max_attendees} onChange={(e) => set('max_attendees', e.target.value)} placeholder="16" className={inputCls} />
@@ -796,25 +803,6 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
                 </p>
               </div>
             </div>
-            {form.total_price && (
-              <div className="bg-sand-50 border border-sand-200 rounded-xl p-4">
-                <h3 className="text-sm font-semibold mb-2">Desglose de precios</h3>
-                <div className="grid grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <p className="text-[#a09383]">El asistente paga</p>
-                    <p className="font-bold text-lg">{Number(form.total_price).toFixed(0)}€</p>
-                  </div>
-                  <div>
-                    <p className="text-[#a09383]">Tu ingreso neto</p>
-                    <p className="font-semibold text-sage-700">{(Number(form.total_price) * 0.8).toFixed(0)}€</p>
-                  </div>
-                  <div>
-                    <p className="text-[#a09383]">Comisión Retiru</p>
-                    <p className="font-semibold text-terracotta-600">{(Number(form.total_price) * 0.2).toFixed(0)}€</p>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Cancellation policy */}
             <div>

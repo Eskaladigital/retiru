@@ -16,6 +16,8 @@ Antes de implementar cualquier cambio funcional (nuevas features, cambios de flu
    - `docs/SCHEMA-REVIEW.md` — si se tocan tablas/migraciones
    - `docs/SEO-LANDINGS.md` — si se tocan landings o SEO
 
+**Migraciones vs datos:** el contenido de retiros/eventos en BD se documenta en `README.md` (scripts operativos). Las migraciones SQL del repo son solo esquema y permisos; ver regla `supabase-datos-operativos.mdc`.
+
 ## Después de hacer cambios
 
 Si el cambio afecta a cualquiera de estos aspectos, **actualizar los `.md` correspondientes**:

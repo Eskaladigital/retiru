@@ -135,15 +135,40 @@ node scripts/count-generic-descriptions.mjs # Contar descripciones genéricas
 node scripts/seed-retreats.mjs           # Poblar retiros de ejemplo en Supabase
 node scripts/count-retreats.mjs          # Contar retiros en BD
 node scripts/assign-retreats-to-admin.mjs # Asignar retiros de ejemplo al admin
+npm run retreats:push-alma-nomada        # Contenido ficha Alma Nómada (PDF) → Supabase vía .env.local
 ```
 
 ---
 
 ## Base de datos (Supabase)
 
+### Contenido operativo (retiros, textos, filas de negocio)
+
+Las carpetas `supabase/migrations/` y `supabase/seed/` sirven para **esquema**, **RLS**, **índices** y **datos iniciales reproducibles** en cualquier entorno.
+
+Las actualizaciones puntuales de una ficha de retiro (descripciones, programa, incluidos, destino, etc.) **no** deben ir como nuevas migraciones SQL en el repo: se aplican con **scripts Node** que usan `.env.local` (`NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`), igual que `npm run blog:import-csv:push`. Así el agente o quien tenga el entorno puede escribir en la tabla sin que tú copies SQL en el dashboard.
+
+En esos textos **no** deben figurar **teléfonos móviles ni emails de contacto** del organizador: el canal es siempre la ficha en Retiru (reserva o mensaje).
+
+| Comando | Uso |
+|--------|-----|
+| `npm run retreats:push-alma-nomada` | Actualiza por slug el retiro Alma Nómada según el contenido acordado (PDF 1ª edición): destino Marruecos, textos ES/EN, incluidos, excluidos, `schedule`, meta. |
+
+Para otro retiro, añadir un script análogo en `scripts/` o generalizar con un JSON + slug (mismo patrón).
+
 ### Migraciones y seeds
 
 Ejecutar en el **SQL Editor** de Supabase (con service_role) en este orden:
+
+**Pares que no se pueden saltar (ni fusionar en un solo “Run”):** PostgreSQL exige que ciertos valores de enum existan y estén confirmados antes de usarlos en la misma transacción (p. ej. índices parciales, políticas RLS, `DEFAULT`). Por eso el repo parte el cambio en dos archivos seguidos:
+
+| Primero | Después | Motivo |
+|--------|---------|--------|
+| `012_centers_user_proposals.sql` | `013_centers_user_proposals_rls.sql` | `pending_review` en `center_status` → luego `submitted_by`, índice y política |
+| `018_full_payment_model.sql` | `019_full_payment_model_columns.sql` | Valores nuevos en `remaining_payment_status` → columnas payout y `DEFAULT` |
+| `022_reserved_no_payment_status.sql` | `023_reserved_no_payment_index.sql` | `reserved_no_payment` en `booking_status` → índice parcial |
+
+Con **Supabase CLI** (`supabase link` + `supabase db push`) se aplican solas en orden. Con **SQL Editor**, ejecuta **un archivo por ejecución**, en orden numérico. Si pegas solo `013` sin `012`, verás `22P02` / `pending_review`.
 
 1. `supabase/migrations/001_initial.sql` — esquema completo (tablas, RLS, triggers)
 2. `supabase/migrations/002_fix_handle_new_profile.sql` — fix trigger perfil
@@ -166,10 +191,17 @@ Ejecutar en el **SQL Editor** de Supabase (con service_role) en este orden:
 19. `supabase/migrations/019_full_payment_model_columns.sql` — modelo pago 100%, parte 2: columnas payout + defaults (ejecutar DESPUÉS de 018)
 20. `supabase/migrations/020_handle_new_user_phone.sql` — teléfono obligatorio en profiles
 21. `supabase/migrations/021_storage_blog_folder_policy.sql` — política RLS para subir imágenes a carpeta `blog/` (y `avatars/`) en bucket `retreat-images`
-22. `supabase/seed/001_categories_destinations.sql` — categorías y destinos
-17. `supabase/seed/002_sample_retreats.sql` — usuario demo + 10 retiros de ejemplo
-18. `supabase/seed/003_sample_blog.sql` — 3 categorías de blog + 5 artículos  
-    Opcional: tras generar con `npm run blog:import-csv`, ejecutar `supabase/seed/016_blog_from_csv.sql` en el SQL Editor para importar ~50 artículos del CSV (orden no alfabético).
+22. `supabase/migrations/022_reserved_no_payment_status.sql` — enum `reserved_no_payment`, columnas `payment_deadline` y `payment_reminder_sent` en `bookings` (índice en 023)
+23. `supabase/migrations/023_reserved_no_payment_index.sql` — índice parcial `idx_bk_reserved` (ejecutar después de 022)
+24. `supabase/migrations/024_backfill_min_attendees_equals_max.sql` — backfill `retreats.min_attendees = max_attendees` en datos legacy
+25. `supabase/migrations/025_storage_retreat_images_bucket_ensure.sql` — idempotente: crea bucket público `retreat-images` + políticas (si en producción falta el bucket y fallan las subidas de fotos de eventos, ejecutar este SQL en el panel)
+
+**Seeds** (después de las migraciones):
+
+1. `supabase/seed/001_categories_destinations.sql` — categorías y destinos
+2. `supabase/seed/002_sample_retreats.sql` — usuario demo + 10 retiros de ejemplo
+3. `supabase/seed/003_sample_blog.sql` — 3 categorías de blog + 5 artículos  
+   Opcional: tras generar con `npm run blog:import-csv`, ejecutar `supabase/seed/016_blog_from_csv.sql` en el SQL Editor para importar ~50 artículos del CSV (orden no alfabético).
 
 ### Capa de datos
 

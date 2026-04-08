@@ -1,4 +1,11 @@
--- Paso 2/2: columna, índices y RLS (ejecutar después de 012; ya existe el valor pending_review).
+-- Paso 2/2: columna, índices y RLS para propuestas de centro.
+--
+-- PREREQUISITO OBLIGATORIO: migración 012_centers_user_proposals.sql (valor enum pending_review).
+-- Sin 012, esta migración falla al crear el índice/política con:
+--   22P02: invalid input value for enum center_status: "pending_review"
+--
+-- Con Supabase CLI cada archivo es una migración en transacción propia (orden numérico).
+-- En SQL Editor: ejecuta 012, pulsa Run; luego 013, Run (nunca pegar 012+013 en un solo bloque).
 
 ALTER TABLE centers
   ADD COLUMN IF NOT EXISTS submitted_by UUID REFERENCES profiles(id) ON DELETE SET NULL;

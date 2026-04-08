@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Upload, X } from 'lucide-react';
+import { OrganizerPriceBreakdown } from '@/components/organizer/OrganizerPriceBreakdown';
 
 interface Option { id: string; name: string; slug: string }
 
@@ -18,9 +19,9 @@ async function uploadRetreatImageViaApi(file: File): Promise<string> {
         'No se pudo subir la imagen. Comprueba el bucket «retreat-images» en Supabase y que SUPABASE_SERVICE_ROLE_KEY esté definida en el servidor (p. ej. Vercel).',
       );
     }
-    if (/Bucket not found|not found/i.test(msg)) {
+    if (/Bucket not found|not found|does not exist/i.test(msg) || msg.includes('404')) {
       throw new Error(
-        'El bucket «retreat-images» no existe en este proyecto. Créalo o aplica las migraciones de Storage.',
+        'El bucket «retreat-images» no existe en Supabase. En el panel: SQL → ejecuta la migración 025_storage_retreat_images_bucket_ensure.sql (carpeta supabase/migrations), o crea el bucket «retreat-images» como público en Storage.',
       );
     }
     throw new Error(msg.startsWith('Error') ? msg : `Error al subir una imagen: ${msg}`);
@@ -374,11 +375,17 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
         <input type="text" value={form.address} onChange={(e) => set('address', e.target.value)} className={inputCls} />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">Precio (€) *</label>
-          <input type="number" min="50" value={form.total_price} onChange={(e) => set('total_price', e.target.value)} className={inputCls} />
-        </div>
+      <div>
+        <label className="block text-sm font-medium text-foreground mb-1.5">Precio por persona (€) *</label>
+        <input type="number" min="50" value={form.total_price} onChange={(e) => set('total_price', e.target.value)} className={`${inputCls} max-w-xs`} />
+        <p className="text-xs text-[#7a6b5d] mt-1.5 leading-relaxed max-w-2xl">
+          Precio <strong className="text-foreground">público y final</strong> que paga cada asistente en Retiru. La comisión de la plataforma va incluida; el desglose indica tu ingreso neto y lo que corresponde a Retiru (20&nbsp;%).
+        </p>
+      </div>
+      <div className="mt-3">
+        <OrganizerPriceBreakdown priceInput={form.total_price} />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
         <div>
           <label className="block text-sm font-medium text-foreground mb-1.5">Plazas máximas *</label>
           <input type="number" min="1" value={form.max_attendees} onChange={(e) => set('max_attendees', e.target.value)} className={inputCls} />
