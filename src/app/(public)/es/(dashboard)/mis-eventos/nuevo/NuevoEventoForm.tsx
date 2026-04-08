@@ -773,16 +773,16 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
                 <h3 className="text-sm font-semibold mb-2">Desglose de precios</h3>
                 <div className="grid grid-cols-3 gap-4 text-sm">
                   <div>
-                    <p className="text-[#a09383]">Precio total</p>
+                    <p className="text-[#a09383]">El asistente paga</p>
                     <p className="font-bold text-lg">{Number(form.total_price).toFixed(0)}€</p>
                   </div>
                   <div>
-                    <p className="text-[#a09383]">Comisión Retiru (20%)</p>
-                    <p className="font-semibold">{(Number(form.total_price) * 0.2).toFixed(0)}€</p>
+                    <p className="text-[#a09383]">Tu ingreso neto</p>
+                    <p className="font-semibold text-sage-700">{(Number(form.total_price) * 0.8).toFixed(0)}€</p>
                   </div>
                   <div>
-                    <p className="text-[#a09383]">Tu ingreso (80%)</p>
-                    <p className="font-semibold text-sage-700">{(Number(form.total_price) * 0.8).toFixed(0)}€</p>
+                    <p className="text-[#a09383]">Comisión Retiru</p>
+                    <p className="font-semibold text-terracotta-600">{(Number(form.total_price) * 0.2).toFixed(0)}€</p>
                   </div>
                 </div>
               </div>

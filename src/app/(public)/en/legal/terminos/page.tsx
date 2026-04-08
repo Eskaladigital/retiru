@@ -41,7 +41,7 @@ export default function TerminosPageEn() {
               </li>
               <li className="flex gap-3">
                 <span className="text-terracotta-600 font-bold shrink-0">2.</span>
-                <span><strong>When you book, you pay the full price in one step</strong> by card via Stripe. Retiru retains its commission (e.g. 20%) and settles the net amount to the organizer under our payout agreement—not as a separate payment you make to the organizer outside the platform.</span>
+                <span><strong>When you book, you pay the full price in one step</strong> by card via Stripe. Retiru settles the net amount to the organizer under our payout agreement—no second payment, no separate transfer.</span>
               </li>
               <li className="flex gap-3">
                 <span className="text-terracotta-600 font-bold shrink-0">3.</span>
