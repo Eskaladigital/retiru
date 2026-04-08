@@ -40,7 +40,7 @@ export async function PATCH(
       .from('bookings')
       .select(`
         id, booking_number, retreat_id, attendee_id, organizer_id, 
-        platform_fee, organizer_amount, stripe_payment_intent_id, status,
+        total_price, platform_fee, organizer_amount, stripe_payment_intent_id, status,
         retreats!retreat_id(title_es, title_en, start_date),
         profiles!attendee_id(email, full_name, preferred_locale)
       `)
@@ -74,8 +74,6 @@ export async function PATCH(
         const dateFmt = new Intl.DateTimeFormat(locale === 'es' ? 'es-ES' : 'en-GB', {
           day: 'numeric', month: 'long', year: 'numeric',
         });
-        const remainingDue = new Date(retreat?.start_date);
-        remainingDue.setDate(remainingDue.getDate() - 7);
 
         try {
           await sendBookingConfirmedEmail({
@@ -84,9 +82,7 @@ export async function PATCH(
             bookingNumber: booking.booking_number,
             eventTitle: locale === 'es' ? retreat?.title_es : (retreat?.title_en || retreat?.title_es),
             startDate: dateFmt.format(new Date(retreat?.start_date)),
-            platformFee: booking.platform_fee,
-            organizerAmount: booking.organizer_amount,
-            remainingPaymentDate: dateFmt.format(remainingDue),
+            totalPrice: booking.total_price,
           });
         } catch (emailErr) {
           console.error('Failed to send confirmation email:', emailErr);
@@ -126,7 +122,7 @@ export async function PATCH(
           bookingNumber: booking.booking_number,
           eventTitle: locale === 'es' ? retreat?.title_es : (retreat?.title_en || retreat?.title_es),
           reason: reason || undefined,
-          refundAmount: booking.platform_fee,
+          refundAmount: booking.total_price,
         });
       } catch (emailErr) {
         console.error('Failed to send booking rejected email:', emailErr);

@@ -3,8 +3,10 @@ import Link from 'next/link';
 import { createAdminSupabase } from '@/lib/supabase/server';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Pencil, Plus, Eye, Trash2, ImageOff } from 'lucide-react';
+import { Pencil, Plus, Eye, ImageOff } from 'lucide-react';
 import { DeleteArticleButton } from './DeleteArticleButton';
+
+export const dynamic = 'force-dynamic';
 
 export default async function AdminBlogPage() {
   const supabase = createAdminSupabase();
@@ -92,6 +94,7 @@ export default async function AdminBlogPage() {
                     <div className="flex items-center gap-3">
                       <div className="w-14 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-sand-100 border border-sand-200">
                         {a.cover_image_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={a.cover_image_url}
                             alt=""
