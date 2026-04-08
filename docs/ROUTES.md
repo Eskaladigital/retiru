@@ -88,7 +88,7 @@ Parámetros opcionales en registro: `?redirect=/ruta&claim=true` (redirige tras 
 | `/es/mis-reservas` | `app/es/(dashboard)/mis-reservas/page.tsx` | Reservas como asistente |
 | `/es/mensajes` | `app/es/(dashboard)/mensajes/page.tsx` | Bandeja de mensajes (+ botón soporte) |
 | `/es/mensajes/[id]` | `app/es/(dashboard)/mensajes/[id]/page.tsx` | Conversación individual (chat / soporte) |
-| `/es/perfil` | `app/es/(dashboard)/perfil/page.tsx` | Datos personales, avatar |
+| `/es/perfil` | `app/es/(dashboard)/perfil/page.tsx` | Datos personales desde `profiles` (Supabase); guardar vía `PATCH /api/profile` |
 | `/es/mis-centros` | `app/es/(dashboard)/mis-centros/page.tsx` | Centros reclamados, propuestas pendientes, reclamar / proponer nuevo |
 | `/es/mis-eventos` | `app/es/(dashboard)/mis-eventos/page.tsx` | Eventos/retiros creados |
 | `/es/mis-eventos/nuevo` | `app/es/(dashboard)/mis-eventos/nuevo/page.tsx` | Wizard para crear evento |
@@ -210,6 +210,7 @@ Protegido por middleware (role=admin). No indexado en buscadores.
 | PATCH | `/api/retreats/[id]` | Actualizar retiro (solo propietario) |
 | POST | `/api/retreats/[id]` | Cancelar retiro (propietario, action=cancel) |
 | DELETE | `/api/retreats/[id]` | Eliminar retiro (propietario, solo sin reservas confirmadas) |
+| PATCH | `/api/profile` | Actualizar perfil propio (`full_name`, `phone`, `bio`) |
 | GET | `/api/messages/conversations` | Listar conversaciones del usuario |
 | POST | `/api/messages/conversations` | Crear/recuperar conversación sobre un retiro |
 | GET | `/api/messages/conversations/[id]` | Obtener mensajes de una conversación |
