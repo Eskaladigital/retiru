@@ -583,7 +583,7 @@ Cualquier usuario logueado (incluido el admin) tiene acceso a:
 1. **Mis reservas** — reservas como asistente
 2. **Mi perfil** — datos personales, avatar, contraseña
 3. **Mis centros** — centros reclamados, propuestas en revisión, CTA para reclamar en el directorio o proponer centro nuevo (Google Maps)
-4. **Mis eventos** — retiros/eventos creados; formulario wizard para crear nuevos
+4. **Mis eventos** — retiros/eventos creados; wizard para crear/editar con **plazas máximas** (`max_attendees`) y **mínimo viable** (`min_attendees`): umbral de inscritos confirmados a partir del cual el organizador da el retiro por celebrable; en ficha pública se muestra si el mínimo es mayor que 1
 
 El admin tiene además acceso a `/administrator` desde el menú.
 

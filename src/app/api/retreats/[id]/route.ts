@@ -120,7 +120,7 @@ export async function PATCH(
       description_es, description_en,
       includes_es, includes_en,
       start_date, end_date,
-      total_price, max_attendees,
+      total_price, max_attendees, min_attendees,
       destination_id, address,
       categories, confirmation_type, languages, status,
       images,
@@ -138,7 +138,40 @@ export async function PATCH(
     if (start_date !== undefined) updateData.start_date = start_date;
     if (end_date !== undefined) updateData.end_date = end_date;
     if (total_price !== undefined) updateData.total_price = parseFloat(total_price);
-    if (max_attendees !== undefined) updateData.max_attendees = parseInt(max_attendees, 10);
+    if (max_attendees !== undefined) {
+      const m = parseInt(String(max_attendees), 10);
+      if (Number.isNaN(m) || m < 1) {
+        return NextResponse.json({ error: 'Plazas máximas no válidas' }, { status: 400 });
+      }
+      updateData.max_attendees = m;
+    }
+    if (min_attendees !== undefined) {
+      let mn = min_attendees === '' || min_attendees === null
+        ? 1
+        : parseInt(String(min_attendees), 10);
+      if (Number.isNaN(mn) || mn < 1) mn = 1;
+      const maxForCheck = updateData.max_attendees !== undefined
+        ? (updateData.max_attendees as number)
+        : undefined;
+      if (maxForCheck !== undefined && mn > maxForCheck) {
+        return NextResponse.json({ error: 'El mínimo de plazas no puede ser mayor que el máximo' }, { status: 400 });
+      }
+      updateData.min_attendees = mn;
+    }
+    if (updateData.min_attendees !== undefined && updateData.max_attendees === undefined) {
+      const { data: cur } = await admin.from('retreats').select('max_attendees').eq('id', id).single();
+      const cap = cur?.max_attendees as number | undefined;
+      if (cap != null && (updateData.min_attendees as number) > cap) {
+        return NextResponse.json({ error: 'El mínimo de plazas no puede ser mayor que el máximo' }, { status: 400 });
+      }
+    }
+    if (updateData.max_attendees !== undefined && updateData.min_attendees === undefined) {
+      const { data: cur } = await admin.from('retreats').select('min_attendees').eq('id', id).single();
+      const mn = (cur?.min_attendees as number | null) ?? 1;
+      if ((updateData.max_attendees as number) < mn) {
+        return NextResponse.json({ error: 'El máximo no puede ser menor que el mínimo de plazas' }, { status: 400 });
+      }
+    }
     if (destination_id !== undefined) updateData.destination_id = destination_id || null;
     if (address !== undefined) updateData.address = address || null;
     if (confirmation_type !== undefined) updateData.confirmation_type = confirmation_type;

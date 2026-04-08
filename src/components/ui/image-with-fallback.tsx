@@ -1,15 +1,27 @@
 'use client';
 
+import { ImageIcon } from 'lucide-react';
+
 interface ImageWithFallbackProps {
   src: string;
   alt: string;
   className?: string;
-  fallbackEmoji?: string;
   fallbackSize?: 'sm' | 'md' | 'lg';
 }
 
-export function ImageWithFallback({ src, alt, className, fallbackEmoji = '🖼️', fallbackSize = 'lg' }: ImageWithFallbackProps) {
-  const sizeClass = fallbackSize === 'sm' ? 'text-5xl' : fallbackSize === 'md' ? 'text-6xl' : 'text-7xl';
+const SIZE_ICON: Record<'sm' | 'md' | 'lg', string> = {
+  sm: 'w-12 h-12',
+  md: 'w-16 h-16',
+  lg: 'w-20 h-20',
+};
+
+export function ImageWithFallback({
+  src,
+  alt,
+  className,
+  fallbackSize = 'lg',
+}: ImageWithFallbackProps) {
+  const iconClass = SIZE_ICON[fallbackSize];
   return (
     <>
       <img
@@ -21,8 +33,8 @@ export function ImageWithFallback({ src, alt, className, fallbackEmoji = '🖼�
           e.currentTarget.nextElementSibling?.classList.remove('hidden');
         }}
       />
-      <div className="hidden absolute inset-0 bg-sage-100 flex items-center justify-center">
-        <span className={sizeClass}>{fallbackEmoji}</span>
+      <div className="hidden absolute inset-0 bg-sage-100 flex items-center justify-center text-sage-400" aria-hidden>
+        <ImageIcon className={iconClass} strokeWidth={1.25} />
       </div>
     </>
   );

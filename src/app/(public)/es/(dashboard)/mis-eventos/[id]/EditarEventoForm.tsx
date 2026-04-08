@@ -2,10 +2,32 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import { Upload, X } from 'lucide-react';
 
 interface Option { id: string; name: string; slug: string }
+
+async function uploadRetreatImageViaApi(file: File): Promise<string> {
+  const fd = new FormData();
+  fd.append('file', file);
+  const res = await fetch('/api/storage/retreat-images', { method: 'POST', body: fd });
+  const data = (await res.json().catch(() => ({}))) as { error?: string; publicUrl?: string };
+  if (!res.ok) {
+    const msg = data.error || `Error al subir (${res.status})`;
+    if (/row-level security|RLS|Unauthorized/i.test(msg)) {
+      throw new Error(
+        'No se pudo subir la imagen. Comprueba el bucket «retreat-images» en Supabase y que SUPABASE_SERVICE_ROLE_KEY esté definida en el servidor (p. ej. Vercel).',
+      );
+    }
+    if (/Bucket not found|not found/i.test(msg)) {
+      throw new Error(
+        'El bucket «retreat-images» no existe en este proyecto. Créalo o aplica las migraciones de Storage.',
+      );
+    }
+    throw new Error(msg.startsWith('Error') ? msg : `Error al subir una imagen: ${msg}`);
+  }
+  if (!data.publicUrl) throw new Error('No se obtuvo URL pública tras la subida.');
+  return data.publicUrl;
+}
 
 interface Props {
   retreat: any;
@@ -107,6 +129,7 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
     end_date: retreat.end_date || '',
     total_price: retreat.total_price?.toString() || '',
     max_attendees: retreat.max_attendees?.toString() || '',
+    min_attendees: (retreat.min_attendees ?? 1).toString(),
     destination_id: retreat.destination_id || '',
     address: retreat.address || '',
     confirmation_type: retreat.confirmation_type || 'automatic',
@@ -170,7 +193,6 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
   }
 
   async function buildImagesPayload(): Promise<{ url: string; is_cover: boolean }[]> {
-    const supabase = createClient();
     const uploaded: { url: string; is_cover: boolean }[] = [];
 
     for (const img of images) {
@@ -180,26 +202,8 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
       }
       if (!img.file) continue;
 
-      const ext = img.file.name.split('.').pop();
-      const path = `retreats/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-
-      const { error: upErr } = await supabase.storage.from('retreat-images').upload(path, img.file, {
-        cacheControl: '31536000',
-        upsert: false,
-      });
-
-      if (upErr) {
-        const msg = upErr.message || 'Error desconocido';
-        if (msg.includes('row-level security') || msg.includes('RLS') || msg.includes('Unauthorized')) {
-          throw new Error(
-            'No se pudo subir la imagen: falta el bucket «retreat-images» o sus políticas en Supabase (migración 016).',
-          );
-        }
-        throw new Error(`Error al subir una imagen: ${msg}`);
-      }
-
-      const { data: urlData } = supabase.storage.from('retreat-images').getPublicUrl(path);
-      uploaded.push({ url: urlData.publicUrl, is_cover: img.is_cover });
+      const publicUrl = await uploadRetreatImageViaApi(img.file);
+      uploaded.push({ url: publicUrl, is_cover: img.is_cover });
     }
 
     if (images.length > 0 && uploaded.length !== images.length) {
@@ -214,6 +218,20 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
     setSuccess('');
 
     try {
+      const maxN = parseInt(String(form.max_attendees), 10);
+      let minN = form.min_attendees === '' ? 1 : parseInt(String(form.min_attendees), 10);
+      if (Number.isNaN(minN) || minN < 1) minN = 1;
+      if (Number.isNaN(maxN) || maxN < 1) {
+        setError('Indica un número válido de plazas máximas.');
+        setSaving(false);
+        return;
+      }
+      if (minN > maxN) {
+        setError('El mínimo de plazas no puede ser mayor que el máximo.');
+        setSaving(false);
+        return;
+      }
+
       setUploading(true);
       const imagePayload = await buildImagesPayload();
       setUploading(false);
@@ -223,6 +241,8 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
+          min_attendees: minN,
+          max_attendees: maxN,
           includes_es: form.includes_es.filter(Boolean),
           destination_id: form.destination_id || null,
           status: publish ? 'published' : undefined,
@@ -346,7 +366,7 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
         <input type="text" value={form.address} onChange={(e) => set('address', e.target.value)} className={inputCls} />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-foreground mb-1.5">Precio (€) *</label>
           <input type="number" min="50" value={form.total_price} onChange={(e) => set('total_price', e.target.value)} className={inputCls} />
@@ -354,6 +374,13 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
         <div>
           <label className="block text-sm font-medium text-foreground mb-1.5">Plazas máximas *</label>
           <input type="number" min="1" value={form.max_attendees} onChange={(e) => set('max_attendees', e.target.value)} className={inputCls} />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-1.5">Mínimo para mantener el retiro</label>
+          <input type="number" min="1" value={form.min_attendees} onChange={(e) => set('min_attendees', e.target.value)} className={inputCls} />
+          <p className="text-xs text-[#a09383] mt-1.5 leading-relaxed">
+            Con este número de inscritos confirmados das el retiro por viable. Por debajo puedes cancelar o aplazar según comuniques.
+          </p>
         </div>
       </div>
 

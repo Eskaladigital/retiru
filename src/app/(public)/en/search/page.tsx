@@ -6,6 +6,7 @@
 
 import { Suspense, useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
+import { Flame, MapPin, Search, Star, Tag, Zap } from 'lucide-react';
 import { getCenterTypeLabel } from '@/lib/utils';
 
 const TYPES_FILTER = ['All', 'Retreats', 'Centers'];
@@ -145,7 +146,9 @@ function SearchContent() {
 
       {!loading && results.length === 0 && (
         <div className="text-center py-16">
-          <p className="text-4xl mb-4">🔍</p>
+          <div className="flex justify-center mb-4 text-[#a09383]">
+            <Search className="w-14 h-14" strokeWidth={1.25} aria-hidden />
+          </div>
           <h3 className="font-serif text-xl mb-2">No results</h3>
           <p className="text-sm text-[#7a6b5d]">Try different terms or remove a filter</p>
         </div>
@@ -172,17 +175,32 @@ function RetreatCard({ item }: { item: any }) {
         <div className="absolute top-3 left-3 flex gap-1.5">
           <span className="text-[10px] font-bold uppercase tracking-wider bg-terracotta-600 text-white px-2 py-0.5 rounded-full">Retreat</span>
           {categoryName && <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm">{categoryName}</span>}
-          {item.confirmation_type === 'automatic' && <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[rgba(92,127,96,0.9)] text-white">⚡</span>}
+          {item.confirmation_type === 'automatic' && (
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[rgba(92,127,96,0.9)] text-white inline-flex items-center gap-1" title="Instant confirmation">
+              <Zap className="w-3.5 h-3.5 shrink-0" strokeWidth={2.5} aria-hidden />
+            </span>
+          )}
         </div>
         {item.available_spots != null && item.available_spots <= 5 && (
-          <span className="absolute top-3 right-3 text-[10px] font-bold bg-red-500 text-white px-2 py-0.5 rounded-full">🔥 {item.available_spots} spots</span>
+          <span className="absolute top-3 right-3 text-[10px] font-bold bg-red-500 text-white px-2 py-0.5 rounded-full inline-flex items-center gap-0.5">
+            <Flame className="w-3 h-3 shrink-0" aria-hidden />
+            {item.available_spots} spots
+          </span>
         )}
       </div>
       <div className="p-5">
         <div className="flex items-center justify-between mb-2 text-[13px]">
-          {locationName && <span className="text-[#7a6b5d]">📍 {locationName}</span>}
+          {locationName && (
+            <span className="text-[#7a6b5d] inline-flex items-center gap-1">
+              <MapPin className="w-3.5 h-3.5 shrink-0" aria-hidden />
+              {locationName}
+            </span>
+          )}
           {item.avg_rating != null && (
-            <span className="font-semibold">⭐ {item.avg_rating} <span className="font-normal text-[#a09383]">({item.review_count ?? 0})</span></span>
+            <span className="font-semibold inline-flex items-center gap-1">
+              <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0" aria-hidden />
+              {item.avg_rating} <span className="font-normal text-[#a09383]">({item.review_count ?? 0})</span>
+            </span>
           )}
         </div>
         <h3 className="font-serif text-lg leading-[1.3] mb-1 line-clamp-2">{title}</h3>
@@ -216,9 +234,15 @@ function CenterCard({ item }: { item: any }) {
       </div>
       <div className="p-5">
         <div className="flex items-center justify-between mb-2 text-[13px]">
-          <span className="text-[#7a6b5d]">📍 {item.city}{item.province ? `, ${item.province}` : ''}</span>
+          <span className="text-[#7a6b5d] inline-flex items-center gap-1">
+            <MapPin className="w-3.5 h-3.5 shrink-0" aria-hidden />
+            {item.city}{item.province ? `, ${item.province}` : ''}
+          </span>
           {item.avg_rating != null && (
-            <span className="font-semibold">⭐ {item.avg_rating} <span className="font-normal text-[#a09383]">({item.review_count ?? 0})</span></span>
+            <span className="font-semibold inline-flex items-center gap-1">
+              <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0" aria-hidden />
+              {item.avg_rating} <span className="font-normal text-[#a09383]">({item.review_count ?? 0})</span>
+            </span>
           )}
         </div>
         <h3 className="font-serif text-lg leading-[1.3] mb-2">{item.name}</h3>
@@ -230,7 +254,10 @@ function CenterCard({ item }: { item: any }) {
         )}
         {item.price_range_en && (
           <div className="pt-3 border-t border-sand-200">
-            <span className="text-sm text-[#7a6b5d]">💰 {item.price_range_en}</span>
+            <span className="text-sm text-[#7a6b5d] inline-flex items-center gap-1">
+              <Tag className="w-3.5 h-3.5 shrink-0" aria-hidden />
+              {item.price_range_en}
+            </span>
           </div>
         )}
       </div>

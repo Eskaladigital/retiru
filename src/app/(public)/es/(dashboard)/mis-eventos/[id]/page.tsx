@@ -27,7 +27,7 @@ export default async function EditarEventoPage({ params }: Props) {
     .select(`
       id, title_es, title_en, slug, summary_es, summary_en,
       description_es, description_en, includes_es, includes_en,
-      start_date, end_date, total_price, max_attendees,
+      start_date, end_date, total_price, max_attendees, min_attendees,
       destination_id, address, confirmation_type, languages, status,
       rejection_reason, reviewed_at, updated_at,
       retreat_categories(category_id),

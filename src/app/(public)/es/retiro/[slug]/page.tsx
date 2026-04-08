@@ -86,6 +86,9 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
   const availability: 'InStock' | 'SoldOut' | 'LimitedAvailability' =
     r.available_spots === 0 ? 'SoldOut' : r.available_spots <= 3 ? 'LimitedAvailability' : 'InStock';
 
+  const minViable = r.min_attendees ?? 1;
+  const confirmedCount = r.confirmed_bookings ?? 0;
+
   // JSON-LD structured data
   const eventLd = jsonLdEvent({
     name: r.title_es,
@@ -353,6 +356,16 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
                   {r.confirmation_type === 'automatic' && (
                     <div className="flex items-center gap-2 text-sage-600 font-medium">
                       <Zap size={16} /> Confirmación inmediata
+                    </div>
+                  )}
+                  {minViable > 1 && (
+                    <div className="rounded-lg bg-sand-50 border border-sand-200/80 p-3 text-xs text-muted-foreground leading-relaxed">
+                      <strong className="text-foreground">Mínimo de participantes:</strong> {minViable}. El organizador considera el retiro viable al alcanzar esta cifra.
+                      {confirmedCount >= minViable ? (
+                        <span className="block mt-1.5 text-sage-700 font-medium">Con las reservas confirmadas actuales, ese mínimo ya está cubierto.</span>
+                      ) : (
+                        <span className="block mt-1.5">Si no se alcanza, el evento podría cancelarse o aplazarse; pregunta al organizador o revisa la política de cancelación.</span>
+                      )}
                     </div>
                   )}
                 </div>

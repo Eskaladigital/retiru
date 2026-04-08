@@ -1,5 +1,6 @@
 // /es/destinos/[slug] — Retiros en un destino (Supabase)
 import Link from 'next/link';
+import { Flame, Zap } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getDestinationBySlug, getDestinationSlugs, getPublishedRetreats } from '@/lib/data';
 import { ImageWithFallback } from '@/components/ui/image-with-fallback';
@@ -45,10 +46,15 @@ export default async function DestinoDetailPage({ params }: { params: Promise<{ 
           return (
             <Link key={r.id} href={`/es/retiro/${r.slug}`} className="group bg-white rounded-2xl overflow-hidden border border-sand-200 transition-all duration-[350ms] hover:shadow-elevated hover:-translate-y-1">
               <div className="relative aspect-[16/10] overflow-hidden">
-                <ImageWithFallback src={img} alt={r.title_es} className="w-full h-full object-cover transition-transform duration-[600ms] group-hover:scale-105" fallbackEmoji="🏔️" />
+                <ImageWithFallback src={img} alt={r.title_es} className="w-full h-full object-cover transition-transform duration-[600ms] group-hover:scale-105" />
                 <div className="absolute top-3 left-3 flex gap-1.5">
                   <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm">{category}</span>
-                  {instant && <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[rgba(92,127,96,0.9)] text-white">⚡ Inmediata</span>}
+                  {instant && (
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[rgba(92,127,96,0.9)] text-white inline-flex items-center gap-1">
+                      <Zap className="w-3.5 h-3.5 shrink-0" strokeWidth={2.5} aria-hidden />
+                      Inmediata
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="p-5">
@@ -59,7 +65,10 @@ export default async function DestinoDetailPage({ params }: { params: Promise<{ 
                 </div>
                 <div className="flex items-end justify-between pt-4 border-t border-sand-200">
                   <div><span className="text-xs text-[#a09383] uppercase tracking-wider font-semibold">Desde</span><br/><span className="text-2xl font-bold">{r.total_price}€</span> <span className="text-sm text-[#7a6b5d]">/persona</span></div>
-                  <span className={`text-[13px] font-medium ${spotsLow ? 'text-terracotta-600' : 'text-sage-600'}`}>{spotsLow ? '🔥' : ''} {r.available_spots} plazas</span>
+                  <span className={`text-[13px] font-medium inline-flex items-center gap-1 ${spotsLow ? 'text-terracotta-600' : 'text-sage-600'}`}>
+                    {spotsLow && <Flame className="w-3.5 h-3.5 shrink-0" aria-hidden />}
+                    {r.available_spots} plazas
+                  </span>
                 </div>
               </div>
             </Link>

@@ -4,6 +4,7 @@
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Brain, Flame, Flower2, Leaf, ShoppingBag, Sparkles, Star, Zap } from 'lucide-react';
 import { homeES } from '@/lib/seo/page-metadata';
 
 export const metadata: Metadata = homeES;
@@ -54,6 +55,20 @@ const IconCheck = () => <svg className="w-[14px] h-[14px]" viewBox="0 0 24 24" f
 const IconShield = () => <svg className="w-[18px] h-[18px] text-sage-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;
 const IconVerified = () => <svg className="w-[18px] h-[18px] text-sage-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
 const IconHeartsm = () => <svg className="w-[18px] h-[18px] text-sage-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>;
+
+function CategoryCardIcon({ slug }: { slug: string }) {
+  const cls = 'w-8 h-8 text-white drop-shadow-md shrink-0';
+  switch (slug) {
+    case 'yoga':
+      return <Flower2 className={cls} strokeWidth={1.5} aria-hidden />;
+    case 'meditacion':
+      return <Brain className={cls} strokeWidth={1.5} aria-hidden />;
+    case 'ayurveda':
+      return <Leaf className={cls} strokeWidth={1.5} aria-hidden />;
+    default:
+      return <Sparkles className={cls} strokeWidth={1.5} aria-hidden />;
+  }
+}
 
 export default async function HomePage() {
   const [categories, destinations, { retreats }, shopProducts] = await Promise.all([
@@ -202,11 +217,12 @@ export default async function HomePage() {
                     src={c.cover_image_url || CAT_IMAGES[c.slug] || CAT_IMAGES.yoga}
                     alt={c.name_es}
                     className="w-full h-full object-cover transition-transform duration-[600ms] group-hover:scale-[1.08]"
-                    fallbackEmoji="🥤"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[rgba(45,35,25,0.7)] to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-5">
-                    <div className="text-[28px] mb-2 drop-shadow-md">{c.icon || '✨'}</div>
+                    <div className="mb-2 flex items-center">
+                      <CategoryCardIcon slug={c.slug} />
+                    </div>
                     <h3 className="font-serif text-lg text-white">{c.name_es}</h3>
                   </div>
                 </Link>
@@ -242,7 +258,10 @@ export default async function HomePage() {
                       <span className="text-[10px] font-bold uppercase tracking-wider bg-sage-700 text-white px-2 py-0.5 rounded-full">Centro</span>
                       <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm">{getCenterTypeLabel(c.type)}</span>
                     </div>
-                    <span className="absolute top-3 right-3 text-[10px] font-bold bg-amber-400 text-amber-900 px-2 py-0.5 rounded-full">⭐ Destacado</span>
+                    <span className="absolute top-3 right-3 text-[10px] font-bold bg-amber-400 text-amber-900 px-2 py-0.5 rounded-full inline-flex items-center gap-0.5">
+                      <Star className="w-3 h-3 shrink-0 fill-amber-900 text-amber-900" aria-hidden />
+                      Destacado
+                    </span>
                   </div>
                   <div className="p-5">
                     <div className="flex items-center justify-between mb-2 text-[13px]">
@@ -289,7 +308,12 @@ export default async function HomePage() {
                     <img src={img} alt={r.title_es} className="w-full h-full object-cover transition-transform duration-[600ms] group-hover:scale-105" />
                     <div className="absolute top-3 left-3 flex gap-1.5">
                       <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground">{category}</span>
-                      {instant && <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[rgba(92,127,96,0.9)] backdrop-blur-sm text-white">⚡ Confirmación inmediata</span>}
+                      {instant && (
+                        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[rgba(92,127,96,0.9)] backdrop-blur-sm text-white inline-flex items-center gap-1">
+                          <Zap className="w-3.5 h-3.5 shrink-0" strokeWidth={2.5} aria-hidden />
+                          Confirmación inmediata
+                        </span>
+                      )}
                     </div>
                     <div className="absolute top-3 right-3 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:scale-110 transition-transform">
                       <IconHeart />
@@ -310,8 +334,9 @@ export default async function HomePage() {
                         <span className="text-xs text-[#a09383] uppercase tracking-wider font-semibold">Desde</span>
                         <span className="text-2xl font-bold text-foreground leading-none mt-0.5">{r.total_price}€ <span className="text-sm font-normal text-[#7a6b5d]">/persona</span></span>
                       </div>
-                      <span className={`text-[13px] font-medium flex items-center gap-1 ${spotsLow ? 'text-terracotta-600' : 'text-sage-600'}`}>
-                        {spotsLow ? '🔥' : ''} {r.available_spots} plazas
+                      <span className={`text-[13px] font-medium inline-flex items-center gap-1 ${spotsLow ? 'text-terracotta-600' : 'text-sage-600'}`}>
+                        {spotsLow && <Flame className="w-3.5 h-3.5 shrink-0" aria-hidden />}
+                        {r.available_spots} plazas
                       </span>
                     </div>
                   </div>
@@ -410,7 +435,6 @@ export default async function HomePage() {
                       src={d.cover_image_url || DEST_IMAGES[d.slug] || DEST_IMAGES.ibiza}
                       alt={d.name_es}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
-                      fallbackEmoji="🏝️"
                       fallbackSize="md"
                     />
                   </div>
@@ -450,7 +474,9 @@ export default async function HomePage() {
                       {img ? (
                         <img src={img} alt={p.name_es} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-5xl bg-sage-50 text-sage-400">🛍️</div>
+                        <div className="w-full h-full flex items-center justify-center bg-sage-50 text-sage-400">
+                          <ShoppingBag className="w-12 h-12" strokeWidth={1.25} aria-hidden />
+                        </div>
                       )}
                       {discount > 0 && (
                         <span className="absolute top-2 left-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-red-500 text-white">
@@ -512,7 +538,7 @@ export default async function HomePage() {
               <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle at 25% 25%, white 1px, transparent 1px), radial-gradient(circle at 75% 75%, white 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
               <div className="relative z-10 max-w-[600px]">
                 <div className="inline-flex items-center gap-1.5 bg-white/15 border border-white/20 px-4 py-1.5 rounded-full text-[13px] font-semibold tracking-wide mb-6">
-                  ✨ 100% GRATIS para organizadores
+                  100% gratis para organizadores
                 </div>
                 <h2 className="font-serif text-[clamp(28px,4vw,42px)] text-white mb-4">¿Organizas retiros? Publica gratis.</h2>
                 <p className="text-[17px] text-white/80 leading-[1.7] mb-8">

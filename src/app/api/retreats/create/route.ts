@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       includes_es, includes_en,
       excludes_es, excludes_en,
       start_date, end_date,
-      total_price, max_attendees,
+      total_price, max_attendees, min_attendees,
       destination_id, address,
       categories, confirmation_type, languages,
       images, schedule, cancellation_policy,
@@ -34,6 +34,18 @@ export async function POST(request: NextRequest) {
 
     if (!title_es || !summary_es || !description_es || !start_date || !end_date || !total_price || !max_attendees) {
       return NextResponse.json({ error: 'Faltan campos obligatorios' }, { status: 400 });
+    }
+
+    const maxN = parseInt(String(max_attendees), 10);
+    if (Number.isNaN(maxN) || maxN < 1) {
+      return NextResponse.json({ error: 'Plazas máximas no válidas' }, { status: 400 });
+    }
+    let minN = min_attendees === undefined || min_attendees === '' || min_attendees === null
+      ? 1
+      : parseInt(String(min_attendees), 10);
+    if (Number.isNaN(minN) || minN < 1) minN = 1;
+    if (minN > maxN) {
+      return NextResponse.json({ error: 'El mínimo de plazas no puede ser mayor que el máximo' }, { status: 400 });
     }
 
     const admin = createAdminSupabase();
@@ -101,7 +113,8 @@ export async function POST(request: NextRequest) {
       start_date,
       end_date,
       total_price: parseFloat(total_price),
-      max_attendees: parseInt(max_attendees, 10),
+      max_attendees: maxN,
+      min_attendees: minN,
       destination_id: destination_id || null,
       address: address || null,
       confirmation_type: confirmation_type || 'automatic',

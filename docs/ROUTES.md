@@ -210,6 +210,7 @@ Protegido por middleware (role=admin). No indexado en buscadores.
 | PATCH | `/api/retreats/[id]` | Actualizar retiro (solo propietario) |
 | POST | `/api/retreats/[id]` | Cancelar retiro (propietario, action=cancel) |
 | DELETE | `/api/retreats/[id]` | Eliminar retiro (propietario, solo sin reservas confirmadas) |
+| POST | `/api/storage/retreat-images` | Subir imagen de evento al bucket `retreat-images` (usuario autenticado; el servidor usa service role para evitar depender del RLS del cliente) |
 | PATCH | `/api/profile` | Actualizar perfil propio (`full_name`, `phone` obligatorio con ≥9 dígitos, `bio`) |
 | GET | `/api/messages/conversations` | Listar conversaciones del usuario |
 | POST | `/api/messages/conversations` | Crear/recuperar conversación sobre un retiro |

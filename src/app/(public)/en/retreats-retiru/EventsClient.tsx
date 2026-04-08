@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Search, SlidersHorizontal, X, MapPin, Star, ChevronDown, CalendarDays, Users } from 'lucide-react';
+import { Search, SlidersHorizontal, X, MapPin, Star, ChevronDown, CalendarDays, Users, Zap, Flame } from 'lucide-react';
 import type { Retreat, Category, Destination } from '@/types';
 
 interface EventsClientProps {
@@ -204,7 +204,9 @@ export default function EventsClientEN({ retreats, categories, destinations }: E
 
       {filtered.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-4xl mb-4">🔍</p>
+          <div className="flex justify-center mb-4 text-[#a09383]">
+            <Search className="w-14 h-14" strokeWidth={1.25} aria-hidden />
+          </div>
           <p className="font-serif text-xl text-foreground mb-2">No retreats found</p>
           <p className="text-sm text-[#7a6b5d] mb-6">Try changing filters or broadening your search</p>
           <button onClick={clearFilters} className="text-sm font-semibold text-terracotta-600 hover:text-terracotta-700">Clear filters</button>
@@ -231,7 +233,12 @@ export default function EventsClientEN({ retreats, categories, destinations }: E
                   />
                   <div className="absolute top-3 left-3 flex gap-1.5">
                     {categoryLabel && <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground">{categoryLabel}</span>}
-                    {isInstant && <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[rgba(92,127,96,0.9)] text-white">⚡ Instant</span>}
+                    {isInstant && (
+                      <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[rgba(92,127,96,0.9)] text-white inline-flex items-center gap-1">
+                        <Zap className="w-3.5 h-3.5 shrink-0" strokeWidth={2.5} aria-hidden />
+                        Instant
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="p-5">
@@ -256,9 +263,10 @@ export default function EventsClientEN({ retreats, categories, destinations }: E
                       <span className="text-xs text-[#a09383] uppercase tracking-wider font-semibold">From</span>
                       <span className="text-2xl font-bold leading-none mt-0.5">{r.total_price}€ <span className="text-sm font-normal text-[#7a6b5d]">/person</span></span>
                     </div>
-                    <span className={`text-[13px] font-medium flex items-center gap-1 ${spotsLow ? 'text-terracotta-600' : 'text-sage-600'}`}>
-                      <Users size={14} />
-                      {spotsLow ? '🔥 ' : ''}{r.available_spots} spots
+                    <span className={`text-[13px] font-medium inline-flex items-center gap-1 ${spotsLow ? 'text-terracotta-600' : 'text-sage-600'}`}>
+                      <Users size={14} aria-hidden />
+                      {spotsLow && <Flame className="w-3.5 h-3.5 shrink-0" aria-hidden />}
+                      {r.available_spots} spots
                     </span>
                   </div>
                 </div>

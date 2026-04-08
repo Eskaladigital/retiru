@@ -36,7 +36,7 @@ export default async function DestinosPage() {
           return (
             <Link key={d.id} href={`/es/destinos/${d.slug}`} className="group rounded-2xl overflow-hidden relative cursor-pointer hover:-translate-y-1 transition-transform duration-300">
               <div className="aspect-[4/3] relative">
-                <ImageWithFallback src={img} alt={d.name_es} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.06]" fallbackEmoji="🏔️" />
+                <ImageWithFallback src={img} alt={d.name_es} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"  />
                 <div className="absolute inset-0 bg-gradient-to-t from-[rgba(45,35,25,0.7)] to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-5">
                   <h2 className="font-serif text-xl text-white">{d.name_es}</h2>

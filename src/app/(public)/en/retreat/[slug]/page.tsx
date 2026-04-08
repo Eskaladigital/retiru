@@ -81,6 +81,9 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
   const availability: 'InStock' | 'SoldOut' | 'LimitedAvailability' =
     r.available_spots === 0 ? 'SoldOut' : r.available_spots <= 3 ? 'LimitedAvailability' : 'InStock';
 
+  const minViable = r.min_attendees ?? 1;
+  const confirmedCount = r.confirmed_bookings ?? 0;
+
   const eventLd = jsonLdEvent({
     name: r.title_en || r.title_es,
     description:
@@ -346,6 +349,16 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
                   {r.confirmation_type === 'automatic' && (
                     <div className="flex items-center gap-2 text-sage-600 font-medium">
                       <Zap size={16} /> Instant confirmation
+                    </div>
+                  )}
+                  {minViable > 1 && (
+                    <div className="rounded-lg bg-sand-50 border border-sand-200/80 p-3 text-xs text-muted-foreground leading-relaxed">
+                      <strong className="text-foreground">Minimum participants:</strong> {minViable}. The organizer treats the retreat as viable once this number is reached.
+                      {confirmedCount >= minViable ? (
+                        <span className="block mt-1.5 text-sage-700 font-medium">Current confirmed bookings already meet this minimum.</span>
+                      ) : (
+                        <span className="block mt-1.5">If it is not reached, the event may be cancelled or rescheduled—check with the organizer or the cancellation policy.</span>
+                      )}
                     </div>
                   )}
                 </div>

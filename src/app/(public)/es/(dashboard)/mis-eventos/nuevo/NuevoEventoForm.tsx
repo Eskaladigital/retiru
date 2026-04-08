@@ -2,7 +2,6 @@
 
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import { Upload, X, GripVertical, Plus, Trash2 } from 'lucide-react';
 
 interface Option { id: string; name: string; slug: string }
@@ -16,6 +15,29 @@ interface ScheduleItem { time: string; activity: string }
 interface ScheduleDay { day: number; title: string; items: ScheduleItem[] }
 
 const STEPS = ['Información', 'Detalles', 'Programa', 'Incluye', 'Precio'];
+
+async function uploadRetreatImageViaApi(file: File): Promise<string> {
+  const fd = new FormData();
+  fd.append('file', file);
+  const res = await fetch('/api/storage/retreat-images', { method: 'POST', body: fd });
+  const data = (await res.json().catch(() => ({}))) as { error?: string; publicUrl?: string };
+  if (!res.ok) {
+    const msg = data.error || `Error al subir (${res.status})`;
+    if (/row-level security|RLS|Unauthorized/i.test(msg)) {
+      throw new Error(
+        'No se pudo subir la imagen. Comprueba el bucket «retreat-images» en Supabase y que SUPABASE_SERVICE_ROLE_KEY esté definida en el servidor (p. ej. Vercel).',
+      );
+    }
+    if (/Bucket not found|not found/i.test(msg)) {
+      throw new Error(
+        'El bucket «retreat-images» no existe en este proyecto. Créalo o aplica las migraciones de Storage.',
+      );
+    }
+    throw new Error(msg.startsWith('Error') ? msg : `Error al subir una imagen: ${msg}`);
+  }
+  if (!data.publicUrl) throw new Error('No se obtuvo URL pública tras la subida.');
+  return data.publicUrl;
+}
 
 const inputCls = 'w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all';
 const textareaCls = `${inputCls} resize-none`;
@@ -57,6 +79,7 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
     end_date: '',
     total_price: '',
     max_attendees: '',
+    min_attendees: '1',
     destination_id: '',
     address: '',
     confirmation_type: 'automatic',
@@ -185,7 +208,6 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
   }
 
   async function uploadImages(): Promise<{ url: string; is_cover: boolean }[]> {
-    const supabase = createClient();
     const uploaded: { url: string; is_cover: boolean }[] = [];
 
     for (const img of images) {
@@ -195,31 +217,8 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
       }
       if (!img.file) continue;
 
-      const ext = img.file.name.split('.').pop();
-      const path = `retreats/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-
-      const { error } = await supabase.storage.from('retreat-images').upload(path, img.file, {
-        cacheControl: '31536000',
-        upsert: false,
-      });
-
-      if (error) {
-        const msg = error.message || 'Error desconocido';
-        if (msg.includes('row-level security') || msg.includes('RLS') || msg.includes('Unauthorized')) {
-          throw new Error(
-            'No se pudo subir la imagen: falta el bucket «retreat-images» o sus políticas en Supabase. Aplica la migración 016_retreat_images_bucket.sql en el proyecto.',
-          );
-        }
-        if (msg.includes('Bucket not found') || msg.includes('not found')) {
-          throw new Error(
-            'El bucket de imágenes no existe en este proyecto. Crea en Supabase Storage el bucket público «retreat-images» o aplica las migraciones.',
-          );
-        }
-        throw new Error(`Error al subir una imagen: ${msg}`);
-      }
-
-      const { data: urlData } = supabase.storage.from('retreat-images').getPublicUrl(path);
-      uploaded.push({ url: urlData.publicUrl, is_cover: img.is_cover });
+      const publicUrl = await uploadRetreatImageViaApi(img.file);
+      uploaded.push({ url: publicUrl, is_cover: img.is_cover });
     }
 
     if (images.length > 0 && uploaded.length !== images.length) {
@@ -236,6 +235,16 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
   async function createRetreatInDb(): Promise<CreateResult> {
     if (!isFormComplete()) {
       return { ok: false, error: 'Completa todos los campos obligatorios.' };
+    }
+
+    const maxN = parseInt(String(form.max_attendees), 10);
+    let minN = form.min_attendees === '' ? 1 : parseInt(String(form.min_attendees), 10);
+    if (Number.isNaN(minN) || minN < 1) minN = 1;
+    if (Number.isNaN(maxN) || maxN < 1) {
+      return { ok: false, error: 'Indica un número válido de plazas máximas.' };
+    }
+    if (minN > maxN) {
+      return { ok: false, error: 'El mínimo de plazas no puede ser mayor que el máximo.' };
     }
 
     try {
@@ -266,6 +275,7 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
+          min_attendees: minN,
           includes_es: form.includes_es.filter(Boolean),
           excludes_es: form.excludes_es.filter(Boolean),
           destination_id: form.destination_id || null,
@@ -758,7 +768,7 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
         {/* ═══ Step 4: Precio ═══ */}
         {step === 4 && (
           <>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">Precio por persona (€) *</label>
                 <input type="number" min="50" value={form.total_price} onChange={(e) => set('total_price', e.target.value)} placeholder="790" className={inputCls} />
@@ -766,6 +776,20 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">Plazas máximas *</label>
                 <input type="number" min="1" value={form.max_attendees} onChange={(e) => set('max_attendees', e.target.value)} placeholder="16" className={inputCls} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Mínimo para mantener el retiro</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={form.min_attendees}
+                  onChange={(e) => set('min_attendees', e.target.value)}
+                  placeholder="1"
+                  className={inputCls}
+                />
+                <p className="text-xs text-[#a09383] mt-1.5 leading-relaxed">
+                  Al alcanzar este número de inscritos confirmados, das por viable celebrar el retiro. Por debajo, podrías cancelar o aplazar según tu criterio y la política que comuniques a los asistentes.
+                </p>
               </div>
             </div>
             {form.total_price && (

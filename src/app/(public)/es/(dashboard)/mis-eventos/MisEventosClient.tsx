@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Ban, Trash2 } from 'lucide-react';
+import { Ban, CalendarDays, Trash2 } from 'lucide-react';
 
 interface Retreat {
   id: string;
@@ -12,6 +12,7 @@ interface Retreat {
   start_date: string | null;
   end_date: string | null;
   max_attendees: number;
+  min_attendees: number;
   confirmed_bookings: number;
   total_price: number;
   cover: string | null;
@@ -84,6 +85,7 @@ export function MisEventosClient({ retreats: initial }: { retreats: Retreat[] })
           {retreats.map((r) => {
             const s = STATUS_MAP[r.status] || STATUS_MAP.draft;
             const occupancy = r.max_attendees ? Math.round((r.confirmed_bookings / r.max_attendees) * 100) : 0;
+            const minOk = (r.min_attendees ?? 1) <= 1 || r.confirmed_bookings >= (r.min_attendees ?? 1);
             const dateStr = r.start_date
               ? `${new Date(r.start_date).toLocaleDateString('es', { day: 'numeric', month: 'short' })}${r.end_date ? ` – ${new Date(r.end_date).toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}`
               : 'Sin fecha';
@@ -97,7 +99,9 @@ export function MisEventosClient({ retreats: initial }: { retreats: Retreat[] })
                   {r.cover ? (
                     <img src={r.cover} alt={r.title_es} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-2xl text-[#a09383]">📅</div>
+                    <div className="w-full h-full flex items-center justify-center text-[#a09383]">
+                      <CalendarDays className="w-10 h-10" strokeWidth={1.25} aria-hidden />
+                    </div>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -110,11 +114,21 @@ export function MisEventosClient({ retreats: initial }: { retreats: Retreat[] })
                     <div className="flex-1 max-w-[200px]">
                       <div className="flex justify-between text-xs mb-1">
                         <span className="text-[#a09383]">Ocupación</span>
-                        <span className="font-semibold">{r.confirmed_bookings}/{r.max_attendees || 0}</span>
+                        <span className="font-semibold">
+                          {r.confirmed_bookings}/{r.max_attendees || 0}
+                          {(r.min_attendees ?? 1) > 1 && (
+                            <span className="font-normal text-[#a09383]"> · mín. {r.min_attendees}</span>
+                          )}
+                        </span>
                       </div>
                       <div className="h-2 bg-sand-200 rounded-full overflow-hidden">
                         <div className="h-full bg-terracotta-500 rounded-full transition-all" style={{ width: `${occupancy}%` }} />
                       </div>
+                      {(r.min_attendees ?? 1) > 1 && (
+                        <p className={`text-[11px] mt-1 ${minOk ? 'text-sage-700' : 'text-amber-700'}`}>
+                          {minOk ? 'Mínimo viable alcanzado' : `Faltan ${(r.min_attendees ?? 1) - r.confirmed_bookings} para el mínimo`}
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <Link href={`/es/mis-eventos/${r.id}`} className="text-xs font-medium text-terracotta-600 hover:underline">
