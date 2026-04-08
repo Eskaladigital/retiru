@@ -180,16 +180,28 @@ export async function PATCH(
     }
 
     if (images !== undefined && Array.isArray(images)) {
-      await admin.from('retreat_images').delete().eq('retreat_id', id);
-      if (images.length > 0) {
-        await admin.from('retreat_images').insert(
-          images.map((img: { url: string; is_cover: boolean }, i: number) => ({
-            retreat_id: id,
-            url: img.url,
-            is_cover: img.is_cover || false,
-            sort_order: i,
-          })),
-        );
+      const imgRows = images
+        .map((img: { url: string; is_cover: boolean }, i: number) => ({
+          retreat_id: id,
+          url: typeof img?.url === 'string' ? img.url.trim() : '',
+          is_cover: Boolean(img?.is_cover),
+          sort_order: i,
+        }))
+        .filter((row) => row.url.length > 0);
+
+      const { error: delImgErr } = await admin.from('retreat_images').delete().eq('retreat_id', id);
+      if (delImgErr) {
+        return NextResponse.json({ error: delImgErr.message }, { status: 500 });
+      }
+
+      if (imgRows.length > 0) {
+        const { error: insImgErr } = await admin.from('retreat_images').insert(imgRows);
+        if (insImgErr) {
+          return NextResponse.json(
+            { error: `No se pudieron guardar las imágenes: ${insImgErr.message}` },
+            { status: 500 },
+          );
+        }
       }
     }
 

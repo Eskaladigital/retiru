@@ -18,7 +18,7 @@ export default async function MisEventosPage() {
 
   let retreats: any[] = [];
   if (orgProfile) {
-    const { data } = await admin
+    const { data, error: retreatsErr } = await admin
       .from('retreats')
       .select(`
         id, slug, title_es, status, start_date, end_date,
@@ -27,6 +27,9 @@ export default async function MisEventosPage() {
       `)
       .eq('organizer_id', orgProfile.id)
       .order('start_date', { ascending: false });
+    if (retreatsErr) {
+      console.error('[mis-eventos] Error cargando retiros:', retreatsErr.message);
+    }
     retreats = data || [];
   }
 

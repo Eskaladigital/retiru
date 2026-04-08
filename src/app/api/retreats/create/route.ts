@@ -136,15 +136,27 @@ export async function POST(request: NextRequest) {
       await admin.from('retreat_categories').insert(catRows);
     }
 
-    // Guardar imágenes si se proporcionaron
+    // Guardar imágenes si se proporcionaron (URLs públicas tras subida al bucket retreat-images)
     if (images && Array.isArray(images) && images.length > 0) {
-      const imgRows = images.map((img: { url: string; is_cover: boolean }, i: number) => ({
-        retreat_id: retreat!.id,
-        url: img.url,
-        is_cover: img.is_cover || false,
-        sort_order: i,
-      }));
-      await admin.from('retreat_images').insert(imgRows);
+      const imgRows = images
+        .map((img: { url: string; is_cover: boolean }, i: number) => ({
+          retreat_id: retreat!.id,
+          url: typeof img?.url === 'string' ? img.url.trim() : '',
+          is_cover: Boolean(img?.is_cover),
+          sort_order: i,
+        }))
+        .filter((row) => row.url.length > 0);
+
+      if (imgRows.length > 0) {
+        const { error: imgErr } = await admin.from('retreat_images').insert(imgRows);
+        if (imgErr) {
+          await admin.from('retreats').delete().eq('id', retreat!.id);
+          return NextResponse.json(
+            { error: `El retiro no se pudo guardar: error al registrar imágenes (${imgErr.message}).` },
+            { status: 500 },
+          );
+        }
+      }
     }
 
     return NextResponse.json({
