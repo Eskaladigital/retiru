@@ -154,7 +154,7 @@ export default async function BlogPostEN({ params }: { params: Promise<{ slug: s
           {/* Article content */}
           <div className="px-2 md:px-4 mb-16">
             <div className="text-[15px] text-[#7a6b5d] leading-[1.85]">
-              <MarkdownContent content={articleContent} />
+              <MarkdownContent content={articleContent} inferBlogStructure />
             </div>
 
             {/* CTA */}

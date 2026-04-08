@@ -58,7 +58,6 @@ export default async function ReservaDetailPage({ params }: Props) {
   const statusLabel = STATUS[(booking as any).status] || (booking as any).status;
   const statusColor = STATUS_COLOR[(booking as any).status] || 'bg-sand-200 text-foreground';
   const feePaid = (booking as any).platform_payment_status === 'paid';
-  const remainingPaid = (booking as any).remaining_payment_status === 'confirmed_by_organizer';
   const createdAt = (booking as any).created_at ? formatDate((booking as any).created_at, 'es') : '';
 
   // Buscar conversación: primero por booking_id, luego por retreat_id + user_id
@@ -144,31 +143,23 @@ export default async function ReservaDetailPage({ params }: Props) {
             </div>
           )}
 
-          {/* Desglose pago */}
+          {/* Resumen del pago */}
           <div className="bg-white border border-sand-200 rounded-2xl p-6">
-            <h3 className="font-serif text-lg mb-4">Desglose del pago</h3>
+            <h3 className="font-serif text-lg mb-4">Resumen del pago</h3>
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-[#7a6b5d]">Cuota Retiru</span>
+                <span className="text-[#7a6b5d]">Importe total</span>
                 <span className={`font-semibold ${feePaid ? 'text-sage-600' : 'text-amber-600'}`}>
-                  {feePaid ? '✓' : '⏳'} {Number((booking as any).platform_fee).toFixed(0)}€
+                  {feePaid ? '✓' : '⏳'} {Number((booking as any).total_price).toFixed(0)}€
                 </span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-[#7a6b5d]">Al organizador</span>
-                <span className={`font-semibold ${remainingPaid ? 'text-sage-600' : 'text-amber-600'}`}>
-                  {remainingPaid ? '✓' : '⏳'} {Number((booking as any).organizer_amount).toFixed(0)}€
+              <div className="flex justify-between pt-3 border-t border-sand-200">
+                <span className="text-xs text-[#7a6b5d]">Estado</span>
+                <span className="text-xs font-semibold text-sage-600">
+                  {feePaid ? 'Pago completado' : 'Pendiente de pago'}
                 </span>
-              </div>
-              <div className="flex justify-between pt-3 border-t border-sand-200 font-bold">
-                <span>Total</span><span>{Number((booking as any).total_price).toFixed(0)}€</span>
               </div>
             </div>
-            {!remainingPaid && (
-              <p className="mt-3 text-xs text-amber-600 bg-amber-50 rounded-lg p-3">
-                Recuerda pagar los {Number((booking as any).organizer_amount).toFixed(0)}€ al organizador antes del retiro.
-              </p>
-            )}
           </div>
 
           {/* Cancelar (solo si aplica) */}

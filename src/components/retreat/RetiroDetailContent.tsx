@@ -211,19 +211,9 @@ export function RetiroDetailContent({ retreat, isPreview }: Props) {
         <aside className="hidden w-96 shrink-0 lg:block">
           <div className="sticky top-24">
             <div className="rounded-2xl border border-sand-200 bg-white p-6 shadow-elevated">
-              <div className="mb-4 text-center">
-                <span className="text-sm text-muted-foreground">Precio total</span>
+              <div className="mb-6 text-center">
                 <p className="text-3xl font-bold text-foreground">{r.total_price}€ <span className="text-base font-normal text-muted-foreground">/ persona</span></p>
-              </div>
-              <div className="mb-6 rounded-xl bg-cream-100 p-4 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Cuota Retiru (20%)</span>
-                  <span className="font-semibold text-terracotta-600">{r.platform_fee}€</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Al organizador (80%)</span>
-                  <span className="font-semibold">{r.organizer_amount}€</span>
-                </div>
+                <p className="text-xs text-muted-foreground mt-1">Pago único · Todo incluido</p>
               </div>
               <div className="mb-6 space-y-3 text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
@@ -248,7 +238,7 @@ export function RetiroDetailContent({ retreat, isPreview }: Props) {
               ) : (
                 <>
                   <button className="btn-primary w-full py-4 text-base" disabled={r.available_spots === 0}>
-                    {r.available_spots === 0 ? 'Agotado' : `Reservar plaza · ${r.platform_fee}€`}
+                    {r.available_spots === 0 ? 'Agotado' : `Reservar plaza · ${r.total_price}€`}
                   </button>
                   <div className="mt-4">
                     <AskOrganizerButton retreatId={r.id} locale="es" />

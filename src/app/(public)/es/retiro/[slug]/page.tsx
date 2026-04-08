@@ -282,9 +282,7 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
                     ))}
                   </ul>
                   <p className="mt-3 text-xs text-muted-foreground">
-                    {r.cancellation_policy.platform_fee_refundable
-                      ? 'La cuota de gestión de Retiru (20%) es reembolsable.'
-                      : 'La cuota de gestión de Retiru (20%) no es reembolsable.'}
+                    El porcentaje de reembolso se aplica sobre el importe total pagado.
                   </p>
                 </div>
               </section>
@@ -324,25 +322,9 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
             <div className="sticky top-24">
               <div className="rounded-2xl border border-sand-200 bg-white p-6 shadow-elevated">
                 {/* Price */}
-                <div className="mb-4 text-center">
-                  <span className="text-sm text-muted-foreground">Precio total</span>
+                <div className="mb-6 text-center">
                   <p className="text-3xl font-bold text-foreground">{r.total_price}€ <span className="text-base font-normal text-muted-foreground">/ persona</span></p>
-                </div>
-
-                {/* Price breakdown */}
-                <div className="mb-6 rounded-xl bg-cream-100 p-4 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Cuota Retiru (20%)</span>
-                    <span className="font-semibold text-terracotta-600">{r.platform_fee}€</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Al organizador (80%)</span>
-                    <span className="font-semibold">{r.organizer_amount}€</span>
-                  </div>
-                  <hr className="border-sand-300" />
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Pagas hoy <strong>{r.platform_fee}€</strong> a Retiru · El resto ({r.organizer_amount}€) lo pagas al organizador antes del retiro.
-                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Pago único · Todo incluido</p>
                 </div>
 
                 {/* Info */}
@@ -379,7 +361,7 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
                 <ReserveButton
                   retreatId={r.id}
                   retreatSlug={r.slug}
-                  platformFee={r.platform_fee}
+                  totalPrice={r.total_price}
                   availableSpots={r.available_spots}
                   locale="es"
                   className="w-full py-4 text-base"
@@ -387,7 +369,7 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
 
                 <p className="mt-3 text-center text-xs text-muted-foreground">
                   <Shield size={12} className="inline mr-1" />
-                  Pago seguro con Stripe
+                  Pago seguro con Stripe · Reembolso según política de cancelación
                 </p>
 
                 <div className="mt-4">
@@ -404,14 +386,14 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
         <div className="flex items-center justify-between gap-3">
           <div className="shrink-0">
             <p className="text-lg font-bold text-foreground">{r.total_price}€</p>
-            <p className="text-xs text-muted-foreground">Hoy pagas {r.platform_fee}€</p>
+            <p className="text-xs text-muted-foreground">por persona</p>
           </div>
           <div className="flex items-center gap-2">
             <AskOrganizerButton retreatId={r.id} locale="es" compact />
             <ReserveButton
               retreatId={r.id}
               retreatSlug={r.slug}
-              platformFee={r.platform_fee}
+              totalPrice={r.total_price}
               availableSpots={r.available_spots}
               locale="es"
               className="px-6 py-3 whitespace-nowrap"

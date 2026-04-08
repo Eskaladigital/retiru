@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { MarkdownContent } from '@/components/ui/markdown-content';
 import { CenterMap } from '@/components/ui/center-map';
 import { ClaimCenterButton } from '@/components/ui/claim-center-button';
+import { EmailLink } from '@/components/ui/email-link';
 import { generatePageMetadata } from '@/lib/seo';
 import { getCenterBySlug, getCenterSlugs } from '@/lib/data';
 import { getCenterTypeLabel } from '@/lib/utils';
@@ -151,7 +152,7 @@ export default async function CenterDetailEN({ params }: Props) {
                 <div className="text-sm"><span className="text-[#a09383] block text-xs uppercase tracking-wider font-semibold mb-0.5">Phone</span><a href={`tel:${C.phone}`} className="text-foreground hover:text-terracotta-600 transition-colors">{C.phone}</a></div>
               )}
               {C.email && (
-                <div className="text-sm"><span className="text-[#a09383] block text-xs uppercase tracking-wider font-semibold mb-0.5">Email</span><a href={`mailto:${C.email}`} className="text-foreground hover:text-terracotta-600 transition-colors break-all">{C.email}</a></div>
+                <div className="text-sm"><span className="text-[#a09383] block text-xs uppercase tracking-wider font-semibold mb-0.5">Email</span><EmailLink email={C.email} className="text-foreground hover:text-terracotta-600 transition-colors break-all" /></div>
               )}
               {C.instagram && (
                 <div className="text-sm"><span className="text-[#a09383] block text-xs uppercase tracking-wider font-semibold mb-0.5">Instagram</span><a href={`https://instagram.com/${C.instagram.replace('@', '')}`} target="_blank" rel="noopener" className="text-foreground hover:text-terracotta-600 transition-colors">{C.instagram}</a></div>

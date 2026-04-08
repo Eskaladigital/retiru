@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { MessageCircle, Search, Eye, AlertTriangle, Send, LifeBuoy, X, Trash2 } from 'lucide-react';
+import { EmailLink } from '@/components/ui/email-link';
 
 interface AdminConversation {
   id: string;
@@ -184,7 +185,12 @@ export default function AdminMensajesPage() {
                 >
                   <td className="px-4 py-3">
                     <div className="font-medium">{c.user_profile?.full_name ?? '—'}</div>
-                    <div className="text-xs text-[#a09383]">{c.user_profile?.email ?? ''}</div>
+                    {c.user_profile?.email ? (
+                      <EmailLink
+                        email={c.user_profile.email}
+                        className="text-xs text-[#a09383] hover:text-terracotta-600 hover:underline break-all"
+                      />
+                    ) : null}
                   </td>
                   <td className="px-4 py-3">
                     {c.is_support

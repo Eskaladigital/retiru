@@ -1,8 +1,11 @@
 'use client';
 
+import { EmailLink } from '@/components/ui/email-link';
+
 interface RefundRow {
   id: string;
   attendee: string;
+  attendee_email: string | null;
   event: string;
   retreat_slug: string | null;
   amount: number;
@@ -59,7 +62,15 @@ export function ReembolsosTableClient({ refunds }: { refunds: RefundRow[] }) {
               return (
                 <tr key={r.id} className="border-b border-sand-100 hover:bg-sand-50/50">
                   <td className="py-3 px-4 font-medium text-[#7a6b5d]">{r.id.slice(0, 8)}…</td>
-                  <td className="py-3 px-4">{r.attendee}</td>
+                  <td className="py-3 px-4">
+                    {r.attendee_email ? (
+                      <EmailLink email={r.attendee_email} className="text-foreground hover:text-terracotta-600 hover:underline">
+                        {r.attendee}
+                      </EmailLink>
+                    ) : (
+                      r.attendee
+                    )}
+                  </td>
                   <td className="py-3 px-4 text-[#7a6b5d] hidden md:table-cell">
                     {r.retreat_slug ? (
                       <a href={`/es/retiro/${r.retreat_slug}`} target="_blank" rel="noopener" className="text-terracotta-600 hover:underline">

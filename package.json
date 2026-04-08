@@ -30,7 +30,9 @@
     "centers:sync-directorio:update": "node scripts/sync-directorio.mjs --update-existing",
     "centers:translate-en": "node scripts/translate-centers-en.mjs",
     "blog:backfill-slugs-en": "node scripts/backfill-blog-slugs-en.mjs",
-    "blog:translate-en": "node scripts/translate-blog-articles-en.mjs"
+    "blog:translate-en": "node scripts/translate-blog-articles-en.mjs",
+    "blog:import-csv": "node scripts/import-blog-csv.mjs",
+    "blog:import-csv:push": "node scripts/import-blog-csv.mjs --push"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

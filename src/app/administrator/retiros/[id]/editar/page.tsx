@@ -27,8 +27,9 @@ export default async function AdminEditarRetiroPage({ params }: Props) {
       description_es, description_en, includes_es, includes_en,
       start_date, end_date, total_price, max_attendees,
       destination_id, address, confirmation_type, languages, status,
-      rejection_reason, reviewed_at,
-      retreat_categories(category_id)
+      rejection_reason, reviewed_at, updated_at,
+      retreat_categories(category_id),
+      retreat_images(url, is_cover, sort_order)
     `)
     .eq('id', id)
     .single();

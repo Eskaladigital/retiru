@@ -139,7 +139,7 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
           {/* Article content */}
           <div className="px-2 md:px-4 mb-16">
             <div className="text-[15px] text-[#7a6b5d] leading-[1.85]">
-              <MarkdownContent content={article.content_es} />
+              <MarkdownContent content={article.content_es} inferBlogStructure />
             </div>
 
             {/* CTA */}

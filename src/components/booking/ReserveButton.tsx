@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 interface ReserveButtonProps {
   retreatId: string;
   retreatSlug: string;
-  platformFee: number;
+  totalPrice: number;
   availableSpots: number;
   locale?: 'es' | 'en';
   className?: string;
@@ -17,7 +17,7 @@ interface ReserveButtonProps {
 export default function ReserveButton({
   retreatId,
   retreatSlug,
-  platformFee,
+  totalPrice,
   availableSpots,
   locale = 'es',
   className = '',
@@ -30,8 +30,8 @@ export default function ReserveButton({
   const label = soldOut
     ? (locale === 'es' ? 'Agotado' : 'Sold out')
     : compact
-      ? `${locale === 'es' ? 'Reservar' : 'Book'} · ${platformFee}€`
-      : `${locale === 'es' ? 'Reservar plaza' : 'Book your spot'} · ${platformFee}€`;
+      ? `${locale === 'es' ? 'Reservar' : 'Book'} · ${totalPrice}€`
+      : `${locale === 'es' ? 'Reservar plaza' : 'Book your spot'} · ${totalPrice}€`;
 
   async function handleReserve() {
     if (soldOut || loading) return;

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { EmailLink } from '@/components/ui/email-link';
 
 interface ClaimRow {
   id: string;
@@ -146,18 +147,24 @@ export function ClaimsTableClient({ claims }: { claims: ClaimRow[] }) {
                         >
                           {c.centers?.name || c.center_id}
                         </a>
-                        {c.centers?.email && (
-                          <span className="block text-xs text-[#a09383]">{c.centers.email}</span>
-                        )}
+                        {c.centers?.email ? (
+                          <EmailLink
+                            email={c.centers.email}
+                            className="block text-xs text-[#a09383] hover:text-terracotta-600 hover:underline break-all"
+                          />
+                        ) : null}
                         {c.centers?.city && (
                           <span className="block text-[11px] text-[#b5a89c]">{c.centers.city}</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
                         <span className="font-medium">{c.profiles?.full_name || 'Sin nombre'}</span>
-                        {c.profiles?.email && (
-                          <span className="block text-xs text-[#a09383]">{c.profiles.email}</span>
-                        )}
+                        {c.profiles?.email ? (
+                          <EmailLink
+                            email={c.profiles.email}
+                            className="block text-xs text-[#a09383] hover:text-terracotta-600 hover:underline break-all"
+                          />
+                        ) : null}
                       </td>
                       <td className="px-4 py-3">
                         {match === true && (
@@ -270,9 +277,12 @@ export function ClaimsTableClient({ claims }: { claims: ClaimRow[] }) {
               {/* Centro */}
               <div className="bg-sand-50 rounded-xl p-4 space-y-1">
                 <p className="font-semibold text-foreground">{detailClaim.centers?.name}</p>
-                {detailClaim.centers?.email && (
-                  <p className="text-[#7a6b5d]">Email centro: <span className="font-mono text-xs">{detailClaim.centers.email}</span></p>
-                )}
+                {detailClaim.centers?.email ? (
+                  <p className="text-[#7a6b5d]">
+                    Email centro:{' '}
+                    <EmailLink email={detailClaim.centers.email} className="font-mono text-xs text-terracotta-600 hover:underline break-all" />
+                  </p>
+                ) : null}
                 {detailClaim.centers?.phone && (
                   <p className="text-[#7a6b5d]">Tel: {detailClaim.centers.phone}</p>
                 )}
@@ -293,9 +303,12 @@ export function ClaimsTableClient({ claims }: { claims: ClaimRow[] }) {
               {/* Solicitante */}
               <div className="bg-blue-50/50 rounded-xl p-4 space-y-1">
                 <p className="font-semibold text-foreground">{detailClaim.profiles?.full_name || 'Sin nombre'}</p>
-                {detailClaim.profiles?.email && (
-                  <p className="text-[#7a6b5d]">Email usuario: <span className="font-mono text-xs">{detailClaim.profiles.email}</span></p>
-                )}
+                {detailClaim.profiles?.email ? (
+                  <p className="text-[#7a6b5d]">
+                    Email usuario:{' '}
+                    <EmailLink email={detailClaim.profiles.email} className="font-mono text-xs text-terracotta-600 hover:underline break-all" />
+                  </p>
+                ) : null}
                 <p className="text-[#7a6b5d]">Método: {METHOD_LABEL[detailClaim.method] || detailClaim.method}</p>
                 {detailClaim.notes && (
                   <p className="text-[#7a6b5d]">Notas del usuario: <em>{detailClaim.notes}</em></p>

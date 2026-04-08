@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Download, Check, MessageCircle, ChevronDown } from 'lucide-react';
+import { EmailLink } from '@/components/ui/email-link';
 
 interface BookingRow {
   id: string;
@@ -14,7 +15,6 @@ interface BookingRow {
   organizer_amount: number;
   platform_payment_status: string;
   remaining_payment_status: string;
-  remaining_payment_due_date: string | null;
   form_responses: Record<string, unknown>;
   organizer_notes: string | null;
   created_at: string;
@@ -83,25 +83,13 @@ export default function ReservasEventoPage() {
     }
   }
 
-  async function markAsPaid(bookingId: string) {
-    setActionLoading(bookingId);
-    try {
-      await fetch(`/api/organizer/bookings/${bookingId}/payment`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ method: 'manual' }),
-      });
-      await fetchBookings();
-    } finally {
-      setActionLoading(null);
-    }
-  }
-
   const confirmed = bookings.filter((b) => ['confirmed', 'completed'].includes(b.status)).length;
-  const pendingPayment = bookings.filter((b) => b.remaining_payment_status === 'pending' && b.status === 'confirmed').length;
   const totalIncome = bookings
     .filter((b) => ['confirmed', 'completed'].includes(b.status))
     .reduce((sum, b) => sum + Number(b.organizer_amount), 0);
+  const totalRevenue = bookings
+    .filter((b) => ['confirmed', 'completed'].includes(b.status))
+    .reduce((sum, b) => sum + Number(b.total_price), 0);
 
   return (
     <div>
@@ -122,13 +110,13 @@ export default function ReservasEventoPage() {
           <p className="text-2xl font-bold">{confirmed}</p>
           <p className="text-xs text-[#7a6b5d]">Confirmadas</p>
         </div>
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-          <p className="text-2xl font-bold">{pendingPayment}</p>
-          <p className="text-xs text-[#7a6b5d]">80% pendiente</p>
-        </div>
         <div className="bg-terracotta-50 border border-terracotta-200 rounded-xl p-4">
+          <p className="text-2xl font-bold">{totalRevenue.toLocaleString()}€</p>
+          <p className="text-xs text-[#7a6b5d]">Facturación total</p>
+        </div>
+        <div className="bg-sage-50 border border-sage-200 rounded-xl p-4">
           <p className="text-2xl font-bold">{totalIncome.toLocaleString()}€</p>
-          <p className="text-xs text-[#7a6b5d]">Ingresos (80%)</p>
+          <p className="text-xs text-[#7a6b5d]">Tus ingresos</p>
         </div>
       </div>
 
@@ -147,8 +135,8 @@ export default function ReservasEventoPage() {
                 <th className="text-left py-3 px-4 font-semibold text-[#7a6b5d]">Asistente</th>
                 <th className="text-left py-3 px-4 font-semibold text-[#7a6b5d] hidden md:table-cell">Email</th>
                 <th className="text-left py-3 px-4 font-semibold text-[#7a6b5d]">Estado</th>
-                <th className="text-center py-3 px-4 font-semibold text-[#7a6b5d]">20%</th>
-                <th className="text-center py-3 px-4 font-semibold text-[#7a6b5d]">80%</th>
+                <th className="text-center py-3 px-4 font-semibold text-[#7a6b5d]">Pago</th>
+                <th className="text-right py-3 px-4 font-semibold text-[#7a6b5d]">Total</th>
                 <th className="text-right py-3 px-4 font-semibold text-[#7a6b5d]">Acciones</th>
               </tr>
             </thead>
@@ -157,7 +145,6 @@ export default function ReservasEventoPage() {
                 const s = STATUS_LABELS[b.status] || { label: b.status, color: 'bg-sand-200 text-foreground' };
                 const profile = b.profiles;
                 const isPending = b.status === 'pending_confirmation';
-                const canMarkPaid = b.status === 'confirmed' && b.remaining_payment_status === 'pending';
 
                 return (
                   <tr key={b.id} className="border-b border-sand-100">
@@ -168,23 +155,28 @@ export default function ReservasEventoPage() {
                         </div>
                         <div>
                           <p className="font-medium">{profile?.full_name || 'Asistente'}</p>
-                          <p className="text-xs text-[#a09383] md:hidden">{profile?.email}</p>
+                          {profile?.email ? (
+                            <EmailLink
+                              email={profile.email}
+                              className="text-xs text-[#a09383] hover:text-terracotta-600 hover:underline md:hidden break-all"
+                            />
+                          ) : null}
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-[#7a6b5d] hidden md:table-cell">{profile?.email}</td>
+                    <td className="py-3 px-4 text-[#7a6b5d] hidden md:table-cell">
+                      <EmailLink email={profile?.email} className="text-[#7a6b5d] hover:text-terracotta-600 hover:underline break-all" />
+                    </td>
                     <td className="py-3 px-4">
                       <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${s.color}`}>{s.label}</span>
                     </td>
                     <td className="py-3 px-4 text-center">
                       {b.platform_payment_status === 'paid'
-                        ? <span className="text-sage-600">✓</span>
+                        ? <span className="text-sage-600">✓ Pagado</span>
                         : <span className="text-amber-500">⏳</span>}
                     </td>
-                    <td className="py-3 px-4 text-center">
-                      {b.remaining_payment_status === 'confirmed_by_organizer'
-                        ? <span className="text-sage-600">✓</span>
-                        : <span className="text-amber-500">⏳</span>}
+                    <td className="py-3 px-4 text-right font-semibold">
+                      {Number(b.total_price).toFixed(0)}€
                     </td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-1">
@@ -205,15 +197,6 @@ export default function ReservasEventoPage() {
                               Rechazar
                             </button>
                           </>
-                        )}
-                        {canMarkPaid && (
-                          <button
-                            onClick={() => markAsPaid(b.id)}
-                            disabled={actionLoading === b.id}
-                            className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-terracotta-50 text-terracotta-700 hover:bg-terracotta-100 disabled:opacity-50"
-                          >
-                            80% pagado
-                          </button>
                         )}
                       </div>
                     </td>

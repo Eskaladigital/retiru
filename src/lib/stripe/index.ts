@@ -10,12 +10,12 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 /**
- * Create a Stripe Checkout Session for a booking
+ * Create a Stripe Checkout Session for a booking (full price)
  */
 export async function createCheckoutSession({
   bookingId,
   eventTitle,
-  platformFee,
+  totalPrice,
   currency,
   customerEmail,
   locale,
@@ -24,7 +24,7 @@ export async function createCheckoutSession({
 }: {
   bookingId: string;
   eventTitle: string;
-  platformFee: number;
+  totalPrice: number;
   currency: string;
   customerEmail: string;
   locale: 'es' | 'en';
@@ -40,14 +40,14 @@ export async function createCheckoutSession({
       {
         price_data: {
           currency: currency.toLowerCase(),
-          unit_amount: Math.round(platformFee * 100), // Stripe uses cents
+          unit_amount: Math.round(totalPrice * 100),
           product_data: {
             name: locale === 'es'
-              ? `Cuota de gestión Retiru — ${eventTitle}`
-              : `Retiru booking fee — ${eventTitle}`,
+              ? `Reserva — ${eventTitle}`
+              : `Booking — ${eventTitle}`,
             description: locale === 'es'
-              ? 'Cuota de intermediación y gestión de reserva (20% del precio total)'
-              : 'Booking and management fee (20% of total price)',
+              ? `Reserva completa para ${eventTitle} a través de Retiru`
+              : `Full booking for ${eventTitle} via Retiru`,
           },
         },
         quantity: 1,

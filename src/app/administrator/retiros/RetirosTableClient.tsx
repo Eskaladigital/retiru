@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { EmailLink } from '@/components/ui/email-link';
 
 interface RetreatRow {
   id: string;
@@ -193,9 +194,12 @@ export function RetirosTableClient({ retreats }: { retreats: RetreatRow[] }) {
                       </td>
                       <td className="px-4 py-3 hidden md:table-cell">
                         <span className="font-medium text-xs">{r.organizer_name || '—'}</span>
-                        {r.organizer_email && (
-                          <span className="block text-[11px] text-[#a09383] truncate max-w-[160px]">{r.organizer_email}</span>
-                        )}
+                        {r.organizer_email ? (
+                          <EmailLink
+                            email={r.organizer_email}
+                            className="block text-[11px] text-[#a09383] hover:text-terracotta-600 hover:underline truncate max-w-[160px]"
+                          />
+                        ) : null}
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span className={`text-[11px] font-semibold px-2 py-1 rounded-full border whitespace-nowrap ${badge.className}`}>

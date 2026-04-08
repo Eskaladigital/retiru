@@ -70,6 +70,14 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
   const [images, setImages] = useState<{ file?: File; url: string; preview: string; is_cover: boolean }[]>([]);
   const [schedule, setSchedule] = useState<ScheduleDay[]>([]);
 
+  /** Tras crear borrador: modal explicativo antes de ir al listado o editar */
+  const [postCreate, setPostCreate] = useState<{
+    retreatId: string;
+    isVerifiedOrganizer: boolean;
+  } | null>(null);
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewError, setReviewError] = useState('');
+
   function set(field: string, value: unknown) {
     setForm((f) => ({ ...f, [field]: value }));
   }
@@ -183,12 +191,26 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
       });
 
       if (error) {
-        console.error('Upload error:', error);
-        continue;
+        const msg = error.message || 'Error desconocido';
+        if (msg.includes('row-level security') || msg.includes('RLS') || msg.includes('Unauthorized')) {
+          throw new Error(
+            'No se pudo subir la imagen: falta el bucket «retreat-images» o sus políticas en Supabase. Aplica la migración 016_retreat_images_bucket.sql en el proyecto.',
+          );
+        }
+        if (msg.includes('Bucket not found') || msg.includes('not found')) {
+          throw new Error(
+            'El bucket de imágenes no existe en este proyecto. Crea en Supabase Storage el bucket público «retreat-images» o aplica las migraciones.',
+          );
+        }
+        throw new Error(`Error al subir una imagen: ${msg}`);
       }
 
       const { data: urlData } = supabase.storage.from('retreat-images').getPublicUrl(path);
       uploaded.push({ url: urlData.publicUrl, is_cover: img.is_cover });
+    }
+
+    if (images.length > 0 && uploaded.length !== images.length) {
+      throw new Error('No se pudieron subir todas las imágenes. Quita las que fallen y vuelve a intentarlo.');
     }
 
     return uploaded;
@@ -245,17 +267,134 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
         return;
       }
 
-      router.push('/es/mis-eventos');
-    } catch {
-      setError('Error de conexión');
+      const id = data.retreat?.id as string | undefined;
+      if (!id) {
+        setError('Evento creado pero sin identificador. Revisa en «Mis eventos».');
+        router.push('/es/mis-eventos');
+        return;
+      }
+
+      setPostCreate({
+        retreatId: id,
+        isVerifiedOrganizer: Boolean(data.isVerifiedOrganizer),
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error de conexión');
     } finally {
       setSaving(false);
       setUploading(false);
     }
   }
 
+  async function handleSendFromModal() {
+    if (!postCreate) return;
+    setReviewError('');
+    setReviewSubmitting(true);
+    try {
+      const res = await fetch(`/api/retreats/${postCreate.retreatId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'published' }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setReviewError(typeof data.error === 'string' ? data.error : 'No se pudo enviar. Inténtalo de nuevo.');
+        return;
+      }
+      setPostCreate(null);
+      router.push('/es/mis-eventos');
+      router.refresh();
+    } catch {
+      setReviewError('Error de conexión');
+    } finally {
+      setReviewSubmitting(false);
+    }
+  }
+
+  function handleContinueEditingFromModal() {
+    if (!postCreate) return;
+    const id = postCreate.retreatId;
+    setPostCreate(null);
+    router.push(`/es/mis-eventos/${id}`);
+  }
+
+  function handleGoToListFromModal() {
+    setPostCreate(null);
+    router.push('/es/mis-eventos');
+  }
+
   return (
     <>
+      {postCreate && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/45 backdrop-blur-[2px]"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="draft-modal-title"
+        >
+          <div className="w-full max-w-md rounded-2xl bg-white shadow-xl border border-sand-200 p-6 sm:p-8">
+            <h2 id="draft-modal-title" className="font-serif text-xl sm:text-2xl text-foreground mb-3">
+              Evento guardado como borrador
+            </h2>
+            <p className="text-[15px] text-[#5c5349] leading-relaxed mb-3">
+              Acabas de crear este evento en modo borrador: aún no es visible para el público ni puede recibir reservas.
+            </p>
+            {postCreate.isVerifiedOrganizer ? (
+              <p className="text-[15px] text-[#5c5349] leading-relaxed mb-4">
+                Como ya tienes eventos publicados, puedes <strong>publicarlo ahora</strong> y quedará en línea al instante. Si prefieres, sigue editándolo antes.
+              </p>
+            ) : (
+              <p className="text-[15px] text-[#5c5349] leading-relaxed mb-4">
+                Cuando lo tengas listo, <strong>envíalo a revisión</strong>: el equipo de Retiru lo revisará y lo aprobará antes de publicarlo. Hasta entonces seguirá como borrador.
+              </p>
+            )}
+            {reviewError && (
+              <div className="mb-4 px-3 py-2 rounded-xl bg-red-50 border border-red-200 text-sm text-red-800">
+                {reviewError}
+              </div>
+            )}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                type="button"
+                onClick={handleContinueEditingFromModal}
+                disabled={reviewSubmitting}
+                className="flex-1 bg-white border border-sand-300 text-foreground font-semibold px-4 py-3 rounded-xl text-sm hover:bg-sand-50 transition-colors disabled:opacity-50"
+              >
+                Seguir editando
+              </button>
+              <button
+                type="button"
+                onClick={handleSendFromModal}
+                disabled={reviewSubmitting}
+                className="flex-1 bg-terracotta-600 text-white font-semibold px-4 py-3 rounded-xl text-sm hover:bg-terracotta-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {reviewSubmitting ? (
+                  <>
+                    <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden>
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
+                      <path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" fill="currentColor" className="opacity-75" />
+                    </svg>
+                    Enviando…
+                  </>
+                ) : postCreate.isVerifiedOrganizer ? (
+                  'Publicar ahora'
+                ) : (
+                  'Enviar a revisión'
+                )}
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={handleGoToListFromModal}
+              disabled={reviewSubmitting}
+              className="mt-4 w-full text-center text-sm text-[#7a6b5d] hover:text-foreground underline-offset-2 hover:underline disabled:opacity-50"
+            >
+              Ir a mis eventos (sigue en borrador)
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Step indicator */}
       <div className="flex gap-2 mb-8">
         {STEPS.map((s, i) => (

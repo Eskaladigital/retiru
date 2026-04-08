@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Download, Search } from 'lucide-react';
+import { EmailLink } from '@/components/ui/email-link';
 
 interface Attendee {
   id: string;
@@ -91,7 +92,9 @@ export default function AsistentesPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="py-3 px-4 text-[#7a6b5d] hidden md:table-cell">{a.email}</td>
+                  <td className="py-3 px-4 text-[#7a6b5d] hidden md:table-cell">
+                    <EmailLink email={a.email} className="text-[#7a6b5d] hover:text-terracotta-600 hover:underline break-all" />
+                  </td>
                   <td className="py-3 px-4 text-center">{a.events}</td>
                   <td className="py-3 px-4 text-right font-semibold">{a.totalSpent.toLocaleString()}€</td>
                   <td className="py-3 px-4 text-[#7a6b5d] text-xs hidden lg:table-cell">{a.lastEvent}</td>

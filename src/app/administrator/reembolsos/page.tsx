@@ -46,6 +46,7 @@ export default async function AdminReembolsosPage() {
     return {
       id: r.id,
       attendee: p.full_name || p.email || '—',
+      attendee_email: (p.email as string | null) || null,
       event: t.title_es || '—',
       retreat_slug: t.slug,
       amount: Number(r.amount || 0),

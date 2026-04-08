@@ -1,6 +1,6 @@
 // ============================================================================
 // RETIRU · Condiciones — /es/condiciones
-// Cómo se cobra, cómo percibe la app su remuneración, modelo de precios
+// Cómo se cobra, modelo de precios (pago 100%)
 // ============================================================================
 
 import Link from 'next/link';
@@ -33,26 +33,17 @@ export default function CondicionesPage() {
             Cómo se cobra
           </h2>
           <p className="text-[15px] leading-relaxed text-foreground mb-4">
-            El organizador fija el precio total del retiro (mínimo 50€). Ese es el precio que ves en la ficha del retiro. Al reservar, el asistente realiza dos pagos diferenciados:
+            El organizador fija el precio total del retiro (mínimo 50€). Ese es el precio que ves en la ficha del retiro. Al reservar, <strong>pagas el 100% del precio con tarjeta</strong> a través de Stripe en un solo paso. No hay pagos adicionales.
           </p>
 
           <div className="bg-sand-100 rounded-2xl p-6 md:p-8">
             <div className="space-y-6">
               <div className="flex gap-4">
-                <div className="w-10 h-10 rounded-full bg-terracotta-100 text-terracotta-600 flex items-center justify-center font-bold shrink-0">1</div>
+                <div className="w-10 h-10 rounded-full bg-sage-100 text-sage-700 flex items-center justify-center font-bold shrink-0">✓</div>
                 <div>
-                  <h3 className="font-semibold text-foreground mb-1">Pago inmediato a Retiru (20%)</h3>
+                  <h3 className="font-semibold text-foreground mb-1">Pago único al reservar</h3>
                   <p className="text-[15px] text-muted-foreground leading-relaxed">
-                    Se cobra con tarjeta a través de Stripe al hacer la reserva. Retiru emite factura al asistente. Este pago bloquea la plaza y cubre la intermediación y gestión de la reserva.
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <div className="w-10 h-10 rounded-full bg-sage-100 text-sage-700 flex items-center justify-center font-bold shrink-0">2</div>
-                <div>
-                  <h3 className="font-semibold text-foreground mb-1">Pago al organizador (80%)</h3>
-                  <p className="text-[15px] text-muted-foreground leading-relaxed">
-                    Se paga directamente al organizador antes del inicio del retiro, por transferencia o el método que él indique. Fuera de la plataforma. Retiru no interviene en este pago.
+                    Se cobra el importe completo con tarjeta a través de Stripe. Tu plaza queda confirmada al instante (o pendiente de confirmación del organizador, según el retiro). Sin sorpresas ni pagos posteriores.
                   </p>
                 </div>
               </div>
@@ -63,25 +54,25 @@ export default function CondicionesPage() {
         {/* ═══ CÓMO PERCIBE RETIRU SU REMUNERACIÓN ═══ */}
         <section>
           <h2 className="font-serif text-2xl font-bold text-foreground mb-4">
-            Cómo percibe Retiru su remuneración
+            Cómo se financia Retiru
           </h2>
           <p className="text-[15px] leading-relaxed text-foreground mb-4">
-            Retiru se financia exclusivamente con el 20% que paga el asistente al reservar. Es nuestra única fuente de ingresos.
+            Retiru cobra una comisión incluida en el precio que fija el organizador. Es nuestra forma de financiar la plataforma, el soporte y el desarrollo.
           </p>
 
           <div className="bg-terracotta-50 border border-terracotta-100 rounded-2xl p-6 md:p-8">
             <ul className="space-y-3 text-[15px] leading-relaxed">
               <li className="flex gap-3">
                 <span className="text-terracotta-600 font-bold">•</span>
-                <span><strong>El organizador no paga nada:</strong> ni comisión, ni suscripción, ni cuota. Publicar y gestionar retiros es 100% gratis.</span>
+                <span><strong>El organizador no paga comisión directa:</strong> publica y gestiona retiros de forma gratuita. Retiru retiene su comisión del precio total fijado por el organizador.</span>
               </li>
               <li className="flex gap-3">
                 <span className="text-terracotta-600 font-bold">•</span>
-                <span><strong>El asistente paga el 20% a Retiru</strong> como cuota de intermediación y gestión de reserva. Con eso cubrimos la plataforma, el procesamiento de pagos, el soporte y el desarrollo.</span>
+                <span><strong>El asistente paga el precio publicado.</strong> Sin cuotas adicionales ni costes ocultos.</span>
               </li>
               <li className="flex gap-3">
                 <span className="text-terracotta-600 font-bold">•</span>
-                <span><strong>El 80% va íntegro al organizador.</strong> Retiru no retiene ni un euro de esa parte.</span>
+                <span><strong>Retiru transfiere al organizador</strong> su parte una vez confirmada la reserva.</span>
               </li>
             </ul>
           </div>
@@ -96,31 +87,31 @@ export default function CondicionesPage() {
             <p className="text-sm font-semibold text-muted-foreground mb-4">Retiro de 500€</p>
             <div className="space-y-3 text-[15px]">
               <div className="flex justify-between items-center py-3 border-b border-sand-100">
-                <span className="flex items-center gap-2">
-                  Cuota de gestión de reserva
-                  <span className="text-[11px] font-semibold uppercase bg-terracotta-100 text-terracotta-700 px-2 py-0.5 rounded-full">Retiru</span>
-                </span>
-                <span className="font-bold text-terracotta-600">100€</span>
+                <span>El asistente paga</span>
+                <span className="text-xl font-bold">500€</span>
               </div>
               <div className="flex justify-between items-center py-3 border-b border-sand-100">
                 <span className="flex items-center gap-2">
-                  Pago al organizador
+                  El organizador recibe
                   <span className="text-[11px] font-semibold uppercase bg-sage-100 text-sage-700 px-2 py-0.5 rounded-full">Organizador</span>
                 </span>
                 <span className="font-bold">400€</span>
               </div>
-              <div className="flex justify-between items-center pt-4 mt-2 border-t-2 border-foreground">
-                <span className="font-semibold">Precio total del retiro</span>
-                <span className="text-xl font-bold">500€</span>
+              <div className="flex justify-between items-center py-3 border-b border-sand-100">
+                <span className="flex items-center gap-2">
+                  Comisión Retiru
+                  <span className="text-[11px] font-semibold uppercase bg-terracotta-100 text-terracotta-700 px-2 py-0.5 rounded-full">Retiru</span>
+                </span>
+                <span className="font-bold text-terracotta-600">100€</span>
               </div>
             </div>
             <p className="mt-4 text-sm text-muted-foreground">
-              Al reservar pagas 100€ a Retiru. Los 400€ restantes se los pagas directamente al organizador antes del inicio del retiro. Sin costes ocultos.
+              Al reservar pagas 500€. Retiru transfiere 400€ al organizador y retiene 100€ como comisión de gestión. Un solo pago, sin costes adicionales.
             </p>
           </div>
         </section>
 
-        {/* ═══ RESERVAS, CONFIRMACIÓN Y CANCELACIONES ═══ */}
+        {/* ═══ DIRECTORIO DE CENTROS ═══ */}
         <section>
           <h2 className="font-serif text-2xl font-bold text-foreground mb-4">
             Directorio de centros
@@ -133,24 +124,28 @@ export default function CondicionesPage() {
               <strong className="text-foreground">Tras el periodo gratuito:</strong> Evaluaremos juntos el impacto del directorio en tu negocio. Si deseas continuar, pasarás a una cuota mensual asequible. Si no, tu ficha se desactivará sin compromiso.
             </p>
             <p>
-              <strong className="text-foreground">Reclama tu centro:</strong> Si tu centro ya aparece en el directorio, puedes reclamarlo creando una cuenta y haciendo clic en "Reclamar este centro" en tu ficha. Nuestro equipo verificará tu identidad como propietario.
+              <strong className="text-foreground">Reclama tu centro:</strong> Si tu centro ya aparece en el directorio, puedes reclamarlo creando una cuenta y haciendo clic en &quot;Reclamar este centro&quot; en tu ficha. Nuestro equipo verificará tu identidad como propietario.
             </p>
           </div>
         </section>
 
+        {/* ═══ RESERVAS, CONFIRMACIÓN Y CANCELACIONES ═══ */}
         <section>
           <h2 className="font-serif text-2xl font-bold text-foreground mb-4">
             Reservas, confirmación y cancelaciones
           </h2>
           <div className="space-y-4 text-[15px] leading-relaxed text-muted-foreground">
             <p>
-              <strong className="text-foreground">Reserva:</strong> Tu plaza queda bloqueada tras el pago del 20%. Si el retiro tiene confirmación inmediata, la plaza se confirma al instante. Si requiere confirmación manual, el organizador tiene un plazo (por defecto 48h) para confirmar o rechazar.
+              <strong className="text-foreground">Reserva:</strong> Tu plaza queda bloqueada tras el pago completo. Si el retiro tiene confirmación inmediata, la plaza se confirma al instante. Si requiere confirmación manual, el organizador tiene un plazo (por defecto 48h) para confirmar o rechazar.
             </p>
             <p>
-              <strong className="text-foreground">Cancelación por el asistente:</strong> La cuota del 20% pagada a Retiru no es reembolsable. El reembolso del 80% (si aplica) depende de la política de cancelación de cada retiro.
+              <strong className="text-foreground">Cancelación por el asistente:</strong> El reembolso depende de la política de cancelación de cada retiro. Consulta los detalles en la ficha del retiro antes de reservar.
             </p>
             <p>
-              <strong className="text-foreground">Cancelación por el organizador:</strong> Recibirás el reembolso completo del 20% de forma automática.
+              <strong className="text-foreground">Cancelación por el organizador:</strong> Recibirás el reembolso completo de forma automática.
+            </p>
+            <p>
+              <strong className="text-foreground">Rechazo por el organizador:</strong> Si el organizador no confirma tu reserva en el plazo establecido, recibirás el reembolso completo automáticamente.
             </p>
           </div>
         </section>

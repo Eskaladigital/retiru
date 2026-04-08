@@ -68,6 +68,7 @@ export async function POST(request: NextRequest) {
           platform_payment_status: 'paid',
           platform_paid_at: new Date().toISOString(),
           stripe_payment_intent_id: session.payment_intent as string,
+          remaining_payment_status: 'not_applicable',
           updated_at: new Date().toISOString(),
         };
 
@@ -87,9 +88,6 @@ export async function POST(request: NextRequest) {
           day: 'numeric', month: 'long', year: 'numeric',
         });
 
-        const remainingDue = new Date(retreat?.start_date);
-        remainingDue.setDate(remainingDue.getDate() - 7);
-
         if (attendee?.email) {
           try {
             await sendBookingConfirmedEmail({
@@ -98,9 +96,7 @@ export async function POST(request: NextRequest) {
               bookingNumber: booking.booking_number,
               eventTitle: locale === 'es' ? retreat?.title_es : (retreat?.title_en || retreat?.title_es),
               startDate: dateFmt.format(new Date(retreat?.start_date)),
-              platformFee: booking.platform_fee,
-              organizerAmount: booking.organizer_amount,
-              remainingPaymentDate: dateFmt.format(remainingDue),
+              totalPrice: booking.total_price,
             });
           } catch (emailErr) {
             console.error('Failed to send booking confirmation email:', emailErr);

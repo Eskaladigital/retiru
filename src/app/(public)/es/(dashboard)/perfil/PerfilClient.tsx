@@ -1,7 +1,14 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { Camera } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+import { EmailLink } from '@/components/ui/email-link';
+
+const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
+const AVATAR_ACCEPT = ['image/jpeg', 'image/png', 'image/webp'] as const;
 
 export type PerfilInitial = {
   full_name: string;
@@ -23,39 +30,142 @@ function initialsFromName(name: string) {
 }
 
 export function PerfilClient({ initial }: { initial: PerfilInitial }) {
+  const router = useRouter();
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [fullName, setFullName] = useState(initial.full_name);
   const [phone, setPhone] = useState(initial.phone ?? '');
   const [bio, setBio] = useState(initial.bio ?? '');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(initial.avatar_url);
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [banner, setBanner] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
   const initials = useMemo(() => initialsFromName(fullName), [fullName]);
+
+  useEffect(() => {
+    setAvatarUrl(initial.avatar_url);
+  }, [initial.avatar_url]);
+
+  async function persistProfile(body: Record<string, unknown>, okMessage: string) {
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setBanner({ type: 'err', text: json.error || 'No se pudo guardar' });
+        return false;
+      }
+      if (json.profile?.full_name) {
+        setFullName(json.profile.full_name);
+      }
+      setBanner({ type: 'ok', text: okMessage });
+      router.refresh();
+      return true;
+    } catch {
+      setBanner({ type: 'err', text: 'Error de red. Inténtalo de nuevo.' });
+      return false;
+    }
+  }
+
+  async function onAvatarFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    if (!(AVATAR_ACCEPT as readonly string[]).includes(file.type)) {
+      setBanner({ type: 'err', text: 'Formato no válido. Usa JPG, PNG o WebP.' });
+      return;
+    }
+    if (file.size > MAX_AVATAR_BYTES) {
+      setBanner({ type: 'err', text: 'La imagen supera 2MB.' });
+      return;
+    }
+
+    setUploadingAvatar(true);
+    setBanner(null);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setBanner({ type: 'err', text: 'Sesión caducada. Vuelve a iniciar sesión.' });
+        return;
+      }
+
+      const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+      const path = `${user.id}/avatar.${ext}`;
+      const { error: upErr } = await supabase.storage.from('avatars').upload(path, file, {
+        upsert: true,
+        cacheControl: '3600',
+        contentType: file.type,
+      });
+
+      if (upErr) {
+        const msg = upErr.message || '';
+        setBanner({
+          type: 'err',
+          text:
+            msg.includes('row-level security') || msg.includes('RLS') || msg.includes('Bucket not found')
+              ? 'No se pudo subir la foto. Comprueba que exista el bucket público «avatars» en Supabase.'
+              : `Error al subir: ${msg}`,
+        });
+        return;
+      }
+
+      const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path);
+      const publicUrl = pub.publicUrl;
+
+      const ok = await persistProfile(
+        {
+          full_name: fullName,
+          phone: phone.trim() || null,
+          bio: bio.trim() || null,
+          avatar_url: publicUrl,
+        },
+        'Foto de perfil actualizada.',
+      );
+      if (ok) setAvatarUrl(publicUrl);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }
+
+  async function removeAvatar() {
+    if (!avatarUrl) return;
+    if (!confirm('¿Quitar la foto de perfil?')) return;
+    setUploadingAvatar(true);
+    setBanner(null);
+    try {
+      const ok = await persistProfile(
+        {
+          full_name: fullName,
+          phone: phone.trim() || null,
+          bio: bio.trim() || null,
+          avatar_url: null,
+        },
+        'Foto eliminada.',
+      );
+      if (ok) setAvatarUrl(null);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }
 
   async function onSave(e: React.FormEvent) {
     e.preventDefault();
     setBanner(null);
     setSaving(true);
     try {
-      const res = await fetch('/api/profile', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      await persistProfile(
+        {
           full_name: fullName,
           phone: phone.trim() || null,
           bio: bio.trim() || null,
-        }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setBanner({ type: 'err', text: json.error || 'No se pudo guardar' });
-        return;
-      }
-      if (json.profile?.full_name) {
-        setFullName(json.profile.full_name);
-      }
-      setBanner({ type: 'ok', text: 'Cambios guardados.' });
-    } catch {
-      setBanner({ type: 'err', text: 'Error de red. Inténtalo de nuevo.' });
+        },
+        'Cambios guardados.',
+      );
     } finally {
       setSaving(false);
     }
@@ -78,10 +188,11 @@ export function PerfilClient({ initial }: { initial: PerfilInitial }) {
 
       <div className="max-w-2xl space-y-8">
         <div className="flex items-center gap-6">
-          {initial.avatar_url ? (
-            <div className="relative w-20 h-20 rounded-2xl overflow-hidden shrink-0 bg-sand-100">
+          {avatarUrl ? (
+            <div className="relative w-20 h-20 rounded-2xl overflow-hidden shrink-0 bg-sand-100 ring-1 ring-sand-200">
               <Image
-                src={initial.avatar_url}
+                key={avatarUrl}
+                src={avatarUrl}
                 alt=""
                 fill
                 className="object-cover"
@@ -93,11 +204,36 @@ export function PerfilClient({ initial }: { initial: PerfilInitial }) {
               {initials}
             </div>
           )}
-          <div>
-            <button type="button" className="text-sm font-semibold text-[#a09383] cursor-not-allowed" disabled>
-              Cambiar foto
-            </button>
-            <p className="text-xs text-[#a09383] mt-0.5">Próximamente. JPG, PNG. Máximo 2MB.</p>
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-3">
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept={AVATAR_ACCEPT.join(',')}
+                className="hidden"
+                onChange={onAvatarFile}
+              />
+              <button
+                type="button"
+                disabled={uploadingAvatar || saving}
+                onClick={() => avatarInputRef.current?.click()}
+                className="inline-flex items-center gap-2 text-sm font-semibold text-terracotta-600 hover:text-terracotta-700 disabled:opacity-50"
+              >
+                <Camera size={18} aria-hidden />
+                {uploadingAvatar ? 'Subiendo…' : 'Cambiar foto'}
+              </button>
+              {avatarUrl ? (
+                <button
+                  type="button"
+                  disabled={uploadingAvatar || saving}
+                  onClick={removeAvatar}
+                  className="text-sm font-medium text-[#a09383] hover:text-red-600 disabled:opacity-50"
+                >
+                  Quitar foto
+                </button>
+              ) : null}
+            </div>
+            <p className="text-xs text-[#a09383]">JPG, PNG o WebP. Máximo 2MB.</p>
           </div>
         </div>
 
@@ -120,14 +256,16 @@ export function PerfilClient({ initial }: { initial: PerfilInitial }) {
               <label htmlFor="perfil-email" className="block text-sm font-medium text-foreground mb-1.5">
                 Email
               </label>
-              <input
+              <div
                 id="perfil-email"
-                type="email"
-                value={initial.email}
-                readOnly
-                disabled
-                className="w-full px-4 py-3 rounded-xl border border-sand-200 text-[15px] bg-sand-50 text-[#a09383]"
-              />
+                className="w-full px-4 py-3 rounded-xl border border-sand-200 text-[15px] bg-sand-50 min-h-[48px] flex items-center"
+              >
+                <EmailLink
+                  email={initial.email}
+                  className="text-[#7a6b5d] hover:text-terracotta-600 hover:underline break-all"
+                  emptyLabel="—"
+                />
+              </div>
             </div>
           </div>
           <div>

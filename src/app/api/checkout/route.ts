@@ -59,8 +59,6 @@ export async function POST(request: NextRequest) {
     }
 
     const bookingNumber = generateBookingNumber();
-    const remainingPaymentDueDate = new Date(retreat.start_date);
-    remainingPaymentDueDate.setDate(remainingPaymentDueDate.getDate() - 7);
 
     const slaDeadline = retreat.confirmation_type === 'manual'
       ? new Date(Date.now() + (retreat.sla_hours || 48) * 60 * 60 * 1000).toISOString()
@@ -79,8 +77,7 @@ export async function POST(request: NextRequest) {
         currency: retreat.currency,
         status: 'pending_payment',
         platform_payment_status: 'pending',
-        remaining_payment_status: 'pending',
-        remaining_payment_due_date: remainingPaymentDueDate.toISOString().split('T')[0],
+        remaining_payment_status: 'not_applicable',
         sla_deadline: slaDeadline,
       })
       .select('id')
@@ -97,7 +94,7 @@ export async function POST(request: NextRequest) {
     const session = await createCheckoutSession({
       bookingId: booking.id,
       eventTitle,
-      platformFee: retreat.platform_fee,
+      totalPrice: retreat.total_price,
       currency: retreat.currency,
       customerEmail: user.email!,
       locale: locale as 'es' | 'en',

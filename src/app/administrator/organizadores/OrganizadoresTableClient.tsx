@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { MessageCircle } from 'lucide-react';
+import { EmailLink } from '@/components/ui/email-link';
 
 interface OrganizerRow {
   id: string;
@@ -80,7 +81,9 @@ export function OrganizadoresTableClient({ organizers }: { organizers: Organizer
                       {o.name}
                     </a>
                   </td>
-                  <td className="py-3 px-4 text-[#7a6b5d] hidden md:table-cell">{o.email || '—'}</td>
+                  <td className="py-3 px-4 text-[#7a6b5d] hidden md:table-cell">
+                    <EmailLink email={o.email} className="text-[#7a6b5d] hover:text-terracotta-600 hover:underline break-all" />
+                  </td>
                   <td className="py-3 px-4 text-center">{o.events}</td>
                   <td className="py-3 px-4 text-center">{o.total_bookings}</td>
                   <td className="py-3 px-4 text-center">

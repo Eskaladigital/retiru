@@ -200,12 +200,10 @@ export async function sendBookingConfirmedEmail(
     bookingNumber: string;
     eventTitle: string;
     startDate: string;
-    platformFee: number;
-    organizerAmount: number;
-    remainingPaymentDate: string;
+    totalPrice: number;
   }
 ) {
-  const { to, locale, bookingNumber, eventTitle, startDate, platformFee, organizerAmount, remainingPaymentDate } = options;
+  const { to, locale, bookingNumber, eventTitle, startDate, totalPrice } = options;
 
   const subject = t(locale,
     `¡Reserva confirmada! — ${eventTitle}`,
@@ -214,18 +212,17 @@ export async function sendBookingConfirmedEmail(
 
   const body = [
     paragraph(t(locale,
-      `Tu reserva para <strong>${eventTitle}</strong> ha sido confirmada.`,
-      `Your booking for <strong>${eventTitle}</strong> has been confirmed.`
+      `Tu reserva para <strong>${eventTitle}</strong> ha sido confirmada. El pago completo ha sido procesado correctamente.`,
+      `Your booking for <strong>${eventTitle}</strong> has been confirmed. Your payment has been processed successfully.`
     )),
     infoBox([
       infoLine(t(locale, 'N&ordm; de reserva', 'Booking number'), bookingNumber),
       infoLine(t(locale, 'Fecha', 'Date'), startDate),
-      infoLine(t(locale, 'Pagado a Retiru', 'Paid to Retiru'), `${platformFee}&euro;`),
-      `<p style="margin: 4px 0; font-size: 14px; color: #c85a30; font-family: Arial, sans-serif;"><strong>${t(locale, 'Pendiente al organizador', 'Remaining to organizer')}:</strong> ${organizerAmount}&euro; ${t(locale, 'antes del', 'before')} ${remainingPaymentDate}</p>`,
+      infoLine(t(locale, 'Importe pagado', 'Amount paid'), `${totalPrice}&euro;`),
     ].join('')),
     paragraph(t(locale,
-      'El organizador se pondr&aacute; en contacto contigo. Puedes escribirle desde tu panel de reservas.',
-      'The organizer will get in touch with you. You can message them from your bookings panel.'
+      'El organizador se pondr&aacute; en contacto contigo con los detalles pr&aacute;cticos. Tambi&eacute;n puedes escribirle desde tu panel de reservas.',
+      'The organizer will get in touch with you with practical details. You can also message them from your bookings panel.'
     )),
   ].join('');
 
@@ -242,44 +239,12 @@ export async function sendBookingConfirmedEmail(
   return resend.emails.send({ from: FROM, to, subject, html });
 }
 
-// ─── Payment Reminder to Attendee ───────────────────────────────────────────
+// ─── Payment Reminder to Attendee (DEPRECATED — full payment model) ─────────
+// Kept as no-op to avoid breaking existing imports.
 
-export async function sendPaymentReminderEmail(
-  options: EmailOptions & {
-    eventTitle: string;
-    organizerAmount: number;
-    dueDate: string;
-  }
-) {
-  const { to, locale, eventTitle, organizerAmount, dueDate } = options;
-
-  const subject = t(locale,
-    `Recordatorio de pago — ${eventTitle}`,
-    `Payment reminder — ${eventTitle}`
-  );
-
-  const body = [
-    paragraph(t(locale,
-      `Recuerda que tienes pendiente el pago de <strong>${organizerAmount}&euro;</strong> al organizador de <strong>${eventTitle}</strong> antes del <strong>${dueDate}</strong>.`,
-      `This is a reminder that you have a pending payment of <strong>&euro;${organizerAmount}</strong> to the organizer of <strong>${eventTitle}</strong> before <strong>${dueDate}</strong>.`
-    )),
-    paragraph(t(locale,
-      'El organizador te indicar&aacute; c&oacute;mo realizar el pago.',
-      'The organizer will let you know how to make the payment.'
-    )),
-  ].join('');
-
-  const html = emailLayout({
-    locale, preheader: subject,
-    title: t(locale, 'Recordatorio de pago', 'Payment reminder'),
-    body,
-    cta: {
-      href: `${APP_URL}/${t(locale, 'es/mis-reservas', 'en/my-bookings')}`,
-      label: t(locale, 'Ver mis reservas', 'View my bookings'),
-    },
-  });
-
-  return resend.emails.send({ from: FROM, to, subject, html });
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function sendPaymentReminderEmail(_options: EmailOptions & { eventTitle: string; organizerAmount: number; dueDate: string }) {
+  return null;
 }
 
 // ─── New Booking notification to Organizer ──────────────────────────────────
@@ -824,7 +789,7 @@ export async function sendRetreatPendingReviewEmail(
   });
 }
 
-// ─── Booking Expired (SLA) → attendee ───────────────────────────────────────
+// ─── Booking Expired (SLA / session) → attendee ─────────────────────────────
 
 export async function sendBookingExpiredEmail(
   options: EmailOptions & { eventTitle: string; bookingNumber: string }
@@ -838,12 +803,12 @@ export async function sendBookingExpiredEmail(
 
   const body = [
     paragraph(t(locale,
-      `Tu reserva <strong>#${bookingNumber}</strong> para <strong>${eventTitle}</strong> ha expirado porque el pago restante no se recibi&oacute; a tiempo.`,
-      `Your booking <strong>#${bookingNumber}</strong> for <strong>${eventTitle}</strong> has expired because the remaining payment was not received on time.`
+      `Tu reserva <strong>#${bookingNumber}</strong> para <strong>${eventTitle}</strong> ha expirado porque el organizador no la confirm&oacute; a tiempo.`,
+      `Your booking <strong>#${bookingNumber}</strong> for <strong>${eventTitle}</strong> has expired because the organizer did not confirm it in time.`
     )),
     paragraph(t(locale,
-      'Se ha procesado el reembolso de la se&ntilde;al autom&aacute;ticamente. Recibir&aacute;s el importe en 5-10 d&iacute;as h&aacute;biles.',
-      'The deposit refund has been processed automatically. You will receive the amount within 5-10 business days.'
+      'Se ha procesado el reembolso completo autom&aacute;ticamente. Recibir&aacute;s el importe en 5-10 d&iacute;as h&aacute;biles.',
+      'A full refund has been processed automatically. You will receive the amount within 5-10 business days.'
     )),
     paragraph(t(locale,
       'Si a&uacute;n quieres asistir, puedes volver a reservar mientras haya plazas disponibles.',
@@ -985,48 +950,10 @@ export async function sendNewCenterProposalEmail(options: {
   });
 }
 
-// ─── Payment Overdue → organizer ────────────────────────────────────────────
+// ─── Payment Overdue → organizer (DEPRECATED — full payment model) ──────────
+// Kept as no-op to avoid breaking existing imports.
 
-export async function sendPaymentOverdueToOrganizerEmail(
-  options: EmailOptions & {
-    eventTitle: string;
-    attendeeName: string;
-    bookingNumber: string;
-    dueDate: string;
-  }
-) {
-  const { to, locale, eventTitle, attendeeName, bookingNumber, dueDate } = options;
-
-  const subject = t(locale,
-    `Pago vencido en reserva #${bookingNumber}`,
-    `Overdue payment on booking #${bookingNumber}`
-  );
-
-  const body = [
-    paragraph(t(locale,
-      `El pago restante de la reserva <strong>#${bookingNumber}</strong> para <strong>${eventTitle}</strong> ha vencido.`,
-      `The remaining payment for booking <strong>#${bookingNumber}</strong> for <strong>${eventTitle}</strong> is overdue.`
-    )),
-    infoBox([
-      infoLine(t(locale, 'Asistente', 'Attendee'), attendeeName),
-      infoLine(t(locale, 'Fecha l&iacute;mite', 'Due date'), dueDate),
-    ].join('')),
-    paragraph(t(locale,
-      'Si el pago no se recibe pronto, la reserva podr&aacute; ser cancelada autom&aacute;ticamente. Puedes contactar al asistente desde tu panel.',
-      'If the payment is not received soon, the booking may be cancelled automatically. You can contact the attendee from your dashboard.'
-    )),
-  ].join('');
-
-  const html = emailLayout({
-    locale,
-    preheader: t(locale, `Pago vencido: reserva #${bookingNumber}`, `Overdue: booking #${bookingNumber}`),
-    title: t(locale, 'Pago vencido', 'Payment overdue'),
-    body,
-    cta: {
-      href: `${APP_URL}/${t(locale, 'es/organizer/panel/reservas', 'en/organizer/panel/reservas')}`,
-      label: t(locale, 'Ver mis reservas', 'View my bookings'),
-    },
-  });
-
-  return resend.emails.send({ from: FROM, to, subject, html });
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function sendPaymentOverdueToOrganizerEmail(_options: EmailOptions & { eventTitle: string; attendeeName: string; bookingNumber: string; dueDate: string }) {
+  return null;
 }

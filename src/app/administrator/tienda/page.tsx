@@ -41,11 +41,14 @@ export default async function AdminTiendaPage() {
   }, {});
 
   const userIds = [...new Set(orderList.map((o) => o.user_id).filter(Boolean))];
-  let userMap: Record<string, string> = {};
+  let userMap: Record<string, { label: string; email: string | null }> = {};
   if (userIds.length > 0) {
     const { data: profiles } = await supabase.from('profiles').select('id, full_name, email').in('id', userIds);
-    userMap = (profiles || []).reduce((acc: Record<string, string>, p: any) => {
-      acc[p.id] = p.full_name || p.email || '—';
+    userMap = (profiles || []).reduce((acc: Record<string, { label: string; email: string | null }>, p: any) => {
+      acc[p.id] = {
+        label: p.full_name || p.email || '—',
+        email: p.email || null,
+      };
       return acc;
     }, {});
   }
@@ -70,10 +73,12 @@ export default async function AdminTiendaPage() {
 
   const recentOrders = orderList.slice(0, 10).map((o) => {
     const items = Array.isArray(o.items) ? o.items : [];
+    const u = userMap[o.user_id];
     return {
       id: o.id,
       order_number: o.order_number,
-      customer: userMap[o.user_id] || '—',
+      customer: u?.label || '—',
+      customer_email: u?.email || null,
       items: items.length,
       total: Number(o.total || 0),
       status: o.status,

@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { Upload, X } from 'lucide-react';
 
 interface Option { id: string; name: string; slug: string }
 
@@ -18,12 +20,42 @@ interface Props {
 const inputCls = 'w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all';
 const textareaCls = `${inputCls} resize-none`;
 
+type ImgRow = { url: string; is_cover: boolean; sort_order?: number };
+
+function sortRetreatImages(rows: ImgRow[] | undefined) {
+  return [...(rows || [])].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+}
+
+type LocalImage = { file?: File; url: string; preview: string; is_cover: boolean };
+
 export function EditarEventoForm({ retreat, categories, destinations, apiPath, hideActions }: Props) {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [acting, setActing] = useState(false);
+
+  const [images, setImages] = useState<LocalImage[]>(() => {
+    const sorted = sortRetreatImages(retreat.retreat_images as ImgRow[] | undefined);
+    return sorted.map((img) => ({
+      url: img.url,
+      preview: img.url,
+      is_cover: Boolean(img.is_cover),
+    }));
+  });
+
+  useEffect(() => {
+    const sorted = sortRetreatImages(retreat.retreat_images as ImgRow[] | undefined);
+    setImages(
+      sorted.map((img) => ({
+        url: img.url,
+        preview: img.url,
+        is_cover: Boolean(img.is_cover),
+      })),
+    );
+  }, [retreat.id, retreat.updated_at]);
 
   async function handleCancel() {
     if (!confirm(`¿Cancelar el evento "${retreat.title_es}"? Los asistentes serán notificados.`)) return;
@@ -112,12 +144,80 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
     setForm((f) => ({ ...f, includes_es: f.includes_es.filter((_, idx) => idx !== i) }));
   }
 
+  async function handleImageUpload(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    const newOnes = Array.from(files).slice(0, 8 - images.length).map((file) => ({
+      file,
+      url: '',
+      preview: URL.createObjectURL(file),
+      is_cover: images.length === 0,
+    }));
+    setImages((prev) => [...prev, ...newOnes]);
+  }
+
+  function removeImage(idx: number) {
+    setImages((prev) => {
+      const updated = prev.filter((_, i) => i !== idx);
+      if (updated.length > 0 && !updated.some((img) => img.is_cover)) {
+        updated[0].is_cover = true;
+      }
+      return updated;
+    });
+  }
+
+  function setCover(idx: number) {
+    setImages((prev) => prev.map((img, i) => ({ ...img, is_cover: i === idx })));
+  }
+
+  async function buildImagesPayload(): Promise<{ url: string; is_cover: boolean }[]> {
+    const supabase = createClient();
+    const uploaded: { url: string; is_cover: boolean }[] = [];
+
+    for (const img of images) {
+      if (img.url) {
+        uploaded.push({ url: img.url, is_cover: img.is_cover });
+        continue;
+      }
+      if (!img.file) continue;
+
+      const ext = img.file.name.split('.').pop();
+      const path = `retreats/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+      const { error: upErr } = await supabase.storage.from('retreat-images').upload(path, img.file, {
+        cacheControl: '31536000',
+        upsert: false,
+      });
+
+      if (upErr) {
+        const msg = upErr.message || 'Error desconocido';
+        if (msg.includes('row-level security') || msg.includes('RLS') || msg.includes('Unauthorized')) {
+          throw new Error(
+            'No se pudo subir la imagen: falta el bucket «retreat-images» o sus políticas en Supabase (migración 016).',
+          );
+        }
+        throw new Error(`Error al subir una imagen: ${msg}`);
+      }
+
+      const { data: urlData } = supabase.storage.from('retreat-images').getPublicUrl(path);
+      uploaded.push({ url: urlData.publicUrl, is_cover: img.is_cover });
+    }
+
+    if (images.length > 0 && uploaded.length !== images.length) {
+      throw new Error('No se pudieron subir todas las imágenes.');
+    }
+    return uploaded;
+  }
+
   async function handleSave(publish: boolean = false) {
     setSaving(true);
     setError('');
     setSuccess('');
 
     try {
+      setUploading(true);
+      const imagePayload = await buildImagesPayload();
+      setUploading(false);
+
       const res = await fetch(apiPath || `/api/retreats/${retreat.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -126,6 +226,7 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
           includes_es: form.includes_es.filter(Boolean),
           destination_id: form.destination_id || null,
           status: publish ? 'published' : undefined,
+          images: imagePayload,
         }),
       });
 
@@ -143,10 +244,11 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
         setSuccess('Cambios guardados.');
       }
       router.refresh();
-    } catch {
-      setError('Error de conexión');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error de conexión');
     } finally {
       setSaving(false);
+      setUploading(false);
     }
   }
 
@@ -170,6 +272,54 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
       <div>
         <label className="block text-sm font-medium text-foreground mb-1.5">Descripción (ES) *</label>
         <textarea rows={6} value={form.description_es} onChange={(e) => set('description_es', e.target.value)} className={textareaCls} />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-foreground mb-1.5">Imágenes del evento</label>
+        <p className="text-xs text-[#a09383] mb-3">Hasta 8 imágenes. Marca portada o sube nuevas; se guardan al pulsar «Guardar cambios».</p>
+        {images.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            {images.map((img, i) => (
+              <div key={`${img.preview}-${i}`} className="relative group rounded-xl overflow-hidden border-2 border-sand-200 aspect-[4/3]">
+                <img src={img.preview} alt="" className="w-full h-full object-cover" />
+                {img.is_cover && (
+                  <span className="absolute top-2 left-2 text-[10px] font-bold bg-terracotta-600 text-white px-2 py-0.5 rounded-full">
+                    PORTADA
+                  </span>
+                )}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                  {!img.is_cover && (
+                    <button type="button" onClick={() => setCover(i)} className="bg-white text-foreground text-xs font-semibold px-2.5 py-1 rounded-lg">
+                      Portada
+                    </button>
+                  )}
+                  <button type="button" onClick={() => removeImage(i)} className="bg-red-500 text-white p-1.5 rounded-lg">
+                    <X size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        {images.length < 8 && (
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full border-2 border-dashed border-sand-300 rounded-xl p-6 flex flex-col items-center gap-2 text-[#a09383] hover:border-terracotta-400 hover:text-terracotta-600 transition-colors"
+          >
+            <Upload size={22} />
+            <span className="text-sm font-medium">Añadir imágenes</span>
+            <span className="text-xs">{images.length}/8</span>
+          </button>
+        )}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          multiple
+          className="hidden"
+          onChange={(e) => handleImageUpload(e.target.files)}
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -259,16 +409,16 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
         <button
           type="button"
           onClick={() => handleSave(false)}
-          disabled={saving || acting}
+          disabled={saving || acting || uploading}
           className="bg-white border border-sand-300 text-foreground font-semibold px-6 py-3 rounded-xl text-sm hover:bg-sand-50 transition-colors disabled:opacity-50"
         >
-          Guardar cambios
+          {uploading ? 'Subiendo imágenes…' : 'Guardar cambios'}
         </button>
         {(retreat.status === 'draft' || retreat.status === 'rejected') && (
           <button
             type="button"
             onClick={() => handleSave(true)}
-            disabled={saving || acting}
+            disabled={saving || acting || uploading}
             className="bg-terracotta-600 text-white font-semibold px-6 py-3 rounded-xl text-sm hover:bg-terracotta-700 transition-colors disabled:opacity-50"
           >
             {apiPath ? 'Publicar' : 'Enviar a revisión'}

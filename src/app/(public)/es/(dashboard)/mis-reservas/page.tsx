@@ -59,9 +59,7 @@ export default async function MisReservasPage() {
                   </div>
                   <p className="text-sm text-[#7a6b5d] mb-2">{org?.business_name ?? 'Organizador'} · 📅 {dates}</p>
                   <div className="flex flex-wrap gap-4 text-sm">
-                    <div><span className="text-[#a09383]">Pagado a Retiru:</span> <span className="font-semibold">{Number(b.platform_fee).toFixed(0)}€</span></div>
-                    <div><span className="text-[#a09383]">Pendiente al organizador:</span> <span className="font-semibold">{Number(b.organizer_amount).toFixed(0)}€</span></div>
-                    <div><span className="text-[#a09383]">Total:</span> <span className="font-bold">{Number(b.total_price).toFixed(0)}€</span></div>
+                    <div><span className="text-[#a09383]">Importe:</span> <span className="font-bold">{Number(b.total_price).toFixed(0)}€</span></div>
                   </div>
                 </div>
               </Link>

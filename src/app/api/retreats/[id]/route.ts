@@ -123,6 +123,7 @@ export async function PATCH(
       total_price, max_attendees,
       destination_id, address,
       categories, confirmation_type, languages, status,
+      images,
     } = body;
 
     const updateData: Record<string, any> = {};
@@ -174,6 +175,20 @@ export async function PATCH(
       if (categories.length > 0) {
         await admin.from('retreat_categories').insert(
           categories.map((catId: string) => ({ retreat_id: id, category_id: catId })),
+        );
+      }
+    }
+
+    if (images !== undefined && Array.isArray(images)) {
+      await admin.from('retreat_images').delete().eq('retreat_id', id);
+      if (images.length > 0) {
+        await admin.from('retreat_images').insert(
+          images.map((img: { url: string; is_cover: boolean }, i: number) => ({
+            retreat_id: id,
+            url: img.url,
+            is_cover: img.is_cover || false,
+            sort_order: i,
+          })),
         );
       }
     }

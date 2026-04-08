@@ -13,7 +13,7 @@ Plataforma web bilingüe (ES/EN) donde las personas descubren y reservan retiros
 | Frontend | Next.js 14 (App Router), React 18, TypeScript |
 | Estilos | Tailwind CSS, Radix UI, Lucide Icons |
 | Backend | Supabase (PostgreSQL, Auth, Storage, Realtime, Edge Functions) |
-| Pagos | Stripe (cobro del 20 %, facturación, reembolsos vía webhooks) |
+| Pagos | Stripe (cobro del 100 % al asistente, payout manual al organizador, reembolsos vía webhooks) |
 | Emails | Resend |
 | i18n | next-intl (ES base + EN completo) |
 | Formularios | React Hook Form + Zod |
@@ -103,6 +103,8 @@ npm run centers:translate-en                          # Solo traducir centros co
 npm run centers:vaciar-genericas                       # Vaciar descripciones genéricas
 npm run blog:backfill-slugs-en                        # Rellenar slug_en del blog desde title_en (opcional --dry-run)
 npm run blog:translate-en                             # Traducir posts publicados ES→EN (OpenAI); --force retraduce todo
+npm run blog:import-csv                               # Genera `supabase/seed/016_blog_from_csv.sql` desde `Table 1-Grid view.csv` (orden barajado, fechas escalonadas)
+npm run blog:import-csv:push                          # Igual + inserta/actualiza en Supabase usando `.env.local` (service role)
 
 # Centros — emails
 npm run centers:emails        # Sincronizar emails desde CSV
@@ -158,9 +160,14 @@ Ejecutar en el **SQL Editor** de Supabase (con service_role) en este orden:
 13. `supabase/migrations/013_centers_user_proposals_rls.sql` — columna `submitted_by`, índices y política RLS `ctr_submitted`
 14. `supabase/migrations/014_center_type_three_disciplines.sql` — enum `center_type`: solo `yoga`, `meditation`, `ayurveda`
 15. `supabase/migrations/015_categories_retreat_ayurveda.sql` — categoría de retiro `ayurveda` (home y filtro `tipo`)
-16. `supabase/seed/001_categories_destinations.sql` — categorías y destinos
+16. `supabase/migrations/016_retreat_images_bucket.sql` — bucket para imágenes de retiros
+17. `supabase/migrations/017_avatars_bucket.sql` — bucket para avatares
+18. `supabase/migrations/018_full_payment_model.sql` — modelo pago 100%, parte 1: añade valores al enum `remaining_payment_status`
+19. `supabase/migrations/019_full_payment_model_columns.sql` — modelo pago 100%, parte 2: columnas payout + defaults (ejecutar DESPUÉS de 018)
+19. `supabase/seed/001_categories_destinations.sql` — categorías y destinos
 17. `supabase/seed/002_sample_retreats.sql` — usuario demo + 10 retiros de ejemplo
-18. `supabase/seed/003_sample_blog.sql` — 3 categorías de blog + 5 artículos
+18. `supabase/seed/003_sample_blog.sql` — 3 categorías de blog + 5 artículos  
+    Opcional: tras generar con `npm run blog:import-csv`, ejecutar `supabase/seed/016_blog_from_csv.sql` en el SQL Editor para importar ~50 artículos del CSV (orden no alfabético).
 
 ### Capa de datos
 
@@ -318,9 +325,9 @@ Sistema de emails automáticos enviados por la plataforma en eventos clave. Todo
 
 | Email | Destinatario | Cuándo se envía | Disparado por |
 |-------|-------------|----------------|---------------|
-| `sendBookingConfirmedEmail` | Asistente | Tras pagar el 20% (reserva confirmada) | Webhook Stripe / Organizador confirma |
+| `sendBookingConfirmedEmail` | Asistente | Tras pagar el 100% (reserva confirmada) | Webhook Stripe / Organizador confirma |
 | `sendNewBookingToOrganizerEmail` | Organizador | Cuando recibe una nueva reserva | Webhook Stripe |
-| `sendPaymentReminderEmail` | Asistente | 7 días antes del vencimiento del 80% | Cron diario (9:00) |
+| `sendPaymentReminderEmail` | ~~Desactivado~~ | ~~Modelo anterior (pago 80% al organizador)~~ | ~~Cron diario~~ |
 | `sendClaimApprovedEmail` | Usuario (propietario) | Admin aprueba claim de centro | `/api/admin/center-claims` |
 | `sendClaimRejectedEmail` | Usuario (propietario) | Admin rechaza claim de centro | `/api/admin/center-claims` |
 | `sendRetreatApprovedEmail` | Organizador | Admin aprueba retiro (se publica) | `/api/admin/retreats` |
@@ -333,16 +340,16 @@ Sistema de emails automáticos enviados por la plataforma en eventos clave. Todo
 | Broadcast del organizador | Asistentes del evento | Organizador envía mensaje masivo (opcional email) | `/api/organizer/events/[id]/broadcast` |
 | `sendWelcomeEmail` | Usuario | Primera vez que verifica email (signup) | `/api/auth/callback` |
 | `sendRetreatPendingReviewEmail` | Admin | Organizador envía retiro a revisión | `/api/retreats/[id]` (PATCH → pending_review) |
-| `sendBookingExpiredEmail` | Asistente | Reserva expirada por impago del 80% (SLA) | Cron diario (9:00) |
+| `sendBookingExpiredEmail` | Asistente | Reserva expirada (SLA del organizador) | Cron diario (9:00) |
 | `sendRetreatCancelledToAttendeeEmail` | Asistentes del evento | Organizador cancela un retiro | `/api/retreats/[id]` (POST → cancel) |
 | `sendNewClaimPendingEmail` | Admin | Usuario solicita reclamar un centro (manual) | `/api/centers/claim` |
 | `sendNewCenterProposalEmail` | Admin | Usuario propone un centro nuevo (pendiente revisión) | `/api/centers/propose` |
-| `sendPaymentOverdueToOrganizerEmail` | Organizador | Pago del 80% de un asistente ha vencido | Cron diario (9:00) |
+| `sendPaymentOverdueToOrganizerEmail` | ~~Desactivado~~ | ~~Modelo anterior (pago 80% al organizador)~~ | ~~Cron diario~~ |
 
-**Total: 19 emails transaccionales.**
+**Total: 17 emails activos** (2 desactivados con modelo de pago completo).
 
 **Cron jobs (Vercel):** configurados en `vercel.json`:
-- `0 9 * * *` — recordatorios de pago del 80% + marcar overdue + expirar reservas SLA + notificar organizador
+- `0 9 * * *` — (no-op con modelo pago completo; SLA de confirmación se gestiona en webhook)
 - `0 10 * * *` — recordatorios pre-evento
 - `0 11 * * *` — solicitudes de reseña post-evento
 
@@ -419,12 +426,13 @@ src/
 
 ## Modelo de negocio
 
-### Retiros (marketplace)
+### Retiros (marketplace) — Modelo "Booking" (pago 100 %)
 
-- El **organizador publica gratis**. Sin suscripción ni comisión.
-- Al reservar, el **asistente paga el 20 %** del precio total a Retiru como cuota de intermediación.
-- El **80 % restante** lo cobra el organizador directamente al asistente antes del retiro.
-- Ejemplo: retiro de 500 € → 100 € a Retiru + 400 € al organizador.
+- El **organizador publica gratis**. Sin suscripción ni comisión directa.
+- Al reservar, el **asistente paga el 100 %** del precio total a Retiru vía Stripe en un solo paso.
+- Retiru retiene su comisión (20 %) y **transfiere el 80 % al organizador** (payout manual por transferencia bancaria).
+- Ejemplo: retiro de 500 € → el asistente paga 500 € → Retiru retiene 100 € y transfiere 400 € al organizador.
+- **Ventajas**: un solo pago para el asistente, mayor conversión, control total del flujo financiero, sin pagos pendientes.
 
 ### Directorio de centros (suscripción)
 
@@ -631,7 +639,7 @@ El admin tiene además acceso a `/administrator` desde el menú.
 - **Mobile-first**, limpio, premium pero accesible
 - **Paleta cálida**: terracotta, verde salvia, blanco roto, arena
 - **Tipografía**: DM Serif Display (títulos) + DM Sans (cuerpo)
-- Desglose de pagos siempre transparente
+- Precio único claro (sin desglose de comisiones al asistente)
 
 ---
 

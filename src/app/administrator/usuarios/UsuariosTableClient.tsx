@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Search, ChevronUp, ChevronDown, ChevronsUpDown, X, Trash2, MessageCircle } from 'lucide-react';
+import { EmailLink } from '@/components/ui/email-link';
 
 interface UserRow {
   id: string;
@@ -249,7 +250,9 @@ export function UsuariosTableClient({ users, currentUserId }: { users: UserRow[]
                         </div>
                       </td>
                       <td className="py-3 px-4 font-medium max-w-[200px] truncate">{u.full_name || '—'}</td>
-                      <td className="py-3 px-4 text-[#7a6b5d] max-w-[220px] truncate">{u.email}</td>
+                      <td className="py-3 px-4 text-[#7a6b5d] max-w-[220px] truncate">
+                        <EmailLink email={u.email} className="text-[#7a6b5d] hover:text-terracotta-600 hover:underline" />
+                      </td>
                       <td className="py-3 px-4 text-[#7a6b5d]">{u.phone || '—'}</td>
                       <td className="py-3 px-4 text-center">
                         <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${badge.cls}`}>

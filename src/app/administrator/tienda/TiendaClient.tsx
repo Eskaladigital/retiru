@@ -1,5 +1,7 @@
 'use client';
 
+import { EmailLink } from '@/components/ui/email-link';
+
 interface ProductRow {
   id: string;
   name: string;
@@ -24,6 +26,7 @@ interface OrderRow {
   id: string;
   order_number: string;
   customer: string;
+  customer_email: string | null;
   items: number;
   total: number;
   status: string;
@@ -142,7 +145,15 @@ export function TiendaClient({
                   return (
                     <tr key={o.id} className="border-b border-sand-100 hover:bg-sand-50/50">
                       <td className="py-2.5 font-medium text-terracotta-600">{o.order_number}</td>
-                      <td className="py-2.5">{o.customer}</td>
+                      <td className="py-2.5">
+                        {o.customer_email ? (
+                          <EmailLink email={o.customer_email} className="text-foreground hover:text-terracotta-600 hover:underline">
+                            {o.customer}
+                          </EmailLink>
+                        ) : (
+                          o.customer
+                        )}
+                      </td>
                       <td className="py-2.5 text-center">{o.items}</td>
                       <td className="py-2.5 text-right font-semibold">{o.total.toFixed(2)}€</td>
                       <td className="py-2.5 text-center">

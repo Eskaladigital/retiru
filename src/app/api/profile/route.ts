@@ -6,6 +6,19 @@ const MAX_NAME = 200;
 const MAX_PHONE = 50;
 const MAX_BIO = 4000;
 
+function isAllowedAvatarPublicUrl(url: string, userId: string): boolean {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!base || !url) return false;
+  let pathname: string;
+  try {
+    pathname = new URL(url).pathname;
+  } catch {
+    return false;
+  }
+  const prefix = `/storage/v1/object/public/avatars/${userId}/`;
+  return pathname.startsWith(prefix);
+}
+
 export async function PATCH(request: NextRequest) {
   try {
     const supabase = await createServerSupabase();
@@ -32,14 +45,31 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Nombre demasiado largo' }, { status: 400 });
     }
 
+    const updatePayload: Record<string, unknown> = {
+      full_name,
+      phone,
+      bio,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (Object.prototype.hasOwnProperty.call(body, 'avatar_url')) {
+      if (body.avatar_url === null) {
+        updatePayload.avatar_url = null;
+      } else if (typeof body.avatar_url === 'string') {
+        const trimmed = body.avatar_url.trim();
+        if (!isAllowedAvatarPublicUrl(trimmed, user.id)) {
+          return NextResponse.json(
+            { error: 'La foto debe subirse desde tu cuenta (bucket avatars).' },
+            { status: 400 },
+          );
+        }
+        updatePayload.avatar_url = trimmed;
+      }
+    }
+
     const { data, error } = await supabase
       .from('profiles')
-      .update({
-        full_name,
-        phone,
-        bio,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updatePayload)
       .eq('id', user.id)
       .select('id, email, full_name, phone, bio, avatar_url, preferred_locale')
       .single();

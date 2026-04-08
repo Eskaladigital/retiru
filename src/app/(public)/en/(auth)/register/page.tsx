@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { EmailLink } from '@/components/ui/email-link';
 
 function RegisterFormEN() {
   const [fullName, setFullName] = useState('');
@@ -81,7 +82,11 @@ function RegisterFormEN() {
             </div>
             <h2 className="font-serif text-2xl mb-2">Check your email</h2>
             <p className="text-sm text-[#7a6b5d] mb-4">
-              We&apos;ve sent a verification link to <strong className="text-foreground">{email}</strong>. Click it to activate your account.
+              We&apos;ve sent a verification link to{' '}
+              <EmailLink email={email} className="font-semibold text-foreground hover:text-terracotta-600 hover:underline break-all">
+                {email}
+              </EmailLink>
+              . Click it to activate your account.
             </p>
             <p className="text-xs text-[#a09383]">
               If you don&apos;t see it, check your spam folder.

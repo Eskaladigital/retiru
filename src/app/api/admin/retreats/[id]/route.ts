@@ -92,7 +92,7 @@ export async function PATCH(
     }
   }
 
-  if (images !== undefined && Array.isArray(images) && images.length > 0) {
+  if (images !== undefined && Array.isArray(images)) {
     await admin.from('retreat_images').delete().eq('retreat_id', id);
     if (images.length > 0) {
       await admin.from('retreat_images').insert(
