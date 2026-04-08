@@ -256,7 +256,11 @@ export async function PATCH(
       }
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      status: updateData.status || undefined,
+      imagesCount: Array.isArray(images) ? images.filter((i: any) => i?.url).length : undefined,
+    });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Error interno';
     return NextResponse.json({ error: msg }, { status: 500 });

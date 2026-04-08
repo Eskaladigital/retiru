@@ -194,21 +194,26 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
 
   async function buildImagesPayload(): Promise<{ url: string; is_cover: boolean }[]> {
     const uploaded: { url: string; is_cover: boolean }[] = [];
+    const updatedLocal: LocalImage[] = [];
 
     for (const img of images) {
       if (img.url) {
         uploaded.push({ url: img.url, is_cover: img.is_cover });
+        updatedLocal.push(img);
         continue;
       }
       if (!img.file) continue;
 
       const publicUrl = await uploadRetreatImageViaApi(img.file);
       uploaded.push({ url: publicUrl, is_cover: img.is_cover });
+      updatedLocal.push({ ...img, url: publicUrl, preview: publicUrl, file: undefined });
     }
 
     if (images.length > 0 && uploaded.length !== images.length) {
       throw new Error('No se pudieron subir todas las imágenes.');
     }
+
+    setImages(updatedLocal);
     return uploaded;
   }
 
@@ -261,7 +266,10 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
           ? 'Evento publicado directamente.'
           : 'Evento enviado a revisión. El equipo de Retiru lo revisará pronto.');
       } else {
-        setSuccess('Cambios guardados.');
+        const imgCount = imagePayload.length;
+        setSuccess(imgCount > 0
+          ? `Cambios guardados (${imgCount} imagen${imgCount === 1 ? '' : 'es'}).`
+          : 'Cambios guardados.');
       }
       router.refresh();
     } catch (e) {

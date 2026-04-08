@@ -209,22 +209,26 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
 
   async function uploadImages(): Promise<{ url: string; is_cover: boolean }[]> {
     const uploaded: { url: string; is_cover: boolean }[] = [];
+    const updatedLocal: typeof images = [];
 
     for (const img of images) {
       if (img.url) {
         uploaded.push({ url: img.url, is_cover: img.is_cover });
+        updatedLocal.push(img);
         continue;
       }
       if (!img.file) continue;
 
       const publicUrl = await uploadRetreatImageViaApi(img.file);
       uploaded.push({ url: publicUrl, is_cover: img.is_cover });
+      updatedLocal.push({ ...img, url: publicUrl, preview: publicUrl, file: undefined });
     }
 
     if (images.length > 0 && uploaded.length !== images.length) {
       throw new Error('No se pudieron subir todas las imágenes. Quita las que fallen y vuelve a intentarlo.');
     }
 
+    setImages(updatedLocal);
     return uploaded;
   }
 
