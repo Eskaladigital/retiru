@@ -134,7 +134,7 @@ export default function CondicionesPageEn() {
               <strong className="text-foreground">Booking:</strong> Your spot is secured after paying the full amount. If the retreat has instant confirmation, your spot is confirmed immediately. If it requires manual confirmation, the organizer has a deadline (default 48h) to confirm or reject.
             </p>
             <p>
-              <strong className="text-foreground">Cancellation by attendee:</strong> Refunds depend on each retreat&apos;s cancellation policy. Check the details on the retreat page before booking.
+              <strong className="text-foreground">Cancellation by attendee:</strong> Refunds follow each organizer&apos;s cancellation policy (percentages and deadlines applied to the total amount you paid). Check the retreat page before booking. If a refund applies, you receive that amount in full to your original payment method. Retiru&apos;s remuneration in these cases is governed by our agreement with the organizer and does not mean an extra deduction from your refund.
             </p>
             <p>
               <strong className="text-foreground">Cancellation by organizer:</strong> You will receive a full refund automatically.

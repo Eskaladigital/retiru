@@ -334,9 +334,9 @@ export default async function HomePage() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-6">
               {[
                 { n: 1, t: 'Explora', d: 'Busca en nuestro directorio de centros o descubre retiros por destino, fecha o disciplina.' },
-                { n: 2, t: 'Reserva tu plaza', d: 'Paga solo el 20% como cuota de gestión para asegurar tu plaza. Proceso 100% seguro con Stripe.' },
+                { n: 2, t: 'Reserva tu plaza', d: 'Paga el precio completo del retiro en un solo pago seguro con tarjeta (Stripe). Tu plaza queda gestionada desde la plataforma.' },
                 { n: 3, t: 'Coordina', d: 'Habla directamente con el organizador por el chat. Rellena el cuestionario y prepara tu experiencia.' },
-                { n: 4, t: 'Vive la experiencia', d: 'Paga el 80% restante al organizador antes del retiro y disfruta de una experiencia transformadora.' },
+                { n: 4, t: 'Vive la experiencia', d: 'Disfruta de la experiencia. Los reembolsos por cancelación, si aplican, siguen la política del retiro sobre lo que pagaste.' },
               ].map(({ n, t, d }) => (
                 <div key={n} className="text-center px-5 py-8">
                   <div className="w-12 h-12 bg-terracotta-50 border-2 border-terracotta-200 text-terracotta-600 rounded-full flex items-center justify-center font-serif text-xl mx-auto mb-5">
@@ -382,7 +382,7 @@ export default async function HomePage() {
               </div>
 
               <p className="text-center text-sm text-[#7a6b5d] leading-relaxed">
-                <strong className="text-foreground">Al reservar pagas 100€ a Retiru.</strong> Los 400€ restantes se los pagas directamente al organizador antes del inicio del retiro. Sin costes ocultos, sin sorpresas.
+                <strong className="text-foreground">Pagas 500€ en un solo cobro.</strong> De ese importe, Retiru retiene 100€ (comisión) y transfiere 400€ al organizador según la liquidación acordada. Sin costes ocultos ni segundo pago aparte.
               </p>
             </div>
           </div>

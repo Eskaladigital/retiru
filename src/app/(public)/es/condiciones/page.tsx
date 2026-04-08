@@ -139,7 +139,7 @@ export default function CondicionesPage() {
               <strong className="text-foreground">Reserva:</strong> Tu plaza queda bloqueada tras el pago completo. Si el retiro tiene confirmación inmediata, la plaza se confirma al instante. Si requiere confirmación manual, el organizador tiene un plazo (por defecto 48h) para confirmar o rechazar.
             </p>
             <p>
-              <strong className="text-foreground">Cancelación por el asistente:</strong> El reembolso depende de la política de cancelación de cada retiro. Consulta los detalles en la ficha del retiro antes de reservar.
+              <strong className="text-foreground">Cancelación por el asistente:</strong> El reembolso depende de la política de cancelación que configure cada organizador (porcentajes y plazos sobre el importe total abonado). Consúltala en la ficha antes de reservar. Si según esa política te corresponde un reembolso, recibirás ese importe íntegro en tu método de pago. La retribución de Retiru en estos supuestos se regula en el acuerdo con el organizador y no implica retener parte de tu reembolso como cuota adicional.
             </p>
             <p>
               <strong className="text-foreground">Cancelación por el organizador:</strong> Recibirás el reembolso completo de forma automática.

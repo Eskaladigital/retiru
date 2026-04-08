@@ -278,9 +278,7 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
                     ))}
                   </ul>
                   <p className="mt-3 text-xs text-muted-foreground">
-                    {r.cancellation_policy.platform_fee_refundable
-                      ? 'Retiru\'s management fee (20%) is refundable.'
-                      : 'Retiru\'s management fee (20%) is non-refundable.'}
+                    The percentage applies to the total amount you paid. If a refund applies, you receive that amount in full to your original payment method. Retiru&apos;s remuneration in cancellation cases is handled under our agreement with the organizer and is not an extra deduction from your refund.
                   </p>
                 </div>
               </section>

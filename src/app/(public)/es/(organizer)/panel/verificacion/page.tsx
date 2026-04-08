@@ -22,7 +22,7 @@ const STEPS = [
   {
     id: 4,
     title: 'Datos bancarios',
-    description: 'IBAN donde recibirás los pagos del 80% de tus asistentes.',
+    description: 'IBAN donde recibirás las liquidaciones del neto de tus reservas (según acuerdo con Retiru).',
     status: 'locked' as const,
   },
 ];

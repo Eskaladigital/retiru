@@ -33,9 +33,9 @@ const CHANNELS = [
 
 const FAQ_QUICK = [
   { q: '¿Cómo publico un retiro?', a: 'Crea tu cuenta con email, verifica tu email y crea tu primer retiro. Nuestro equipo lo revisa en 24-48h y una vez aprobado, eres organizador verificado.' },
-  { q: '¿Cuánto cuesta usar Retiru?', a: 'Para organizadores, 0 €. El asistente paga un 20 % de cuota de gestión. El organizador no paga nada.' },
+  { q: '¿Cuánto cuesta usar Retiru?', a: 'Para organizadores, 0 € en comisiones o suscripción. El asistente paga el precio publicado en un solo pago; Retiru retiene su comisión y liquida el neto al organizador según el acuerdo vigente.' },
   { q: '¿Cómo reclamo mi centro?', a: 'Busca tu centro en el directorio, haz clic en "Reclamar este centro" y crea tu cuenta si no la tienes. Verificaremos tu identidad como propietario.' },
-  { q: '¿Puedo cancelar una reserva?', a: 'Sí. Cada retiro tiene su propia política de cancelación visible antes de reservar.' },
+  { q: '¿Puedo cancelar una reserva?', a: 'Sí. Cada retiro tiene su política de cancelación (plazos y % sobre lo pagado). Si te corresponde reembolso, lo recibes íntegro; la comisión de Retiru en cancelaciones se regula con el organizador, no como retención extra sobre tu devolución.' },
 ];
 
 export default function ContactoPage() {

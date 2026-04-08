@@ -203,6 +203,9 @@ export function RetiroDetailContent({ retreat, isPreview }: Props) {
                     </li>
                   ))}
                 </ul>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  El porcentaje se aplica sobre el importe total pagado. Si corresponde reembolso, se devuelve íntegro al asistente; la comisión de Retiru en cancelaciones se regula con el organizador y no se resta del reembolso del asistente.
+                </p>
               </div>
             </section>
           )}

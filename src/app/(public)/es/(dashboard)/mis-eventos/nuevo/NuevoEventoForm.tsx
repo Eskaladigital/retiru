@@ -171,6 +171,19 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
     return true;
   }
 
+  /** Mismos requisitos que crear el evento (POST /api/retreats/create). */
+  function isFormComplete(): boolean {
+    return Boolean(
+      form.title_es
+      && form.summary_es
+      && form.description_es
+      && form.start_date
+      && form.end_date
+      && form.total_price
+      && form.max_attendees,
+    );
+  }
+
   async function uploadImages(): Promise<{ url: string; is_cover: boolean }[]> {
     const supabase = createClient();
     const uploaded: { url: string; is_cover: boolean }[] = [];
@@ -216,13 +229,14 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
     return uploaded;
   }
 
-  async function handleSubmit() {
-    if (!form.title_es || !form.summary_es || !form.description_es || !form.start_date || !form.end_date || !form.total_price || !form.max_attendees) {
-      setError('Completa todos los campos obligatorios.');
-      return;
+  type CreateOk = { ok: true; id: string; isVerifiedOrganizer: boolean };
+  type CreateFail = { ok: false; error: string };
+  type CreateResult = CreateOk | CreateFail;
+
+  async function createRetreatInDb(): Promise<CreateResult> {
+    if (!isFormComplete()) {
+      return { ok: false, error: 'Completa todos los campos obligatorios.' };
     }
-    setSaving(true);
-    setError('');
 
     try {
       setUploading(true);
@@ -263,26 +277,88 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
 
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || 'Error al crear el evento');
-        return;
+        return { ok: false, error: data.error || 'Error al crear el evento' };
       }
 
       const id = data.retreat?.id as string | undefined;
       if (!id) {
-        setError('Evento creado pero sin identificador. Revisa en «Mis eventos».');
-        router.push('/es/mis-eventos');
-        return;
+        return { ok: false, error: 'Evento creado pero sin identificador. Revisa en «Mis eventos».' };
       }
 
-      setPostCreate({
-        retreatId: id,
+      return {
+        ok: true,
+        id,
         isVerifiedOrganizer: Boolean(data.isVerifiedOrganizer),
-      });
+      };
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error de conexión');
+      return { ok: false, error: e instanceof Error ? e.message : 'Error de conexión' };
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  /** Borrador + modal (o seguir editando / enviar desde el modal). */
+  async function handleSaveDraft() {
+    setSaving(true);
+    setError('');
+    const result = await createRetreatInDb();
+    setSaving(false);
+    if (!result.ok) {
+      setError(result.error);
+      if (result.error.includes('sin identificador')) {
+        router.push('/es/mis-eventos');
+      }
+      return;
+    }
+    setPostCreate({
+      retreatId: result.id,
+      isVerifiedOrganizer: result.isVerifiedOrganizer,
+    });
+  }
+
+  /** Crear y enviar a revisión / publicar en un solo paso (sin modal intermedio). */
+  async function handleSubmitForReview() {
+    setSaving(true);
+    setError('');
+    const result = await createRetreatInDb();
+    if (!result.ok) {
+      setSaving(false);
+      setError(result.error);
+      if (result.error.includes('sin identificador')) {
+        router.push('/es/mis-eventos');
+      }
+      return;
+    }
+
+    try {
+      const patchRes = await fetch(`/api/retreats/${result.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'published' }),
+      });
+      const patchData = await patchRes.json().catch(() => ({}));
+      if (!patchRes.ok) {
+        setError(
+          typeof patchData.error === 'string'
+            ? `${patchData.error} El evento quedó como borrador en «Mis eventos».`
+            : 'No se pudo enviar a revisión. El evento quedó como borrador; inténtalo desde la edición.',
+        );
+        setPostCreate({
+          retreatId: result.id,
+          isVerifiedOrganizer: result.isVerifiedOrganizer,
+        });
+        return;
+      }
+      router.push('/es/mis-eventos');
+      router.refresh();
+    } catch {
+      setError('Error de red al enviar. El evento puede haberse guardado como borrador.');
+      setPostCreate({
+        retreatId: result.id,
+        isVerifiedOrganizer: result.isVerifiedOrganizer,
+      });
     } finally {
       setSaving(false);
-      setUploading(false);
     }
   }
 
@@ -740,14 +816,43 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
                   </label>
                 ))}
               </div>
-              <p className="text-xs text-[#a09383] mt-2">La cuota de gestión de Retiru (20%) no es reembolsable en ningún caso.</p>
+              <p className="text-xs text-[#a09383] mt-2">
+                Los porcentajes muestran el reparto del precio publicado (comisión Retiru / neto para ti). Si un asistente cancela y le corresponde reembolso según estos tramos, ese importe se devuelve por completo al asistente. La compensación de la comisión de Retiru en cancelaciones se regula en el acuerdo comercial con Retiru (no se descuenta del reembolso del asistente).
+              </p>
             </div>
           </>
         )}
       </div>
 
+      {/* Enviar directo: visible en cualquier paso si ya están fechas, precio y textos obligatorios */}
+      {isFormComplete() && (
+        <div className="mt-8 rounded-xl border border-sand-200 bg-sand-50/90 px-4 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <p className="text-sm text-[#5c5349] leading-relaxed">
+            <strong className="text-foreground">¿Todo listo?</strong> Puedes enviar el evento a revisión (o publicarlo si ya tienes retiros en línea) sin guardar antes un borrador por separado.
+          </p>
+          <button
+            type="button"
+            onClick={handleSubmitForReview}
+            disabled={saving}
+            className="shrink-0 bg-terracotta-600 text-white font-semibold px-6 py-3 rounded-xl text-sm hover:bg-terracotta-700 transition-colors disabled:opacity-50 disabled:cursor-wait flex items-center justify-center gap-2"
+          >
+            {saving ? (
+              <>
+                <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
+                  <path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" fill="currentColor" className="opacity-75" />
+                </svg>
+                {uploading ? 'Subiendo imágenes…' : 'Procesando…'}
+              </>
+            ) : (
+              'Enviar a revisión / publicar'
+            )}
+          </button>
+        </div>
+      )}
+
       {/* Navigation */}
-      <div className="flex gap-3 pt-8">
+      <div className="flex flex-wrap gap-3 pt-8">
         {step > 0 && (
           <button type="button" onClick={() => setStep(step - 1)} className="bg-white border border-sand-300 text-foreground font-semibold px-6 py-3 rounded-xl text-sm hover:bg-sand-50 transition-colors">
             Anterior
@@ -765,17 +870,20 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
         ) : (
           <button
             type="button"
-            onClick={handleSubmit}
+            onClick={handleSaveDraft}
             disabled={saving}
-            className="bg-terracotta-600 text-white font-semibold px-8 py-3 rounded-xl hover:bg-terracotta-700 transition-colors disabled:opacity-50 disabled:cursor-wait flex items-center gap-2"
+            className="bg-white border border-sand-300 text-foreground font-semibold px-8 py-3 rounded-xl hover:bg-sand-50 transition-colors disabled:opacity-50 disabled:cursor-wait flex items-center gap-2"
           >
             {saving ? (
               <>
-                <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" /><path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" fill="currentColor" className="opacity-75" /></svg>
-                {uploading ? 'Subiendo imágenes...' : 'Creando...'}
+                <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
+                  <path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" fill="currentColor" className="opacity-75" />
+                </svg>
+                {uploading ? 'Subiendo imágenes…' : 'Guardando…'}
               </>
             ) : (
-              'Crear evento (borrador)'
+              'Guardar borrador'
             )}
           </button>
         )}

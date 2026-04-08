@@ -282,7 +282,7 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
                     ))}
                   </ul>
                   <p className="mt-3 text-xs text-muted-foreground">
-                    El porcentaje de reembolso se aplica sobre el importe total pagado.
+                    El porcentaje se aplica sobre el importe total que pagaste. Si te corresponde reembolso, recibes ese importe íntegro en tu método de pago. La retribución de Retiru en supuestos de cancelación se canaliza según el acuerdo comercial con el organizador y no supone una retención adicional sobre tu reembolso.
                   </p>
                 </div>
               </section>

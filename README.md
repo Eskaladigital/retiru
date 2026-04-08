@@ -433,6 +433,7 @@ src/
 - Retiru retiene su comisión (20 %) y **transfiere el 80 % al organizador** (payout manual por transferencia bancaria).
 - Ejemplo: retiro de 500 € → el asistente paga 500 € → Retiru retiene 100 € y transfiere 400 € al organizador.
 - **Ventajas**: un solo pago para el asistente, mayor conversión, control total del flujo financiero, sin pagos pendientes.
+- **Cancelaciones**: el organizador define políticas flexibles (porcentajes y plazos sobre el importe pagado). Si al asistente le corresponde reembolso según esa política, recibe ese importe íntegro en su método de pago. La compensación de la comisión de Retiru en supuestos de cancelación se regula en el **acuerdo comercial con el organizador**, no como retención adicional sobre el reembolso del asistente.
 
 ### Directorio de centros (suscripción)
 

@@ -21,7 +21,7 @@ export default function TerminosPageEn() {
       <h1 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-2">
         Terms and conditions
       </h1>
-      <p className="text-muted-foreground mb-12">Last updated: March 2025</p>
+      <p className="text-muted-foreground mb-12">Last updated: April 2026</p>
 
       <div className="prose prose-sand max-w-none space-y-12">
         <section>
@@ -41,11 +41,11 @@ export default function TerminosPageEn() {
               </li>
               <li className="flex gap-3">
                 <span className="text-terracotta-600 font-bold shrink-0">2.</span>
-                <span><strong>When you book, you pay 20% to Retiru</strong> as an intermediation and booking management fee. This payment is made by card via Stripe and Retiru will issue you an invoice.</span>
+                <span><strong>When you book, you pay the full price in one step</strong> by card via Stripe. Retiru retains its commission (e.g. 20%) and settles the net amount to the organizer under our payout agreement—not as a separate payment you make to the organizer outside the platform.</span>
               </li>
               <li className="flex gap-3">
                 <span className="text-terracotta-600 font-bold shrink-0">3.</span>
-                <span><strong>The remaining 80% is paid directly to the organizer</strong> before the retreat starts, by transfer or whichever method they specify. Outside the platform.</span>
+                <span><strong>What you see is what you pay</strong> for the booking transaction: one charge, no hidden booking fees on top of the listed price.</span>
               </li>
             </ul>
 
@@ -53,7 +53,7 @@ export default function TerminosPageEn() {
               <p className="text-sm font-semibold text-muted-foreground mb-2">Example: €500 retreat</p>
               <div className="space-y-2 text-[15px]">
                 <div className="flex justify-between">
-                  <span>Booking fee (Retiru)</span>
+                  <span>Commission (Retiru)</span>
                   <span className="font-bold text-terracotta-600">€100</span>
                 </div>
                 <div className="flex justify-between">
@@ -68,7 +68,7 @@ export default function TerminosPageEn() {
             </div>
 
             <p className="mt-4 text-sm text-muted-foreground">
-              The organizer pays no commission or subscription. Retiru is funded solely by the 20% paid by the attendee when booking.
+              The organizer pays no commission or subscription to publish. Retiru is funded by the commission included in the price the attendee pays when booking.
             </p>
           </div>
         </section>
@@ -78,7 +78,7 @@ export default function TerminosPageEn() {
             Bookings and confirmation
           </h2>
           <p className="text-[15px] leading-relaxed text-muted-foreground mb-4">
-            When you book, your spot is secured after paying the 20%. If the retreat requires manual confirmation, the organizer has a deadline (default 48h) to confirm or reject. If it has instant confirmation, your spot is confirmed immediately.
+            When you book, your spot is secured after the full payment is completed. If the retreat requires manual confirmation, the organizer has a deadline (default 48h) to confirm or reject. If it has instant confirmation, your spot is confirmed immediately.
           </p>
         </section>
 
@@ -87,7 +87,7 @@ export default function TerminosPageEn() {
             Cancellations
           </h2>
           <p className="text-[15px] leading-relaxed text-muted-foreground mb-4">
-            The 20% fee paid to Retiru is non-refundable. Refunds of the 80% (if applicable) depend on each retreat&apos;s cancellation policy, which you can check before booking. If the organizer cancels the retreat, you will receive a full refund of the 20% automatically.
+            Refunds when you cancel depend on each retreat&apos;s cancellation policy (percentages and deadlines applied to the total amount you paid). If a refund applies under that policy, you receive that amount in full to your original payment method. Retiru&apos;s remuneration in cancellation cases is governed by our agreement with the organizer and is not an extra deduction from your refund. If the organizer cancels the retreat, you receive a full automatic refund of what you paid.
           </p>
         </section>
 

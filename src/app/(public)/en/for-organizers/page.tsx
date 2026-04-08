@@ -26,14 +26,14 @@ const ORGANIZER_FEATURES = [
 ];
 
 const FAQS = [
-  { q: 'Is it really free for organizers?', a: 'Yes. We don\'t charge any commission or subscription to organizers. Our revenue comes from the 20% the attendee pays as a booking management fee.' },
+  { q: 'Is it really free for organizers?', a: "Yes. We don't charge organizers commission or subscription. Our revenue comes from the management fee included in the listed price the attendee pays when booking (100% upfront payment)." },
   { q: 'How does the center directory work?', a: 'Your center appears in our directory with a full profile: photos, services, hours, location and reviews. Users can find you by area, discipline type or name. If your center is already on Retiru, claim it from its listing. If it is not listed, logged-in users can propose it from "My centers"; our team reviews it before publication.' },
   { q: 'How much does a directory listing cost?', a: 'We currently offer 6 months of free membership to selected centers. After that period, we\'ll assess the impact with you and you can continue with an affordable monthly fee.' },
   { q: 'Can I be both a center and an organizer?', a: 'Yes. If you\'re a center that organizes retreats or events, you can have your directory listing and also publish events with all the panel tools.' },
-  { q: 'How do I get paid?', a: 'When someone books a retreat, they pay 20% to Retiru. You collect the remaining 80% directly from the attendee before the retreat, by bank transfer or your preferred method.' },
+  { q: 'How do I get paid?', a: 'The attendee pays the full price through the platform. Retiru retains its commission and transfers your net amount according to the settlement agreement (bank transfer or other agreed channel).' },
   { q: 'Do I need to get verified to publish retreats?', a: 'No documents required. Simply create your account, create your first retreat and our team will review it within 24-48h. Once your first retreat is approved, you become a verified organizer and can keep publishing.' },
   { q: 'How do I claim or add my center?', a: 'If your center is already listed, search for it and use "Claim this center" (or sign up first). If it is not listed, sign in, go to "My centers", choose "Propose new center" and pick the place in Google Maps; we review the proposal and, once approved, you can manage the listing.' },
-  { q: 'What if an attendee cancels?', a: 'You configure your cancellation policy per retreat. Retiru handles refunds automatically according to that policy.' },
+  { q: 'What if an attendee cancels?', a: "You set the cancellation policy (deadlines and percentages on the amount paid). If a refund applies, the attendee receives that amount in full. Compensation for Retiru's commission in those cases is governed by our commercial agreement with you—not as an extra deduction from the attendee's refund." },
 ];
 
 export default function ForOrganizersPageEN() {
@@ -178,7 +178,7 @@ export default function ForOrganizersPageEN() {
               { s: '01', t: 'Create your account', d: 'Sign up with your email and verify your account. Any user can create retreats or other events from their dashboard.' },
               { s: '02', t: 'Create your first retreat or event', d: 'Use our step-by-step wizard to create your retreat or another event. Add photos, schedule, prices and configure your cancellation policy.' },
               { s: '03', t: 'We review & publish', d: 'Our team reviews your first retreat within 24-48h to ensure quality. Once approved, it goes live and you become a verified organizer.' },
-              { s: '04', t: 'Receive bookings & get paid', d: 'Attendees pay 20% to Retiru to secure their spot. You collect the remaining 80% directly from the attendee before the retreat. No intermediaries.' },
+              { s: '04', t: 'Receive bookings & get paid', d: 'Attendees pay the full price through the platform. Retiru retains its commission and settles your net amount per agreement. You run the experience; we handle booking flow and payments.' },
             ].map(({ s, t, d }) => (
               <div key={s} className="flex gap-6 items-start">
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-terracotta-600 text-lg font-bold text-white">{s}</span>

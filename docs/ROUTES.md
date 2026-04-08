@@ -228,9 +228,9 @@ Protegido por middleware (role=admin). No indexado en buscadores.
 | GET | `/api/organizer/attendees` | Listar todos los asistentes cross-evento |
 | GET | `/api/organizer/events/[id]/bookings` | Listar bookings de un evento |
 | GET | `/api/organizer/events/[id]/bookings/export` | Exportar asistentes a CSV |
-| PATCH | `/api/organizer/bookings/[id]/payment` | Marcar pago 80% como recibido |
+| PATCH | `/api/organizer/bookings/[id]/payment` | Legacy: marcar liquidación/pago complementario (modelo histórico 80 % fuera de plataforma; con pago 100 % suele no aplicar) |
 | POST | `/api/organizer/events/[id]/broadcast` | Enviar mensaje a todos los asistentes |
 | GET | `/api/organizer/events/[id]/communications` | Timeline de comunicaciones del evento |
-| POST | `/api/cron/payment-reminders` | Cron: recordatorios de pago del 80% |
+| POST | `/api/cron/payment-reminders` | Cron: no-op con pago 100 % (antes recordatorio del 80 %) |
 | POST | `/api/cron/event-reminders` | Cron: recordatorios pre-evento (7d y 2d) |
 | POST | `/api/cron/review-requests` | Cron: solicitar reseñas post-evento |

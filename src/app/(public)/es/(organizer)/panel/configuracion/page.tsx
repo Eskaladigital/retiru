@@ -64,7 +64,7 @@ export default function ConfiguracionPage() {
             { label: 'Cancelación', description: 'Cuando un asistente cancela su reserva', default: true },
             { label: 'Nuevo mensaje', description: 'Cuando recibes un mensaje de un asistente', default: true },
             { label: 'Nueva reseña', description: 'Cuando un asistente deja una reseña', default: false },
-            { label: 'Recordatorios de pago', description: 'Recordatorios sobre pagos pendientes del 80%', default: true },
+            { label: 'Recordatorios de pago', description: 'Avisos sobre pagos o liquidaciones pendientes (si aplica)', default: true },
             { label: 'Informes mensuales', description: 'Resumen mensual de rendimiento de tus retiros', default: false },
           ].map((notif) => (
             <label key={notif.label} className="flex items-start gap-3 cursor-pointer">
@@ -81,7 +81,7 @@ export default function ConfiguracionPage() {
       {/* Datos fiscales */}
       <section className="bg-white border border-sand-200 rounded-2xl p-6 mb-6">
         <h2 className="font-serif text-xl mb-4">Datos fiscales</h2>
-        <p className="text-sm text-[#7a6b5d] mb-5">Información para la facturación del 80% que cobras a los asistentes.</p>
+        <p className="text-sm text-[#7a6b5d] mb-5">Información fiscal y de facturación asociada a tus retiros y liquidaciones.</p>
 
         <form className="space-y-5">
           <div className="grid grid-cols-2 gap-4">

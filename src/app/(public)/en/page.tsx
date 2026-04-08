@@ -276,9 +276,9 @@ export default async function HomePageEN() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-6">
               {[
                 { n: 1, t: 'Explore', d: 'Browse our center directory or discover retreats by destination, date or discipline.' },
-                { n: 2, t: 'Book your spot', d: 'Pay only 20% as a booking fee to secure your spot. 100% secure process with Stripe.' },
+                { n: 2, t: 'Book your spot', d: 'Pay the full retreat price in one secure card payment (Stripe). Your place is handled through the platform.' },
                 { n: 3, t: 'Coordinate', d: 'Chat directly with the organizer. Fill in the questionnaire and prepare your experience.' },
-                { n: 4, t: 'Live the experience', d: 'Pay the remaining 80% to the organizer before the retreat and enjoy a transformative experience.' },
+                { n: 4, t: 'Live the experience', d: 'Enjoy the experience. Cancellation refunds, when they apply, follow the retreat policy on what you paid.' },
               ].map(({ n, t, d }) => (
                 <div key={n} className="text-center px-5 py-8"><div className="w-12 h-12 bg-terracotta-50 border-2 border-terracotta-200 text-terracotta-600 rounded-full flex items-center justify-center font-serif text-xl mx-auto mb-5">{n}</div><h3 className="font-serif text-lg mb-2">{t}</h3><p className="text-sm text-[#7a6b5d] leading-relaxed">{d}</p></div>
               ))}
@@ -298,7 +298,7 @@ export default async function HomePageEN() {
                 <div className="flex justify-between items-center py-2.5 border-t border-sand-200"><span className="text-[15px] flex items-center gap-2">Payment to organizer <span className="text-[11px] font-semibold uppercase tracking-wider bg-sage-100 text-sage-700 px-2 py-0.5 rounded-full">Organizer</span></span><span className="text-lg font-bold">400€</span></div>
                 <div className="flex justify-between items-center pt-4 mt-2 border-t-2 border-foreground"><span className="text-base font-semibold">Total retreat price</span><span className="text-2xl font-bold">500€</span></div>
               </div>
-              <p className="text-center text-sm text-[#7a6b5d] leading-relaxed"><strong className="text-foreground">You pay 100€ to Retiru when booking.</strong> The remaining 400€ goes directly to the organizer before the retreat starts. No hidden costs, no surprises.</p>
+              <p className="text-center text-sm text-[#7a6b5d] leading-relaxed"><strong className="text-foreground">You pay €500 in a single charge.</strong> Of that, Retiru retains €100 (commission) and transfers €400 to the organizer per the settlement agreement. No hidden fees or separate second payment.</p>
             </div>
           </div>
         </section>

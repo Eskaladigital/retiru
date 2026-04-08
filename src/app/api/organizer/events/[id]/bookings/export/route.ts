@@ -62,7 +62,7 @@ export async function GET(
 
     const headers = [
       'Nº Reserva', 'Nombre', 'Email', 'Teléfono', 'Estado',
-      'Precio total', 'Pago 20%', 'Pago 80%',
+      'Precio total', 'Comisión Retiru (€)', 'Neto organizador (€)',
       'Notas organizador', 'Fecha reserva',
       ...formHeaders,
     ];
@@ -83,8 +83,8 @@ export async function GET(
         profile.phone || '',
         STATUS_LABELS[b.status] || b.status,
         b.total_price,
-        b.platform_payment_status === 'paid' ? 'Pagado' : 'Pendiente',
-        b.remaining_payment_status === 'confirmed_by_organizer' ? 'Pagado' : 'Pendiente',
+        b.platform_fee ?? '',
+        b.organizer_amount ?? '',
         b.organizer_notes || '',
         new Date(b.created_at).toLocaleDateString('es-ES'),
         ...formValues,

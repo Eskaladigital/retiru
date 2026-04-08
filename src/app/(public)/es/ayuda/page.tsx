@@ -1,20 +1,19 @@
 // /es/ayuda — Centro de ayuda
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { helpES } from '@/lib/seo/page-metadata';
 export const metadata: Metadata = helpES;
 
 const SECTIONS = [
   { title: 'Para asistentes', items: [
-    { q: '¿Cómo funciona la reserva?', a: 'Al reservar pagas el 20% como cuota de gestión a Retiru. El 80% restante se lo pagas directamente al organizador antes del retiro.' },
-    { q: '¿Puedo cancelar mi reserva?', a: 'Sí. Cada retiro tiene su propia política de cancelación que puedes ver antes de reservar. La cuota de Retiru (20%) no es reembolsable.' },
+    { q: '¿Cómo funciona la reserva?', a: 'Pagas el precio completo del retiro en un solo pago seguro con tarjeta (Stripe). Retiru gestiona la reserva y el reparto acordado con el organizador.' },
+    { q: '¿Puedo cancelar mi reserva?', a: 'Sí. Cada retiro tiene su política de cancelación (plazos y porcentajes sobre lo que pagaste). Si te corresponde reembolso, recibes ese importe íntegro; no aplicamos una retención extra tipo «cuota no reembolsable» sobre tu devolución.' },
     { q: '¿Cómo contacto al organizador?', a: 'Una vez confirmada tu reserva, tendrás acceso al chat directo con el organizador desde tu panel.' },
     { q: '¿El precio incluye alojamiento?', a: 'Depende de cada retiro. Revisa la sección "Qué incluye" en la ficha del retiro.' },
   ]},
   { title: 'Para organizadores', items: [
-    { q: '¿Es gratis publicar?', a: 'Sí, 100%. No cobramos comisión ni suscripción. Nuestros ingresos vienen del 20% que paga el asistente.' },
+    { q: '¿Es gratis publicar?', a: 'Sí, 100%. No cobramos comisión ni suscripción al organizador. Nuestros ingresos provienen de la cuota de gestión incluida en el precio que paga el asistente al reservar.' },
     { q: '¿Cómo empiezo a publicar retiros?', a: 'Crea tu cuenta con email, verifica tu email y crea tu primer retiro desde tu panel. Nuestro equipo lo revisa en 24-48h. Una vez aprobado tu primer retiro, te conviertes en organizador verificado.' },
-    { q: '¿Cómo cobro a mis asistentes?', a: 'Tú cobras el 80% directamente al asistente antes del retiro, por transferencia o el método que prefieras.' },
+    { q: '¿Cómo cobro mis retiros?', a: 'El asistente paga el importe total por la plataforma. Retiru retiene su comisión y te transfiere el neto según los acuerdos de liquidación vigentes.' },
     { q: '¿Mis retiros pasan revisión?', a: 'Tu primer retiro se revisa para garantizar la calidad (24-48h). Una vez verificado como organizador, los siguientes retiros se publican directamente.' },
   ]},
   { title: 'Para centros', items: [
@@ -25,7 +24,7 @@ const SECTIONS = [
   { title: 'Pagos y seguridad', items: [
     { q: '¿Es seguro pagar en Retiru?', a: 'Sí. Procesamos todos los pagos con Stripe, el mismo sistema que usan Airbnb, Spotify o Shopify.' },
     { q: '¿Qué métodos de pago aceptáis?', a: 'Tarjeta de crédito y débito (Visa, Mastercard, American Express).' },
-    { q: '¿Cómo funciona el reembolso?', a: 'Según la política de cancelación del retiro. Los reembolsos se procesan automáticamente a la tarjeta original en 5-10 días.' },
+    { q: '¿Cómo funciona el reembolso?', a: 'Según la política de cancelación del retiro (sobre el importe total pagado). Si te corresponde, recibes ese importe íntegro en tu tarjeta en unos 5-10 días; no añadimos retenciones extra sobre la devolución.' },
   ]},
 ];
 

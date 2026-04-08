@@ -32,14 +32,14 @@ const ORGANIZER_FEATURES = [
 ];
 
 const FAQS = [
-  { q: '¿De verdad es gratis para organizadores?', a: 'Sí. No cobramos comisión ni suscripción al organizador. Nuestros ingresos vienen del 20% que paga el asistente como cuota de gestión.' },
+  { q: '¿De verdad es gratis para organizadores?', a: 'Sí. No cobramos comisión ni suscripción al organizador. Nuestros ingresos provienen de la cuota de gestión incluida en el precio que paga el asistente al reservar (pago único del 100 %).' },
   { q: '¿Cómo funciona el directorio de centros?', a: 'Tu centro aparece en nuestro directorio con ficha completa: fotos, servicios, horarios, ubicación y reseñas. Los usuarios pueden encontrarte buscando por zona, tipo de disciplina o nombre. Si tu centro ya está en Retiru, puedes reclamarlo desde su ficha. Si no aparece, con cuenta iniciada puedes proponerlo desde «Mis centros»; nuestro equipo lo revisa antes de publicarlo.' },
   { q: '¿Cuánto cuesta aparecer en el directorio?', a: 'Actualmente ofrecemos 6 meses de membresía gratuita a los centros seleccionados. Tras ese periodo, evaluaremos el impacto contigo y podrás continuar con una cuota mensual asequible.' },
   { q: '¿Puedo ser centro y organizador a la vez?', a: 'Sí. Si eres un centro que organiza retiros u otros eventos, puedes tener tu ficha en el directorio y además publicarlos con todas las herramientas del panel.' },
-  { q: '¿Cómo cobro a mis asistentes?', a: 'Cuando alguien reserva un retiro, paga el 20% a Retiru. Tú cobras el 80% restante directamente al asistente antes del retiro, por transferencia o el método que prefieras.' },
+  { q: '¿Cómo cobro a mis asistentes?', a: 'El asistente paga el precio completo por la plataforma. Retiru retiene su comisión y te transfiere el neto según el acuerdo de liquidación (transferencia u otro canal acordado).' },
   { q: '¿Necesito verificarme para publicar retiros?', a: 'No necesitas subir documentos. Simplemente crea tu cuenta, crea tu primer retiro y nuestro equipo lo revisará en 24-48h. Una vez aprobado tu primer retiro, te conviertes en organizador verificado y puedes seguir publicando.' },
   { q: '¿Cómo reclamo o doy de alta mi centro?', a: 'Si tu centro ya está en el directorio, búscalo y usa «Reclamar este centro» (o regístrate si aún no tienes cuenta). Si no está listado, entra en «Mis centros» tras iniciar sesión, elige «Proponer nuevo centro» y localiza el lugar en Google Maps; enviaremos la propuesta a revisión y, al aprobarla, podrás gestionar la ficha.' },
-  { q: '¿Y si un asistente cancela?', a: 'Tú configuras tu política de cancelación por retiro. Retiru gestiona los reembolsos automáticamente según esa política.' },
+  { q: '¿Y si un asistente cancela?', a: 'Tú configuras la política de cancelación (plazos y porcentajes sobre lo pagado). Si al asistente le corresponde reembolso, se le devuelve ese importe íntegro. La compensación de la comisión de Retiru en esos casos se regula en el acuerdo comercial contigo, no como retención adicional sobre el reembolso del asistente.' },
 ];
 
 export default function ParaOrganizadoresPage() {
@@ -198,7 +198,7 @@ export default function ParaOrganizadoresPage() {
               { step: '01', title: 'Crea tu cuenta', desc: 'Regístrate con tu email y verifica tu cuenta. Cualquier usuario puede crear retiros u otros eventos desde su panel.' },
               { step: '02', title: 'Crea tu primer retiro', desc: 'Usa nuestro wizard paso a paso para crear tu retiro o evento. Añade fotos, programa, precios y configura tu política de cancelación.' },
               { step: '03', title: 'Revisamos y publicamos', desc: 'Nuestro equipo revisa tu primer retiro en 24-48h para asegurar la calidad. Una vez aprobado, se publica y te conviertes en organizador verificado.' },
-              { step: '04', title: 'Recibe reservas y cobra', desc: 'Los asistentes pagan el 20% a Retiru para asegurar su plaza. Tú cobras el 80% restante directamente al asistente antes del retiro. Sin intermediarios.' },
+              { step: '04', title: 'Recibe reservas y cobra', desc: 'Los asistentes pagan el precio completo por la plataforma. Retiru retiene su comisión y te liquida el neto según el acuerdo. Tú gestionas la experiencia; nosotros el flujo de reserva y pagos.' },
             ].map(({ step, title, desc }) => (
               <div key={step} className="flex gap-6 items-start">
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-terracotta-600 text-lg font-bold text-white">

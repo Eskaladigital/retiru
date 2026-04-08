@@ -20,7 +20,7 @@ const STATS = [
   { value: '500+', label: 'Retreats in Spain' },
   { value: '9', label: 'Featured destinations' },
   { value: '0%', label: 'Commission for organizers' },
-  { value: '20%', label: 'Transparent guest fee' },
+  { value: '100%', label: 'Single upfront payment' },
 ];
 
 export default function AboutPageEN() {
@@ -223,21 +223,21 @@ export default function AboutPageEN() {
           <span className="text-xs font-bold uppercase tracking-[0.12em] text-terracotta-600">How pricing works</span>
           <h2 className="font-serif text-2xl md:text-3xl text-foreground mt-3 mb-2">Our model</h2>
           <p className="text-[15px] text-[#7a6b5d] leading-relaxed mb-8">
-            This is how we split the amount when you book a retreat — no fine print, with the breakdown always visible.
+            You pay the listed price once at booking. Behind the scenes, that amount is split between Retiru&apos;s commission and the organizer&apos;s net—clearly shown on each retreat page.
           </p>
           <div className="grid sm:grid-cols-2 gap-4 mb-6">
             <div className="rounded-2xl bg-white border border-sand-200 p-5 md:p-6">
               <p className="font-serif text-3xl text-terracotta-600 font-bold tabular-nums">20%</p>
-              <p className="font-semibold text-foreground mt-2">Fee to Retiru</p>
+              <p className="font-semibold text-foreground mt-2">Commission to Retiru</p>
               <p className="text-sm text-[#7a6b5d] mt-2 leading-relaxed">
-                Booking management, payments and support. You pay this when you confirm your place.
+                Booking, payments and support—included in the price you pay, not an extra charge on top.
               </p>
             </div>
             <div className="rounded-2xl bg-white border border-sand-200 p-5 md:p-6">
               <p className="font-serif text-3xl text-sage-700 font-bold tabular-nums">80%</p>
-              <p className="font-semibold text-foreground mt-2">Payment to the organizer</p>
+              <p className="font-semibold text-foreground mt-2">Net for the organizer</p>
               <p className="text-sm text-[#7a6b5d] mt-2 leading-relaxed">
-                The remainder goes directly to the organizer before the retreat begins.
+                The rest is settled to the organizer per our payout agreement—no second payment step for you to pay them separately.
               </p>
             </div>
           </div>
