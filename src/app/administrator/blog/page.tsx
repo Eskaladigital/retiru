@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { createAdminSupabase } from '@/lib/supabase/server';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Pencil, Plus, Eye, Trash2 } from 'lucide-react';
+import { Pencil, Plus, Eye, Trash2, ImageOff } from 'lucide-react';
 import { DeleteArticleButton } from './DeleteArticleButton';
 
 export default async function AdminBlogPage() {
@@ -11,7 +11,7 @@ export default async function AdminBlogPage() {
 
   const { data: articles } = await supabase
     .from('blog_articles')
-    .select('id, title_es, slug, excerpt_es, is_published, published_at, read_time_min, view_count, created_at, blog_categories(name_es)')
+    .select('id, title_es, slug, excerpt_es, cover_image_url, is_published, published_at, read_time_min, view_count, created_at, blog_categories(name_es)')
     .order('created_at', { ascending: false });
 
   const { data: categories } = await supabase
@@ -24,6 +24,7 @@ export default async function AdminBlogPage() {
     title_es: string;
     slug: string;
     excerpt_es: string;
+    cover_image_url: string | null;
     is_published?: boolean;
     published_at: string | null;
     read_time_min: number;
@@ -88,8 +89,25 @@ export default async function AdminBlogPage() {
               list.map((a) => (
                 <tr key={a.id} className="border-b border-sand-100 hover:bg-sand-50/50">
                   <td className="py-3 px-4">
-                    <div className="font-medium">{a.title_es}</div>
-                    <div className="text-xs text-[#a09383] truncate max-w-xs">{a.excerpt_es}</div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-14 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-sand-100 border border-sand-200">
+                        {a.cover_image_url ? (
+                          <img
+                            src={a.cover_image_url}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-[#a09383]">
+                            <ImageOff size={16} />
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-medium truncate">{a.title_es}</div>
+                        <div className="text-xs text-[#a09383] truncate max-w-xs">{a.excerpt_es}</div>
+                      </div>
+                    </div>
                   </td>
                   <td className="py-3 px-4 text-[#7a6b5d]">{(a.blog_categories as { name_es?: string })?.name_es ?? '—'}</td>
                   <td className="py-3 px-4 text-center">

@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import slugify from 'slugify';
 import { RichTextEditor } from '@/components/admin/RichTextEditor';
-import { ArrowLeft, Save } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+import { ArrowLeft, Save, Upload, X, ImageOff } from 'lucide-react';
 import Link from 'next/link';
 
 const schema = z.object({
@@ -54,6 +55,8 @@ export function BlogArticleForm({ categories, article }: BlogArticleFormProps) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -116,6 +119,32 @@ export function BlogArticleForm({ categories, article }: BlogArticleFormProps) {
         'slug_en',
         slugify(titleEn, { lower: true, strict: true }).slice(0, 80)
       );
+    }
+  };
+
+  const coverUrl = watch('cover_image_url');
+
+  const handleImageUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) return;
+    setUploading(true);
+    try {
+      const supabase = createClient();
+      const ext = file.name.split('.').pop() || 'jpg';
+      const path = `blog/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+      const { error: upErr } = await supabase.storage.from('retreat-images').upload(path, file, {
+        cacheControl: '31536000',
+        upsert: false,
+      });
+
+      if (upErr) throw new Error(upErr.message);
+
+      const { data: urlData } = supabase.storage.from('retreat-images').getPublicUrl(path);
+      setValue('cover_image_url', urlData.publicUrl);
+    } catch (e: any) {
+      setError(`Error al subir imagen: ${e.message}`);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -273,12 +302,60 @@ export function BlogArticleForm({ categories, article }: BlogArticleFormProps) {
 
               <div>
                 <label className="block text-sm font-semibold text-foreground mb-2">Imagen de portada</label>
-                <input
-                  {...register('cover_image_url')}
-                  type="url"
-                  className="w-full px-4 py-2.5 rounded-xl border border-sand-200 text-foreground text-sm focus:border-terracotta-500"
-                  placeholder="https://..."
-                />
+
+                <div className="space-y-3">
+                  {coverUrl ? (
+                    <div className="relative group rounded-xl overflow-hidden border border-sand-200">
+                      <img
+                        src={coverUrl}
+                        alt="Portada"
+                        className="w-full h-40 object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setValue('cover_image_url', '')}
+                        className="absolute top-2 right-2 p-1 bg-black/50 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Quitar imagen"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-full h-28 rounded-xl border-2 border-dashed border-sand-300 flex flex-col items-center justify-center text-[#a09383] gap-1">
+                      <ImageOff size={24} />
+                      <span className="text-xs">Sin imagen</span>
+                    </div>
+                  )}
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleImageUpload(file);
+                      e.target.value = '';
+                    }}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-sand-200 text-sm text-[#7a6b5d] hover:bg-sand-50 disabled:opacity-50 transition-colors"
+                  >
+                    <Upload size={14} />
+                    {uploading ? 'Subiendo...' : 'Subir imagen'}
+                  </button>
+
+                  <input
+                    {...register('cover_image_url')}
+                    type="url"
+                    className="w-full px-3 py-2 rounded-xl border border-sand-200 text-foreground text-xs focus:border-terracotta-500"
+                    placeholder="O pegar URL: https://..."
+                  />
+                </div>
               </div>
 
               <div>
