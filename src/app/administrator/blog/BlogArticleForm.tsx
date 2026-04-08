@@ -125,11 +125,19 @@ export function BlogArticleForm({ categories, article }: BlogArticleFormProps) {
   const coverUrl = watch('cover_image_url');
 
   const handleImageUpload = async (file: File) => {
-    if (!file.type.startsWith('image/')) return;
+    if (!file.type.startsWith('image/')) {
+      setError('El archivo seleccionado no es una imagen');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('La imagen supera 5 MB. Elige una más pequeña.');
+      return;
+    }
     setUploading(true);
+    setError(null);
     try {
       const supabase = createClient();
-      const ext = file.name.split('.').pop() || 'jpg';
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
       const path = `blog/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
       const { error: upErr } = await supabase.storage.from('retreat-images').upload(path, file, {
@@ -140,9 +148,11 @@ export function BlogArticleForm({ categories, article }: BlogArticleFormProps) {
       if (upErr) throw new Error(upErr.message);
 
       const { data: urlData } = supabase.storage.from('retreat-images').getPublicUrl(path);
+      if (!urlData?.publicUrl) throw new Error('No se obtuvo URL pública');
       setValue('cover_image_url', urlData.publicUrl);
-    } catch (e: any) {
-      setError(`Error al subir imagen: ${e.message}`);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Error desconocido';
+      setError(`Error al subir imagen: ${msg}`);
     } finally {
       setUploading(false);
     }

@@ -164,7 +164,9 @@ Ejecutar en el **SQL Editor** de Supabase (con service_role) en este orden:
 17. `supabase/migrations/017_avatars_bucket.sql` — bucket para avatares
 18. `supabase/migrations/018_full_payment_model.sql` — modelo pago 100%, parte 1: añade valores al enum `remaining_payment_status`
 19. `supabase/migrations/019_full_payment_model_columns.sql` — modelo pago 100%, parte 2: columnas payout + defaults (ejecutar DESPUÉS de 018)
-19. `supabase/seed/001_categories_destinations.sql` — categorías y destinos
+20. `supabase/migrations/020_handle_new_user_phone.sql` — teléfono obligatorio en profiles
+21. `supabase/migrations/021_storage_blog_folder_policy.sql` — política RLS para subir imágenes a carpeta `blog/` (y `avatars/`) en bucket `retreat-images`
+22. `supabase/seed/001_categories_destinations.sql` — categorías y destinos
 17. `supabase/seed/002_sample_retreats.sql` — usuario demo + 10 retiros de ejemplo
 18. `supabase/seed/003_sample_blog.sql` — 3 categorías de blog + 5 artículos  
     Opcional: tras generar con `npm run blog:import-csv`, ejecutar `supabase/seed/016_blog_from_csv.sql` en el SQL Editor para importar ~50 artículos del CSV (orden no alfabético).
