@@ -11,6 +11,7 @@ import { generatePageMetadata, jsonLdEvent, jsonLdBreadcrumb, jsonLdScript } fro
 import { Star, MapPin, Calendar, Clock, Users, Globe, Shield, Zap, Heart, Share2, ChevronRight, Check, X as XIcon } from 'lucide-react';
 import AskOrganizerButton from '@/components/messaging/AskOrganizerButton';
 import ReserveButton from '@/components/booking/ReserveButton';
+import { RetreatDescriptionBody } from '@/components/ui/retreat-description-body';
 
 const dateFmt = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1200&q=80';
@@ -126,26 +127,38 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(eventLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbLd) }} />
 
-      {/* Image Gallery */}
+      {/* Cover + full gallery */}
       <section className="bg-sand-100 pt-20 md:pt-[72px]">
-        <div className="container-wide py-4">
+        <div className="container-wide py-4 space-y-3">
           {hasImages ? (
-            sortedImages.length >= 3 ? (
-              <div className="grid gap-2 md:grid-cols-4 md:grid-rows-2 rounded-2xl overflow-hidden" style={{ maxHeight: '480px' }}>
-                <div className="md:col-span-2 md:row-span-2 relative">
-                  <img src={sortedImages[0].url} alt={sortedImages[0].alt_text ?? (r.title_en || r.title_es)} className="h-full w-full object-cover" style={{ minHeight: '300px' }} />
-                </div>
-                {sortedImages.slice(1, 5).map((img, i) => (
-                  <div key={img.id ?? i} className="hidden md:block relative">
-                    <img src={img.url} alt={img.alt_text ?? ''} className="h-full w-full object-cover" />
+            <>
+              <div className="rounded-2xl overflow-hidden border border-sand-200/80 bg-sand-200/30">
+                <img
+                  src={sortedImages[0].url}
+                  alt={sortedImages[0].alt_text ?? (r.title_en || r.title_es)}
+                  className="w-full object-cover min-h-[220px] max-h-[min(480px,55vh)] md:max-h-[520px]"
+                />
+              </div>
+              {sortedImages.length > 1 && (
+                <div>
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-[#7a6b5d] mb-2">Retreat gallery</h2>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                    {sortedImages.slice(1).map((img, i) => (
+                      <div
+                        key={img.id ?? `${img.url}-${i}`}
+                        className="relative rounded-xl overflow-hidden border border-sand-200/80 aspect-[4/3] bg-sand-200/30"
+                      >
+                        <img
+                          src={img.url}
+                          alt={img.alt_text ?? `${r.title_en || r.title_es} — photo ${i + 2}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="rounded-2xl overflow-hidden" style={{ maxHeight: '420px' }}>
-                <img src={sortedImages[0].url} alt={sortedImages[0].alt_text ?? (r.title_en || r.title_es)} className="w-full h-full object-cover" style={{ minHeight: '280px', maxHeight: '420px' }} />
-              </div>
-            )
+                </div>
+              )}
+            </>
           ) : (
             <div className="flex items-center justify-center rounded-2xl bg-sand-200 text-muted-foreground" style={{ height: '320px' }}>
               <span className="text-sm">No images available</span>
@@ -194,9 +207,7 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
             <section className="mb-10">
               <h2 className="mb-4 font-serif text-2xl font-semibold">About this retreat</h2>
               {r.description_en ? (
-                <div className="prose prose-sand text-muted-foreground leading-relaxed whitespace-pre-line text-sm">
-                  {r.description_en}
-                </div>
+                <RetreatDescriptionBody content={r.description_en} />
               ) : r.description_es ? (
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   We are adding an English description for this retreat.{' '}

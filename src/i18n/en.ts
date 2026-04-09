@@ -7,7 +7,7 @@ import type { TranslationKeys } from './es';
 const en: TranslationKeys = {
   meta: {
     title: 'Retiru — Retreats & Getaways in Spain',
-    description: 'Discover and book the best yoga, meditation, nature and wellness retreats in Spain. Free for organizers.',
+    description: 'Discover and book the best yoga, meditation, nature and wellness retreats in Spain. Organizers: no subscription; 20% on the PVP, 80% net.',
   },
 
   nav: {
@@ -44,12 +44,12 @@ const en: TranslationKeys = {
     step1Title: 'Explore',
     step1Desc: 'Browse hundreds of retreats by category, destination, dates or price.',
     step2Title: 'Book your spot',
-    step2Desc: 'Pay the full price by card and your spot is confirmed instantly.',
+    step2Desc: 'Pay the listed PVP by card when payment is due, or hold a spot without paying until the minimum group size is met, if the retreat uses that model.',
     step3Title: 'Live the experience',
     step3Desc: 'Disconnect, reconnect and transform. Your retreat awaits.',
     testimonialsTitle: 'What our travelers say',
     ctaTitle: 'Have a center or organize retreats?',
-    ctaSubtitle: 'Appear in our directory or publish your retreats for free. No commissions, no subscriptions.',
+    ctaSubtitle: 'List your center or publish retreats with no listing fee: no subscription; 20% of the PVP to Retiru and 80% net to you.',
     ctaButton: 'Start for free',
   },
 
@@ -176,16 +176,16 @@ const en: TranslationKeys = {
 
   forOrganizers: {
     heroTitle: 'Grow your project with Retiru',
-    heroSubtitle: 'Whether you have a wellness center or organize retreats, Retiru is your platform. No commissions. No subscriptions.',
+    heroSubtitle: 'Whether you have a wellness center or organize retreats, Retiru is your platform. No subscription to publish; 20% of the PVP to Retiru and 80% net to you (no extra surcharge for guests).',
     ctaButton: 'Find out how',
-    benefit1Title: '0% commission',
-    benefit1Desc: 'We charge you nothing. No booking commission, no monthly fee, no hidden costs.',
+    benefit1Title: 'No listing fee',
+    benefit1Desc: 'No subscription or signup fee. On each sale, 20% of the PVP is Retiru’s commission and you receive 80% net, with a clear breakdown in the form.',
     benefit2Title: 'Complete management panel',
     benefit2Desc: 'Bookings, attendees, messaging, check-in, analytics — everything in one place.',
     benefit3Title: 'Guaranteed visibility',
     benefit3Desc: 'Reach thousands of retreat seekers in Spain and worldwide. SEO optimized.',
     benefit4Title: 'Secure payments',
-    benefit4Desc: 'Attendees pay the listed price in one payment. Retiru retains its commission and settles your net amount per agreement.',
+    benefit4Desc: 'Attendees pay the listed PVP (or hold a spot without payment until the minimum is met, if you set one). Retiru retains 20% and settles 80% net per agreement.',
     howTitle: 'How does it work for you?',
     step1: 'Create your organizer profile and get verified',
     step2: 'Publish your retreats with our step-by-step wizard',

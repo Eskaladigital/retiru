@@ -33,7 +33,7 @@ export default function CondicionesPage() {
             Cómo se cobra
           </h2>
           <p className="text-[15px] leading-relaxed text-foreground mb-4">
-            El organizador fija el precio total del retiro (mínimo 50€). Ese es el precio que ves en la ficha del retiro. Al reservar, <strong>pagas el 100% del precio con tarjeta</strong> a través de Stripe en un solo paso. No hay pagos adicionales.
+            El organizador fija el <strong>PVP</strong> (precio público final por persona, mínimo 50€): es el importe que ves en la ficha. Ese precio <strong>no lleva recargos extra</strong> para el asistente. En la mayoría de retiros, al reservar <strong>pagas el 100% del PVP con tarjeta</strong> en un solo paso (Stripe). Si el retiro tiene un mínimo de plazas y aún no se ha alcanzado, puedes reservar plaza sin pagar hasta que se cumpla el mínimo; entonces recibirás un enlace para pagar dentro del plazo indicado.
           </p>
 
           <div className="bg-sand-100 rounded-2xl p-6 md:p-8">
@@ -41,9 +41,9 @@ export default function CondicionesPage() {
               <div className="flex gap-4">
                 <div className="w-10 h-10 rounded-full bg-sage-100 text-sage-700 flex items-center justify-center font-bold shrink-0">✓</div>
                 <div>
-                  <h3 className="font-semibold text-foreground mb-1">Pago único al reservar</h3>
+                  <h3 className="font-semibold text-foreground mb-1">Pago al reservar (o tras el mínimo de plazas)</h3>
                   <p className="text-[15px] text-muted-foreground leading-relaxed">
-                    Se cobra el importe completo con tarjeta a través de Stripe. Tu plaza queda confirmada al instante (o pendiente de confirmación del organizador, según el retiro). Sin sorpresas ni pagos posteriores.
+                    Cuando aplica cobro inmediato, se paga el PVP completo con tarjeta (Stripe) en un paso. Si el retiro tiene mínimo de plazas y aún no se ha alcanzado, primero reservas plaza sin pagar y pagas el PVP dentro del plazo cuando te lo indiquemos. Sin recargos ocultos sobre el precio publicado.
                   </p>
                 </div>
               </div>
@@ -57,18 +57,18 @@ export default function CondicionesPage() {
             Cómo se financia Retiru
           </h2>
           <p className="text-[15px] leading-relaxed text-foreground mb-4">
-            Retiru cobra una comisión incluida en el precio que fija el organizador. Es nuestra forma de financiar la plataforma, el soporte y el desarrollo.
+            Retiru cobra una comisión del <strong>20%</strong> incluida en el PVP que fija el organizador (él percibe el <strong>80%</strong> neto). Es nuestra forma de financiar la plataforma, el soporte y el desarrollo.
           </p>
 
           <div className="bg-terracotta-50 border border-terracotta-100 rounded-2xl p-6 md:p-8">
             <ul className="space-y-3 text-[15px] leading-relaxed">
               <li className="flex gap-3">
                 <span className="text-terracotta-600 font-bold">•</span>
-                <span><strong>El organizador no paga comisión directa:</strong> publica y gestiona retiros de forma gratuita. Retiru retiene su comisión del precio total fijado por el organizador.</span>
+                <span><strong>Sin suscripción para publicar:</strong> no hay cuota fija por usar el panel. La remuneración de Retiru es el <strong>20 % del PVP</strong> que paga el asistente; el organizador percibe el <strong>80 % neto</strong>.</span>
               </li>
               <li className="flex gap-3">
                 <span className="text-terracotta-600 font-bold">•</span>
-                <span><strong>El asistente paga el precio publicado.</strong> Sin cuotas adicionales ni costes ocultos.</span>
+                <span><strong>El asistente paga el PVP publicado</strong> (sin recargos encima). Si el retiro tiene mínimo de plazas, puede reservar sin pagar hasta cumplir el mínimo y luego pagar dentro del plazo.</span>
               </li>
               <li className="flex gap-3">
                 <span className="text-terracotta-600 font-bold">•</span>

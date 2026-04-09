@@ -44,8 +44,20 @@ const FILTER_OPTIONS: { value: FilterStatus; label: string }[] = [
   { value: 'archived', label: 'Archivados' },
 ];
 
-export function RetirosTableClient({ retreats }: { retreats: RetreatRow[] }) {
-  const [filter, setFilter] = useState<FilterStatus>('all');
+function parseInitialFilter(value: string | undefined): FilterStatus {
+  if (!value) return 'all';
+  if (FILTER_OPTIONS.some((f) => f.value === value)) return value as FilterStatus;
+  return 'all';
+}
+
+export function RetirosTableClient({
+  retreats,
+  initialFilter,
+}: {
+  retreats: RetreatRow[];
+  initialFilter?: FilterStatus;
+}) {
+  const [filter, setFilter] = useState<FilterStatus>(() => parseInitialFilter(initialFilter));
   const [acting, setActing] = useState<string | null>(null);
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
@@ -178,7 +190,7 @@ export function RetirosTableClient({ retreats }: { retreats: RetreatRow[] }) {
                 filtered.map((r) => {
                   const badge = STATUS_BADGE[r.status] || STATUS_BADGE.draft;
                   return (
-                    <tr key={r.id} className="hover:bg-sand-50/50 transition-colors">
+                    <tr key={r.id} id={`retreat-${r.id}`} className="hover:bg-sand-50/50 transition-colors scroll-mt-24">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="w-14 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-sand-100 border border-sand-200">

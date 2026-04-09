@@ -150,28 +150,25 @@ Al terminar este sprint:
 
 ### 2.1 Subida de imágenes en el wizard
 
-**Problema:** No hay forma de subir fotos. La ficha pública las muestra (tabla `retreat_images`) pero el wizard no tiene upload.
+**Estado:** ✅ **Implementado** (2026). La ficha pública muestra portada + galería completa (todas las fotos).
 
-**Qué debe permitir:**
-- Subir imagen de portada (obligatoria)
-- Subir hasta 8 imágenes adicionales (galería)
-- Drag & drop y/o selector de archivos
-- Preview de imágenes subidas
-- Reordenar imágenes
-- Eliminar imágenes
+**Implementado hoy:**
+- Hasta **8 imágenes** en total por retiro; una marcada como **portada** (`is_cover`); el resto se muestran en la ficha bajo «Galería del retiro» / «Retreat gallery» (ES/EN).
+- Selector de archivos (múltiple), preview, eliminar, elegir portada; **generar portada con IA** (DALL·E) opcional; si no hay fotos, al guardar puede generarse portada automática (OpenAI en servidor).
+- Subida vía `POST /api/storage/retreat-images`; persistencia en `retreat_images` con `sort_order` en `POST /api/retreats/create` y `PATCH /api/retreats/[id]`.
+- Edición en `EditarEventoForm` (misma lógica).
 
-**Storage:** Supabase Storage (bucket `retreat-images`, ya debería existir la política en `004_storage_policies.sql`)
+**Pendiente opcional (mejora UX):**
+- Drag & drop dedicado y **reordenar** arrastrando (hoy el orden sigue el orden de la lista al guardar).
+- Componente `ImageUploader.tsx` extra si se extrae del formulario.
 
-**Flujo:**
-1. Nuevo paso en el wizard (o integrado en paso 0/1) → "Imágenes"
-2. El usuario sube fotos → se guardan en Supabase Storage
-3. Al guardar el evento → se crean registros en `retreat_images` con URLs y `sort_order`
+**Storage:** bucket público `retreat-images` (migraciones `016`, `021`, `025_…_ensure` según entorno).
 
-**Archivos afectados:**
-- `src/app/(public)/es/(dashboard)/mis-eventos/nuevo/NuevoEventoForm.tsx` — añadir paso o sección de imágenes
-- Nuevo componente: `ImageUploader.tsx` (drag & drop, preview, reordenar)
-- `src/app/api/retreats/create/route.ts` — aceptar y guardar imágenes
-- `src/app/api/retreats/[id]/route.ts` — actualizar imágenes al editar
+**Archivos principales:**
+- `src/app/(public)/es/(dashboard)/mis-eventos/nuevo/NuevoEventoForm.tsx`
+- `src/app/(public)/es/(dashboard)/mis-eventos/[id]/EditarEventoForm.tsx`
+- `src/app/api/retreats/create/route.ts`, `src/app/api/retreats/[id]/route.ts`
+- `src/app/(public)/es/retiro/[slug]/page.tsx`, `src/app/(public)/en/retreat/[slug]/page.tsx`
 
 ### 2.2 Programa/agenda del retiro
 
@@ -605,7 +602,7 @@ Sprint 2: Event Builder ────────┐    │                      
 La plataforma está lista para operar con usuarios reales cuando:
 
 - [ ] **Sprint 1 completo** — se pueden hacer reservas con pago real
-- [ ] **Sprint 2 completo** — los organizadores pueden crear eventos completos con fotos
+- [ ] **Sprint 2 completo** — los organizadores pueden crear eventos completos con fotos *(subida portada + galería hasta 8 imágenes y ficha pública: ✅; quedan mejoras opcionales del plan, p. ej. reordenar por drag & drop)*
 - [ ] **Sprint 3 mínimo** — al menos la vista de asistentes real (sin formulario custom, puede ser fase 2)
 - [x] Emails transaccionales funcionando (confirmación, nueva reserva, claims, retiros, mensajes, cancelaciones)
 

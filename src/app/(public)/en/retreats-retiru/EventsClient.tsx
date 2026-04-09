@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Search, SlidersHorizontal, X, MapPin, Star, ChevronDown, CalendarDays, Users, Zap, Flame } from 'lucide-react';
 import type { Retreat, Category, Destination } from '@/types';
+import { getOrganizerReviewStats, organizerHasRatingToShow } from '@/lib/utils';
 
 interface EventsClientProps {
   retreats: Retreat[];
@@ -80,16 +81,16 @@ export default function EventsClientEN({ retreats, categories, destinations }: E
         || r.categories?.some((c) => (c.name_en || c.name_es) === selectedCategory);
       const matchesDestination = selectedDestination === 'All'
         || (r.destination?.name_en || r.destination?.name_es) === selectedDestination;
-      const matchesRating = r.avg_rating >= minRating;
+      const matchesRating = getOrganizerReviewStats(r).avg_rating >= minRating;
       return matchesQuery && matchesCategory && matchesDestination && matchesRating;
     });
 
     switch (sortBy) {
       case 'price_asc': results.sort((a, b) => a.total_price - b.total_price); break;
       case 'price_desc': results.sort((a, b) => b.total_price - a.total_price); break;
-      case 'rating': results.sort((a, b) => b.avg_rating - a.avg_rating); break;
+      case 'rating': results.sort((a, b) => getOrganizerReviewStats(b).avg_rating - getOrganizerReviewStats(a).avg_rating); break;
       case 'date': results.sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime()); break;
-      default: results.sort((a, b) => b.review_count - a.review_count);
+      default: results.sort((a, b) => getOrganizerReviewStats(b).review_count - getOrganizerReviewStats(a).review_count);
     }
     return results;
   }, [query, selectedCategory, selectedDestination, minRating, sortBy, retreats]);
@@ -218,6 +219,8 @@ export default function EventsClientEN({ retreats, categories, destinations }: E
             const categoryLabel = r.categories?.[0]?.name_en || r.categories?.[0]?.name_es || '';
             const spotsLow = r.available_spots <= 4;
             const isInstant = r.confirmation_type === 'automatic';
+            const { avg_rating: orgAvg, review_count: orgReviews } = getOrganizerReviewStats(r);
+            const showOrgRating = organizerHasRatingToShow(r);
 
             return (
               <Link
@@ -246,10 +249,12 @@ export default function EventsClientEN({ retreats, categories, destinations }: E
                     <span className="text-[13px] text-[#7a6b5d] flex items-center gap-1">
                       <MapPin size={13} /> {r.destination?.name_en || r.destination?.name_es || 'Spain'}
                     </span>
-                    <span className="text-[13px] font-semibold flex items-center gap-1">
-                      <Star size={13} className="text-amber-400 fill-amber-400" />
-                      {r.avg_rating.toFixed(1)} <span className="font-normal text-[#7a6b5d]">({r.review_count})</span>
-                    </span>
+                    {showOrgRating && (
+                      <span className="text-[13px] font-semibold flex items-center gap-1" title="Organizer rating">
+                        <Star size={13} className="text-amber-400 fill-amber-400" />
+                        {orgAvg.toFixed(1)} <span className="font-normal text-[#7a6b5d]">({orgReviews})</span>
+                      </span>
+                    )}
                   </div>
                   <h3 className="font-serif text-lg leading-[1.3] mb-2 line-clamp-2 group-hover:text-terracotta-600 transition-colors">{r.title_en || r.title_es}</h3>
                   <p className="text-sm text-[#7a6b5d] line-clamp-2 mb-3">{r.summary_en || r.summary_es}</p>
@@ -293,7 +298,7 @@ export default function EventsClientEN({ retreats, categories, destinations }: E
 
       <div className="mt-6 bg-gradient-to-br from-terracotta-600 to-terracotta-700 rounded-2xl p-8 md:p-10 text-white text-center">
         <h2 className="font-serif text-2xl mb-3">Do you organize yoga, meditation or ayurveda retreats?</h2>
-        <p className="text-white/80 max-w-lg mx-auto mb-6">Publish your retreats and events for free on Retiru. Complete management panel, no commissions.</p>
+        <p className="text-white/80 max-w-lg mx-auto mb-6">Publish with no subscription: 20% of the PVP to Retiru and 80% net to you. Full management panel.</p>
         <Link href="/en/for-organizers#organizers" className="inline-flex bg-white text-terracotta-700 font-bold px-8 py-3 rounded-xl hover:-translate-y-0.5 hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)] transition-all text-sm">Start for free</Link>
       </div>
     </div>

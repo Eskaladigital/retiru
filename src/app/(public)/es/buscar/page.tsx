@@ -7,7 +7,7 @@
 import { Suspense, useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Flame, MapPin, Search, Star, Tag, Zap } from 'lucide-react';
-import { getCenterTypeLabel } from '@/lib/utils';
+import { getCenterTypeLabel, getOrganizerReviewStats, organizerHasRatingToShow } from '@/lib/utils';
 
 const TYPES_FILTER = ['Todos', 'Retiros', 'Centros'];
 const CAT_FILTER = ['Yoga', 'Meditación', 'Ayurveda'];
@@ -78,7 +78,11 @@ function BuscarContent() {
       });
     }
 
-    items.sort((a, b) => (b.avg_rating || 0) - (a.avg_rating || 0));
+    items.sort((a, b) => {
+      const ra = a.kind === 'retiro' ? getOrganizerReviewStats(a).avg_rating : (a.avg_rating ?? 0);
+      const rb = b.kind === 'retiro' ? getOrganizerReviewStats(b).avg_rating : (b.avg_rating ?? 0);
+      return rb - ra;
+    });
     return items;
   }, [query, typeFilter, catFilter, retiros, centros]);
 
@@ -164,6 +168,8 @@ function RetiroCard({ item }: { item: any }) {
     || item.images?.[0]?.url || '';
   const categoryName = item.categories?.[0]?.name_es || '';
   const locationName = item.destination?.name_es || '';
+  const { avg_rating: orgAvg, review_count: orgReviews } = getOrganizerReviewStats(item);
+  const showOrgRating = organizerHasRatingToShow(item);
 
   return (
     <Link href={`/es/retiro/${item.slug}`} className="group bg-white rounded-2xl overflow-hidden border border-sand-200 transition-all duration-[350ms] hover:shadow-elevated hover:-translate-y-1">
@@ -197,10 +203,10 @@ function RetiroCard({ item }: { item: any }) {
               {locationName}
             </span>
           )}
-          {item.avg_rating != null && (
-            <span className="font-semibold inline-flex items-center gap-1">
+          {showOrgRating && (
+            <span className="font-semibold inline-flex items-center gap-1" title="Valoración del organizador">
               <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0" aria-hidden />
-              {item.avg_rating} <span className="font-normal text-[#a09383]">({item.review_count ?? 0})</span>
+              {orgAvg.toFixed(1)} <span className="font-normal text-[#a09383]">({orgReviews})</span>
             </span>
           )}
         </div>

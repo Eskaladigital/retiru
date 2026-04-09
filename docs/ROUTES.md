@@ -12,7 +12,7 @@ Documentación de la arquitectura de rutas y landings.
 | `/es/buscar` | `app/es/(public)/buscar/page.tsx` | Buscador general (retiros + centros) |
 | `/es/retiros-retiru` | `app/es/(public)/retiros-retiru/page.tsx` | Lista retiros (hero + EventosSearch + EventosClient) |
 | `/es/retiros-retiru/[slug]` | `app/es/(public)/retiros-retiru/[slug]/page.tsx` | Retiros por ciudad |
-| `/es/retiro/[slug]` | `app/es/(public)/retiro/[slug]/page.tsx` | Ficha de retiro |
+| `/es/retiro/[slug]` | `app/es/(public)/retiro/[slug]/page.tsx` | Ficha de retiro (portada + galería con todas las `retreat_images` extra; móvil y escritorio) |
 | `/es/centros-retiru` | `app/es/(public)/centros-retiru/page.tsx` | Directorio centros (hero + CentrosClient) |
 | `/es/centros-retiru/[slug]` | `app/es/(public)/centros-retiru/[slug]/page.tsx` | Centros por ciudad |
 | `/es/centro/[slug]` | `app/es/(public)/centro/[slug]/page.tsx` | Ficha de centro |
@@ -39,7 +39,7 @@ Documentación de la arquitectura de rutas y landings.
 | `/en/search` | `app/en/(public)/search/page.tsx` |
 | `/en/retreats-retiru` | `app/en/(public)/retreats-retiru/page.tsx` |
 | `/en/retreats-retiru/[slug]` | `app/en/(public)/retreats-retiru/[slug]/page.tsx` |
-| `/en/retreat/[slug]` | `app/en/(public)/retreat/[slug]/page.tsx` |
+| `/en/retreat/[slug]` | `app/en/(public)/retreat/[slug]/page.tsx` — ficha retiro (portada + galería, equivalente a ES) |
 | `/en/centers-retiru` | `app/en/(public)/centers-retiru/page.tsx` |
 | `/en/centers-retiru/[slug]` | `app/en/(public)/centers-retiru/[slug]/page.tsx` |
 | `/en/center/[slug]` | `app/en/(public)/center/[slug]/page.tsx` |
@@ -91,8 +91,8 @@ Parámetros opcionales en registro: `?redirect=/ruta&claim=true` (redirige tras 
 | `/es/perfil` | `app/es/(dashboard)/perfil/page.tsx` | Datos personales desde `profiles` (Supabase); guardar vía `PATCH /api/profile` |
 | `/es/mis-centros` | `app/es/(dashboard)/mis-centros/page.tsx` | Centros reclamados, propuestas pendientes, reclamar / proponer nuevo |
 | `/es/mis-eventos` | `app/es/(dashboard)/mis-eventos/page.tsx` | Eventos/retiros creados |
-| `/es/mis-eventos/nuevo` | `app/es/(dashboard)/mis-eventos/nuevo/page.tsx` | Wizard para crear evento |
-| `/es/mis-eventos/[id]` | `app/es/(dashboard)/mis-eventos/[id]/page.tsx` | Editar evento existente |
+| `/es/mis-eventos/nuevo` | `app/es/(dashboard)/mis-eventos/nuevo/page.tsx` | Wizard para crear evento (paso Información: portada + hasta 8 fotos vía `POST /api/storage/retreat-images`; IA opcional `POST /api/retreats/generate-cover-image`) |
+| `/es/mis-eventos/[id]` | `app/es/(dashboard)/mis-eventos/[id]/page.tsx` | Editar evento (misma gestión de portada y galería) |
 | `/es/panel/mensajes` | `app/es/(organizer)/panel/mensajes/page.tsx` | Bandeja de mensajes del organizador (+ botón soporte) |
 
 Cualquier usuario logueado (incluido admin) accede a estas secciones desde el menú de usuario.
@@ -143,6 +143,19 @@ Localidades y categorías vienen de la base de datos.
 
 ---
 
+## Valoraciones en listados de retiros
+
+En **cards** de retiros (home “populares”, `/es/retiros-retiru`, `/es/retiros-retiru/[slug]`, `/es/buscar` cuando el ítem es retiro, equivalentes EN, y componentes `EventCard` / `event-card` si se usan en listados):
+
+- Lo que se muestra como estrellas + contador es la **media y el número de reseñas del organizador** (`organizer_profiles`, derivado de `reviews` por `organizer_id`), no el agregado del retiro concreto.
+- Si el organizador **no tiene** reseñas visibles, **no** se renderiza el bloque de valoración (evita mostrar `0.0 (0)`).
+
+En la **ficha** `/es/retiro/[slug]` (y EN): el bloque principal de opiniones corresponde a reseñas del **retiro**; la valoración del organizador se muestra **por separado** (p. ej. en la zona del organizador).
+
+Código de referencia: `getOrganizerReviewStats`, `organizerHasRatingToShow` en `src/lib/utils/index.ts`; listados consumen `organizer` incluido en el `select` de `getPublishedRetreats` (`src/lib/data/index.ts`).
+
+---
+
 ## Carpetas en `src/app/es/(public)`
 
 ### Implementadas
@@ -151,7 +164,7 @@ Localidades y categorías vienen de la base de datos.
 |---------|-----------|
 | `retiros-retiru/` | page.tsx, EventosClient.tsx, [slug]/page.tsx |
 | `centros-retiru/` | page.tsx, CentrosClient.tsx, [slug]/page.tsx |
-| `retiro/[slug]/` | Ficha de retiro |
+| `retiro/[slug]/` | Ficha de retiro (portada + sección galería con el resto de imágenes) |
 | `centro/[slug]/` | Ficha de centro |
 | `buscar/` | Buscador general (retiros + centros) |
 | `destinos/` | Destinos + [slug] |
@@ -182,7 +195,7 @@ Localidades y categorías vienen de la base de datos.
 | `/administrator` | `app/administrator/page.tsx` | Dashboard admin |
 | `/administrator/usuarios` | `app/administrator/usuarios/page.tsx` | Gestión usuarios (+ botón Mensaje para abrir chat de soporte) |
 | `/administrator/organizadores` | `app/administrator/organizadores/page.tsx` | Gestión organizadores (+ botón Mensaje para abrir chat de soporte) |
-| `/administrator/retiros` | `app/administrator/retiros/page.tsx` | Gestión retiros (ver, editar, aprobar, rechazar, cancelar, eliminar) |
+| `/administrator/retiros` | `app/administrator/retiros/page.tsx` | Gestión retiros (ver, editar, aprobar, rechazar, cancelar, eliminar). Query `?filter=pending_review` abre el listado filtrado (p. ej. desde el dashboard admin) |
 | `/administrator/retiros/[id]/editar` | `app/administrator/retiros/[id]/editar/page.tsx` | Editar retiro (admin) |
 | `/administrator/centros` | `app/administrator/centros/page.tsx` | Gestión centros |
 | `/administrator/claims` | `app/administrator/claims/page.tsx` | Gestión claims de centros |
@@ -207,10 +220,11 @@ Protegido por middleware (role=admin). No indexado en buscadores.
 | POST | `/api/admin/retreats` | Aprobar, rechazar, cancelar, archivar o eliminar retiro (admin) |
 | PATCH | `/api/admin/retreats/[id]` | Editar retiro (admin) |
 | POST | `/api/retreats/create` | Crear retiro (auto-crea organizer_profile) |
+| POST | `/api/retreats/generate-cover-image` | Portada IA: cuerpo con **briefing completo** del evento (textos, destino, fechas, categorías, programa, incluidos…); **GPT-4o** genera un único párrafo-prompt en español; **DALL·E 3** (`hd`) la imagen; usuario autenticado; `OPENAI_API_KEY`; bucket `retreat-images` |
 | PATCH | `/api/retreats/[id]` | Actualizar retiro (solo propietario) |
 | POST | `/api/retreats/[id]` | Cancelar retiro (propietario, action=cancel) |
 | DELETE | `/api/retreats/[id]` | Eliminar retiro (propietario, solo sin reservas confirmadas) |
-| POST | `/api/storage/retreat-images` | Subir imagen de evento al bucket `retreat-images` (usuario autenticado; el servidor usa service role para evitar depender del RLS del cliente) |
+| POST | `/api/storage/retreat-images` | Subir una imagen de retiro al bucket `retreat-images` (portada o galería; el cliente puede llamar varias veces hasta el límite del formulario, p. ej. 8 por retiro; usuario autenticado; service role en servidor) |
 | PATCH | `/api/profile` | Actualizar perfil propio (`full_name`, `phone` obligatorio con ≥9 dígitos, `bio`) |
 | GET | `/api/messages/conversations` | Listar conversaciones del usuario |
 | POST | `/api/messages/conversations` | Crear/recuperar conversación sobre un retiro |
@@ -220,7 +234,7 @@ Protegido por middleware (role=admin). No indexado en buscadores.
 | GET | `/api/admin/messages` | Listar todas las conversaciones (admin, incluye soporte) |
 | POST | `/api/admin/messages/support` | Admin crea/obtiene conversación de soporte con un usuario (targetUserId) |
 | DELETE | `/api/admin/messages/[messageId]` | Borrar mensaje (solo admin) |
-| POST | `/api/checkout` | Crear sesión de Stripe Checkout para reservar retiro |
+| POST | `/api/checkout` | Reserva/pago: con `{ retreatId }` crea Stripe Checkout **o** reserva sin pago (`reserved_no_payment`) si el retiro tiene `min_attendees > 1` y aún no se alcanzó el mínimo; respuesta puede incluir `{ reserved: true, bookingId }`. Con `{ bookingId }` (reserva existente) crea sesión Stripe para pagar antes del deadline |
 | POST | `/api/webhooks/stripe` | Webhook Stripe (checkout.session.completed, charge.refunded) |
 | PATCH | `/api/bookings/[id]` | Organizador confirma/rechaza reserva |
 | GET | `/api/bookings/[id]/form` | Obtener formulario post-reserva del asistente |

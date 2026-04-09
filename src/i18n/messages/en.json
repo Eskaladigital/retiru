@@ -55,12 +55,12 @@
     "howStep1Title": "Discover",
     "howStep1Desc": "Explore hundreds of retreats across Spain, filtered by your preferences",
     "howStep2Title": "Book",
-    "howStep2Desc": "Book your spot with one secure payment of the full price. No surprises.",
+    "howStep2Desc": "Book your spot: pay the PVP by card when payment is due, or hold it without paying until the minimum group size is met if the retreat uses that model.",
     "howStep3Title": "Experience",
     "howStep3Desc": "Enjoy the experience. If you cancel and a refund applies, it follows the retreat policy on what you paid.",
     "testimonials": "What our travelers say",
     "ctaOrganizers": "Do you organize retreats?",
-    "ctaOrganizersDesc": "Publish and manage your retreats for free. No commissions. With the most complete panel on the market.",
+    "ctaOrganizersDesc": "Publish with no subscription; 20% of the PVP and 80% net. Full panel to manage retreats and bookings.",
     "ctaOrganizersButton": "Start for free"
   },
   "search": {
@@ -160,11 +160,11 @@
     }
   },
   "forOrganizers": {
-    "heroTitle": "List your retreats for free",
-    "heroSubtitle": "No commissions. No subscriptions. The most complete management panel on the market, completely free.",
+    "heroTitle": "Publish with no listing fee",
+    "heroSubtitle": "No subscription; 20% commission on the PVP (80% net to you). The most complete management panel, with a clear breakdown when you publish.",
     "cta": "Start for free",
-    "benefit1Title": "0% commission",
-    "benefit1Desc": "We charge no commission or subscription. The attendee pays the listed price and you receive the agreed net amount.",
+    "benefit1Title": "No listing fee",
+    "benefit1Desc": "No subscription. The attendee pays the PVP; Retiru retains 20% and you receive 80% net (shown in the form).",
     "benefit2Title": "Complete panel",
     "benefit2Desc": "Dashboard, bookings, CRM, messaging, check-in, analytics. All included.",
     "benefit3Title": "More visibility",

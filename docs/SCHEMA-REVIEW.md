@@ -422,6 +422,15 @@ created_at          timestamptz DEFAULT now()
 | `center_claims` | CenterClaim | ✅ Definido (migración 006) |
 | `claim_tokens` | ClaimToken | ✅ Definido (migración 006) |
 
+**Ampliaciones recientes en `bookings` (migraciones 022–023):**
+
+| Campo / valor | Uso |
+|---------------|-----|
+| `status = 'reserved_no_payment'` | Reserva de plaza sin cobro (retiros con `min_attendees > 1` hasta alcanzar el mínimo) |
+| `payment_deadline` | Fecha límite para pagar tras alcanzar el mínimo (o `null` si no aplica) |
+| `payment_reminder_sent` | Si ya se envió el email de gracia (+24 h) vía cron `payment-deadlines` |
+| Índice parcial `idx_bk_reserved` | Bookings en `reserved_no_payment` con deadline (eficiencia del cron) |
+
 ### Tablas NUEVAS necesarias
 
 | Tabla | Prioridad | Páginas | Estado |
@@ -489,4 +498,10 @@ Nota: `Order.items` está definido como `OrderItem[]` en el tipo, lo que sugiere
 
 ---
 
-*Generado automáticamente. Última revisión: Marzo 2026.*
+## Actualización producto (abril 2026)
+
+- **`retreat_images`:** el organizador puede subir hasta **8** URLs por retiro (bucket `retreat-images` + filas con `is_cover`, `sort_order`). La **ficha pública** (`/es/retiro/[slug]`, `/en/retreat/[slug]`) muestra la portada destacada y un bloque de **galería** con el resto de fotos. Creación/edición: `mis-eventos/nuevo`, `mis-eventos/[id]` y APIs `POST /api/retreats/create`, `PATCH /api/retreats/[id]`.
+
+---
+
+*Generado automáticamente. Última revisión: Marzo 2026 (texto de producto arriba: abril 2026).*

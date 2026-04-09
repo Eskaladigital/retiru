@@ -367,8 +367,9 @@ export default function CentersClientEN({ centers }: CentersClientProps) {
           <p className="text-xs font-bold uppercase tracking-widest text-terracotta-500 mb-2">You might also be interested</p>
           <h3 className="font-serif text-xl md:text-2xl text-foreground mb-2">Does your center organize retreats or events?</h3>
           <p className="text-sm text-[#7a6b5d] leading-relaxed max-w-lg">
-            Beyond your directory listing, you can publish retreats, getaways or workshops for free.
-            Reach thousands of people already looking for experiences like yours.
+            Beyond your directory listing, you can publish retreats, getaways or workshops from your profile with no subscription:
+            paid bookings split the PVP 80% / 20% (net to you / Retiru).{' '}
+            <Link href="/en/condiciones" className="text-terracotta-700 font-semibold underline underline-offset-2 hover:text-terracotta-800">Terms &amp; pricing</Link>.
           </p>
         </div>
         <Link

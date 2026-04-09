@@ -13,7 +13,7 @@ Plataforma web bilingüe (ES/EN) donde las personas descubren y reservan retiros
 | Frontend | Next.js 14 (App Router), React 18, TypeScript |
 | Estilos | Tailwind CSS, Radix UI, Lucide Icons |
 | Backend | Supabase (PostgreSQL, Auth, Storage, Realtime, Edge Functions) |
-| Pagos | Stripe (cobro del 100 % al asistente, payout manual al organizador, reembolsos vía webhooks) |
+| Pagos | Stripe (PVP = precio público por persona; el asistente paga ese importe íntegro; **20 %** comisión Retiru y **80 %** neto para el organizador; cobro 100 % al reservar salvo flujo «mínimo viable»; payout manual; reembolsos vía webhooks) |
 | Emails | Resend |
 | i18n | next-intl (ES base + EN completo) |
 | Formularios | React Hook Form + Zod |
@@ -75,10 +75,14 @@ Copia `.env.example` a `.env.local` y rellena los valores:
 | `RESEND_FROM_EMAIL` | Email remitente (ej: `contacto@retiru.com`) |
 | `NEXT_PUBLIC_APP_URL` | URL base de la app |
 | `NEXT_PUBLIC_APP_NAME` | Nombre de la app (`Retiru`) |
-| `OPENAI_API_KEY` | (opcional) Para generación de descripciones IA |
+| `OPENAI_API_KEY` | (opcional) Descripciones IA, blog, centros y **portadas de eventos**: agente **GPT-4o** sintetiza un dossier completo del evento (destino, fechas, categorías, programa, incluidos…) en un prompt en español; **DALL·E 3** (`hd`, `natural`) genera la imagen (`POST /api/retreats/generate-cover-image`; definir también en Vercel) |
+| `NEXT_PUBLIC_TINYMCE_API_KEY` | (opcional) Clave [Tiny Cloud](https://www.tiny.cloud/) para el editor visual de la **descripción** en crear/editar evento (`/es/mis-eventos/...`). Si está vacía se usa `no-api-key` (solo adecuado en desarrollo; en producción conviene clave y dominio aprobados) |
 | `GOOGLE_PLACES_API_KEY` | (opcional) Para obtener reseñas de Google Places |
+| `CRON_SECRET` | (recomendado en producción) Secreto `Bearer` para `POST /api/cron/*` (p. ej. `payment-deadlines`). Si está vacío, los cron no exigen autorización (solo aceptable en local) |
 
 > **Nota:** Supabase es necesario para que la app muestre retiros, centros, blog y tienda. Sin él, las páginas mostrarán listas vacías.
+
+> **`SUPABASE_SERVICE_ROLE_KEY`:** además de operaciones de servidor habituales, se usa en `POST /api/storage/retreat-images` para subir imágenes de eventos al bucket `retreat-images` sin depender del RLS del cliente.
 
 ---
 
@@ -136,6 +140,7 @@ node scripts/seed-retreats.mjs           # Poblar retiros de ejemplo en Supabase
 node scripts/count-retreats.mjs          # Contar retiros en BD
 node scripts/assign-retreats-to-admin.mjs # Asignar retiros de ejemplo al admin
 npm run retreats:push-alma-nomada        # Contenido ficha Alma Nómada (PDF) → Supabase vía .env.local
+npm run retreats:backfill-covers-ai    # Portadas IA (DALL·E) para retiros sin retreat_images; --dry-run, --limit=N, --replace-ai-covers
 ```
 
 ---
@@ -153,6 +158,7 @@ En esos textos **no** deben figurar **teléfonos móviles ni emails de contacto*
 | Comando | Uso |
 |--------|-----|
 | `npm run retreats:push-alma-nomada` | Actualiza por slug el retiro Alma Nómada según el contenido acordado (PDF 1ª edición): destino Marruecos, textos ES/EN, incluidos, excluidos, `schedule`, meta. |
+| `npm run retreats:backfill-covers-ai` | Igual que la API: dossier completo desde Supabase → **GPT-4o** → DALL·E 3 `hd`. Opciones: `--dry-run`, `--limit=N`, `--replace-ai-covers`. |
 
 Para otro retiro, añadir un script análogo en `scripts/` o generalizar con un JSON + slug (mismo patrón).
 
@@ -220,6 +226,8 @@ Las páginas consumen datos a través de `src/lib/data/index.ts`:
 
 Las APIs `/api/retreats`, `/api/centers` y `/api/catalog` exponen datos para búsqueda y filtros.
 
+**Valoraciones en cards de retiros (listados públicos):** la estrella y el número entre paréntesis reflejan la media y el total de reseñas **del organizador** (`organizer_profiles`, agregadas desde `reviews` por `organizer_id`), no las del retiro concreto — así tiene sentido en ediciones futuras sin reseñas propias. Si el organizador no tiene reseñas visibles, **no se muestra** ese bloque (no se enseña `0.0 (0)`). En la **ficha del retiro** (`/retiro/[slug]`) el bloque principal de opiniones sigue siendo el **de ese retiro** (`retreat_id`); la valoración del organizador aparece **aparte** (p. ej. junto al nombre). Utilidades en código: `getOrganizerReviewStats` y `organizerHasRatingToShow` en `src/lib/utils/index.ts`.
+
 ---
 
 ## Estructura de URLs y landings
@@ -232,7 +240,7 @@ Las APIs `/api/retreats`, `/api/centers` y `/api/catalog` exponen datos para bú
 | `/es/buscar` | Buscador general |
 | `/es/retiros-retiru` | Retiros y escapadas (hero + buscador + lista) |
 | `/es/retiros-retiru/[slug]` | Retiros filtrados por ciudad (ej. `/retiros-retiru/murcia`) |
-| `/es/retiro/[slug]` | Ficha individual de retiro |
+| `/es/retiro/[slug]` | Ficha individual de retiro (portada + galería de fotos) |
 | `/es/centros-retiru` | Directorio de centros (hero + CentrosSearch) |
 | `/es/centros-retiru/[slug]` | Centros filtrados por ciudad (ej. `/centros-retiru/murcia`) |
 | `/es/centro/[slug]` | Ficha individual de centro (ej. `/centro/yoga-sala-madrid`) |
@@ -253,8 +261,8 @@ Las APIs `/api/retreats`, `/api/centers` y `/api/catalog` exponen datos para bú
 | `/es/perfil` | Datos personales, avatar, contraseña |
 | `/es/mis-centros` | Centros reclamados, propuestas pendientes, reclamar o proponer centro nuevo |
 | `/es/mis-eventos` | Lista de eventos/retiros creados |
-| `/es/mis-eventos/nuevo` | Formulario wizard para crear evento |
-| `/es/mis-eventos/[id]` | Editar evento existente |
+| `/es/mis-eventos/nuevo` | Wizard crear evento (portada + hasta 8 fotos / galería, IA opcional) |
+| `/es/mis-eventos/[id]` | Editar evento (misma gestión de imágenes) |
 
 Cualquier usuario logueado (incluido el admin) accede a estas secciones desde el menú de usuario.
 
@@ -262,7 +270,7 @@ Cualquier usuario logueado (incluido el admin) accede a estas secciones desde el
 
 | Ruta | Descripción |
 |------|-------------|
-| `/administrator` | Dashboard admin |
+| `/administrator` | Dashboard admin (KPIs y listas de pendientes desde Supabase) |
 | `/administrator/usuarios` | Gestión de usuarios |
 | `/administrator/organizadores` | Gestión organizadores |
 | `/administrator/retiros` | Gestión retiros (aprobar/rechazar) |
@@ -360,7 +368,11 @@ Sistema de emails automáticos enviados por la plataforma en eventos clave. Todo
 | Email | Destinatario | Cuándo se envía | Disparado por |
 |-------|-------------|----------------|---------------|
 | `sendBookingConfirmedEmail` | Asistente | Tras pagar el 100% (reserva confirmada) | Webhook Stripe / Organizador confirma |
+| `sendReservationConfirmedEmail` | Asistente | Plaza reservada sin pago (`reserved_no_payment`, mínimo viable no alcanzado) | `POST /api/checkout` (flujo reserva sin Stripe) |
 | `sendNewBookingToOrganizerEmail` | Organizador | Cuando recibe una nueva reserva | Webhook Stripe |
+| `sendMinViableReachedEmail` | Asistente | Mínimo de plazas alcanzado: enlace para pagar antes del deadline | Lógica tras nueva reserva en `POST /api/checkout` |
+| `sendMinViableReachedToOrganizerEmail` | Organizador | Mínimo alcanzado: el evento se confirma en cuanto paguen los inscritos | Misma ruta |
+| `sendPaymentDeadlineReminderEmail` | Asistente | Recordatorio tras vencer el primer deadline (+24 h de gracia) | `POST /api/cron/payment-deadlines` |
 | `sendPaymentReminderEmail` | ~~Desactivado~~ | ~~Modelo anterior (pago 80% al organizador)~~ | ~~Cron diario~~ |
 | `sendClaimApprovedEmail` | Usuario (propietario) | Admin aprueba claim de centro | `/api/admin/center-claims` |
 | `sendClaimRejectedEmail` | Usuario (propietario) | Admin rechaza claim de centro | `/api/admin/center-claims` |
@@ -380,10 +392,11 @@ Sistema de emails automáticos enviados por la plataforma en eventos clave. Todo
 | `sendNewCenterProposalEmail` | Admin | Usuario propone un centro nuevo (pendiente revisión) | `/api/centers/propose` |
 | `sendPaymentOverdueToOrganizerEmail` | ~~Desactivado~~ | ~~Modelo anterior (pago 80% al organizador)~~ | ~~Cron diario~~ |
 
-**Total: 17 emails activos** (2 desactivados con modelo de pago completo).
+**Total: 22 emails activos** (2 desactivados del modelo histórico 80 % fuera de plataforma).
 
-**Cron jobs (Vercel):** configurados en `vercel.json`:
-- `0 9 * * *` — (no-op con modelo pago completo; SLA de confirmación se gestiona en webhook)
+**Cron jobs (Vercel):** configurados en `vercel.json` (proteger con `Authorization: Bearer CRON_SECRET` si `CRON_SECRET` está definido):
+- `0 9 * * *` — `payment-reminders` (no-op con pago 100 %)
+- `0 * * * *` — `payment-deadlines` (gracia +24 h y cancelación de reservas `reserved_no_payment` vencidas)
 - `0 10 * * *` — recordatorios pre-evento
 - `0 11 * * *` — solicitudes de reseña post-evento
 
@@ -400,7 +413,7 @@ src/
 │   │   │   │   ├── page.tsx
 │   │   │   │   ├── EventosClient.tsx
 │   │   │   │   └── [slug]/     # Por ciudad (murcia, barcelona...)
-│   │   │   ├── retiro/[slug]/  # Ficha individual de retiro
+│   │   │   ├── retiro/[slug]/  # Ficha retiro: portada + galería (retreat_images)
 │   │   │   ├── centros-retiru/ # Centros (hero + CentrosClient)
 │   │   │   │   ├── page.tsx
 │   │   │   │   ├── CentrosClient.tsx
@@ -615,9 +628,13 @@ Cualquier usuario logueado (incluido el admin) tiene acceso a:
 1. **Mis reservas** — reservas como asistente
 2. **Mi perfil** — datos personales, avatar, contraseña
 3. **Mis centros** — centros reclamados, propuestas en revisión, CTA para reclamar en el directorio o proponer centro nuevo (Google Maps)
-4. **Mis eventos** — retiros/eventos creados; wizard para crear/editar con **plazas máximas** (`max_attendees`) y **mínimo viable** (`min_attendees`): umbral de inscritos a partir del cual el organizador se compromete a celebrar el retiro; en ficha pública se muestra progreso de reservas si el mínimo es mayor que 1
+4. **Mis eventos** — retiros/eventos creados; wizard para crear/editar con **plazas máximas** (`max_attendees`) y **mínimo viable** (`min_attendees`): umbral de inscritos a partir del cual el organizador se compromete a celebrar el retiro; en ficha pública se muestra progreso de reservas si el mínimo es mayor que 1. **Imágenes:** hasta **8** fotos por retiro (`POST /api/storage/retreat-images` + registro en `retreat_images`); una es la **portada** (listados y cabecera de ficha), el resto forman la **galería** visible en la ficha pública; portada opcional con **IA** (dossier del evento → GPT-4o → DALL·E; `POST /api/retreats/generate-cover-image`) o generada al guardar si no hay ninguna foto
 
 El admin tiene además acceso a `/administrator` desde el menú.
+
+### Precio público (PVP) y reparto (organizador / Retiru)
+
+En el wizard de **Mis eventos** el organizador indica el **PVP por persona** (precio público final que ve el asistente en la ficha). **No hay recargo extra** al asistente: paga exactamente ese importe (o reserva sin pago en el flujo de mínimo viable). Del PVP percibido, **Retiru retiene el 20 %** como comisión de gestión y **el organizador recibe el 80 %** neto (liquidación según acuerdo). El formulario muestra el desglose en tiempo real (`OrganizerPriceBreakdown`).
 
 ### Flujo de reserva con mínimo viable ("crowdfunding de plazas")
 
@@ -628,7 +645,7 @@ Cuando un retiro tiene `min_attendees > 1`:
    - Se calcula un deadline de pago: `min(ahora + 72h, start_date - 24h)`.
    - Se envía email a todos los inscritos con enlace de pago y plazo.
    - Se notifica al organizador que el mínimo se ha cumplido y se compromete a celebrar el evento.
-3. **Pago por los inscritos** — Cada inscrito paga vía Stripe antes del deadline. Si paga, su booking pasa a `pending_payment` → Stripe webhook → `confirmed`/`pending_confirmation` (flujo normal).
+3. **Pago por los inscritos** — Cada inscrito paga vía Stripe antes del deadline (`POST /api/checkout` con `bookingId` de su reserva). Si paga, su booking pasa a `pending_payment` → Stripe webhook → `confirmed`/`pending_confirmation` (flujo normal).
 4. **Gracia si no paga** — Si vence el deadline sin pagar, se da +24h extra con un recordatorio por email. Si aún no paga, la reserva se cancela automáticamente (`cancelled_by_attendee`).
 5. **Nuevos asistentes tras el mínimo** — Pagan al instante vía Stripe (flujo estándar).
 
@@ -645,28 +662,28 @@ El cron `/api/cron/payment-deadlines` (cada hora) gestiona la gracia y cancelaci
 ## Funcionalidades principales
 
 ### Front público
-- **Homepage** con H1 "Centros y retiros de yoga, meditación y ayurveda", sección "Dos mundos, un solo lugar" (Directorio + Retiros), HeroSearch (toggle Retiros/Centros), centros destacados, retiros populares y destinos desde Supabase; bloque **Tienda** solo si hay filas en `shop_products` con `is_available`
-- **Retiros** (`/retiros-retiru`): hero + buscador (texto, destino, fechas) + lista con filtros — datos desde Supabase
-- **Retiros por ciudad** (`/retiros-retiru/[slug]`): retiros filtrados por destino/ciudad
-- **Ficha de retiro** (`/retiro/[slug]`): galería, desglose de pagos, reseñas, CTA sticky — datos desde Supabase
+- **Homepage** con H1 "Centros y retiros de yoga, meditación y ayurveda", sección "Dos mundos, un solo lugar" (Directorio + Retiros), HeroSearch (toggle Retiros/Centros), centros destacados, retiros populares (en cards: valoración del **organizador** si tiene reseñas) y destinos desde Supabase; bloque **Tienda** solo si hay filas en `shop_products` con `is_available`
+- **Retiros** (`/retiros-retiru`): hero + buscador (texto, destino, fechas) + lista con filtros; filtros/orden por valoración usan datos del **organizador** — Supabase
+- **Retiros por ciudad** (`/retiros-retiru/[slug]`): retiros filtrados por destino/ciudad (misma lógica de estrellas en card que el listado general)
+- **Ficha de retiro** (`/retiro/[slug]`): **portada** + **galería del retiro** (todas las fotos extra de `retreat_images`, hasta 8 en creación/edición); precio (PVP), progreso si hay mínimo viable, **reseñas del retiro** + valoración del organizador en cabecera, CTA sticky — Supabase
 - **Centros** (`/centros-retiru`): hero + CentrosSearch (texto, tipo, ciudad) + directorio con filtros — datos desde Supabase
 - **Centros por ciudad** (`/centros-retiru/[slug]`): centros filtrados por ciudad
 - **Ficha de centro** (`/centro/[slug]`): galería, servicios, horarios, contacto — datos desde Supabase
-- **Organizador** (`/organizador/[slug]`): perfil público con retiros publicados
-- **Buscador** (`/buscar`): búsqueda unificada retiros + centros con filtros
+- **Organizador** (`/organizador/[slug]`): perfil público con retiros publicados (en cada retiro del grid solo se muestra valoración si el organizador tiene reseñas)
+- **Buscador** (`/buscar`): búsqueda unificada retiros + centros con filtros (tarjetas de retiro: valoración del organizador cuando aplica)
 - **Blog** (`/blog`, `/blog/[slug]`): artículos desde Supabase
 - **Tienda** (`/tienda`, `/tienda/[slug]`): productos desde Supabase
 - **Para centros y organizadores** (`/para-organizadores`): secciones centros + organizadores
 - **Condiciones** (`/condiciones`): modelo de precios transparente (en footer)
 
 ### Dashboard de usuario (cualquier usuario logueado)
-- **Mis reservas**: reservas como asistente con estados visuales (datos desde BD)
+- **Mis reservas**: reservas como asistente con estados visuales; reservas `reserved_no_payment` con botón para pagar cuando corresponda (datos desde BD)
 - **Mensajes**: bandeja de conversaciones con organizadores + botón "Contactar soporte" para chat con admin
 - **Mi perfil**: datos personales, avatar, contraseña
 - **Mis centros**: centros reclamados y propuestas pendientes; reclamar desde el directorio o proponer centro nuevo
 - **Mis eventos**: lista de retiros/eventos creados con imagen, estado, ocupación
-  - Wizard de creación en 4 pasos (Información, Detalles, Incluye, Precio)
-  - Edición de eventos existentes con publicación desde borrador
+  - Wizard de creación en 5 pasos (Información —incluye portada y galería—, Detalles, Programa, Incluye, Precio)
+  - Edición de eventos existentes con publicación desde borrador; mismas opciones de **portada + galería** (hasta 8 imágenes)
   - Auto-creación de `organizer_profile` al crear el primer evento
 - **"Reclama tu centro"**: botón en cada ficha pública de centro + link mágico en email de bienvenida
 
@@ -689,7 +706,7 @@ El cron `/api/cron/payment-deadlines` (cada hora) gestiona la gracia y cancelaci
 - **Mobile-first**, limpio, premium pero accesible
 - **Paleta cálida**: terracotta, verde salvia, blanco roto, arena
 - **Tipografía**: DM Serif Display (títulos) + DM Sans (cuerpo)
-- Precio único claro (sin desglose de comisiones al asistente)
+- Precio único claro para el asistente (PVP); el desglose 80/20 solo se explica al organizador en el formulario y en páginas legales/informativas
 
 ---
 

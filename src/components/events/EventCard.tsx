@@ -8,7 +8,7 @@ import { Calendar, MapPin, Star, Zap, Users } from 'lucide-react';
 import type { Retreat } from '@/types';
 import type { Locale } from '@/i18n/config';
 import { getLocalized, getDictionary } from '@/i18n';
-import { formatPrice, formatDateRange } from '@/lib/utils';
+import { formatPrice, formatDateRange, getOrganizerReviewStats, organizerHasRatingToShow } from '@/lib/utils';
 
 interface EventCardProps {
   event: Retreat;
@@ -29,6 +29,8 @@ export default function EventCard({ event, locale }: EventCardProps) {
   const spotsLeft = event.available_spots;
   const isLastSpots = spotsLeft > 0 && spotsLeft <= 3;
   const isSoldOut = spotsLeft <= 0;
+  const { avg_rating: orgAvg, review_count: orgReviews } = getOrganizerReviewStats(event);
+  const showOrgRating = organizerHasRatingToShow(event);
 
   return (
     <Link href={link} className="group">
@@ -61,11 +63,11 @@ export default function EventCard({ event, locale }: EventCardProps) {
             )}
           </div>
           {/* Rating overlay */}
-          {event.avg_rating > 0 && (
-            <div className="absolute bottom-3 right-3 flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold backdrop-blur-sm">
+          {showOrgRating && (
+            <div className="absolute bottom-3 right-3 flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold backdrop-blur-sm" title={locale === 'es' ? 'Valoración del organizador' : 'Organizer rating'}>
               <Star size={12} className="fill-terracotta-500 text-terracotta-500" />
-              {event.avg_rating.toFixed(1)}
-              <span className="text-muted-foreground">({event.review_count})</span>
+              {orgAvg.toFixed(1)}
+              <span className="text-muted-foreground">({orgReviews})</span>
             </div>
           )}
         </div>

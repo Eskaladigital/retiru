@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { MapPin, Star, CalendarDays, Users } from 'lucide-react';
 import EventosSearch from '@/components/home/EventosSearch';
 import { getDestinationsWithRetreats, getDestinationBySlug, getPublishedRetreats } from '@/lib/data';
+import { getOrganizerReviewStats, organizerHasRatingToShow } from '@/lib/utils';
 
 export const revalidate = 3600;
 
@@ -86,6 +87,8 @@ export default async function RetirosPorDestinoPage({ params }: { params: Promis
               const coverImg = r.images?.find((i: any) => i.is_cover)?.url || r.images?.[0]?.url || '';
               const destName = r.destination?.name_es || dest.name_es;
               const spotsLow = (r.available_spots ?? 0) <= 3 && (r.available_spots ?? 0) > 0;
+              const { avg_rating: orgAvg, review_count: orgReviews } = getOrganizerReviewStats(r);
+              const showOrgRating = organizerHasRatingToShow(r);
               return (
                 <Link
                   key={r.id}
@@ -110,10 +113,10 @@ export default async function RetirosPorDestinoPage({ params }: { params: Promis
                   <div className="p-5">
                     <div className="flex items-center justify-between mb-2.5">
                       <span className="text-[13px] text-[#7a6b5d] flex items-center gap-1"><MapPin size={13} /> {destName}</span>
-                      {(r.avg_rating ?? 0) > 0 && (
-                        <span className="text-[13px] font-semibold flex items-center gap-1">
-                          <Star size={13} className="text-amber-400 fill-amber-400" /> {r.avg_rating}
-                          {(r.review_count ?? 0) > 0 && <span className="font-normal text-[#7a6b5d]">({r.review_count})</span>}
+                      {showOrgRating && (
+                        <span className="text-[13px] font-semibold flex items-center gap-1" title="Valoración del organizador">
+                          <Star size={13} className="text-amber-400 fill-amber-400" /> {orgAvg.toFixed(1)}
+                          <span className="font-normal text-[#7a6b5d]">({orgReviews})</span>
                         </span>
                       )}
                     </div>

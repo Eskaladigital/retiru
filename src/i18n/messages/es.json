@@ -55,12 +55,12 @@
     "howStep1Title": "Descubre",
     "howStep1Desc": "Explora cientos de retiros en toda España, filtrados por tus preferencias",
     "howStep2Title": "Reserva",
-    "howStep2Desc": "Reserva tu plaza con un solo pago seguro del precio completo. Sin sorpresas.",
+    "howStep2Desc": "Reserva tu plaza: pagas el PVP con tarjeta cuando toca el cobro, o sin pago hasta alcanzar el mínimo de plazas si el retiro lo tiene.",
     "howStep3Title": "Vive",
     "howStep3Desc": "Disfruta de la experiencia. Si cancelas y te corresponde reembolso, se aplica sobre lo que pagaste según la política del retiro.",
     "testimonials": "Lo que dicen nuestros viajeros",
     "ctaOrganizers": "¿Organizas retiros?",
-    "ctaOrganizersDesc": "Publica y gestiona tus retiros gratis. Sin comisiones. Con el panel más completo del mercado.",
+    "ctaOrganizersDesc": "Publica sin suscripción; 20 % sobre el PVP y 80 % neto. Panel completo para gestionar retiros y reservas.",
     "ctaOrganizersButton": "Empieza gratis"
   },
   "search": {
@@ -160,11 +160,11 @@
     }
   },
   "forOrganizers": {
-    "heroTitle": "Publica tus retiros gratis",
-    "heroSubtitle": "Sin comisiones. Sin suscripciones. El panel de gestión más completo del mercado, completamente gratuito.",
+    "heroTitle": "Publica tus retiros sin cuota fija",
+    "heroSubtitle": "Sin suscripción; comisión del 20 % sobre el PVP (80 % neto para ti). El panel de gestión más completo, con desglose claro al publicar.",
     "cta": "Empieza gratis",
-    "benefit1Title": "0% comisión",
-    "benefit1Desc": "No te cobramos comisión ni suscripción. El asistente paga el precio publicado y tú recibes el neto acordado.",
+    "benefit1Title": "Sin cuota de publicación",
+    "benefit1Desc": "Sin suscripción. El asistente paga el PVP; Retiru retiene el 20 % y tú cobras el 80 % neto (visible en el formulario).",
     "benefit2Title": "Panel completo",
     "benefit2Desc": "Dashboard, reservas, CRM, mensajería, check-in, analíticas. Todo incluido.",
     "benefit3Title": "Más visibilidad",

@@ -349,8 +349,9 @@ export default function CentrosClient({ centers }: CentrosClientProps) {
           <p className="text-xs font-bold uppercase tracking-widest text-terracotta-500 mb-2">También te puede interesar</p>
           <h3 className="font-serif text-xl md:text-2xl text-foreground mb-2">¿Tu centro organiza retiros o escapadas?</h3>
           <p className="text-sm text-[#7a6b5d] leading-relaxed max-w-lg">
-            Si además de estar en el directorio quieres publicar retiros, escapadas o talleres, 
-            puedes hacerlo gratis desde tu perfil. Llegarás a miles de personas que ya buscan experiencias como las tuyas.
+            Si además de estar en el directorio quieres publicar retiros, escapadas o talleres,
+            hazlo desde tu perfil sin suscripción: las reservas pagadas reparten el PVP 80 % / 20 % (neto para ti / Retiru).{' '}
+            <Link href="/es/condiciones" className="text-terracotta-700 font-semibold underline underline-offset-2 hover:text-terracotta-800">Condiciones y precios</Link>.
           </p>
         </div>
         <Link

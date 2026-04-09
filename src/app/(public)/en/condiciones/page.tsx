@@ -32,7 +32,7 @@ export default function CondicionesPageEn() {
             How charges work
           </h2>
           <p className="text-[15px] leading-relaxed text-foreground mb-4">
-            The organizer sets the total price of the retreat (minimum €50). That&apos;s the price you see on the retreat page. When booking, <strong>you pay 100% of the price by card</strong> via Stripe in a single step. No additional payments needed.
+            The organizer sets the <strong>PVP</strong> (listed price per person, minimum €50): that is what you see on the page, with <strong>no extra surcharges</strong>. For most retreats, when booking <strong>you pay 100% of the PVP by card</strong> via Stripe in one step. If the retreat has a minimum group size that is not yet met, you may reserve a spot without paying until the minimum is reached; you will then receive a link to pay within the stated deadline.
           </p>
 
           <div className="bg-sand-100 rounded-2xl p-6 md:p-8">
@@ -40,9 +40,9 @@ export default function CondicionesPageEn() {
               <div className="flex gap-4">
                 <div className="w-10 h-10 rounded-full bg-sage-100 text-sage-700 flex items-center justify-center font-bold shrink-0">✓</div>
                 <div>
-                  <h3 className="font-semibold text-foreground mb-1">Single payment when booking</h3>
+                  <h3 className="font-semibold text-foreground mb-1">Payment when booking (or after minimum is met)</h3>
                   <p className="text-[15px] text-muted-foreground leading-relaxed">
-                    The full amount is charged by card via Stripe. Your spot is confirmed instantly (or pending organizer confirmation, depending on the retreat). No surprises or later payments.
+                    When immediate payment applies, you pay the full PVP by card (Stripe) in one step. If the retreat has a minimum group size that is not yet met, you first hold a spot without paying and pay the PVP within the deadline we send you. No hidden surcharges on the listed price.
                   </p>
                 </div>
               </div>
@@ -55,18 +55,18 @@ export default function CondicionesPageEn() {
             How Retiru is funded
           </h2>
           <p className="text-[15px] leading-relaxed text-foreground mb-4">
-            Retiru charges a commission included in the price set by the organizer. This is how we fund the platform, support and development.
+            Retiru charges a <strong>20%</strong> commission included in the PVP set by the organizer (who receives <strong>80%</strong> net). This is how we fund the platform, support and development.
           </p>
 
           <div className="bg-terracotta-50 border border-terracotta-100 rounded-2xl p-6 md:p-8">
             <ul className="space-y-3 text-[15px] leading-relaxed">
               <li className="flex gap-3">
                 <span className="text-terracotta-600 font-bold">•</span>
-                <span><strong>The organizer pays no direct commission:</strong> publishing and managing retreats is free. Retiru retains its commission from the total price set by the organizer.</span>
+                <span><strong>No subscription to publish:</strong> there is no fixed fee for the dashboard. Retiru&apos;s fee is <strong>20% of the PVP</strong> paid by the guest; the organizer receives <strong>80% net</strong>.</span>
               </li>
               <li className="flex gap-3">
                 <span className="text-terracotta-600 font-bold">•</span>
-                <span><strong>The attendee pays the listed price.</strong> No extra fees or hidden costs.</span>
+                <span><strong>The attendee pays the listed PVP</strong> (no surcharges on top). If the retreat has a minimum group size, they may hold a spot without paying until it is met, then pay within the deadline.</span>
               </li>
               <li className="flex gap-3">
                 <span className="text-terracotta-600 font-bold">•</span>

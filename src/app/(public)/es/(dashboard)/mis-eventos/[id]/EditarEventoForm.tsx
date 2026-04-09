@@ -1,8 +1,14 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Upload, X } from 'lucide-react';
+
+const TinyRetreatDescriptionEditor = dynamic(
+  () => import('@/components/editor/TinyRetreatDescriptionEditor').then((m) => m.TinyRetreatDescriptionEditor),
+  { ssr: false, loading: () => <div className="min-h-[320px] bg-sand-100 animate-pulse rounded-xl border border-sand-200" /> },
+);
+import { Upload, X, Sparkles } from 'lucide-react';
 import { OrganizerPriceBreakdown } from '@/components/organizer/OrganizerPriceBreakdown';
 
 interface Option { id: string; name: string; slug: string }
@@ -27,6 +33,80 @@ async function uploadRetreatImageViaApi(file: File): Promise<string> {
     throw new Error(msg.startsWith('Error') ? msg : `Error al subir una imagen: ${msg}`);
   }
   if (!data.publicUrl) throw new Error('No se obtuvo URL pública tras la subida.');
+  return data.publicUrl;
+}
+
+function buildCoverImagePayloadFromEdit(
+  form: {
+    title_es: string;
+    title_en: string;
+    summary_es: string;
+    summary_en: string;
+    description_es: string;
+    description_en: string;
+    start_date: string;
+    end_date: string;
+    destination_id: string;
+    address: string;
+    categories: string[];
+    includes_es: string[];
+    languages: string[];
+  },
+  retreatSchedule: unknown,
+  categoryOptions: Option[],
+  destinationOptions: Option[],
+): Record<string, unknown> {
+  const destination_label = destinationOptions.find((d) => d.id === form.destination_id)?.name;
+  const category_labels = form.categories
+    .map((id) => categoryOptions.find((c) => c.id === id)?.name)
+    .filter((n): n is string => Boolean(n));
+
+  const sched = Array.isArray(retreatSchedule) ? retreatSchedule : [];
+  const schedulePayload = sched.slice(0, 8).map((d: Record<string, unknown>) => {
+    const itemsRaw = Array.isArray(d.items) ? d.items : [];
+    const items = itemsRaw.map((it: Record<string, unknown>) => ({
+      time: typeof it.time === 'string' ? it.time : '',
+      title_es: typeof it.title_es === 'string' ? it.title_es : '',
+      activity: typeof it.activity === 'string' ? it.activity : '',
+    }));
+    return {
+      day: typeof d.day === 'number' ? d.day : undefined,
+      title_es: typeof d.title_es === 'string' ? d.title_es : typeof d.title === 'string' ? d.title : '',
+      items,
+    };
+  });
+
+  return {
+    title_es: form.title_es,
+    title_en: form.title_en.trim() || undefined,
+    summary_es: form.summary_es,
+    summary_en: form.summary_en.trim() || undefined,
+    description_es: form.description_es,
+    description_en: form.description_en.trim() || undefined,
+    destination_id: form.destination_id || undefined,
+    destination_label: destination_label || undefined,
+    address: form.address.trim() || undefined,
+    start_date: form.start_date || undefined,
+    end_date: form.end_date || undefined,
+    category_ids: form.categories,
+    category_labels,
+    includes_es: form.includes_es.filter(Boolean),
+    schedule: schedulePayload.some((d) => d.items?.length) ? schedulePayload : undefined,
+    languages: form.languages?.length ? form.languages : undefined,
+  };
+}
+
+async function fetchGeneratedCoverUrl(payload: Record<string, unknown>): Promise<string> {
+  const res = await fetch('/api/retreats/generate-cover-image', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  const data = (await res.json().catch(() => ({}))) as { error?: string; publicUrl?: string };
+  if (!res.ok) {
+    throw new Error(data.error || `Error al generar la imagen (${res.status})`);
+  }
+  if (!data.publicUrl) throw new Error('No se obtuvo URL de la imagen generada.');
   return data.publicUrl;
 }
 
@@ -56,6 +136,7 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [generatingCover, setGeneratingCover] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [acting, setActing] = useState(false);
@@ -194,6 +275,15 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
   }
 
   async function buildImagesPayload(): Promise<{ url: string; is_cover: boolean }[]> {
+    if (images.length === 0) {
+      const publicUrl = await fetchGeneratedCoverUrl(
+        buildCoverImagePayloadFromEdit(form, retreat.schedule, categories, destinations),
+      );
+      const one: LocalImage = { url: publicUrl, preview: publicUrl, is_cover: true };
+      setImages([one]);
+      return [{ url: publicUrl, is_cover: true }];
+    }
+
     const uploaded: { url: string; is_cover: boolean }[] = [];
     const updatedLocal: LocalImage[] = [];
 
@@ -216,6 +306,29 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
 
     setImages(updatedLocal);
     return uploaded;
+  }
+
+  async function handleGenerateCoverAi() {
+    if (!form.title_es.trim() || !form.summary_es.trim() || !form.description_es.trim()) {
+      setError('Completa título, resumen y descripción para generar la portada con IA.');
+      return;
+    }
+    if (images.length >= 8) return;
+    setError('');
+    setGeneratingCover(true);
+    try {
+      const publicUrl = await fetchGeneratedCoverUrl(
+        buildCoverImagePayloadFromEdit(form, retreat.schedule, categories, destinations),
+      );
+      setImages((prev) => {
+        const demoted = prev.map((img) => ({ ...img, is_cover: false }));
+        return [{ url: publicUrl, preview: publicUrl, is_cover: true }, ...demoted];
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo generar la imagen.');
+    } finally {
+      setGeneratingCover(false);
+    }
   }
 
   async function handleSave(publish: boolean = false) {
@@ -300,12 +413,23 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
       </div>
       <div>
         <label className="block text-sm font-medium text-foreground mb-1.5">Descripción (ES) *</label>
-        <textarea rows={6} value={form.description_es} onChange={(e) => set('description_es', e.target.value)} className={textareaCls} />
+        <TinyRetreatDescriptionEditor
+          id={`retreat-desc-${retreat.id}-es`}
+          value={form.description_es}
+          onChange={(html) => set('description_es', html)}
+        />
+        <p className="text-xs text-[#a09383] mt-1.5 leading-relaxed">
+          Editor visual (TinyMCE). Clave opcional:{' '}
+          <code className="text-[11px] bg-sand-100 px-1 rounded">NEXT_PUBLIC_TINYMCE_API_KEY</code> en <code className="text-[11px] bg-sand-100 px-1 rounded">.env.local</code>
+          . No incluyas teléfonos ni emails en la descripción.
+        </p>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-foreground mb-1.5">Imágenes del evento</label>
-        <p className="text-xs text-[#a09383] mb-3">Hasta 8 imágenes. Marca portada o sube nuevas; se guardan al pulsar «Guardar cambios».</p>
+        <label className="block text-sm font-medium text-foreground mb-1.5">Portada y galería del retiro</label>
+        <p className="text-xs text-[#a09383] mb-3">
+          <strong className="text-foreground">Portada</strong>: la etiqueta «PORTADA» marca la foto principal (listados y cabecera de la ficha). <strong className="text-foreground">Galería</strong>: el resto de fotos (hasta 8 en total) se muestran en la ficha pública bajo «Galería del retiro». Puedes generar la portada con IA o subir JPG, PNG o WebP. Si no queda ninguna imagen, al guardar se creará una portada con IA.
+        </p>
         {images.length > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
             {images.map((img, i) => (
@@ -331,15 +455,34 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
           </div>
         )}
         {images.length < 8 && (
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="w-full border-2 border-dashed border-sand-300 rounded-xl p-6 flex flex-col items-center gap-2 text-[#a09383] hover:border-terracotta-400 hover:text-terracotta-600 transition-colors"
-          >
-            <Upload size={22} />
-            <span className="text-sm font-medium">Añadir imágenes</span>
-            <span className="text-xs">{images.length}/8</span>
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex-1 border-2 border-dashed border-sand-300 rounded-xl p-6 flex flex-col items-center gap-2 text-[#a09383] hover:border-terracotta-400 hover:text-terracotta-600 transition-colors"
+            >
+              <Upload size={22} />
+              <span className="text-sm font-medium">Añadir imágenes</span>
+              <span className="text-xs">{images.length}/8</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleGenerateCoverAi}
+              disabled={
+                generatingCover ||
+                !form.title_es.trim() ||
+                !form.summary_es.trim() ||
+                !form.description_es.trim()
+              }
+              className="flex-1 border-2 border-dashed border-terracotta-200 bg-terracotta-50/40 rounded-xl p-6 flex flex-col items-center gap-2 text-terracotta-800 hover:border-terracotta-400 hover:bg-terracotta-50 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+            >
+              <Sparkles size={22} className="text-terracotta-600" />
+              <span className="text-sm font-medium">
+                {generatingCover ? 'Generando…' : 'Generar portada con IA'}
+              </span>
+              <span className="text-xs text-center text-[#7a6b5d]">DALL·E · foto editorial</span>
+            </button>
+          </div>
         )}
         <input
           ref={fileInputRef}
@@ -376,10 +519,11 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-foreground mb-1.5">Precio por persona (€) *</label>
+        <label className="block text-sm font-medium text-foreground mb-1.5">PVP por persona (€) *</label>
         <input type="number" min="50" value={form.total_price} onChange={(e) => set('total_price', e.target.value)} className={`${inputCls} max-w-xs`} />
         <p className="text-xs text-[#7a6b5d] mt-1.5 leading-relaxed max-w-2xl">
-          Precio <strong className="text-foreground">público y final</strong> que paga cada asistente en Retiru. La comisión de la plataforma va incluida; el desglose indica tu ingreso neto y lo que corresponde a Retiru (20&nbsp;%).
+          <strong className="text-foreground">PVP</strong> = lo que paga el público por plaza en Retiru (sin cargos extra en checkout).
+          Tú percibes <strong className="text-foreground">solo el 80&nbsp;%</strong> (0,8 de cada euro); el <strong className="text-foreground">20&nbsp;%</strong> (0,2 de cada euro) es comisión Retiru. Ver desglose debajo.
         </p>
       </div>
       <div className="mt-3">

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { MapPin, Calendar, Users, Star, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { formatPrice, formatDateRange } from "@/lib/utils";
+import { formatPrice, formatDateRange, getOrganizerReviewStats, organizerHasRatingToShow } from "@/lib/utils";
 import type { Retreat, Locale } from "@/types";
 import { getLocalized as localized } from "@/i18n";
 
@@ -19,6 +19,8 @@ export function EventCard({ event, locale }: EventCardProps) {
   const destinationName = event.destination ? localized(event.destination, "name", locale) : null;
 
   const href = locale === "es" ? `/es/retiro/${event.slug}` : `/en/retreat/${event.slug}`;
+  const { avg_rating: orgAvg, review_count: orgReviews } = getOrganizerReviewStats(event);
+  const showOrgRating = organizerHasRatingToShow(event);
 
   return (
     <Card hover className="group">
@@ -90,9 +92,9 @@ export function EventCard({ event, locale }: EventCardProps) {
             <span className="flex items-center gap-1">
               <Users className="h-3.5 w-3.5" /> {event.available_spots} {locale === "es" ? "plazas" : "spots"}
             </span>
-            {event.avg_rating > 0 && (
-              <span className="flex items-center gap-1 text-terracotta-600">
-                <Star className="h-3.5 w-3.5 fill-current" /> {event.avg_rating} ({event.review_count})
+            {showOrgRating && (
+              <span className="flex items-center gap-1 text-terracotta-600" title={locale === "es" ? "Valoración del organizador" : "Organizer rating"}>
+                <Star className="h-3.5 w-3.5 fill-current" /> {orgAvg.toFixed(1)} ({orgReviews})
               </span>
             )}
           </div>

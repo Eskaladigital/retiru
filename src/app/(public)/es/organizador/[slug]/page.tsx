@@ -106,7 +106,9 @@ export default async function OrganizadorPage({ params }: { params: Promise<{ sl
                     <h3 className="font-serif text-lg leading-[1.3] mb-2">{r.title_es as string}</h3>
                     <p className="text-sm text-[#7a6b5d] mb-3">
                       📅 {fmt(r.start_date as string)}–{fmt(r.end_date as string)} · {r.duration_days as number} días
-                      {(r.avg_rating as number | null) != null && <> · ⭐ {(r.avg_rating as number).toFixed(1)} ({r.review_count as number})</>}
+                      {(organizer.review_count ?? 0) > 0 && (
+                        <> · ⭐ {organizer.avg_rating?.toFixed(1)} ({organizer.review_count})</>
+                      )}
                     </p>
                     <div className="pt-3 border-t border-sand-200">
                       <span className="text-xs text-[#a09383] uppercase tracking-wider font-semibold">Desde</span>

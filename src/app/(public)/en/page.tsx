@@ -8,7 +8,7 @@ import { Brain, Flame, Flower2, Leaf, ShoppingBag, Sparkles, Star, Zap } from 'l
 import { homeEN } from '@/lib/seo/page-metadata';
 import { ImageWithFallback } from '@/components/ui/image-with-fallback';
 import { getCategories, getDestinations, getHomeShopProducts, getPublishedRetreats } from '@/lib/data';
-import { filterPublicRetreatCategories } from '@/lib/utils';
+import { filterPublicRetreatCategories, getOrganizerReviewStats, organizerHasRatingToShow } from '@/lib/utils';
 
 export const metadata: Metadata = homeEN;
 
@@ -250,6 +250,8 @@ export default async function HomePageEN() {
                 const dates = `${dateFmt.format(new Date(r.start_date))}–${dateFmt.format(new Date(r.end_date))} · ${r.duration_days} days`;
                 const spotsLow = r.available_spots <= 5;
                 const instant = r.confirmation_type === 'automatic';
+                const { avg_rating: orgAvg, review_count: orgReviews } = getOrganizerReviewStats(r);
+                const showOrgRating = organizerHasRatingToShow(r);
                 return (
                 <Link key={r.slug} href={`/en/retreat/${r.slug}`} className="group bg-white rounded-2xl overflow-hidden border border-sand-200 transition-all duration-[350ms] hover:shadow-elevated hover:-translate-y-1 hover:border-sand-300">
                   <div className="relative aspect-[16/10] overflow-hidden">
@@ -270,7 +272,9 @@ export default async function HomePageEN() {
                   <div className="p-5">
                     <div className="flex items-center justify-between mb-2.5">
                       <span className="text-[13px] text-[#7a6b5d] flex items-center gap-1"><IconPin /> {location}</span>
-                      <span className="text-[13px] font-semibold text-foreground flex items-center gap-1"><IconStar /> {r.avg_rating.toFixed(1)} <span className="font-normal text-[#7a6b5d]">({r.review_count})</span></span>
+                      {showOrgRating && (
+                        <span className="text-[13px] font-semibold text-foreground flex items-center gap-1" title="Organizer rating"><IconStar /> {orgAvg.toFixed(1)} <span className="font-normal text-[#7a6b5d]">({orgReviews})</span></span>
+                      )}
                     </div>
                     <h3 className="font-serif text-xl leading-[1.3] mb-2 line-clamp-2">{r.title_en || r.title_es}</h3>
                     <div className="text-sm text-[#7a6b5d] mb-4 flex items-center gap-1.5">
@@ -301,7 +305,7 @@ export default async function HomePageEN() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-6">
               {[
                 { n: 1, t: 'Explore', d: 'Browse our center directory or discover retreats by destination, date or discipline.' },
-                { n: 2, t: 'Book your spot', d: 'Pay the full retreat price in one secure card payment (Stripe). Your place is handled through the platform.' },
+                { n: 2, t: 'Book your spot', d: 'Pay the listed PVP by card when payment is due, or hold a spot without paying until the minimum group size is met if the retreat uses that model. All through the platform.' },
                 { n: 3, t: 'Coordinate', d: 'Chat directly with the organizer. Fill in the questionnaire and prepare your experience.' },
                 { n: 4, t: 'Live the experience', d: 'Enjoy the experience. Cancellation refunds, when they apply, follow the retreat policy on what you paid.' },
               ].map(({ n, t, d }) => (
@@ -323,7 +327,7 @@ export default async function HomePageEN() {
                 <div className="flex justify-between items-center py-2.5 border-t border-sand-200"><span className="text-[15px] flex items-center gap-2">Payment to organizer <span className="text-[11px] font-semibold uppercase tracking-wider bg-sage-100 text-sage-700 px-2 py-0.5 rounded-full">Organizer</span></span><span className="text-lg font-bold">400€</span></div>
                 <div className="flex justify-between items-center pt-4 mt-2 border-t-2 border-foreground"><span className="text-base font-semibold">Total retreat price</span><span className="text-2xl font-bold">500€</span></div>
               </div>
-              <p className="text-center text-sm text-[#7a6b5d] leading-relaxed"><strong className="text-foreground">You pay €500 in a single charge.</strong> Of that, Retiru retains €100 (commission) and transfers €400 to the organizer per the settlement agreement. No hidden fees or separate second payment.</p>
+              <p className="text-center text-sm text-[#7a6b5d] leading-relaxed"><strong className="text-foreground">€500 is the PVP</strong> (listed price per person). <strong className="text-foreground">You pay that amount in one charge</strong> when payment is due at booking. Of that, Retiru retains €100 (20% fee) and transfers €400 (80% net) to the organizer. No hidden surcharges on top of the PVP.</p>
             </div>
           </div>
         </section>
@@ -427,15 +431,15 @@ export default async function HomePageEN() {
             <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-sage-800 to-sage-900 px-10 py-16 md:px-16 md:py-20 text-white">
               <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle at 25% 25%, white 1px, transparent 1px), radial-gradient(circle at 75% 75%, white 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
               <div className="relative z-10 max-w-[600px]">
-                <div className="inline-flex items-center gap-1.5 bg-white/15 border border-white/20 px-4 py-1.5 rounded-full text-[13px] font-semibold tracking-wide mb-6">100% free for organizers</div>
-                <h2 className="font-serif text-[clamp(28px,4vw,42px)] text-white mb-4">Organize retreats? Publish for free.</h2>
-                <p className="text-[17px] text-white/80 leading-[1.7] mb-8">No commissions, no subscriptions. Get a complete professional dashboard to manage your events, bookings, attendees, messaging and much more. All free.</p>
+                <div className="inline-flex items-center gap-1.5 bg-white/15 border border-white/20 px-4 py-1.5 rounded-full text-[13px] font-semibold tracking-wide mb-6">No subscription · 80/20 on the PVP</div>
+                <h2 className="font-serif text-[clamp(28px,4vw,42px)] text-white mb-4">Organize retreats? Publish with no listing fee.</h2>
+                <p className="text-[17px] text-white/80 leading-[1.7] mb-8">Full professional dashboard with no subscription. On each paid booking, a 20% fee is included in the PVP the guest pays and you receive 80% net, with a breakdown when you create the retreat.</p>
                 <div className="grid grid-cols-2 gap-4 mb-8">
-                  {['0% commission', 'Full dashboard', 'Attendee CRM', 'QR Check-in', 'Integrated messaging', 'Analytics'].map((f) => (
+                  {['20% / 80% transparent', 'Full dashboard', 'Attendee CRM', 'QR Check-in', 'Integrated messaging', 'Analytics'].map((f) => (
                     <div key={f} className="flex items-center gap-2.5 text-sm font-medium"><div className="w-6 h-6 bg-white/15 rounded-full flex items-center justify-center shrink-0"><IconCheck /></div>{f}</div>
                   ))}
                 </div>
-                <Link href="/en/for-organizers" className="inline-flex items-center gap-2 bg-white text-sage-800 font-bold text-base px-8 py-3.5 rounded-xl hover:-translate-y-0.5 hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)] transition-all">Start publishing for free <IconChevron /></Link>
+                <Link href="/en/for-organizers" className="inline-flex items-center gap-2 bg-white text-sage-800 font-bold text-base px-8 py-3.5 rounded-xl hover:-translate-y-0.5 hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)] transition-all">How it works for organizers <IconChevron /></Link>
               </div>
             </div>
           </div>

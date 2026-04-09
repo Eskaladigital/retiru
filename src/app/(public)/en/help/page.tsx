@@ -10,7 +10,7 @@ const SECTIONS = [
     items: [
       {
         q: 'How does booking work?',
-        a: 'You pay the full retreat price in one secure card payment (Stripe). Retiru handles the booking and the agreed split with the organizer.',
+        a: 'For most retreats you pay the PVP (listed price per person) in one secure card payment (Stripe). If the retreat has a minimum group size that is not yet met, you can hold a spot without paying until it is reached; you then get a link to pay by the deadline. Retiru handles the booking and the split with the organizer (20% commission / 80% net to the organizer, no extra surcharge to you).',
       },
       {
         q: 'Can I cancel my booking?',
@@ -30,8 +30,8 @@ const SECTIONS = [
     title: 'For organizers',
     items: [
       {
-        q: 'Is it free to publish?',
-        a: "Yes, 100%. We don't charge organizers commission or subscription. Our revenue comes from the management fee included in the price the attendee pays when booking.",
+        q: 'How much does it cost to list retreats?',
+        a: "There is no subscription or listing fee. Retiru's commission (20% of the PVP) is included in what the guest pays; you receive 80% net, with no surcharges on top of the listed price.",
       },
       {
         q: 'How do I start publishing retreats?',
@@ -39,11 +39,15 @@ const SECTIONS = [
       },
       {
         q: 'How do I get paid?',
-        a: 'The attendee pays the full amount through the platform. Retiru retains its commission and transfers your net amount according to the settlement terms in place.',
+        a: 'The attendee pays the PVP through the platform when payment is due (or holds a spot without payment until the minimum group size is met, if you set one). Retiru retains 20% and transfers 80% net according to the settlement terms in place.',
       },
       {
         q: 'Are my retreats reviewed?',
         a: 'Your first retreat is reviewed to ensure quality (24-48h). Once verified as an organizer, subsequent retreats are published directly.',
+      },
+      {
+        q: 'Can I generate the cover image with AI?',
+        a: 'Yes. When creating or editing an event you can upload up to eight photos: one is the cover (listings and hero on the retreat page) and the rest show in the public gallery. You can use "Generate cover with AI" for a photorealistic image (DALL·E) from your title and copy. If you upload no images, saving generates a cover automatically when OpenAI is configured on the server.',
       },
     ],
   },

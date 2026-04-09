@@ -19,8 +19,8 @@ const VALUES = [
 const STATS = [
   { value: '500+', label: 'Retreats in Spain' },
   { value: '9', label: 'Featured destinations' },
-  { value: '0%', label: 'Commission for organizers' },
-  { value: '100%', label: 'Single upfront payment' },
+  { value: '20%', label: 'Retiru fee (on the PVP)' },
+  { value: '80%', label: 'Organizer net' },
 ];
 
 export default function AboutPageEN() {
@@ -223,26 +223,26 @@ export default function AboutPageEN() {
           <span className="text-xs font-bold uppercase tracking-[0.12em] text-terracotta-600">How pricing works</span>
           <h2 className="font-serif text-2xl md:text-3xl text-foreground mt-3 mb-2">Our model</h2>
           <p className="text-[15px] text-[#7a6b5d] leading-relaxed mb-8">
-            You pay the listed price once at booking. One step, no follow-up payments, no hidden fees.
+            The price on the page is the <strong className="text-foreground">PVP</strong> per person. For most retreats you pay it when booking; with a minimum group size you may hold a spot without paying until the minimum is met. No hidden surcharges on the PVP.
           </p>
           <div className="grid sm:grid-cols-2 gap-4 mb-6">
             <div className="rounded-2xl bg-white border border-sand-200 p-5 md:p-6">
               <p className="font-serif text-3xl text-sage-700 font-bold tabular-nums">100%</p>
-              <p className="font-semibold text-foreground mt-2">Single payment at booking</p>
+              <p className="font-semibold text-foreground mt-2">PVP when you book (when due)</p>
               <p className="text-sm text-[#7a6b5d] mt-2 leading-relaxed">
-                Pay the full price by card. Your spot is instantly confirmed. No extra steps.
+                Pay the listed price by card in one step (or within the deadline if you started as a no-payment hold). No extra booking fee at checkout.
               </p>
             </div>
             <div className="rounded-2xl bg-white border border-sand-200 p-5 md:p-6">
-              <p className="font-serif text-3xl text-terracotta-600 font-bold tabular-nums">€0</p>
-              <p className="font-semibold text-foreground mt-2">Free for organizers</p>
+              <p className="font-serif text-3xl text-terracotta-600 font-bold tabular-nums">80/20</p>
+              <p className="font-semibold text-foreground mt-2">Split of the PVP</p>
               <p className="text-sm text-[#7a6b5d] mt-2 leading-relaxed">
-                Publishing retreats is free. No commissions or subscriptions. Retiru is funded through a share already included in the price.
+                No subscription to publish. On each sale the organizer receives 80% net and Retiru 20%, included in the PVP the guest pays.
               </p>
             </div>
           </div>
           <p className="text-[15px] text-[#7a6b5d] leading-[1.8] mb-4">
-            Publishing retreats and using the organizer dashboard costs nothing: no commissions or subscription for people who create experiences.
+            Listing and the dashboard have no fixed fee: we use a sales commission (20% / 80%) with a clear breakdown when you create a retreat.
           </p>
           <p className="text-sm text-[#7a6b5d]">
             <Link href="/en/condiciones" className="text-terracotta-700 font-medium underline underline-offset-2 hover:text-terracotta-800">
@@ -258,7 +258,7 @@ export default function AboutPageEN() {
         <div className="bg-gradient-to-br from-terracotta-600 to-terracotta-700 rounded-3xl p-10 md:p-14 text-center text-white">
           <h2 className="font-serif text-2xl md:text-3xl mb-3">Ready for your next step?</h2>
           <p className="text-white/85 mb-8 max-w-xl mx-auto leading-relaxed">
-            Browse retreats or explore the directory of yoga, meditation and ayurveda centres. If you host experiences, the dashboard is free.
+            Browse retreats or explore the directory of yoga, meditation and ayurveda centres. If you host experiences, there is no subscription; sales are split 80% / 20% on the PVP.
           </p>
           <div className="flex flex-col sm:flex-row flex-wrap gap-3 justify-center">
             <Link href="/en/search" className="inline-flex items-center justify-center gap-2 bg-white text-terracotta-700 font-semibold px-8 py-3.5 rounded-xl hover:bg-white/90 transition-colors">

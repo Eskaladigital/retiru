@@ -37,11 +37,11 @@ export default function TerminosPageEn() {
             <ul className="space-y-3 text-[15px] leading-relaxed">
               <li className="flex gap-3">
                 <span className="text-terracotta-600 font-bold shrink-0">1.</span>
-                <span><strong>The organizer sets the total price</strong> of the retreat (minimum €50). That&apos;s the price you see on the retreat page.</span>
+                <span><strong>The organizer sets the PVP</strong> (listed price per person, minimum €50). That&apos;s what you see on the retreat page, with no surcharges added at checkout.</span>
               </li>
               <li className="flex gap-3">
                 <span className="text-terracotta-600 font-bold shrink-0">2.</span>
-                <span><strong>When you book, you pay the full price in one step</strong> by card via Stripe. Retiru settles the net amount to the organizer under our payout agreement—no second payment, no separate transfer.</span>
+                <span><strong>When payment is due, you pay the PVP by card</strong> via Stripe in one step (or within the deadline if you had reserved without payment until a minimum group size was met). Retiru settles the organizer&apos;s net share under our payout agreement—no second platform fee.</span>
               </li>
               <li className="flex gap-3">
                 <span className="text-terracotta-600 font-bold shrink-0">3.</span>
@@ -68,7 +68,9 @@ export default function TerminosPageEn() {
             </div>
 
             <p className="mt-4 text-sm text-muted-foreground">
-              The organizer pays no commission or subscription to publish. Retiru is funded by the commission included in the price the attendee pays when booking.
+              There is no subscription to publish. Retiru retains <strong>20%</strong> of the PVP paid by the guest; the organizer receives <strong>80%</strong> net. See our{' '}
+              <Link href="/en/condiciones" className="text-terracotta-600 hover:underline font-medium">Terms &amp; pricing</Link>{' '}
+              for detail and examples.
             </p>
           </div>
         </section>
@@ -78,7 +80,7 @@ export default function TerminosPageEn() {
             Bookings and confirmation
           </h2>
           <p className="text-[15px] leading-relaxed text-muted-foreground mb-4">
-            When you book, your spot is secured after the full payment is completed. If the retreat requires manual confirmation, the organizer has a deadline (default 48h) to confirm or reject. If it has instant confirmation, your spot is confirmed immediately.
+            When you book, your spot is secured after the required payment is completed (immediate PVP payment, or payment by the deadline after a no-payment hold when a minimum group size applies). If the retreat requires manual confirmation, the organizer has a deadline (default 48h) to confirm or reject. If it has instant confirmation, your spot is confirmed immediately.
           </p>
         </section>
 

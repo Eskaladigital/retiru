@@ -75,7 +75,7 @@ export function OrganizadoresTableClient({ organizers }: { organizers: Organizer
               const badge = STATUS_BADGE[o.status] || STATUS_BADGE.pending;
               const date = o.joined ? new Date(o.joined).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
               return (
-                <tr key={o.id} className="border-b border-sand-100 hover:bg-sand-50/50">
+                <tr key={o.id} id={`org-${o.id}`} className="border-b border-sand-100 hover:bg-sand-50/50 scroll-mt-24">
                   <td className="py-3 px-4 font-medium">
                     <a href={`/es/organizador/${o.slug}`} target="_blank" rel="noopener" className="text-terracotta-600 hover:underline">
                       {o.name}

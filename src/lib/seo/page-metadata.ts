@@ -9,7 +9,7 @@ import type { Metadata } from 'next';
 
 export const homeES: Metadata = generatePageMetadata({
   title: 'Retiru — Retiros y centros de yoga, meditación y ayurveda en España',
-  description: 'Descubre y reserva retiros y eventos de yoga, meditación y ayurveda en España. Directorio de centros especializado y tienda. Sin comisiones para organizadores.',
+  description: 'Descubre y reserva retiros y eventos de yoga, meditación y ayurveda en España. Directorio de centros y tienda. Organizadores: sin suscripción; 20 % sobre el PVP, 80 % neto.',
   locale: 'es',
   path: '/es',
   altPath: '/en',
@@ -63,8 +63,8 @@ export const shopES: Metadata = generatePageMetadata({
 });
 
 export const forOrganizersES: Metadata = generatePageMetadata({
-  title: 'Para centros y organizadores — Únete a Retiru gratis',
-  description: 'Centros de yoga, meditación y ayurveda: aparece en nuestro directorio gratis. Organizadores: publica y gestiona retiros con un panel completo sin comisiones.',
+  title: 'Para centros y organizadores — Retiru',
+  description: 'Centros de yoga, meditación y ayurveda: directorio sin cuota de alta. Organizadores: panel completo sin suscripción; 20 % comisión sobre el PVP (80 % neto).',
   locale: 'es',
   path: '/es/para-organizadores',
   altPath: '/en/for-organizers',
@@ -127,7 +127,7 @@ export const registerES: Metadata = generatePageMetadata({
 
 export const homeEN: Metadata = generatePageMetadata({
   title: 'Retiru — Yoga, meditation & ayurveda retreats and centers in Spain',
-  description: 'Discover and book yoga, meditation and ayurveda retreats and events in Spain. Specialized center directory and shop. Free for organizers.',
+  description: 'Discover and book yoga, meditation and ayurveda retreats and events in Spain. Center directory and shop. Organizers: no subscription; 20% on the PVP, 80% net.',
   locale: 'en',
   path: '/en',
   altPath: '/es',
@@ -176,8 +176,8 @@ export const shopEN: Metadata = generatePageMetadata({
 });
 
 export const forOrganizersEN: Metadata = generatePageMetadata({
-  title: 'For centers & organizers — Join Retiru for free',
-  description: 'Yoga, meditation and ayurveda centers: list in our directory for free. Organizers: publish and manage retreats with a complete panel. No commissions.',
+  title: 'For centers & organizers — Retiru',
+  description: 'Yoga, meditation and ayurveda centers: list in our directory with no listing fee. Organizers: full panel with no subscription; 20% commission on the PVP (80% net).',
   locale: 'en',
   path: '/en/for-organizers',
   altPath: '/es/para-organizadores',

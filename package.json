@@ -33,7 +33,8 @@
     "blog:translate-en": "node scripts/translate-blog-articles-en.mjs",
     "blog:import-csv": "node scripts/import-blog-csv.mjs",
     "blog:import-csv:push": "node scripts/import-blog-csv.mjs --push",
-    "retreats:push-alma-nomada": "node scripts/push-alma-nomada-content.mjs"
+    "retreats:push-alma-nomada": "node scripts/push-alma-nomada-content.mjs",
+    "retreats:backfill-covers-ai": "node scripts/backfill-retreat-covers-ai.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -50,6 +51,7 @@
     "@stripe/stripe-js": "^4.4.0",
     "@supabase/ssr": "^0.5.0",
     "@supabase/supabase-js": "^2.45.0",
+    "@tinymce/tinymce-react": "^6.3.0",
     "@tiptap/extension-image": "^3.20.0",
     "@tiptap/extension-link": "^3.20.0",
     "@tiptap/extension-placeholder": "^3.20.0",
@@ -76,6 +78,7 @@
     "sonner": "^1.5.0",
     "stripe": "^16.8.0",
     "tailwind-merge": "^2.5.0",
+    "tinymce": "^8.4.0",
     "xlsx": "^0.18.5",
     "zod": "^3.23.0"
   },

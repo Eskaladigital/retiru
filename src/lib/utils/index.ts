@@ -4,7 +4,7 @@
 
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import type { Category } from '@/types';
+import type { Category, Retreat } from '@/types';
 
 /** Merge Tailwind classes without conflicts */
 export function cn(...inputs: ClassValue[]) {
@@ -207,4 +207,22 @@ export function getBookingStatusColor(status: string): string {
     no_show: 'bg-gray-100 text-gray-600',
   };
   return colors[status] || 'bg-gray-100 text-gray-800';
+}
+
+/** Media y número de reseñas del organizador (para cards de listado, no del retiro concreto). */
+export function getOrganizerReviewStats(r: Pick<Retreat, 'organizer'>): {
+  avg_rating: number;
+  review_count: number;
+} {
+  const o = r.organizer;
+  return {
+    avg_rating: typeof o?.avg_rating === 'number' ? o.avg_rating : 0,
+    review_count: typeof o?.review_count === 'number' ? o.review_count : 0,
+  };
+}
+
+/** Cards de listado: no mostrar 0.0 (0); solo si el organizador tiene valoración útil. */
+export function organizerHasRatingToShow(r: Pick<Retreat, 'organizer'>): boolean {
+  const { avg_rating, review_count } = getOrganizerReviewStats(r);
+  return review_count > 0 || avg_rating > 0;
 }

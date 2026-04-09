@@ -6,7 +6,7 @@ const es = {
   // ─── Meta ───────────────────────────────────────────────────────
   meta: {
     title: 'Retiru — Retiros y Escapadas en España',
-    description: 'Descubre y reserva los mejores retiros de yoga, meditación, naturaleza y wellness en España. Sin comisiones para organizadores.',
+    description: 'Descubre y reserva los mejores retiros de yoga, meditación, naturaleza y wellness en España. Organizadores: sin suscripción; 20 % sobre el PVP, 80 % neto.',
   },
 
   // ─── Navigation ─────────────────────────────────────────────────
@@ -45,12 +45,12 @@ const es = {
     step1Title: 'Explora',
     step1Desc: 'Busca entre cientos de retiros por categoría, destino, fechas o precio.',
     step2Title: 'Reserva tu plaza',
-    step2Desc: 'Paga el precio completo con tarjeta y tu plaza queda confirmada al instante.',
+    step2Desc: 'Pagas el PVP (precio publicado) con tarjeta cuando toca el cobro, o reservas sin pago si el retiro tiene mínimo de plazas y aún no se ha alcanzado.',
     step3Title: 'Vive la experiencia',
     step3Desc: 'Desconecta, reconecta y transforma. Tu retiro te espera.',
     testimonialsTitle: 'Lo que dicen nuestros viajeros',
     ctaTitle: '¿Tienes un centro o organizas retiros?',
-    ctaSubtitle: 'Aparece en nuestro directorio o publica tus retiros gratis. Sin comisiones, sin suscripciones.',
+    ctaSubtitle: 'Directorio de centros o publica retiros sin cuota fija: sin suscripción; comisión del 20 % sobre el PVP y 80 % neto para ti.',
     ctaButton: 'Empieza gratis',
   },
 
@@ -183,16 +183,16 @@ const es = {
   // ─── Organizer Landing ──────────────────────────────────────────
   forOrganizers: {
     heroTitle: 'Haz crecer tu proyecto con Retiru',
-    heroSubtitle: 'Si tienes un centro de bienestar o organizas retiros, Retiru es tu plataforma. Sin comisiones. Sin suscripciones.',
+    heroSubtitle: 'Si tienes un centro de bienestar o organizas retiros, Retiru es tu plataforma. Sin suscripción para publicar; 20 % del PVP para Retiru y 80 % neto para ti (sin recargo extra al asistente).',
     ctaButton: 'Descubre cómo',
-    benefit1Title: '0% comisión',
-    benefit1Desc: 'No te cobramos nada. Ni comisión por reserva, ni suscripción mensual, ni costes ocultos.',
+    benefit1Title: 'Sin cuota de publicación',
+    benefit1Desc: 'No pagas suscripción ni alta. Sobre cada venta, el 20 % del PVP es comisión Retiru y tú cobras el 80 % neto, con el desglose en el formulario.',
     benefit2Title: 'Panel de gestión completo',
     benefit2Desc: 'Reservas, asistentes, mensajería, check-in, analíticas — todo en un solo lugar.',
     benefit3Title: 'Visibilidad garantizada',
     benefit3Desc: 'Llega a miles de buscadores de retiros en España y el mundo. SEO optimizado.',
     benefit4Title: 'Cobro seguro',
-    benefit4Desc: 'Tus asistentes pagan el precio publicado en un solo pago. Retiru retiene su comisión y te liquida el neto según el acuerdo.',
+    benefit4Desc: 'Tus asistentes pagan el PVP publicado (o reservan sin pago hasta el mínimo de plazas, si lo configuras). Retiru retiene el 20 % y te liquida el 80 % neto según el acuerdo.',
     howTitle: '¿Cómo funciona para ti?',
     step1: 'Crea tu perfil de organizador y verifícate',
     step2: 'Publica tus retiros con nuestro wizard paso a paso',

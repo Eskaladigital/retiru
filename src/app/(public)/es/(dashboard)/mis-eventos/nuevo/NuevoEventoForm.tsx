@@ -1,8 +1,14 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Upload, X, GripVertical, Plus, Trash2 } from 'lucide-react';
+
+const TinyRetreatDescriptionEditor = dynamic(
+  () => import('@/components/editor/TinyRetreatDescriptionEditor').then((m) => m.TinyRetreatDescriptionEditor),
+  { ssr: false, loading: () => <div className="min-h-[320px] bg-sand-100 animate-pulse rounded-xl border border-sand-200" /> },
+);
+import { Upload, X, GripVertical, Plus, Trash2, Sparkles } from 'lucide-react';
 import { OrganizerPriceBreakdown } from '@/components/organizer/OrganizerPriceBreakdown';
 
 interface Option { id: string; name: string; slug: string }
@@ -40,6 +46,78 @@ async function uploadRetreatImageViaApi(file: File): Promise<string> {
   return data.publicUrl;
 }
 
+function buildCoverImagePayload(
+  form: {
+    title_es: string;
+    title_en: string;
+    summary_es: string;
+    summary_en: string;
+    description_es: string;
+    description_en: string;
+    start_date: string;
+    end_date: string;
+    destination_id: string;
+    address: string;
+    categories: string[];
+    includes_es: string[];
+    excludes_es: string[];
+    languages: string[];
+  },
+  schedule: ScheduleDay[],
+  categoryOptions: Option[],
+  destinationOptions: Option[],
+): Record<string, unknown> {
+  const destination_label = destinationOptions.find((d) => d.id === form.destination_id)?.name;
+  const category_labels = form.categories
+    .map((id) => categoryOptions.find((c) => c.id === id)?.name)
+    .filter((n): n is string => Boolean(n));
+
+  const schedulePayload = schedule
+    .filter((d) => d.items.some((it) => it.activity))
+    .slice(0, 8)
+    .map((d) => ({
+      day: d.day,
+      title_es: d.title,
+      items: d.items
+        .filter((it) => it.activity)
+        .map((it) => ({ time: it.time, activity: it.activity })),
+    }));
+
+  return {
+    title_es: form.title_es,
+    title_en: form.title_en.trim() || undefined,
+    summary_es: form.summary_es,
+    summary_en: form.summary_en.trim() || undefined,
+    description_es: form.description_es,
+    description_en: form.description_en.trim() || undefined,
+    destination_id: form.destination_id || undefined,
+    destination_label: destination_label || undefined,
+    address: form.address.trim() || undefined,
+    start_date: form.start_date || undefined,
+    end_date: form.end_date || undefined,
+    category_ids: form.categories,
+    category_labels,
+    includes_es: form.includes_es.filter(Boolean),
+    excludes_es: form.excludes_es.filter(Boolean),
+    schedule: schedulePayload.length ? schedulePayload : undefined,
+    languages: form.languages?.length ? form.languages : undefined,
+  };
+}
+
+async function fetchGeneratedCoverUrl(payload: Record<string, unknown>): Promise<string> {
+  const res = await fetch('/api/retreats/generate-cover-image', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  const data = (await res.json().catch(() => ({}))) as { error?: string; publicUrl?: string };
+  if (!res.ok) {
+    throw new Error(data.error || `Error al generar la imagen (${res.status})`);
+  }
+  if (!data.publicUrl) throw new Error('No se obtuvo URL de la imagen generada.');
+  return data.publicUrl;
+}
+
 const inputCls = 'w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all';
 const textareaCls = `${inputCls} resize-none`;
 
@@ -67,6 +145,7 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [generatingCover, setGeneratingCover] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
@@ -209,6 +288,15 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
   }
 
   async function uploadImages(): Promise<{ url: string; is_cover: boolean }[]> {
+    if (images.length === 0) {
+      const publicUrl = await fetchGeneratedCoverUrl(
+        buildCoverImagePayload(form, schedule, categories, destinations),
+      );
+      const one = { url: publicUrl, preview: publicUrl, is_cover: true as const };
+      setImages([one]);
+      return [{ url: publicUrl, is_cover: true }];
+    }
+
     const uploaded: { url: string; is_cover: boolean }[] = [];
     const updatedLocal: typeof images = [];
 
@@ -231,6 +319,29 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
 
     setImages(updatedLocal);
     return uploaded;
+  }
+
+  async function handleGenerateCoverAi() {
+    if (!form.title_es.trim() || !form.summary_es.trim() || !form.description_es.trim()) {
+      setError('Completa título, resumen y descripción para generar la portada con IA.');
+      return;
+    }
+    if (images.length >= 8) return;
+    setError('');
+    setGeneratingCover(true);
+    try {
+      const publicUrl = await fetchGeneratedCoverUrl(
+        buildCoverImagePayload(form, schedule, categories, destinations),
+      );
+      setImages((prev) => {
+        const demoted = prev.map((img) => ({ ...img, is_cover: false }));
+        return [{ url: publicUrl, preview: publicUrl, is_cover: true }, ...demoted];
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo generar la imagen.');
+    } finally {
+      setGeneratingCover(false);
+    }
   }
 
   type CreateOk = { ok: true; id: string; isVerifiedOrganizer: boolean };
@@ -526,7 +637,17 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
             </div>
             <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">Descripción completa (ES) *</label>
-              <textarea rows={6} value={form.description_es} onChange={(e) => set('description_es', e.target.value)} placeholder="Describe tu evento en detalle: qué ofreces, a quién va dirigido, qué lo hace especial..." className={textareaCls} />
+              <TinyRetreatDescriptionEditor
+                id="retreat-desc-new-es"
+                value={form.description_es}
+                onChange={(html) => set('description_es', html)}
+                placeholder="Describe tu evento: qué ofreces, a quién va dirigido, qué lo hace especial…"
+              />
+              <p className="text-xs text-[#a09383] mt-1.5 leading-relaxed">
+                Editor visual (TinyMCE). En la ficha pública se verá con títulos, listas y enlaces. Para producción, registra tu dominio en Tiny Cloud y define{' '}
+                <code className="text-[11px] bg-sand-100 px-1 rounded">NEXT_PUBLIC_TINYMCE_API_KEY</code> en <code className="text-[11px] bg-sand-100 px-1 rounded">.env.local</code>
+                {' '}(mientras tanto se usa una clave de desarrollo). No incluyas teléfonos ni emails en la descripción.
+              </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">Categorías</label>
@@ -547,10 +668,16 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
               </div>
             </div>
 
-            {/* Images */}
+            {/* Portada + galería */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Imágenes del evento</label>
-              <p className="text-xs text-[#a09383] mb-3">Sube hasta 8 imágenes. La primera será la portada. Formatos: JPG, PNG, WebP.</p>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Portada y galería del retiro</label>
+              <p className="text-xs text-[#a09383] mb-3">
+                <strong className="text-foreground">Portada</strong>: la imagen con la etiqueta «PORTADA» es la principal (listados y cabecera de la ficha). Puedes subir fotos o generar la portada con IA.
+                {' '}
+                <strong className="text-foreground">Galería</strong>: añade hasta 8 fotos en total; el resto aparecerán en la sección «Galería del retiro» en la ficha pública. Usa «Portada» en cada miniatura para cambiar cuál es la principal.
+                {' '}
+                Si no subes ninguna imagen, al guardar se generará solo la portada con IA. Formatos: JPG, PNG, WebP.
+              </p>
 
               {images.length > 0 && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
@@ -578,15 +705,34 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
               )}
 
               {images.length < 8 && (
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full border-2 border-dashed border-sand-300 rounded-xl p-8 flex flex-col items-center gap-2 text-[#a09383] hover:border-terracotta-400 hover:text-terracotta-600 transition-colors"
-                >
-                  <Upload size={24} />
-                  <span className="text-sm font-medium">Subir imágenes</span>
-                  <span className="text-xs">{images.length}/8 imágenes</span>
-                </button>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex-1 border-2 border-dashed border-sand-300 rounded-xl p-8 flex flex-col items-center gap-2 text-[#a09383] hover:border-terracotta-400 hover:text-terracotta-600 transition-colors"
+                  >
+                    <Upload size={24} />
+                    <span className="text-sm font-medium">Subir imágenes</span>
+                    <span className="text-xs">{images.length}/8 imágenes</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleGenerateCoverAi}
+                    disabled={
+                      generatingCover ||
+                      !form.title_es.trim() ||
+                      !form.summary_es.trim() ||
+                      !form.description_es.trim()
+                    }
+                    className="flex-1 border-2 border-dashed border-terracotta-200 bg-terracotta-50/40 rounded-xl p-8 flex flex-col items-center gap-2 text-terracotta-800 hover:border-terracotta-400 hover:bg-terracotta-50 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                  >
+                    <Sparkles size={24} className="text-terracotta-600" />
+                    <span className="text-sm font-medium">
+                      {generatingCover ? 'Generando…' : 'Generar portada con IA'}
+                    </span>
+                    <span className="text-xs text-center text-[#7a6b5d]">DALL·E · foto tipo editorial</span>
+                  </button>
+                </div>
               )}
               <input
                 ref={fileInputRef}
@@ -774,10 +920,11 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
         {step === 4 && (
           <>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Precio por persona (€) *</label>
+              <label className="block text-sm font-medium text-foreground mb-1.5">PVP por persona (€) *</label>
               <input type="number" min="50" value={form.total_price} onChange={(e) => set('total_price', e.target.value)} placeholder="790" className={`${inputCls} max-w-xs`} />
               <p className="text-xs text-[#7a6b5d] mt-1.5 leading-relaxed max-w-2xl">
-                Es el precio <strong className="text-foreground">público y final</strong> por asistente (lo que pagan en Retiru). La comisión de la plataforma está incluida en esa cifra; el desglose muestra tu parte y la de Retiru.
+                <strong className="text-foreground">PVP</strong> = precio de venta público: lo que paga cada asistente en Retiru (no se suma nada más en el pago).
+                Tú cobras <strong className="text-foreground">solo el 80&nbsp;%</strong> de ese importe; el <strong className="text-foreground">20&nbsp;%</strong> es comisión de Retiru. El desglose lo detalla.
               </p>
             </div>
             <div className="mt-3">

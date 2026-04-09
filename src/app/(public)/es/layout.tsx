@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     default: 'Retiru — Retiros y centros de yoga, meditación y ayurveda',
     template: '%s | Retiru',
   },
-  description: 'Descubre y reserva retiros y eventos de yoga, meditación y ayurveda en España. Directorio de centros especializado y tienda. Sin comisiones para organizadores.',
+  description: 'Descubre y reserva retiros y eventos de yoga, meditación y ayurveda en España. Directorio de centros y tienda. Organizadores: sin suscripción; comisión del 20 % sobre el PVP (80 % neto para ti).',
   metadataBase: new URL(SITE_URL),
   applicationName: 'Retiru',
   authors: [{ name: 'Retiru', url: SITE_URL }],

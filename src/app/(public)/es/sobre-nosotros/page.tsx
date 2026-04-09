@@ -17,8 +17,8 @@ const VALUES = [
 const STATS = [
   { value: '500+', label: 'Retiros en España' },
   { value: '9', label: 'Destinos destacados' },
-  { value: '0 %', label: 'Comisión al organizador' },
-  { value: '1', label: 'Pago único, sin sorpresas' },
+  { value: '20 %', label: 'Comisión Retiru (sobre el PVP)' },
+  { value: '80 %', label: 'Neto organizador' },
 ];
 
 export default function SobreNosotrosPage() {
@@ -222,26 +222,26 @@ export default function SobreNosotrosPage() {
           <span className="text-xs font-bold uppercase tracking-[0.12em] text-terracotta-600">Cómo funciona el precio</span>
           <h2 className="font-serif text-2xl md:text-3xl text-foreground mt-3 mb-2">Nuestro modelo</h2>
           <p className="text-[15px] text-[#7a6b5d] leading-relaxed mb-8">
-            Reservas y pagas el precio completo en un solo paso. Sin pagos adicionales ni sorpresas.
+            El precio de la ficha es el <strong className="text-foreground">PVP</strong> por persona. En la mayoría de retiros pagas ese importe al reservar; si hay mínimo de plazas, a veces reservas primero sin pagar hasta cumplir el mínimo. Sin recargos ocultos sobre el PVP.
           </p>
           <div className="grid sm:grid-cols-2 gap-4 mb-6">
             <div className="rounded-2xl bg-white border border-sand-200 p-5 md:p-6">
               <p className="font-serif text-3xl text-sage-700 font-bold tabular-nums">100 %</p>
-              <p className="font-semibold text-foreground mt-2">Un solo pago al reservar</p>
+              <p className="font-semibold text-foreground mt-2">PVP al reservar (cuando aplica)</p>
               <p className="text-sm text-[#7a6b5d] mt-2 leading-relaxed">
-                Pagas el precio completo con tarjeta. Tu plaza queda confirmada. Sin trámites extra.
+                Pagas el precio publicado con tarjeta en un paso (o dentro del plazo si venías de una reserva sin pago). Sin trámites extra ni comisión añadida en checkout.
               </p>
             </div>
             <div className="rounded-2xl bg-white border border-sand-200 p-5 md:p-6">
-              <p className="font-serif text-3xl text-terracotta-600 font-bold tabular-nums">0 €</p>
-              <p className="font-semibold text-foreground mt-2">Para el organizador</p>
+              <p className="font-serif text-3xl text-terracotta-600 font-bold tabular-nums">80/20</p>
+              <p className="font-semibold text-foreground mt-2">Reparto del PVP</p>
               <p className="text-sm text-[#7a6b5d] mt-2 leading-relaxed">
-                Publicar retiros es gratis. Sin comisiones ni suscripción. Retiru se financia con una parte incluida en el precio.
+                Publicar no lleva suscripción. De cada venta, el organizador percibe el 80 % neto y Retiru el 20 % de gestión, incluido en el PVP que paga el asistente.
               </p>
             </div>
           </div>
           <p className="text-[15px] text-[#7a6b5d] leading-[1.8] mb-4">
-            Publicar retiros y usar el panel del organizador no tiene coste: sin comisiones directas ni suscripción para quien crea experiencias.
+            El panel y la publicación no tienen cuota fija: el modelo es comisión sobre ventas (20 % / 80 %), con desglose visible al crear el retiro.
           </p>
           <p className="text-sm text-[#7a6b5d]">
             <Link href="/es/condiciones" className="text-terracotta-700 font-medium underline underline-offset-2 hover:text-terracotta-800">

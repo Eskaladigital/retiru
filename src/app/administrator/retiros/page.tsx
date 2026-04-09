@@ -4,8 +4,29 @@ import { RetirosTableClient } from './RetirosTableClient';
 
 export const dynamic = 'force-dynamic';
 
-export default async function AdminRetirosPage() {
+type RetirosFilterParam = 'all' | 'pending_review' | 'draft' | 'published' | 'rejected' | 'archived' | 'cancelled';
+
+function filterFromSearchParams(raw: string | string[] | undefined): RetirosFilterParam | undefined {
+  const v = Array.isArray(raw) ? raw[0] : raw;
+  const allowed: RetirosFilterParam[] = [
+    'all',
+    'pending_review',
+    'draft',
+    'published',
+    'rejected',
+    'archived',
+    'cancelled',
+  ];
+  return v && allowed.includes(v as RetirosFilterParam) ? (v as RetirosFilterParam) : undefined;
+}
+
+export default async function AdminRetirosPage({
+  searchParams,
+}: {
+  searchParams?: { filter?: string | string[] };
+}) {
   const supabase = createAdminSupabase();
+  const initialFilter = filterFromSearchParams(searchParams?.filter);
 
   const { data: retreats, error } = await supabase
     .from('retreats')
@@ -82,7 +103,7 @@ export default async function AdminRetirosPage() {
         </div>
       </div>
 
-      <RetirosTableClient retreats={enriched} />
+      <RetirosTableClient retreats={enriched} initialFilter={initialFilter} />
     </div>
   );
 }

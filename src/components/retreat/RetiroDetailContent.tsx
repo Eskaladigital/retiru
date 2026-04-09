@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { Star, MapPin, Calendar, Clock, Users, Globe, Shield, Zap, ChevronRight, Check, X as XIcon } from 'lucide-react';
 import AskOrganizerButton from '@/components/messaging/AskOrganizerButton';
+import { RetreatDescriptionBody } from '@/components/ui/retreat-description-body';
 import type { Retreat } from '@/types';
 
 const dateFmt = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -112,9 +113,7 @@ export function RetiroDetailContent({ retreat, isPreview }: Props) {
 
           <section className="mb-10">
             <h2 className="mb-4 font-serif text-2xl font-semibold">Sobre este retiro</h2>
-            <div className="prose prose-sand text-muted-foreground leading-relaxed whitespace-pre-line text-sm">
-              {r.description_es}
-            </div>
+            <RetreatDescriptionBody content={r.description_es ?? ''} />
           </section>
 
           <section className="mb-10 grid gap-6 md:grid-cols-2">

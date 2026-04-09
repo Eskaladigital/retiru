@@ -11,6 +11,7 @@ import { generatePageMetadata, jsonLdEvent, jsonLdBreadcrumb, jsonLdScript } fro
 import { Star, MapPin, Calendar, Clock, Users, Globe, Shield, Zap, Heart, Share2, ChevronRight, Check, X as XIcon } from 'lucide-react';
 import AskOrganizerButton from '@/components/messaging/AskOrganizerButton';
 import ReserveButton from '@/components/booking/ReserveButton';
+import { RetreatDescriptionBody } from '@/components/ui/retreat-description-body';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -131,26 +132,38 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(eventLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbLd) }} />
 
-      {/* ═══ Image Gallery ═══ */}
+      {/* ═══ Portada + galería (todas las imágenes del retiro) ═══ */}
       <section className="bg-sand-100 pt-20 md:pt-[72px]">
-        <div className="container-wide py-4">
+        <div className="container-wide py-4 space-y-3">
           {hasImages ? (
-            sortedImages.length >= 3 ? (
-              <div className="grid gap-2 md:grid-cols-4 md:grid-rows-2 rounded-2xl overflow-hidden" style={{ maxHeight: '480px' }}>
-                <div className="md:col-span-2 md:row-span-2 relative">
-                  <img src={sortedImages[0].url} alt={sortedImages[0].alt_text ?? r.title_es} className="h-full w-full object-cover" style={{ minHeight: '300px' }} />
-                </div>
-                {sortedImages.slice(1, 5).map((img, i) => (
-                  <div key={img.id ?? i} className="hidden md:block relative">
-                    <img src={img.url} alt={img.alt_text ?? ''} className="h-full w-full object-cover" />
+            <>
+              <div className="rounded-2xl overflow-hidden border border-sand-200/80 bg-sand-200/30">
+                <img
+                  src={sortedImages[0].url}
+                  alt={sortedImages[0].alt_text ?? r.title_es}
+                  className="w-full object-cover min-h-[220px] max-h-[min(480px,55vh)] md:max-h-[520px]"
+                />
+              </div>
+              {sortedImages.length > 1 && (
+                <div>
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-[#7a6b5d] mb-2">Galería del retiro</h2>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                    {sortedImages.slice(1).map((img, i) => (
+                      <div
+                        key={img.id ?? `${img.url}-${i}`}
+                        className="relative rounded-xl overflow-hidden border border-sand-200/80 aspect-[4/3] bg-sand-200/30"
+                      >
+                        <img
+                          src={img.url}
+                          alt={img.alt_text ?? `${r.title_es} — foto ${i + 2}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="rounded-2xl overflow-hidden" style={{ maxHeight: '420px' }}>
-                <img src={sortedImages[0].url} alt={sortedImages[0].alt_text ?? r.title_es} className="w-full h-full object-cover" style={{ minHeight: '280px', maxHeight: '420px' }} />
-              </div>
-            )
+                </div>
+              )}
+            </>
           ) : (
             <div className="flex items-center justify-center rounded-2xl bg-sand-200 text-muted-foreground" style={{ height: '320px' }}>
               <span className="text-sm">Sin imágenes disponibles</span>
@@ -200,12 +213,10 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
               </div>
             </div>
 
-            {/* Description */}
+            {/* Description (mismo render que artículos de blog: ##, párrafos, listas) */}
             <section className="mb-10">
               <h2 className="mb-4 font-serif text-2xl font-semibold">Sobre este retiro</h2>
-              <div className="prose prose-sand text-muted-foreground leading-relaxed whitespace-pre-line text-sm">
-                {r.description_es}
-              </div>
+              <RetreatDescriptionBody content={r.description_es ?? ''} />
             </section>
 
             {/* Includes / Excludes */}

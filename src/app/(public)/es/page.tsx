@@ -11,7 +11,7 @@ export const metadata: Metadata = homeES;
 import { ImageWithFallback } from '@/components/ui/image-with-fallback';
 import HeroSearch from '@/components/home/HeroSearch';
 import { getCategories, getDestinations, getHomeShopProducts, getPublishedRetreats } from '@/lib/data';
-import { getCenterTypeLabel, filterPublicRetreatCategories } from '@/lib/utils';
+import { getCenterTypeLabel, filterPublicRetreatCategories, getOrganizerReviewStats, organizerHasRatingToShow } from '@/lib/utils';
 
 /* ── Fallback images ──────────────────────────────────────────────────── */
 const CAT_IMAGES: Record<string, string> = {
@@ -301,6 +301,8 @@ export default async function HomePage() {
                 const dates = `${dateFmt.format(new Date(r.start_date))}–${dateFmt.format(new Date(r.end_date))} · ${r.duration_days} días`;
                 const spotsLow = r.available_spots <= 5;
                 const instant = r.confirmation_type === 'automatic';
+                const { avg_rating: orgAvg, review_count: orgReviews } = getOrganizerReviewStats(r);
+                const showOrgRating = organizerHasRatingToShow(r);
                 return (
                 <Link key={r.slug} href={`/es/retiro/${r.slug}`} className="group bg-white rounded-2xl overflow-hidden border border-sand-200 transition-all duration-[350ms] hover:shadow-elevated hover:-translate-y-1 hover:border-sand-300">
                   {/* Image */}
@@ -323,7 +325,9 @@ export default async function HomePage() {
                   <div className="p-5">
                     <div className="flex items-center justify-between mb-2.5">
                       <span className="text-[13px] text-[#7a6b5d] flex items-center gap-1"><IconPin /> {location}</span>
-                      <span className="text-[13px] font-semibold text-foreground flex items-center gap-1"><IconStar /> {r.avg_rating.toFixed(1)} <span className="font-normal text-[#7a6b5d]">({r.review_count})</span></span>
+                      {showOrgRating && (
+                        <span className="text-[13px] font-semibold text-foreground flex items-center gap-1" title="Valoración del organizador"><IconStar /> {orgAvg.toFixed(1)} <span className="font-normal text-[#7a6b5d]">({orgReviews})</span></span>
+                      )}
                     </div>
                     <h3 className="font-serif text-xl leading-[1.3] mb-2 line-clamp-2">{r.title_es}</h3>
                     <div className="text-sm text-[#7a6b5d] mb-4 flex items-center gap-1.5">
@@ -359,7 +363,7 @@ export default async function HomePage() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-6">
               {[
                 { n: 1, t: 'Explora', d: 'Busca en nuestro directorio de centros o descubre retiros por destino, fecha o disciplina.' },
-                { n: 2, t: 'Reserva tu plaza', d: 'Paga el precio completo del retiro en un solo pago seguro con tarjeta (Stripe). Tu plaza queda gestionada desde la plataforma.' },
+                { n: 2, t: 'Reserva tu plaza', d: 'Pagas el PVP (precio publicado) con tarjeta cuando toca el cobro, o reservas sin pago si el retiro tiene mínimo de plazas y aún no se ha alcanzado. Todo desde la plataforma.' },
                 { n: 3, t: 'Coordina', d: 'Habla directamente con el organizador por el chat. Rellena el cuestionario y prepara tu experiencia.' },
                 { n: 4, t: 'Vive la experiencia', d: 'Disfruta de la experiencia. Los reembolsos por cancelación, si aplican, siguen la política del retiro sobre lo que pagaste.' },
               ].map(({ n, t, d }) => (
@@ -407,7 +411,7 @@ export default async function HomePage() {
               </div>
 
               <p className="text-center text-sm text-[#7a6b5d] leading-relaxed">
-                <strong className="text-foreground">Pagas 500€ en un solo cobro.</strong> De ese importe, Retiru retiene 100€ (comisión) y transfiere 400€ al organizador según la liquidación acordada. Sin costes ocultos ni segundo pago aparte.
+                <strong className="text-foreground">El 500€ es el PVP</strong> (precio público por persona en la ficha). <strong className="text-foreground">Pagas ese importe en un cobro</strong> cuando corresponde el pago al reservar. De ahí, Retiru retiene 100€ (20 % comisión) y transfiere 400€ (80 % neto) al organizador. Sin recargos ocultos encima del PVP.
               </p>
             </div>
           </div>
@@ -538,14 +542,14 @@ export default async function HomePage() {
               <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle at 25% 25%, white 1px, transparent 1px), radial-gradient(circle at 75% 75%, white 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
               <div className="relative z-10 max-w-[600px]">
                 <div className="inline-flex items-center gap-1.5 bg-white/15 border border-white/20 px-4 py-1.5 rounded-full text-[13px] font-semibold tracking-wide mb-6">
-                  100% gratis para organizadores
+                  Sin suscripción · 80/20 sobre el PVP
                 </div>
-                <h2 className="font-serif text-[clamp(28px,4vw,42px)] text-white mb-4">¿Organizas retiros? Publica gratis.</h2>
+                <h2 className="font-serif text-[clamp(28px,4vw,42px)] text-white mb-4">¿Organizas retiros? Publica sin cuota fija.</h2>
                 <p className="text-[17px] text-white/80 leading-[1.7] mb-8">
-                  Sin comisiones, sin suscripciones. Obtén un panel profesional completo para gestionar tus retiros, reservas, asistentes, mensajería y mucho más. Todo gratis.
+                  Panel profesional completo sin suscripción. Sobre cada reserva pagada, comisión del 20 % incluida en el PVP que paga el asistente y 80 % neto para ti, con desglose al crear el retiro.
                 </p>
                 <div className="grid grid-cols-2 gap-4 mb-8">
-                  {['0% comisión', 'Panel completo', 'CRM de asistentes', 'Check-in con QR', 'Mensajería integrada', 'Analíticas'].map((f) => (
+                  {['20 % / 80 % transparente', 'Panel completo', 'CRM de asistentes', 'Check-in con QR', 'Mensajería integrada', 'Analíticas'].map((f) => (
                     <div key={f} className="flex items-center gap-2.5 text-sm font-medium">
                       <div className="w-6 h-6 bg-white/15 rounded-full flex items-center justify-center shrink-0"><IconCheck /></div>
                       {f}
@@ -553,7 +557,7 @@ export default async function HomePage() {
                   ))}
                 </div>
                 <Link href="/es/para-organizadores" className="inline-flex items-center gap-2 bg-white text-sage-800 font-bold text-base px-8 py-3.5 rounded-xl hover:-translate-y-0.5 hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)] transition-all">
-                  Empieza a publicar gratis <IconChevron />
+                  Cómo funciona para organizadores <IconChevron />
                 </Link>
               </div>
             </div>

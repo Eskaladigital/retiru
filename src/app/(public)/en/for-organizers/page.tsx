@@ -26,11 +26,12 @@ const ORGANIZER_FEATURES = [
 ];
 
 const FAQS = [
-  { q: 'Is it really free for organizers?', a: "Yes. We don't charge organizers commission or subscription. Our revenue comes from the management fee included in the listed price the attendee pays when booking (100% upfront payment)." },
+  { q: 'Is there a subscription or listing fee?', a: "No: publishing and the dashboard have no fixed fee. You set the PVP (listed price per person); Retiru retains 20% as a management fee and you receive 80% net. The attendee pays the PVP with no hidden surcharges." },
+  { q: 'What price should I enter for my retreat?', a: 'The final per-person price you want on the listing—that is the PVP. The form shows the breakdown: your net (80%) and Retiru’s commission (20%).' },
   { q: 'How does the center directory work?', a: 'Your center appears in our directory with a full profile: photos, services, hours, location and reviews. Users can find you by area, discipline type or name. If your center is already on Retiru, claim it from its listing. If it is not listed, logged-in users can propose it from "My centers"; our team reviews it before publication.' },
   { q: 'How much does a directory listing cost?', a: 'We currently offer 6 months of free membership to selected centers. After that period, we\'ll assess the impact with you and you can continue with an affordable monthly fee.' },
   { q: 'Can I be both a center and an organizer?', a: 'Yes. If you\'re a center that organizes retreats or events, you can have your directory listing and also publish events with all the panel tools.' },
-  { q: 'How do I get paid?', a: 'The attendee pays the full price through the platform. Retiru retains its commission and transfers your net amount according to the settlement agreement (bank transfer or other agreed channel).' },
+  { q: 'How do I get paid?', a: 'The attendee pays the PVP through the platform (or holds a spot without payment if you set a minimum group size that is not yet reached). When card payment applies, Retiru retains 20% and transfers 80% net per your settlement agreement.' },
   { q: 'Do I need to get verified to publish retreats?', a: 'No documents required. Simply create your account, create your first retreat and our team will review it within 24-48h. Once your first retreat is approved, you become a verified organizer and can keep publishing.' },
   { q: 'How do I claim or add my center?', a: 'If your center is already listed, search for it and use "Claim this center" (or sign up first). If it is not listed, sign in, go to "My centers", choose "Propose new center" and pick the place in Google Maps; we review the proposal and, once approved, you can manage the listing.' },
   { q: 'What if an attendee cancels?', a: "You set the cancellation policy (deadlines and percentages on the amount paid). If a refund applies, the attendee receives that amount in full. Compensation for Retiru's commission in those cases is governed by our commercial agreement with you—not as an extra deduction from the attendee's refund." },
@@ -52,7 +53,8 @@ export default function ForOrganizersPageEN() {
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-sage-300 leading-relaxed">
             Whether you run a yoga, meditation or ayurveda center, or you organize retreats and events in that space,
-            Retiru is your platform. No commissions. No subscriptions.
+            Retiru is your platform. <strong className="font-semibold text-white">No subscription</strong> to publish.
+            On each paid booking we take a <strong className="font-semibold text-white">20% fee</strong> included in the PVP the attendee pays; you receive <strong className="font-semibold text-white">80% net</strong>, with no hidden surcharges for guests.
           </p>
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <a href="#centers" className="bg-terracotta-600 hover:bg-terracotta-700 text-white font-semibold px-8 py-4 rounded-xl transition-colors text-base">
@@ -118,11 +120,11 @@ export default function ForOrganizersPageEN() {
             <span className="text-sm font-bold uppercase tracking-widest text-terracotta-500">For organizers</span>
           </div>
           <h2 className="font-serif text-3xl font-bold md:text-4xl mb-3">
-            Publish your retreats or events <span className="text-terracotta-600">100% free</span>
+            Publish your retreats <span className="text-terracotta-600">with no listing fee</span>
           </h2>
           <p className="text-[#7a6b5d] max-w-2xl mb-12">
-            If you create yoga, meditation or ayurveda retreats and events, Retiru gives you a
-            complete management panel without charging you a single euro.
+            If you create yoga, meditation or ayurveda retreats and events, Retiru gives you a full management panel
+            with no subscription or signup fee. Like other marketplaces, we use a <strong className="text-foreground">commission on sales</strong> (20% of the PVP to Retiru, 80% net to you), shown clearly in the form before you publish.
           </p>
 
           <div className="overflow-x-auto rounded-2xl border border-sand-200 bg-white mb-12">
@@ -137,8 +139,9 @@ export default function ForOrganizersPageEN() {
               </thead>
               <tbody>
                 {[
-                  ['Organizer commission', '0%', '20-30%', '10-25%'],
-                  ['Management panel', 'Complete & free', 'Basic', 'Limited'],
+                  ['Subscription / listing fee', 'No (€0)', 'Yes / varies', 'Varies'],
+                  ['Commission on sales (PVP)', '20% (transparent)', '20–30%', '10–25%'],
+                  ['Management panel', 'Full, no fixed fee', 'Basic', 'Limited'],
                   ['Attendee CRM', '✓', '✗', '✗'],
                   ['Integrated messaging', '✓', 'Limited', '✗'],
                   ['QR Check-in', '✓', '✗', '✗'],
@@ -176,9 +179,9 @@ export default function ForOrganizersPageEN() {
           <div className="space-y-8">
             {[
               { s: '01', t: 'Create your account', d: 'Sign up with your email and verify your account. Any user can create retreats or other events from their dashboard.' },
-              { s: '02', t: 'Create your first retreat or event', d: 'Use our step-by-step wizard to create your retreat or another event. Add photos, schedule, prices and configure your cancellation policy.' },
+              { s: '02', t: 'Create your first retreat or event', d: 'Use our step-by-step wizard. Set a cover image (main photo in listings and at the top of the retreat page) and add up to eight photos in total—the rest appear in the public retreat gallery below the cover. You can generate the cover with AI from your title and description; if you add no images, a cover is created automatically when you save. Add schedule, PVP per person (with an on-screen 80% / 20% breakdown), optional minimum attendees, and your cancellation policy.' },
               { s: '03', t: 'We review & publish', d: 'Our team reviews your first retreat within 24-48h to ensure quality. Once approved, it goes live and you become a verified organizer.' },
-              { s: '04', t: 'Receive bookings & get paid', d: 'Attendees pay the full price through the platform. Retiru retains its commission and settles your net amount per agreement. You run the experience; we handle booking flow and payments.' },
+              { s: '04', t: 'Receive bookings & get paid', d: 'Attendees pay the PVP through the platform (or reserve without payment until the minimum group size is met, if you set one). Retiru retains 20% and settles 80% net. You run the experience; we handle booking flow and payments.' },
             ].map(({ s, t, d }) => (
               <div key={s} className="flex gap-6 items-start">
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-terracotta-600 text-lg font-bold text-white">{s}</span>
@@ -216,7 +219,7 @@ export default function ForOrganizersPageEN() {
           <h2 className="font-serif text-3xl md:text-4xl font-bold">Join Retiru</h2>
           <p className="mx-auto mt-4 max-w-lg text-terracotta-100">
             Whether you&apos;re a yoga, meditation or ayurveda center or an organizer in that space, Retiru gives you the tools
-            and visibility you need. Free.
+            and visibility you need. No subscription to list; bookings split 80% / 20% on the PVP, like other platforms, with a clear breakdown in your dashboard.
           </p>
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link href="/en/centers" className="inline-block bg-white text-terracotta-700 font-bold px-8 py-4 rounded-xl hover:bg-sand-100 transition-colors">
