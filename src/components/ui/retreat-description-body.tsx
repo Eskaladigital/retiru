@@ -11,3 +11,6 @@ export function RetreatDescriptionBody({ content, className = '' }: { content: s
   }
   return <MarkdownContent content={c} inferBlogStructure className={className} />;
 }
+
+/** Misma lógica que la descripción de retiro: útil para artículos de blog (HTML + legacy markdown). */
+export const RichContentBody = RetreatDescriptionBody;

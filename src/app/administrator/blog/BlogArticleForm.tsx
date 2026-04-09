@@ -1,13 +1,18 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import slugify from 'slugify';
-import { RichTextEditor } from '@/components/admin/RichTextEditor';
 import { createClient } from '@/lib/supabase/client';
+
+const TinyRichTextEditor = dynamic(
+  () => import('@/components/editor/TinyRetreatDescriptionEditor').then((m) => m.TinyRichTextEditor),
+  { ssr: false }
+);
 import { ArrowLeft, Save, Upload, X, ImageOff } from 'lucide-react';
 import Link from 'next/link';
 
@@ -253,22 +258,28 @@ export function BlogArticleForm({ categories, article }: BlogArticleFormProps) {
 
           <div>
             <label className="block text-sm font-semibold text-foreground mb-2">Contenido (ES) *</label>
-            <RichTextEditor
+            <TinyRichTextEditor
+              id={`blog-content-es-${article?.id ?? 'new'}`}
               value={watch('content_es')}
               onChange={(v) => setValue('content_es', v)}
               placeholder="Escribe el contenido del artículo..."
               height={400}
+              language="es"
+              enableImage
             />
             {errors.content_es && <p className="text-red-600 text-xs mt-1">{errors.content_es.message}</p>}
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-foreground mb-2">Contenido (EN)</label>
-            <RichTextEditor
+            <TinyRichTextEditor
+              id={`blog-content-en-${article?.id ?? 'new'}`}
               value={watch('content_en') || ''}
               onChange={(v) => setValue('content_en', v)}
               placeholder="Article content (optional)"
               height={300}
+              language="en"
+              enableImage
             />
           </div>
         </div>

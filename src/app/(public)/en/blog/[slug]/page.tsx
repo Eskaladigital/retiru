@@ -4,7 +4,7 @@ import { Clock, Calendar, ArrowLeft, Share2, ChevronRight } from 'lucide-react';
 import { notFound, redirect } from 'next/navigation';
 import { getBlogPostSlugs } from '@/lib/data';
 import { createServerSupabase } from '@/lib/supabase/server';
-import { MarkdownContent } from '@/components/ui/markdown-content';
+import { RichContentBody } from '@/components/ui/retreat-description-body';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.retiru.com';
 
@@ -153,9 +153,7 @@ export default async function BlogPostEN({ params }: { params: Promise<{ slug: s
 
           {/* Article content */}
           <div className="px-2 md:px-4 mb-16">
-            <div className="text-[15px] text-[#7a6b5d] leading-[1.85]">
-              <MarkdownContent content={articleContent} inferBlogStructure />
-            </div>
+            <RichContentBody content={articleContent ?? ''} />
 
             {/* CTA */}
             <div className="mt-12 bg-gradient-to-br from-terracotta-600 to-terracotta-700 rounded-2xl p-8 text-center text-white">

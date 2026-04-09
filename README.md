@@ -76,7 +76,7 @@ Copia `.env.example` a `.env.local` y rellena los valores:
 | `NEXT_PUBLIC_APP_URL` | URL base de la app |
 | `NEXT_PUBLIC_APP_NAME` | Nombre de la app (`Retiru`) |
 | `OPENAI_API_KEY` | (opcional) Descripciones IA, blog, centros y **portadas de eventos**: agente **GPT-4o** sintetiza un dossier completo del evento (destino, fechas, categorías, programa, incluidos…) en un prompt en español; **GPT Image 1.5** genera la imagen panorámica (`POST /api/retreats/generate-cover-image`; definir también en Vercel). Objetivo visual: **fotografía editorial hiperrealista**, evitando look ilustrado o “IA” |
-| `NEXT_PUBLIC_TINYMCE_API_KEY` | (opcional) Clave [Tiny Cloud](https://www.tiny.cloud/) para el editor visual de la **descripción** en crear/editar evento (`/es/mis-eventos/...`). Si está vacía se usa `no-api-key` (solo adecuado en desarrollo; en producción conviene clave y dominio aprobados) |
+| `NEXT_PUBLIC_TINYMCE_API_KEY` | (opcional) Clave [Tiny Cloud](https://www.tiny.cloud/) para el editor visual de la **descripción** en crear/editar evento (`/es/mis-eventos/...`) y del **cuerpo del artículo** en `/administrator/blog/...`. Si está vacía se usa `no-api-key` (solo adecuado en desarrollo; en producción conviene clave y dominio aprobados) |
 | `GOOGLE_PLACES_API_KEY` | (opcional) Para obtener reseñas de Google Places |
 | `CRON_SECRET` | (recomendado en producción) Secreto `Bearer` para `POST /api/cron/*` (p. ej. `payment-deadlines`). Si está vacío, los cron no exigen autorización (solo aceptable en local) |
 
