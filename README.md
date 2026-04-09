@@ -82,7 +82,7 @@ Copia `.env.example` a `.env.local` y rellena los valores:
 
 > **Nota:** Supabase es necesario para que la app muestre retiros, centros, blog y tienda. Sin él, las páginas mostrarán listas vacías.
 
-> **`SUPABASE_SERVICE_ROLE_KEY`:** además de operaciones de servidor habituales, se usa en `POST /api/storage/retreat-images` para subir imágenes de eventos al bucket `retreat-images` sin depender del RLS del cliente.
+> **`SUPABASE_SERVICE_ROLE_KEY`:** operaciones de servidor habituales; opcionalmente `POST /api/storage/retreat-images` (legacy). El wizard de **Mis eventos** sube fotos al bucket `retreat-images` **desde el navegador** con RLS (carpeta `retreats/`), sin pasar el archivo por la función serverless.
 
 ---
 
@@ -628,7 +628,7 @@ Cualquier usuario logueado (incluido el admin) tiene acceso a:
 1. **Mis reservas** — reservas como asistente
 2. **Mi perfil** — datos personales, avatar, contraseña
 3. **Mis centros** — centros reclamados, propuestas en revisión, CTA para reclamar en el directorio o proponer centro nuevo (Google Maps)
-4. **Mis eventos** — retiros/eventos creados; wizard para crear/editar con **plazas máximas** (`max_attendees`) y **mínimo viable** (`min_attendees`): umbral de inscritos a partir del cual el organizador se compromete a celebrar el retiro; en ficha pública se muestra progreso de reservas si el mínimo es mayor que 1. **Imágenes:** hasta **8** fotos por retiro (`POST /api/storage/retreat-images` + registro en `retreat_images`); una es la **portada** (listados y cabecera de ficha), el resto forman la **galería** visible en la ficha pública; portada opcional con **IA** (dossier del evento → GPT-4o → GPT Image 1.5; `POST /api/retreats/generate-cover-image`) o generada al guardar si no hay ninguna foto
+4. **Mis eventos** — retiros/eventos creados; wizard para crear/editar con **plazas máximas** (`max_attendees`) y **mínimo viable** (`min_attendees`): umbral de inscritos a partir del cual el organizador se compromete a celebrar el retiro; en ficha pública se muestra progreso de reservas si el mínimo es mayor que 1. **Imágenes:** hasta **8** fotos por retiro (subida al bucket `retreat-images` desde el cliente + registro en `retreat_images` vía API); una es la **portada** (listados y cabecera de ficha), el resto forman la **galería** visible en la ficha pública; portada opcional con **IA** (dossier del evento → GPT-4o → GPT Image 1.5; `POST /api/retreats/generate-cover-image`) o generada al guardar si no hay ninguna foto
 
 El admin tiene además acceso a `/administrator` desde el menú.
 

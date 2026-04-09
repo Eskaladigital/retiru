@@ -1,5 +1,5 @@
-// POST /api/storage/retreat-images — Subida de imágenes de retiros al bucket retreat-images
-// Usa service role en servidor para no depender de las políticas RLS del cliente (mismo problema que blog/).
+// POST /api/storage/retreat-images — Subida al bucket retreat-images vía service role (legacy / integraciones).
+// El wizard de organizador sube desde el navegador con RLS (`uploadRetreatGalleryImageFromBrowser`) para evitar 413 en serverless.
 
 import { NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';

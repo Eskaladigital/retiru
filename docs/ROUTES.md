@@ -91,7 +91,7 @@ Parámetros opcionales en registro: `?redirect=/ruta&claim=true` (redirige tras 
 | `/es/perfil` | `app/es/(dashboard)/perfil/page.tsx` | Datos personales desde `profiles` (Supabase); guardar vía `PATCH /api/profile` |
 | `/es/mis-centros` | `app/es/(dashboard)/mis-centros/page.tsx` | Centros reclamados, propuestas pendientes, reclamar / proponer nuevo |
 | `/es/mis-eventos` | `app/es/(dashboard)/mis-eventos/page.tsx` | Eventos/retiros creados |
-| `/es/mis-eventos/nuevo` | `app/es/(dashboard)/mis-eventos/nuevo/page.tsx` | Wizard para crear evento (paso Información: portada + hasta 8 fotos vía `POST /api/storage/retreat-images`; IA opcional `POST /api/retreats/generate-cover-image`) |
+| `/es/mis-eventos/nuevo` | `app/es/(dashboard)/mis-eventos/nuevo/page.tsx` | Wizard para crear evento (portada + hasta 8 fotos: subida directa al bucket `retreat-images` desde el navegador con RLS; IA opcional `POST /api/retreats/generate-cover-image`) |
 | `/es/mis-eventos/[id]` | `app/es/(dashboard)/mis-eventos/[id]/page.tsx` | Editar evento (misma gestión de portada y galería) |
 | `/es/panel/mensajes` | `app/es/(organizer)/panel/mensajes/page.tsx` | Bandeja de mensajes del organizador (+ botón soporte) |
 
@@ -224,7 +224,7 @@ Protegido por middleware (role=admin). No indexado en buscadores.
 | PATCH | `/api/retreats/[id]` | Actualizar retiro (solo propietario) |
 | POST | `/api/retreats/[id]` | Cancelar retiro (propietario, action=cancel) |
 | DELETE | `/api/retreats/[id]` | Eliminar retiro (propietario, solo sin reservas confirmadas) |
-| POST | `/api/storage/retreat-images` | Subir una imagen de retiro al bucket `retreat-images` (portada o galería; el cliente puede llamar varias veces hasta el límite del formulario, p. ej. 8 por retiro; usuario autenticado; service role en servidor) |
+| POST | `/api/storage/retreat-images` | Subir imagen al bucket `retreat-images` con service role (legacy/integraciones; el wizard del organizador usa subida directa desde el cliente para evitar límite de tamaño del body en serverless) |
 | PATCH | `/api/profile` | Actualizar perfil propio (`full_name`, `phone` obligatorio con ≥9 dígitos, `bio`) |
 | GET | `/api/messages/conversations` | Listar conversaciones del usuario |
 | POST | `/api/messages/conversations` | Crear/recuperar conversación sobre un retiro |

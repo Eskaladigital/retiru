@@ -65,7 +65,9 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => ({}));
     const title_es = str(body.title_es);
     const summary_es = str(body.summary_es);
-    const description_es = str(body.description_es);
+    // Tope defensivo: cuerpos enormes (p. ej. HTML con base64 pegado) devuelven 413 en serverless antes de lógica útil.
+    const description_es = str(body.description_es).slice(0, 35000);
+    const description_en_raw = str(body.description_en);
 
     if (!title_es.trim() || !summary_es.trim()) {
       return NextResponse.json(
@@ -96,7 +98,7 @@ export async function POST(request: Request) {
       description_es,
       title_en: str(body.title_en).trim() || undefined,
       summary_en: str(body.summary_en).trim() || undefined,
-      description_en: str(body.description_en).trim() || undefined,
+      description_en: description_en_raw.trim().slice(0, 20000) || undefined,
       destination_label,
       address: str(body.address).trim() || undefined,
       start_date: str(body.start_date).trim() || undefined,

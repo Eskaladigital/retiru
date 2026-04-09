@@ -10,6 +10,7 @@ const TinyRetreatDescriptionEditor = dynamic(
 );
 import { Upload, X, GripVertical, Plus, Trash2, Sparkles } from 'lucide-react';
 import { OrganizerPriceBreakdown } from '@/components/organizer/OrganizerPriceBreakdown';
+import { shrinkHeavyHtmlForRetreatPayload, uploadRetreatGalleryImageFromBrowser } from '@/lib/supabase/client';
 
 interface Option { id: string; name: string; slug: string }
 
@@ -24,26 +25,7 @@ interface ScheduleDay { day: number; title: string; items: ScheduleItem[] }
 const STEPS = ['Información', 'Detalles', 'Programa', 'Incluye', 'Precio'];
 
 async function uploadRetreatImageViaApi(file: File): Promise<string> {
-  const fd = new FormData();
-  fd.append('file', file);
-  const res = await fetch('/api/storage/retreat-images', { method: 'POST', body: fd });
-  const data = (await res.json().catch(() => ({}))) as { error?: string; publicUrl?: string };
-  if (!res.ok) {
-    const msg = data.error || `Error al subir (${res.status})`;
-    if (/row-level security|RLS|Unauthorized/i.test(msg)) {
-      throw new Error(
-        'No se pudo subir la imagen. Comprueba el bucket «retreat-images» en Supabase y que SUPABASE_SERVICE_ROLE_KEY esté definida en el servidor (p. ej. Vercel).',
-      );
-    }
-    if (/Bucket not found|not found|does not exist/i.test(msg) || msg.includes('404')) {
-      throw new Error(
-        'El bucket «retreat-images» no existe en Supabase. En el panel: SQL → ejecuta la migración 025_storage_retreat_images_bucket_ensure.sql (carpeta supabase/migrations), o crea el bucket «retreat-images» como público en Storage.',
-      );
-    }
-    throw new Error(msg.startsWith('Error') ? msg : `Error al subir una imagen: ${msg}`);
-  }
-  if (!data.publicUrl) throw new Error('No se obtuvo URL pública tras la subida.');
-  return data.publicUrl;
+  return uploadRetreatGalleryImageFromBrowser(file);
 }
 
 function buildCoverImagePayload(
@@ -88,8 +70,8 @@ function buildCoverImagePayload(
     title_en: form.title_en.trim() || undefined,
     summary_es: form.summary_es,
     summary_en: form.summary_en.trim() || undefined,
-    description_es: form.description_es,
-    description_en: form.description_en.trim() || undefined,
+    description_es: shrinkHeavyHtmlForRetreatPayload(form.description_es).slice(0, 32000),
+    description_en: shrinkHeavyHtmlForRetreatPayload(form.description_en).trim().slice(0, 16000) || undefined,
     destination_id: form.destination_id || undefined,
     destination_label: destination_label || undefined,
     address: form.address.trim() || undefined,
@@ -112,6 +94,11 @@ async function fetchGeneratedCoverUrl(payload: Record<string, unknown>): Promise
   });
   const data = (await res.json().catch(() => ({}))) as { error?: string; publicUrl?: string };
   if (!res.ok) {
+    if (res.status === 413) {
+      throw new Error(
+        'La petición es demasiado grande (413). Acorta la descripción o el programa, o evita pegar textos con imágenes incrustadas; luego vuelve a generar o guardar.',
+      );
+    }
     throw new Error(data.error || `Error al generar la imagen (${res.status})`);
   }
   if (!data.publicUrl) throw new Error('No se obtuvo URL de la imagen generada.');
@@ -391,6 +378,8 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
+          description_es: shrinkHeavyHtmlForRetreatPayload(form.description_es),
+          description_en: shrinkHeavyHtmlForRetreatPayload(form.description_en),
           min_attendees: minN,
           includes_es: form.includes_es.filter(Boolean),
           excludes_es: form.excludes_es.filter(Boolean),

@@ -155,7 +155,7 @@ Al terminar este sprint:
 **Implementado hoy:**
 - Hasta **8 imágenes** en total por retiro; una marcada como **portada** (`is_cover`); el resto se muestran en la ficha bajo «Galería del retiro» / «Retreat gallery» (ES/EN).
 - Selector de archivos (múltiple), preview, eliminar, elegir portada; **generar portada con IA** (GPT Image 1.5) opcional; si no hay fotos, al guardar puede generarse portada automática (OpenAI en servidor). Desde abril de 2026 se prioriza explícitamente **fotografía hiperrealista** y se abandona el look ilustrado de generaciones antiguas.
-- Subida vía `POST /api/storage/retreat-images`; persistencia en `retreat_images` con `sort_order` en `POST /api/retreats/create` y `PATCH /api/retreats/[id]`.
+- Subida al bucket `retreat-images` desde el cliente (RLS, carpeta `retreats/`); persistencia en `retreat_images` con `sort_order` en `POST /api/retreats/create` y `PATCH /api/retreats/[id]`. Ruta API `POST /api/storage/retreat-images` queda como alternativa legacy.
 - Edición en `EditarEventoForm` (misma lógica).
 
 **Pendiente opcional (mejora UX):**
