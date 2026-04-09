@@ -75,7 +75,7 @@ Copia `.env.example` a `.env.local` y rellena los valores:
 | `RESEND_FROM_EMAIL` | Email remitente (ej: `contacto@retiru.com`) |
 | `NEXT_PUBLIC_APP_URL` | URL base de la app |
 | `NEXT_PUBLIC_APP_NAME` | Nombre de la app (`Retiru`) |
-| `OPENAI_API_KEY` | (opcional) Descripciones IA, blog, centros y **portadas de eventos**: agente **GPT-4o** sintetiza un dossier completo del evento (destino, fechas, categorías, programa, incluidos…) en un prompt en español; **DALL·E 3** (`hd`, `natural`) genera la imagen (`POST /api/retreats/generate-cover-image`; definir también en Vercel) |
+| `OPENAI_API_KEY` | (opcional) Descripciones IA, blog, centros y **portadas de eventos**: agente **GPT-4o** sintetiza un dossier completo del evento (destino, fechas, categorías, programa, incluidos…) en un prompt en español; **GPT Image 1.5** genera la imagen panorámica (`POST /api/retreats/generate-cover-image`; definir también en Vercel). Objetivo visual: **fotografía editorial hiperrealista**, evitando look ilustrado o “IA” |
 | `NEXT_PUBLIC_TINYMCE_API_KEY` | (opcional) Clave [Tiny Cloud](https://www.tiny.cloud/) para el editor visual de la **descripción** en crear/editar evento (`/es/mis-eventos/...`). Si está vacía se usa `no-api-key` (solo adecuado en desarrollo; en producción conviene clave y dominio aprobados) |
 | `GOOGLE_PLACES_API_KEY` | (opcional) Para obtener reseñas de Google Places |
 | `CRON_SECRET` | (recomendado en producción) Secreto `Bearer` para `POST /api/cron/*` (p. ej. `payment-deadlines`). Si está vacío, los cron no exigen autorización (solo aceptable en local) |
@@ -140,7 +140,7 @@ node scripts/seed-retreats.mjs           # Poblar retiros de ejemplo en Supabase
 node scripts/count-retreats.mjs          # Contar retiros en BD
 node scripts/assign-retreats-to-admin.mjs # Asignar retiros de ejemplo al admin
 npm run retreats:push-alma-nomada        # Contenido ficha Alma Nómada (PDF) → Supabase vía .env.local
-npm run retreats:backfill-covers-ai    # Portadas IA (DALL·E) para retiros sin retreat_images; --dry-run, --limit=N, --replace-ai-covers
+npm run retreats:backfill-covers-ai    # Portadas IA (GPT Image 1.5) para retiros sin retreat_images; --dry-run, --limit=N, --replace-ai-covers
 ```
 
 ---
@@ -158,7 +158,7 @@ En esos textos **no** deben figurar **teléfonos móviles ni emails de contacto*
 | Comando | Uso |
 |--------|-----|
 | `npm run retreats:push-alma-nomada` | Actualiza por slug el retiro Alma Nómada según el contenido acordado (PDF 1ª edición): destino Marruecos, textos ES/EN, incluidos, excluidos, `schedule`, meta. |
-| `npm run retreats:backfill-covers-ai` | Igual que la API: dossier completo desde Supabase → **GPT-4o** → DALL·E 3 `hd`. Opciones: `--dry-run`, `--limit=N`, `--replace-ai-covers`. |
+| `npm run retreats:backfill-covers-ai` | Igual que la API: dossier completo desde Supabase → **GPT-4o** → **GPT Image 1.5** (`1536x1024`, `high`). Migrado desde DALL·E 3 por deprecación; prioridad absoluta al look de **fotografía real**. Opciones: `--dry-run`, `--limit=N`, `--replace-ai-covers`. |
 
 Para otro retiro, añadir un script análogo en `scripts/` o generalizar con un JSON + slug (mismo patrón).
 
@@ -628,7 +628,7 @@ Cualquier usuario logueado (incluido el admin) tiene acceso a:
 1. **Mis reservas** — reservas como asistente
 2. **Mi perfil** — datos personales, avatar, contraseña
 3. **Mis centros** — centros reclamados, propuestas en revisión, CTA para reclamar en el directorio o proponer centro nuevo (Google Maps)
-4. **Mis eventos** — retiros/eventos creados; wizard para crear/editar con **plazas máximas** (`max_attendees`) y **mínimo viable** (`min_attendees`): umbral de inscritos a partir del cual el organizador se compromete a celebrar el retiro; en ficha pública se muestra progreso de reservas si el mínimo es mayor que 1. **Imágenes:** hasta **8** fotos por retiro (`POST /api/storage/retreat-images` + registro en `retreat_images`); una es la **portada** (listados y cabecera de ficha), el resto forman la **galería** visible en la ficha pública; portada opcional con **IA** (dossier del evento → GPT-4o → DALL·E; `POST /api/retreats/generate-cover-image`) o generada al guardar si no hay ninguna foto
+4. **Mis eventos** — retiros/eventos creados; wizard para crear/editar con **plazas máximas** (`max_attendees`) y **mínimo viable** (`min_attendees`): umbral de inscritos a partir del cual el organizador se compromete a celebrar el retiro; en ficha pública se muestra progreso de reservas si el mínimo es mayor que 1. **Imágenes:** hasta **8** fotos por retiro (`POST /api/storage/retreat-images` + registro en `retreat_images`); una es la **portada** (listados y cabecera de ficha), el resto forman la **galería** visible en la ficha pública; portada opcional con **IA** (dossier del evento → GPT-4o → GPT Image 1.5; `POST /api/retreats/generate-cover-image`) o generada al guardar si no hay ninguna foto
 
 El admin tiene además acceso a `/administrator` desde el menú.
 

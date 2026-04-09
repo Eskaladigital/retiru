@@ -47,7 +47,7 @@ const SECTIONS = [
       },
       {
         q: 'Can I generate the cover image with AI?',
-        a: 'Yes. When creating or editing an event you can upload up to eight photos: one is the cover (listings and hero on the retreat page) and the rest show in the public gallery. You can use "Generate cover with AI" for a photorealistic image (DALL·E) from your title and copy. If you upload no images, saving generates a cover automatically when OpenAI is configured on the server.',
+        a: 'Yes. When creating or editing an event you can upload up to eight photos: one is the cover (listings and hero on the retreat page) and the rest show in the public gallery. You can use "Generate cover with AI" for a photorealistic image with GPT Image 1.5 from your title and copy. If you upload no images, saving generates a cover automatically when OpenAI is configured on the server.',
       },
     ],
   },

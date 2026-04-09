@@ -730,7 +730,7 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
                     <span className="text-sm font-medium">
                       {generatingCover ? 'Generando…' : 'Generar portada con IA'}
                     </span>
-                    <span className="text-xs text-center text-[#7a6b5d]">DALL·E · foto tipo editorial</span>
+                    <span className="text-xs text-center text-[#7a6b5d]">GPT Image 1.5 · foto tipo editorial</span>
                   </button>
                 </div>
               )}

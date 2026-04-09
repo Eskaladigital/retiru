@@ -1,4 +1,4 @@
-// POST /api/retreats/generate-cover-image — Portada con IA (DALL·E 3) a partir del briefing completo del evento
+// POST /api/retreats/generate-cover-image — Portada con IA (GPT Image 1.5) a partir del briefing completo del evento
 import { NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
 import {

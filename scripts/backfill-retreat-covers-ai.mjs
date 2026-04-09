@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Genera portadas con IA (GPT + DALL·E 3) para retiros sin filas en retreat_images.
+ * Genera portadas con IA (GPT + GPT Image 1.5) para retiros sin filas en retreat_images.
  * Usa .env.local: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, OPENAI_API_KEY
  *
  * Uso:
@@ -36,6 +36,9 @@ readFileSync(envPath, 'utf8').split('\n').forEach((line) => {
 
 const MAX_DESCRIPTION_CHARS = 2800;
 const MAX_SCHEDULE_CHARS = 1200;
+const OPENAI_IMAGE_MODEL = 'gpt-image-1.5';
+const OPENAI_IMAGE_SIZE = '1536x1024';
+const OPENAI_IMAGE_QUALITY = 'high';
 
 /** SYNC: src/lib/openai/event-cover-image.ts (formatEventCoverUserBrief + PROMPT_BUILDER_SYSTEM + buildFinalDallePrompt) */
 
@@ -87,7 +90,7 @@ function formatEventCoverUserBrief(input) {
 
   parts.push(
     '=== DOSSIER DEL EVENTO (úsalo entero; prioriza coherencia geográfica y temática) ===',
-    'Tu salida final será SOLO el párrafo-prompt para DALL·E, no resúmenes de este dossier.',
+    'Tu salida final será SOLO el párrafo-prompt para el modelo de imagen, no resúmenes de este dossier.',
   );
 
   parts.push(`Título (ES): ${String(input.title_es).trim()}`);
@@ -127,7 +130,7 @@ function formatEventCoverUserBrief(input) {
   return parts.join('\n\n');
 }
 
-const PROMPT_BUILDER_SYSTEM = `Eres un agente senior: director de arte + location scout + especialista en prompts para DALL·E 3. Recibes un DOSSIER COMPLETO de un retiro (geografía, fechas, categorías, textos, programa, incluidos). Tu ÚNICA salida es UN párrafo en español que DALL·E usará tal cual: debe ser la mejor posible.
+const PROMPT_BUILDER_SYSTEM = `Eres un agente senior: director de arte + location scout + especialista en prompts para generación de imágenes fotorrealistas. Recibes un DOSSIER COMPLETO de un retiro (geografía, fechas, categorías, textos, programa, incluidos). Tu ÚNICA salida es UN párrafo en español que el modelo de imagen usará tal cual: debe ser la mejor posible.
 
 ANTES de escribir (mentalmente, no lo imprimas): (1) Elige el escenario visual más específico y honesto con el dossier — no un “paraíso genérico”. (2) Conecta TEMÁTICA: yoga/meditación/cerámica/ayurveda/círculo/mar/desierto/montaña según categorías + descripción + programa + incluidos. (3) Elige UNA luz creíble de día (mañana luminosa, media mañana, tarde clara o golden hour todavía alta) coherente con estación y región si el dossier lo permite. (4) Añade 2–4 sustantivos CONCRETOS de textura o material (adobe, lino, arcilla, corcho, sal, musgo, dunas, olivos…) alineados con el lugar y la actividad, no adjetivos vacíos. (5) Si hay conflicto entre campos, prima descripción + título + destino sobre suposiciones. (6) Piensa como si un fotógrafo profesional estuviera físicamente allí con una cámara full frame de alta gama haciendo una foto real para una portada editorial, no como si estuviera “creando arte”.
 
@@ -169,7 +172,7 @@ Reglas:
 - Debe sonar a encargo fotográfico premium real, no a instrucción artística abstracta.
 - No añadas explicaciones sobre lo que has cambiado. Devuelve solo el prompt final.`;
 
-const DALLE_ES_REALISM_TAIL =
+const IMAGE_REALISM_TAIL =
   ' Tomada como fotografía real con cámara full frame profesional y óptica de reportaje de alta calidad, luz existente físicamente creíble, color natural y balance de blancos realista, contraste moderado, grano mínimo natural, detalle auténtico en piel, telas, arena, piedra, vegetación o arquitectura según la escena; siempre de día, luminosa y clara, nunca nocturna ni sombría, con sensación de franja útil entre 09:00 y 20:30 de verano del sur de España; si aparecen personas, secundarias, naturales y no posadas; sin HDR agresivo, sin acabado plástico, sin render 3D, sin pintura digital, sin ilustración, sin tipografía ni logotipos.';
 
 async function buildDallePromptFromEvent(apiKey, input) {
@@ -238,12 +241,12 @@ async function buildDallePromptFromEvent(apiKey, input) {
     .trim();
 }
 
-function buildFinalDallePrompt(sceneFromGpt) {
+function buildFinalImagePrompt(sceneFromGpt) {
   const scene = sceneFromGpt.replace(/\s+/g, ' ').trim();
   if (scene.length < 200) throw new Error('El prompt de imagen es demasiado corto.');
-  const room = 4000 - DALLE_ES_REALISM_TAIL.length - 2;
+  const room = 4000 - IMAGE_REALISM_TAIL.length - 2;
   const core = scene.length <= room ? scene : scene.slice(0, room - 1).trimEnd() + '…';
-  return `${core}${DALLE_ES_REALISM_TAIL}`.replace(/\s+/g, ' ').trim().slice(0, 4000);
+  return `${core}${IMAGE_REALISM_TAIL}`.replace(/\s+/g, ' ').trim().slice(0, 4000);
 }
 
 function retreatRowToBrief(r) {
@@ -273,24 +276,24 @@ function retreatRowToBrief(r) {
 }
 
 async function generateDalle3CoverImage(apiKey, prompt) {
-  const trimmed = buildFinalDallePrompt(prompt);
+  const trimmed = buildFinalImagePrompt(prompt);
 
   const res = await fetch('https://api.openai.com/v1/images/generations', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
-      model: 'dall-e-3',
+      model: OPENAI_IMAGE_MODEL,
       prompt: trimmed,
       n: 1,
-      size: '1792x1024',
-      quality: 'hd',
-      style: 'natural',
+      size: OPENAI_IMAGE_SIZE,
+      quality: OPENAI_IMAGE_QUALITY,
+      output_format: 'png',
     }),
   });
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.error?.message || `DALL·E error (${res.status})`);
+    throw new Error(data.error?.message || `OpenAI image error (${res.status})`);
   }
 
   const url = data.data?.[0]?.url;
