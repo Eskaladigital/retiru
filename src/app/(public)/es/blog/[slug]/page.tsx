@@ -86,7 +86,7 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
 
   return (
     <div>
-      <div className="container-wide pt-6 md:pt-8">
+      <div className="container-wide pt-24 md:pt-28">
         <article className="max-w-4xl mx-auto">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-1.5 text-xs text-[#a09383] mb-5">
