@@ -33,6 +33,7 @@
     "blog:translate-en": "node scripts/translate-blog-articles-en.mjs",
     "blog:import-csv": "node scripts/import-blog-csv.mjs",
     "blog:import-csv:push": "node scripts/import-blog-csv.mjs --push",
+    "blog:backfill-covers-ai": "node scripts/backfill-blog-covers-ai.mjs",
     "retreats:push-alma-nomada": "node scripts/push-alma-nomada-content.mjs",
     "retreats:backfill-covers-ai": "node scripts/backfill-retreat-covers-ai.mjs"
   },

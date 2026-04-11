@@ -123,6 +123,38 @@ export const registerES: Metadata = generatePageMetadata({
   noIndex: true,
 });
 
+export const termsES: Metadata = generatePageMetadata({
+  title: 'Términos legales',
+  description: 'Términos y condiciones legales de uso de la plataforma Retiru.',
+  locale: 'es',
+  path: '/es/legal/terminos',
+  altPath: '/en/legal/terminos',
+});
+
+export const privacyES: Metadata = generatePageMetadata({
+  title: 'Política de privacidad',
+  description: 'Política de privacidad y protección de datos de Retiru.',
+  locale: 'es',
+  path: '/es/legal/privacidad',
+  altPath: '/en/legal/privacidad',
+});
+
+export const cookiesES: Metadata = generatePageMetadata({
+  title: 'Política de cookies',
+  description: 'Política de cookies de Retiru.',
+  locale: 'es',
+  path: '/es/legal/cookies',
+  altPath: '/en/legal/cookies',
+});
+
+export const conditionsES: Metadata = generatePageMetadata({
+  title: 'Condiciones de uso y precios',
+  description: 'Cómo funcionan los precios en Retiru. Cuánto pagas, a quién y cómo se financia la plataforma. Transparencia total.',
+  locale: 'es',
+  path: '/es/condiciones',
+  altPath: '/en/condiciones',
+});
+
 // ─── EN pages ───────────────────────────────────────────────────────────────
 
 export const homeEN: Metadata = generatePageMetadata({
@@ -231,6 +263,38 @@ export const registerEN: Metadata = generatePageMetadata({
   path: '/en/register',
   altPath: '/es/registro',
   noIndex: true,
+});
+
+export const termsEN: Metadata = generatePageMetadata({
+  title: 'Legal terms',
+  description: 'Legal terms and conditions for using the Retiru platform.',
+  locale: 'en',
+  path: '/en/legal/terminos',
+  altPath: '/es/legal/terminos',
+});
+
+export const privacyEN: Metadata = generatePageMetadata({
+  title: 'Privacy policy',
+  description: 'Privacy policy and data protection of Retiru.',
+  locale: 'en',
+  path: '/en/legal/privacidad',
+  altPath: '/es/legal/privacidad',
+});
+
+export const cookiesEN: Metadata = generatePageMetadata({
+  title: 'Cookies policy',
+  description: 'Cookies policy of Retiru.',
+  locale: 'en',
+  path: '/en/legal/cookies',
+  altPath: '/es/legal/cookies',
+});
+
+export const conditionsEN: Metadata = generatePageMetadata({
+  title: 'Conditions and pricing',
+  description: 'How pricing works on Retiru. How much you pay, to whom, and how the platform is funded. Total transparency.',
+  locale: 'en',
+  path: '/en/condiciones',
+  altPath: '/es/condiciones',
 });
 
 // ─── Dashboard / Panel / Admin (noIndex) ────────────────────────────────────

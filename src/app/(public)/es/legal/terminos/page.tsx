@@ -4,11 +4,9 @@
 // ============================================================================
 
 import Link from 'next/link';
+import { termsES } from '@/lib/seo/page-metadata';
 
-export const metadata = {
-  title: 'Términos y condiciones',
-  description: 'Términos de uso y condiciones legales del servicio Retiru.',
-};
+export const metadata = termsES;
 
 export default function TerminosPage() {
   return (

@@ -1,13 +1,38 @@
 // /en/organizer/[slug] — Public organizer profile (EN)
 import Link from 'next/link';
 import Image from 'next/image';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getOrganizerBySlug, getOrganizerSlugs } from '@/lib/data';
+import { generatePageMetadata } from '@/lib/seo';
 import { createServerSupabase } from '@/lib/supabase/server';
 
 export async function generateStaticParams() {
   const slugs = await getOrganizerSlugs();
   return slugs.map((slug) => ({ slug }));
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const organizer = await getOrganizerBySlug(slug);
+  
+  if (!organizer) {
+    return generatePageMetadata({
+      title: 'Organizer not found',
+      description: '',
+      locale: 'en',
+      path: `/en/organizer/${slug}`,
+    });
+  }
+
+  return generatePageMetadata({
+    title: `${organizer.business_name} — Retreat Organizer | Retiru`,
+    description: organizer.description_en?.slice(0, 160) || organizer.description_es?.slice(0, 160) || `Discover retreats and events organized by ${organizer.business_name} on Retiru.`,
+    locale: 'en',
+    path: `/en/organizer/${slug}`,
+    altPath: `/es/organizador/${slug}`,
+    ogImage: organizer.logo_url || undefined,
+  });
 }
 
 export default async function OrganizerPageEN({ params }: { params: Promise<{ slug: string }> }) {

@@ -24,14 +24,6 @@ export const metadata: Metadata = {
   applicationName: 'Retiru',
   authors: [{ name: 'Retiru', url: SITE_URL }],
   keywords: ['retreats spain', 'yoga retreat', 'meditation retreat', 'ayurveda spain', 'yoga centers spain', 'meditation spain', 'ayurveda retreat'],
-  alternates: {
-    canonical: `${SITE_URL}/en`,
-    languages: {
-      'es': `${SITE_URL}/es`,
-      'en': `${SITE_URL}/en`,
-      'x-default': `${SITE_URL}/es`,
-    },
-  },
   openGraph: {
     type: 'website',
     locale: 'en_US',

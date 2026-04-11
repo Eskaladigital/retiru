@@ -3,11 +3,9 @@
 // ============================================================================
 
 import Link from 'next/link';
+import { cookiesES } from '@/lib/seo/page-metadata';
 
-export const metadata = {
-  title: 'Política de cookies',
-  description: 'Política de cookies de Retiru.',
-};
+export const metadata = cookiesES;
 
 export default function CookiesPage() {
   return (

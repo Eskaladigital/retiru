@@ -1,10 +1,8 @@
 // RETIRU · Privacy policy — /en/legal/privacidad
 import Link from 'next/link';
+import { privacyEN } from '@/lib/seo/page-metadata';
 
-export const metadata = {
-  title: 'Privacy policy',
-  description: 'Retiru privacy and data protection policy.',
-};
+export const metadata = privacyEN;
 
 export default function PrivacidadPageEn() {
   return (

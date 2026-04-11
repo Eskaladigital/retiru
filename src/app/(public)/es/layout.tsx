@@ -25,14 +25,6 @@ export const metadata: Metadata = {
   generator: 'Next.js',
   referrer: 'origin-when-cross-origin',
   keywords: ['retiros españa', 'retiro yoga', 'retiro meditación', 'ayurveda españa', 'centros yoga españa', 'retiros ayurveda', 'meditación españa'],
-  alternates: {
-    canonical: `${SITE_URL}/es`,
-    languages: {
-      'es': `${SITE_URL}/es`,
-      'en': `${SITE_URL}/en`,
-      'x-default': `${SITE_URL}/es`,
-    },
-  },
   openGraph: {
     type: 'website',
     locale: 'es_ES',

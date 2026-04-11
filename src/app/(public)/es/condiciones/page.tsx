@@ -4,11 +4,9 @@
 // ============================================================================
 
 import Link from 'next/link';
+import { conditionsES } from '@/lib/seo/page-metadata';
 
-export const metadata = {
-  title: 'Condiciones de uso y precios',
-  description: 'Cómo funcionan los precios en Retiru. Cuánto pagas, a quién y cómo se financia la plataforma. Transparencia total.',
-};
+export const metadata = conditionsES;
 
 export default function CondicionesPage() {
   return (

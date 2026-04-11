@@ -1,13 +1,38 @@
 // /es/organizador/[slug] — Perfil público del organizador
 import Link from 'next/link';
 import Image from 'next/image';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getOrganizerBySlug, getOrganizerSlugs } from '@/lib/data';
+import { generatePageMetadata } from '@/lib/seo';
 import { createServerSupabase } from '@/lib/supabase/server';
 
 export async function generateStaticParams() {
   const slugs = await getOrganizerSlugs();
   return slugs.map((slug) => ({ slug }));
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const organizer = await getOrganizerBySlug(slug);
+  
+  if (!organizer) {
+    return generatePageMetadata({
+      title: 'Organizador no encontrado',
+      description: '',
+      locale: 'es',
+      path: `/es/organizador/${slug}`,
+    });
+  }
+
+  return generatePageMetadata({
+    title: `${organizer.business_name} — Organizador de retiros | Retiru`,
+    description: organizer.description_es?.slice(0, 160) || `Descubre los retiros y eventos organizados por ${organizer.business_name} en Retiru.`,
+    locale: 'es',
+    path: `/es/organizador/${slug}`,
+    altPath: `/en/organizer/${slug}`,
+    ogImage: organizer.logo_url || undefined,
+  });
 }
 
 export default async function OrganizadorPage({ params }: { params: Promise<{ slug: string }> }) {

@@ -4,11 +4,9 @@
 // ============================================================================
 
 import Link from 'next/link';
+import { conditionsEN } from '@/lib/seo/page-metadata';
 
-export const metadata = {
-  title: 'Conditions and pricing',
-  description: 'How pricing works on Retiru. What you pay, to whom, and how the platform is funded. Full transparency.',
-};
+export const metadata = conditionsEN;
 
 export default function CondicionesPageEn() {
   return (

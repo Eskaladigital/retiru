@@ -3,11 +3,9 @@
 // ============================================================================
 
 import Link from 'next/link';
+import { privacyES } from '@/lib/seo/page-metadata';
 
-export const metadata = {
-  title: 'Política de privacidad',
-  description: 'Política de privacidad y protección de datos de Retiru.',
-};
+export const metadata = privacyES;
 
 export default function PrivacidadPage() {
   return (

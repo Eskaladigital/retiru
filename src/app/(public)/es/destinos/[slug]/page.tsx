@@ -1,13 +1,38 @@
 // /es/destinos/[slug] — Retiros en un destino (Supabase)
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { Flame, Zap } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getDestinationBySlug, getDestinationSlugs, getPublishedRetreats } from '@/lib/data';
+import { generatePageMetadata } from '@/lib/seo';
 import { ImageWithFallback } from '@/components/ui/image-with-fallback';
 
 export async function generateStaticParams() {
   const slugs = await getDestinationSlugs();
   return slugs.map((slug) => ({ slug }));
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const destination = await getDestinationBySlug(slug);
+  
+  if (!destination) {
+    return generatePageMetadata({
+      title: 'Destino no encontrado',
+      description: '',
+      locale: 'es',
+      path: `/es/destinos/${slug}`,
+    });
+  }
+
+  return generatePageMetadata({
+    title: `Retiros de yoga y meditación en ${destination.name_es} | Retiru`,
+    description: `Descubre los mejores retiros y escapadas de bienestar en ${destination.name_es}. Compara fechas, precios y reserva con confirmación inmediata.`,
+    locale: 'es',
+    path: `/es/destinos/${slug}`,
+    altPath: `/en/destinations/${slug}`,
+    keywords: ['retiros', destination.name_es, 'yoga', 'meditación', 'españa'],
+  });
 }
 
 function formatDates(start: string, end: string, days: number): string {

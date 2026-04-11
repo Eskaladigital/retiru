@@ -1,10 +1,8 @@
 // RETIRU · Cookie policy — /en/legal/cookies
 import Link from 'next/link';
+import { cookiesEN } from '@/lib/seo/page-metadata';
 
-export const metadata = {
-  title: 'Cookie policy',
-  description: 'Retiru cookie policy.',
-};
+export const metadata = cookiesEN;
 
 export default function CookiesPageEn() {
   return (

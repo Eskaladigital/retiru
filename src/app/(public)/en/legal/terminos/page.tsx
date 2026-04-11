@@ -3,11 +3,9 @@
 // ============================================================================
 
 import Link from 'next/link';
+import { termsEN } from '@/lib/seo/page-metadata';
 
-export const metadata = {
-  title: 'Terms and conditions',
-  description: 'Retiru terms of use and service conditions. How pricing, bookings and payments work.',
-};
+export const metadata = termsEN;
 
 export default function TerminosPageEn() {
   return (

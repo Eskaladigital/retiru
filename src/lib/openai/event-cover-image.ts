@@ -125,6 +125,19 @@ export function formatEventCoverUserBrief(input: EventCoverBriefInput): string {
   const lang = trimLines(input.languages);
   if (lang.length) parts.push(`Idiomas del evento: ${lang.join(', ')}`);
 
+  parts.push(
+    '',
+    '--- Variedad visual (obligatorio) ---',
+    'Cada portada debe sentirse única. Elige al AZAR uno de estos tipos de escena según el retiro:',
+    '  A) Personas haciendo la actividad: de frente, de lado, en movimiento, manos en detalle, en interior o exterior.',
+    '  B) Entorno / paisaje / arquitectura SIN personas: sala preparada con luz, patio, terraza, jardín, costa, montaña.',
+    '  C) Bodegón: alimentos del retiro, materiales del taller, cuencos, textiles.',
+    '  D) Detalle / primer plano: manos, pies, esterilla, texturas del lugar.',
+    '  E) Persona sola en acción: estiramiento, lectura, paseo. Natural.',
+    '  F) Vista aérea / cenital: mesa preparada, círculo de cojines, jardín desde arriba.',
+    'Lo importante es VARIEDAD: no haya un patrón reconocible si se ven varias portadas juntas.',
+  );
+
   return parts.join('\n\n');
 }
 
@@ -133,13 +146,14 @@ export function formatEventCoverUserBrief(input: EventCoverBriefInput): string {
  */
 const PROMPT_BUILDER_SYSTEM = `Eres un agente senior: director de arte + location scout + especialista en prompts para generación de imágenes fotorrealistas. Recibes un DOSSIER COMPLETO de un retiro (geografía, fechas, categorías, textos, programa, incluidos). Tu ÚNICA salida es UN párrafo en español que el modelo de imagen usará tal cual: debe ser la mejor posible.
 
-ANTES de escribir (mentalmente, no lo imprimas): (1) Elige el escenario visual más específico y honesto con el dossier — no un “paraíso genérico”. (2) Conecta TEMÁTICA: yoga/meditación/cerámica/ayurveda/círculo/mar/desierto/montaña según categorías + descripción + programa + incluidos. (3) Elige UNA luz creíble de día (mañana luminosa, media mañana, tarde clara o golden hour todavía alta) coherente con estación y región si el dossier lo permite. (4) Añade 2–4 sustantivos CONCRETOS de textura o material (adobe, lino, arcilla, corcho, sal, musgo, dunas, olivos…) alineados con el lugar y la actividad, no adjetivos vacíos. (5) Si hay conflicto entre campos, prima descripción + título + destino sobre suposiciones. (6) Piensa como si un fotógrafo profesional estuviera físicamente allí con una cámara full frame de alta gama haciendo una foto real para una portada editorial, no como si estuviera “creando arte”.
+ANTES de escribir (mentalmente, no lo imprimas): (1) Elige el escenario visual más específico y honesto con el dossier — no un “paraíso genérico”. (2) Conecta TEMÁTICA: yoga/meditación/cerámica/ayurveda/círculo/mar/desierto/montaña según categorías + descripción + programa + incluidos. (3) Elige UNA luz creíble de día (mañana luminosa, media mañana, tarde clara o golden hour todavía alta) coherente con estación y región si el dossier lo permite. (4) Añade 2–4 sustantivos CONCRETOS de textura o material (adobe, lino, arcilla, corcho, sal, musgo, dunas, olivos…) alineados con el lugar y la actividad, no adjetivos vacíos. (5) Si hay conflicto entre campos, prima descripción + título + destino sobre suposiciones. (6) Piensa como si un fotógrafo profesional estuviera físicamente allí con una cámara full frame de alta gama haciendo una foto real para una portada editorial, no como si estuviera “creando arte”. (7) VARÍA el encuadre: no uses por defecto el tópico “grupo mirando horizonte”.
 
 REGLAS DURAS:
 - Geografía: respeta destino/dirección/fechas/estación inferida; no inventes monumentos ni ciudades nombradas si no salen en el dossier.
 - Luz/horario: PROHIBIDO noche, anochecer oscuro, hora azul, sol ya puesto, amanecer antes de salir el sol o escenas subexpuestas. La foto debe sentirse tomada con luz natural real entre las 09:00 y las 20:30 de horario de verano del sur de España: luminosa, clara y usable como portada.
 - Público: si el texto indica solo mujeres u otro colectivo, respétalo; si no, grupo mixto o sin género explícito, sin estereotipos.
-- Personas: como mucho pocas figuras; rostros sin identidad (espaldas, lejanía, desenfoque, silueta). Nunca celebridades. Si la presencia humana hace la imagen menos realista, prioriza una escena de entorno real con presencia humana mínima, lejana o incluso ninguna.
+- Variedad: el dossier incluye opciones A-F de tipo de escena. Elige la que mejor encaje con ESTE retiro; las personas PUEDEN y DEBEN aparecer a menudo, pero varía composición: de frente, de lado, en acción, una sola persona, grupo activo, primer plano de manos. Lo que NO debe repetirse es siempre el mismo encuadre.
+- Personas cuando aparezcan: naturales, en actividad real, no posadas. Rostros pueden verse si es creíble. Nunca celebridades.
 - Prohibido en la escena: texto legible, logotipos, carteles, móviles como foco, marcas, datos de contacto.
 - Evita “look IA”: cielos neón, piel de plástico, simetría de postal barata, oversaturación, HDR agresivo, tonos morados irreales, niebla mágica, render/pintura/ilustración, perfección plástica, piel suavizada, brillo artificial, composición imposible o escenografía de fantasía, sombras excesivamente cerradas o escenas tenebrosas.
 
@@ -167,6 +181,7 @@ Prioridades:
 - Si el borrador suena demasiado bonito, demasiado escenificado, demasiado “wellness instagram”, demasiado simétrico o demasiado turístico, rebájalo.
 - Da prioridad a entorno real, luz existente, materiales concretos, imperfecciones creíbles, composición editorial contenida.
 - Si las personas no son imprescindibles para comunicar el retiro, reduce su protagonismo o déjalas lejanas/secundarias. Si aparecen, nada de poses artificiales ni expresiones de anuncio.
+- Si el borrador cae siempre en la misma fórmula, rompe el patrón: introduce personas si no las hay, o quítalas si siempre salen, o cambia encuadre. Personas SON bienvenidas en poses y encuadres variados.
 - Corrige cualquier tendencia a oscuridad excesiva: nada de noche, nada de sol escondido, nada de cielos dramáticos oscuros; debe sentirse una franja luminosa y comercialmente útil de día.
 - Evita cualquier sensación de fantasía, exceso de color, teatralidad, glow, piel plástica, postal irreal o escena de catálogo falso.
 
@@ -259,7 +274,7 @@ export async function buildDallePromptFromEvent(apiKey: string, input: EventCove
 
 /** Refuerzo final en español para el modelo de imagen. */
 const IMAGE_REALISM_TAIL =
-  ' Tomada como fotografía real con cámara full frame profesional y óptica de reportaje de alta calidad, luz existente físicamente creíble, color natural y balance de blancos realista, contraste moderado, grano mínimo natural, detalle auténtico en piel, telas, arena, piedra, vegetación o arquitectura según la escena; siempre de día, luminosa y clara, nunca nocturna ni sombría, con sensación de franja útil entre 09:00 y 20:30 de verano del sur de España; si aparecen personas, secundarias, naturales y no posadas; sin HDR agresivo, sin acabado plástico, sin render 3D, sin pintura digital, sin ilustración, sin tipografía ni logotipos.';
+  ' Tomada como fotografía real con cámara full frame profesional y óptica de reportaje de alta calidad, luz existente físicamente creíble, color natural y balance de blancos realista, contraste moderado, grano mínimo natural, detalle auténtico en piel, telas, arena, piedra, vegetación o arquitectura según la escena; siempre de día, luminosa y clara, nunca nocturna ni sombría, con sensación de franja útil entre 09:00 y 20:30 de verano del sur de España; personas naturales y en actividad real cuando aparezcan; sin HDR agresivo, sin acabado plástico, sin render 3D, sin pintura digital, sin ilustración, sin tipografía ni logotipos.';
 
 function buildFinalImagePrompt(sceneFromGpt: string): string {
   const scene = sceneFromGpt.replace(/\s+/g, ' ').trim();

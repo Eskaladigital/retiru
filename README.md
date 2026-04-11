@@ -109,6 +109,7 @@ npm run blog:backfill-slugs-en                        # Rellenar slug_en del blo
 npm run blog:translate-en                             # Traducir posts publicados ES→EN (OpenAI); --force retraduce todo
 npm run blog:import-csv                               # Genera `supabase/seed/016_blog_from_csv.sql` desde `Table 1-Grid view.csv` (orden barajado, fechas escalonadas)
 npm run blog:import-csv:push                          # Igual + inserta/actualiza en Supabase usando `.env.local` (service role)
+npm run blog:backfill-covers-ai                       # Portadas blog con el mismo agente que retiros (GPT-4o×2 + gpt-image-1.5); por defecto solo si portada vacía o URL de stock. Ver `agente generador de imágenes.txt`. Flags: `--dry-run`, `--force`, `--regenerate-blog-ai` (vuelve a generar portadas ya en `blog/ai-cover-*`), `--inline`, `--limit=N`, `--concurrency=2`, `--id=uuid`
 
 # Centros — emails
 npm run centers:emails        # Sincronizar emails desde CSV
