@@ -11,6 +11,7 @@ const TinyRetreatDescriptionEditor = dynamic(
 import { Upload, X, Sparkles } from 'lucide-react';
 import { OrganizerPriceBreakdown } from '@/components/organizer/OrganizerPriceBreakdown';
 import { shrinkHeavyHtmlForRetreatPayload, uploadRetreatGalleryImageFromBrowser } from '@/lib/supabase/client';
+import { RetreatDescriptionBody } from '@/components/ui/retreat-description-body';
 
 interface Option { id: string; name: string; slug: string }
 
@@ -412,6 +413,17 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
           <code className="text-[11px] bg-sand-100 px-1 rounded">NEXT_PUBLIC_TINYMCE_API_KEY</code> en <code className="text-[11px] bg-sand-100 px-1 rounded">.env.local</code>
           . No incluyas teléfonos ni emails en la descripción.
         </p>
+        
+        {form.description_es.trim() && (
+          <details className="mt-4 border border-sand-200 rounded-xl overflow-hidden">
+            <summary className="px-4 py-2.5 bg-sand-50 font-medium text-sm text-foreground cursor-pointer hover:bg-sand-100 transition-colors">
+              👁️ Vista previa (como se verá en la ficha pública)
+            </summary>
+            <div className="p-5 bg-white">
+              <RetreatDescriptionBody content={form.description_es} />
+            </div>
+          </details>
+        )}
       </div>
 
       <div>
