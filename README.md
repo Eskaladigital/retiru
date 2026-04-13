@@ -95,6 +95,7 @@ npm run dev              # Servidor de desarrollo (puerto 3000)
 npm run build            # Build de producción
 npm run start            # Servidor de producción
 npm run lint             # Linter (ESLint)
+npm run supertester      # Playwright: URLs del sitemap + login/registro (SEO, tiempo de carga, trazas). Servidor en marcha; primera vez: `npx playwright install chromium`
 npm run db:types         # Generar tipos TypeScript desde el esquema de Supabase
 npm run db:verify-schema       # Comprueba esquema vía .env.local (031a/031b, user_roles, bucket organizer-docs, pasos por org)
 npm run verify-shop-survey-db  # Tabla + RPC encuesta tienda y unicidad anónima (migraciones 030 + 032)

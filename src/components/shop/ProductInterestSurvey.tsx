@@ -210,78 +210,90 @@ export function ProductInterestSurvey({ lang = 'es' }: ProductInterestSurveyProp
   };
 
   return (
-    <div className="bg-white border border-sand-200 rounded-2xl p-6 md:p-10 max-w-4xl mx-auto">
-      <div className="text-center mb-8">
-        <h3 className="font-serif text-2xl md:text-3xl text-foreground mb-2">{t.title}</h3>
-        <p className="text-[#7a6b5d] text-sm md:text-base">{t.subtitle}</p>
+    <div className="bg-white border border-sand-200 rounded-2xl p-6 md:p-10 max-w-3xl mx-auto shadow-sm">
+      <div className="text-center mb-10">
+        <h3 className="font-serif text-2xl md:text-3xl text-foreground mb-3">{t.title}</h3>
+        <p className="text-[#7a6b5d] text-sm md:text-base max-w-xl mx-auto">{t.subtitle}</p>
       </div>
 
-      <div className="space-y-6">
-        <div className="grid gap-4">
-          {SHOP_SURVEY_CATEGORIES.map((category) => {
-            const label = lang === 'en' ? category.labelEn : category.labelEs;
-            const currentLevel = levels[category.id] || 0;
-            const errCode = errorByCategory[category.id];
-            const isSaving = savingCategory === category.id;
+      <div className="space-y-8">
+        <div className="bg-sand-50/50 rounded-2xl border border-sand-100 overflow-hidden">
+          <div className="hidden md:flex justify-between items-center text-xs font-medium text-[#a09383] uppercase tracking-wider bg-sand-50/80 px-6 py-4 border-b border-sand-100">
+            <span>Categoría</span>
+            <div className="flex items-center gap-12 mr-2">
+              <span>{t.levels[0]}</span>
+              <span>{t.levels[4]}</span>
+            </div>
+          </div>
+          
+          <div className="md:hidden flex justify-between items-center text-xs font-medium text-[#7a6b5d] bg-sand-50 px-4 py-3 border-b border-sand-100">
+            <div className="flex items-center gap-1.5"><span className="w-5 h-5 rounded-full bg-sand-200 flex items-center justify-center text-[10px]">1</span> {t.levels[0]}</div>
+            <div className="flex items-center gap-1.5">{t.levels[4]} <span className="w-5 h-5 rounded-full bg-terracotta-600 text-white flex items-center justify-center text-[10px]">5</span></div>
+          </div>
 
-            return (
-              <div
-                key={category.id}
-                className="bg-sand-50 rounded-xl p-4 hover:bg-sand-100/50 transition-colors"
-              >
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="flex items-start gap-3 min-w-0">
-                    <span className="text-2xl shrink-0" role="img" aria-label={label}>
+          <div className="divide-y divide-sand-100">
+            {SHOP_SURVEY_CATEGORIES.map((category) => {
+              const label = lang === 'en' ? category.labelEn : category.labelEs;
+              const currentLevel = levels[category.id] || 0;
+              const errCode = errorByCategory[category.id];
+              const isSaving = savingCategory === category.id;
+
+              return (
+                <div
+                  key={category.id}
+                  className="p-4 md:px-6 md:py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-white transition-colors group"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl md:text-xl shrink-0" role="img" aria-label={label}>
                       {category.emoji}
                     </span>
-                    <div className="min-w-0">
-                      <h4 className="font-semibold text-foreground">{label}</h4>
+                    <div className="flex flex-col">
+                      <h4 className="font-medium text-foreground md:text-sm">{label}</h4>
+                      <div className="h-4 flex items-center">
+                        {isSaving ? (
+                          <span className="text-[10px] text-terracotta-500 uppercase tracking-widest">{t.saving}</span>
+                        ) : errCode ? (
+                          <span className="text-[10px] text-red-500">{errMsg(errCode)}</span>
+                        ) : currentLevel > 0 ? (
+                          <span className="text-[10px] text-sage-600 uppercase tracking-widest font-semibold flex items-center gap-1">
+                            <span className="w-3 h-3 rounded-full bg-sage-100 text-sage-700 flex items-center justify-center text-[8px]">✓</span> {t.saved}
+                          </span>
+                        ) : null}
+                      </div>
                     </div>
                   </div>
-                  <div className="shrink-0 text-xs text-[#a09383] min-h-[1.25rem]">
-                    {isSaving ? <span className="text-terracotta-600">{t.saving}</span> : null}
-                    {!isSaving && currentLevel > 0 ? (
-                      <span className="text-sage-700 font-semibold">✓ {t.saved}</span>
-                    ) : null}
+
+                  <div className="flex items-center justify-between md:justify-end gap-2 w-full md:w-auto">
+                    {[1, 2, 3, 4, 5].map((level) => (
+                      <button
+                        key={level}
+                        type="button"
+                        disabled={isSaving}
+                        onClick={() => handleLevelClick(category.id, level)}
+                        className={`relative w-11 h-11 md:w-10 md:h-10 flex items-center justify-center text-sm font-medium rounded-full transition-all disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-terracotta-400 focus:ring-offset-2 ${
+                          currentLevel === level
+                            ? 'bg-terracotta-600 text-white shadow-md transform scale-110 z-10'
+                            : 'bg-white border border-sand-200 text-[#7a6b5d] hover:border-terracotta-300 hover:text-terracotta-600 hover:bg-terracotta-50'
+                        }`}
+                        title={t.levels[level - 1]}
+                      >
+                        {level}
+                      </button>
+                    ))}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {[1, 2, 3, 4, 5].map((level) => (
-                    <button
-                      key={level}
-                      type="button"
-                      disabled={isSaving}
-                      onClick={() => handleLevelClick(category.id, level)}
-                      className={`flex-1 py-2 px-1 text-xs md:text-sm font-medium rounded-lg transition-all disabled:opacity-60 ${
-                        currentLevel === level
-                          ? 'bg-terracotta-600 text-white shadow-sm scale-105'
-                          : 'bg-white border border-sand-200 text-[#7a6b5d] hover:border-terracotta-300'
-                      }`}
-                      title={t.levels[level - 1]}
-                    >
-                      {level}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex justify-between text-[10px] text-[#a09383] mt-1.5 px-1">
-                  <span>{t.levels[0]}</span>
-                  <span>{t.levels[4]}</span>
-                </div>
-                {errCode ? (
-                  <p className="text-xs text-red-600 mt-2">{errMsg(errCode)}</p>
-                ) : null}
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
-        <div>
+        <div className="bg-sand-50/30 rounded-2xl p-5 md:p-6 border border-sand-100">
           <label htmlFor="comments" className="block text-sm font-semibold text-foreground mb-2">
             {t.commentsLabel}
           </label>
           <textarea
             id="comments"
-            rows={4}
+            rows={3}
             value={comments}
             onChange={(e) => {
               setComments(e.target.value);
@@ -289,22 +301,28 @@ export function ProductInterestSurvey({ lang = 'es' }: ProductInterestSurveyProp
               setCommentError('');
             }}
             placeholder={t.commentsPlaceholder}
-            className="w-full px-4 py-3 border border-sand-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-terracotta-400 focus:border-transparent resize-none text-sm"
+            className="w-full px-4 py-3 border border-sand-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-terracotta-400 focus:border-transparent resize-none text-sm transition-shadow"
           />
-          {commentError ? (
-            <p className="text-sm text-red-600 mt-2">{commentError}</p>
-          ) : null}
-          {commentSaved ? (
-            <p className="text-sm text-sage-700 font-medium mt-2">✓ {t.saved}</p>
-          ) : null}
-          <button
-            type="button"
-            onClick={() => void handleSaveComment()}
-            disabled={commentSaving || !comments.trim()}
-            className="mt-3 inline-flex items-center justify-center px-5 py-2.5 rounded-full text-sm font-semibold border border-sand-300 text-[#7a6b5d] hover:border-terracotta-400 hover:text-terracotta-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {commentSaving ? t.savingComment : t.saveComment}
-          </button>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mt-3">
+            <div className="min-h-[1.5rem]">
+              {commentError ? (
+                <p className="text-sm text-red-600">{commentError}</p>
+              ) : null}
+              {commentSaved ? (
+                <p className="text-sm text-sage-700 font-medium flex items-center gap-1.5">
+                  <span className="w-5 h-5 rounded-full bg-sage-100 text-sage-700 flex items-center justify-center text-xs">✓</span> {t.saved}
+                </p>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              onClick={() => void handleSaveComment()}
+              disabled={commentSaving || !comments.trim()}
+              className="w-full md:w-auto inline-flex items-center justify-center px-6 py-2.5 rounded-full text-sm font-semibold bg-white border border-sand-300 text-[#7a6b5d] hover:border-terracotta-400 hover:text-terracotta-600 hover:bg-terracotta-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            >
+              {commentSaving ? t.savingComment : t.saveComment}
+            </button>
+          </div>
         </div>
       </div>
     </div>

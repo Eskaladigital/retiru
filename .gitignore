@@ -6,3 +6,6 @@ node_modules/
 .vercel
 supabase/.temp/
 mailing/
+SUPERTESTER/.urls-cache.json
+SUPERTESTER/test-results/
+SUPERTESTER/playwright-report/
