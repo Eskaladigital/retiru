@@ -107,7 +107,7 @@ Parámetros opcionales en registro: `?redirect=/ruta&claim=true` (redirige tras 
 | `/es/mis-eventos/verificacion` | `src/app/(public)/es/(dashboard)/mis-eventos/verificacion/page.tsx` | Pasos KYC organizador + subida a `organizer-docs` |
 | `/es/panel` | `src/app/(public)/es/(organizer)/panel/page.tsx` | Dashboard organizador |
 | `/es/panel/eventos` | `src/app/(public)/es/(organizer)/panel/eventos/page.tsx` | Lista de retiros (contrato si aplica) |
-| `/es/panel/eventos/nuevo` | `src/app/(public)/es/(organizer)/panel/eventos/nuevo/page.tsx` | Wizard nuevo retiro |
+| `/es/panel/eventos/nuevo` | `src/app/(public)/es/(organizer)/panel/eventos/nuevo/page.tsx` | Wizard nuevo retiro (si no hay `contract_accepted_at`, redirección a `/es/panel/eventos` para el contrato) |
 | `/es/panel/eventos/[id]` | `src/app/(public)/es/(organizer)/panel/eventos/[id]/page.tsx` | Editar retiro |
 | `/es/panel/eventos/[id]/reservas` | `src/app/(public)/es/(organizer)/panel/eventos/[id]/reservas/page.tsx` | Reservas del retiro |
 | `/es/panel/eventos/[id]/checkin` | `src/app/(public)/es/(organizer)/panel/eventos/[id]/checkin/page.tsx` | Check-in |

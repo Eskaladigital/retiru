@@ -19,11 +19,11 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   }
 
   if (!hasContract) {
-    return <div className="min-h-[calc(100vh-72px)] bg-cream-100">{children}</div>;
+    return <div className="min-h-[calc(100vh-72px)] bg-cream-100 pt-16 md:pt-[72px]">{children}</div>;
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-72px)]">
+    <div className="flex min-h-[calc(100vh-72px)] pt-16 md:pt-[72px]">
       <PanelSidebar />
       <div className="flex-1 bg-cream-100 p-6 md:p-8">{children}</div>
     </div>

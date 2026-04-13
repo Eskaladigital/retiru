@@ -1,8 +1,23 @@
-import { createAdminSupabase } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
 import { NuevoEventoForm } from '@/app/(public)/es/(dashboard)/mis-eventos/nuevo/NuevoEventoForm';
 
 export default async function PanelNuevoEventoPage() {
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/es/login?redirect=/es/panel/eventos/nuevo');
+
   const admin = createAdminSupabase();
+
+  const { data: orgProfile } = await admin
+    .from('organizer_profiles')
+    .select('contract_accepted_at')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (!orgProfile?.contract_accepted_at) {
+    redirect('/es/panel/eventos');
+  }
 
   const { data: categories } = await admin
     .from('categories')
