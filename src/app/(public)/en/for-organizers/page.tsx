@@ -9,12 +9,48 @@ import { jsonLdFAQ, jsonLdScript } from '@/lib/seo';
 export const metadata: Metadata = forOrganizersEN;
 
 const CENTER_BENEFITS = [
-  { icon: '📍', title: 'Directory listing', desc: 'Detailed profile with hours, services, photos, reviews and map location.', image: '/images/centro-directorio-mapa.png' },
-  { icon: '🌐', title: 'SEO visibility', desc: 'Your center appears in Google searches. Bilingual ES/EN optimized profile.', image: '/images/centro-visibilidad-seo.png' },
-  { icon: '⭐', title: 'Verified reviews', desc: 'Users can rate your center. Good reviews boost your visibility.', image: '/images/centro-resenas-valoraciones.png' },
-  { icon: '✅', title: 'Verified center badge', desc: 'A verification badge builds trust with potential clients.', image: '/images/centro-sello-verificado.png' },
-  { icon: '📞', title: 'Direct contact', desc: 'Interested people contact you directly: phone, email, website and social media.', image: '/images/centro-contacto-canales.png' },
-  { icon: '📅', title: 'Publish events', desc: 'Besides the directory, publish retreats and events from your center profile.', image: '/images/centro-publicar-retiros.png' },
+  {
+    icon: '📍',
+    title: 'Directory listing',
+    desc: 'Detailed profile with hours, services, photos, reviews and map location.',
+    detail: 'Your center gets a polished, credible presence inside Retiru, with a page designed to explain quickly what you offer, where you are and why it is worth visiting.',
+    image: '/images/centro-directorio-mapa.png',
+  },
+  {
+    icon: '🌐',
+    title: 'SEO visibility',
+    desc: 'Your center appears in Google searches. Bilingual ES/EN optimized profile.',
+    detail: 'You do not rely only on social media or word of mouth: we shape a listing prepared to capture organic searches in Spanish and English and bring you new discovery traffic.',
+    image: '/images/centro-visibilidad-seo.png',
+  },
+  {
+    icon: '⭐',
+    title: 'Verified reviews',
+    desc: 'Users can rate your center. Good reviews boost your visibility.',
+    detail: 'Social proof helps you convert better, builds trust from the first glance and strengthens the credibility of your space for people who have never heard of you before.',
+    image: '/images/centro-resenas-valoraciones.png',
+  },
+  {
+    icon: '✅',
+    title: 'Verified center badge',
+    desc: 'A verification badge builds trust with potential clients.',
+    detail: 'That extra layer of trust lowers friction, differentiates you from weaker options and helps an interested visit turn into a contact or booking more easily.',
+    image: '/images/centro-sello-verificado.png',
+  },
+  {
+    icon: '📞',
+    title: 'Direct contact',
+    desc: 'Interested people contact you directly: phone, email, website and social media.',
+    detail: 'We make it easy for each person to choose the contact channel that suits them best, whether they want to ask questions, request info or take the next step quickly.',
+    image: '/images/centro-contacto-canales.png',
+  },
+  {
+    icon: '📅',
+    title: 'Publish events',
+    desc: 'Besides the directory, publish retreats and events from your center profile.',
+    detail: 'If your center also runs experiences, you do not need another platform: you can move from local discovery to retreat acquisition within the same ecosystem.',
+    image: '/images/centro-publicar-retiros.png',
+  },
 ];
 
 const ORGANIZER_FEATURES = [
@@ -127,9 +163,10 @@ export default function ForOrganizersPageEN() {
           <h2 className="font-serif text-3xl font-bold md:text-4xl mb-3">
             Put your center on the map
           </h2>
-          <p className="text-[#7a6b5d] max-w-2xl mb-12">
+          <p className="text-[#7a6b5d] max-w-3xl mb-12">
             If you have a yoga, meditation or ayurveda center,
             we include you in our directory so thousands of people can find you.
+            This is not just about being listed; it is about showing up with a solid, credible profile designed to turn visits into real inquiries.
           </p>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
@@ -142,6 +179,7 @@ export default function ForOrganizersPageEN() {
                   <span className="mb-3 block text-2xl">{b.icon}</span>
                   <h3 className="mb-2 font-semibold">{b.title}</h3>
                   <p className="text-sm leading-relaxed text-[#7a6b5d]">{b.desc}</p>
+                  <p className="mt-3 text-sm leading-relaxed text-[#7a6b5d]">{b.detail}</p>
                 </div>
               </div>
             ))}
@@ -150,9 +188,10 @@ export default function ForOrganizersPageEN() {
           <div className="rounded-2xl bg-gradient-to-r from-sage-800 to-sage-900 text-white p-8 md:p-12 flex flex-col md:flex-row items-center gap-8">
             <div className="flex-1">
               <h3 className="font-serif text-2xl font-bold mb-3">Is your center already on Retiru?</h3>
-              <p className="text-sage-300 leading-relaxed max-w-lg">
+              <p className="text-sage-300 leading-relaxed max-w-xl">
                 Search for your center in our directory and claim it to manage your listing, respond to reviews and publish events.
                 Not listed yet? Sign in and propose it from &quot;My centers&quot; (we review before publishing) or contact us for help.
+                We want serious centers to activate their presence on Retiru with as little friction as possible and with support from the start.
               </p>
             </div>
             <div className="flex flex-col gap-3 shrink-0">
@@ -177,9 +216,10 @@ export default function ForOrganizersPageEN() {
           <h2 className="font-serif text-3xl font-bold md:text-4xl mb-3">
             Publish your retreats <span className="text-terracotta-600">with no listing fee</span>
           </h2>
-          <p className="text-[#7a6b5d] max-w-2xl mb-12">
+          <p className="text-[#7a6b5d] max-w-3xl mb-12">
             If you create yoga, meditation or ayurveda retreats and events, Retiru gives you a full management panel
             with no subscription or signup fee. Your <strong className="text-foreground">first retreat is free</strong> (0% commission); the second at 10%; from the third onward, 20% of the PVP. The breakdown is visible in the form before you publish.
+            The point is not only to give you visibility, but to give you a working tool to sell, coordinate and run your retreats from a single place.
           </p>
 
           <div className="overflow-x-auto rounded-2xl border border-sand-200 bg-white mb-12">
@@ -215,25 +255,34 @@ export default function ForOrganizersPageEN() {
               </tbody>
             </table>
           </div>
+          <p className="mb-12 max-w-3xl text-sm leading-relaxed text-[#7a6b5d]">
+            This comparison captures the Retiru approach: less friction to publish, stronger operational support once bookings start coming in, and better tools to build a real relationship with attendees before, during and after the retreat.
+          </p>
 
           {/* Tiered commission visual */}
           <div className="mb-12 rounded-2xl border-2 border-sand-200 bg-white p-6 md:p-8">
             <h3 className="font-serif text-xl font-bold text-foreground mb-6 text-center">Progressive commissions: start for free</h3>
+            <p className="mx-auto mb-6 max-w-3xl text-center text-sm leading-relaxed text-[#7a6b5d]">
+              We want testing Retiru to feel easy. That is why your first retreat carries no commission, and every retreat keeps the tier it started with so your margins stay predictable over time.
+            </p>
             <div className="grid gap-4 md:grid-cols-3">
               <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-5 text-center">
                 <p className="text-xs font-bold uppercase tracking-wide text-emerald-700 mb-2">1st retreat</p>
                 <p className="text-4xl font-bold text-emerald-700">0%</p>
                 <p className="text-sm text-emerald-800 mt-2">No commission. You receive <strong>100%</strong> of the PVP.</p>
+                <p className="mt-3 text-sm leading-relaxed text-emerald-900">Ideal for validating your first retreat on the platform, seeing how demand reacts and getting used to the panel without variable cost.</p>
               </div>
               <div className="rounded-xl bg-sky-50 border border-sky-200 p-5 text-center">
                 <p className="text-xs font-bold uppercase tracking-wide text-sky-700 mb-2">2nd retreat</p>
                 <p className="text-4xl font-bold text-sky-700">10%</p>
                 <p className="text-sm text-sky-800 mt-2">Reduced commission. You receive <strong>90%</strong> of the PVP.</p>
+                <p className="mt-3 text-sm leading-relaxed text-sky-900">Once you have tested the workflow, you keep a very contained commission so you can continue growing with a clear and manageable cost structure.</p>
               </div>
               <div className="rounded-xl bg-amber-50 border border-amber-200 p-5 text-center">
                 <p className="text-xs font-bold uppercase tracking-wide text-amber-700 mb-2">3rd retreat onward</p>
                 <p className="text-4xl font-bold text-amber-700">20%</p>
                 <p className="text-sm text-amber-800 mt-2">Standard commission. You receive <strong>80%</strong> of the PVP.</p>
+                <p className="mt-3 text-sm leading-relaxed text-amber-900">This is the long-term tier once you are operating with Retiru’s acquisition, management, communication and trust layer fully integrated into your business.</p>
               </div>
             </div>
             <p className="text-xs text-muted-foreground text-center mt-4">
@@ -265,16 +314,37 @@ export default function ForOrganizersPageEN() {
           <h2 className="mb-12 text-center font-serif text-3xl font-bold">How does it work for organizers?</h2>
           <div className="space-y-8">
             {[
-              { s: '01', t: 'Create your account', d: 'Sign up with your email and verify your account. From "My events" you can start the organizer onboarding.' },
-              { s: '02', t: 'Agreement & documents', d: 'In "My events" you accept the organizer agreement with Retiru. You then upload the required documents (ID, business registration, civil liability insurance, tax and bank details). Your profile stays pending validation until our team verifies it; in parallel you can already prepare your events.' },
-              { s: '03', t: 'Build your retreat and send for review', d: 'Use the step-by-step wizard: cover image and up to eight photos (the cover is the main image in listings and at the top of the page; the rest form the gallery). You can generate the cover with AI or, if you add no photos, a cover is created automatically when you save. Add schedule, PVP per person (with on-screen commission breakdown), optional minimum attendees and cancellation policy. When ready, send the retreat for review.' },
-              { s: '04', t: 'Validation, go-live & bookings', d: 'We validate your document profile and review the retreat for quality and consistency. A retreat only goes live when your organizer profile is verified and the retreat is approved (often within 24-48h per track once documents are complete). Once live, attendees book through the platform: Retiru retains the commission for your tier (0%, 10% or 20%) and settles the net per your settlement agreement.' },
-            ].map(({ s, t, d }) => (
+              {
+                s: '01',
+                t: 'Create your account',
+                d: 'Sign up with your email and verify your account. From "My events" you can start the organizer onboarding.',
+                detail: 'In just a few steps you can already begin setting up your workflow and preparing drafts, even before the full documentary process is completed.',
+              },
+              {
+                s: '02',
+                t: 'Agreement & documents',
+                d: 'In "My events" you accept the organizer agreement with Retiru. You then upload the required documents (ID, business registration, civil liability insurance, tax and bank details). Your profile stays pending validation until our team verifies it; in parallel you can already prepare your events.',
+                detail: 'That protects attendees while also giving you a clear route to professionalize your presence inside the platform.',
+              },
+              {
+                s: '03',
+                t: 'Build your retreat and send for review',
+                d: 'Use the step-by-step wizard: cover image and up to eight photos (the cover is the main image in listings and at the top of the page; the rest form the gallery). You can generate the cover with AI or, if you add no photos, a cover is created automatically when you save. Add schedule, PVP per person (with on-screen commission breakdown), optional minimum attendees and cancellation policy. When ready, send the retreat for review.',
+                detail: 'The goal is to help you build a clear, commercial and coherent retreat page without relying on messy manual processes or scattered tools.',
+              },
+              {
+                s: '04',
+                t: 'Validation, go-live & bookings',
+                d: 'We validate your document profile and review the retreat for quality and consistency. A retreat only goes live when your organizer profile is verified and the retreat is approved (often within 24-48h per track once documents are complete). Once live, attendees book through the platform: Retiru retains the commission for your tier (0%, 10% or 20%) and settles the net per your settlement agreement.',
+                detail: 'From there, the panel helps you follow the whole cycle: attract, convert, communicate and operate your event with much cleaner traceability.',
+              },
+            ].map(({ s, t, d, detail }) => (
               <div key={s} className="flex gap-6 items-start">
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-terracotta-600 text-lg font-bold text-white">{s}</span>
                 <div>
                   <h3 className="text-lg font-semibold">{t}</h3>
                   <p className="mt-1 text-sm text-[#7a6b5d] leading-relaxed">{d}</p>
+                  <p className="mt-3 text-sm text-[#7a6b5d] leading-relaxed">{detail}</p>
                 </div>
               </div>
             ))}
@@ -311,9 +381,10 @@ export default function ForOrganizersPageEN() {
       <section className="py-20 bg-gradient-to-br from-terracotta-600 to-terracotta-700 text-white text-center">
         <div className="container-narrow">
           <h2 className="font-serif text-3xl md:text-4xl font-bold">Join Retiru</h2>
-          <p className="mx-auto mt-4 max-w-lg text-terracotta-100">
+          <p className="mx-auto mt-4 max-w-2xl text-terracotta-100">
             Whether you&apos;re a yoga, meditation or ayurveda center or an organizer in that space, Retiru gives you the tools
             and visibility you need. No subscription to list; your first retreat is free, the second at 10%, then 20% standard.
+            If you want a platform that not only promotes you, but also helps you manage every booking and attendee better, this is where we want Retiru to stand apart.
           </p>
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link href="/en/centers" className="inline-block bg-white text-terracotta-700 font-bold px-8 py-4 rounded-xl hover:bg-sand-100 transition-colors">

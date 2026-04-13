@@ -105,8 +105,20 @@ Parámetros opcionales en registro: `?redirect=/ruta&claim=true` (redirige tras 
 | `/es/mis-eventos/nuevo` | `src/app/(public)/es/(dashboard)/mis-eventos/nuevo/page.tsx` | Wizard crear evento (TinyMCE descripción, portada + hasta 8 fotos, RLS `retreat-images`) |
 | `/es/mis-eventos/[id]` | `src/app/(public)/es/(dashboard)/mis-eventos/[id]/page.tsx` | Editar evento |
 | `/es/mis-eventos/verificacion` | `src/app/(public)/es/(dashboard)/mis-eventos/verificacion/page.tsx` | Pasos KYC organizador + subida a `organizer-docs` |
+| `/es/panel` | `src/app/(public)/es/(organizer)/panel/page.tsx` | Dashboard organizador |
+| `/es/panel/eventos` | `src/app/(public)/es/(organizer)/panel/eventos/page.tsx` | Lista de retiros (contrato si aplica) |
+| `/es/panel/eventos/nuevo` | `src/app/(public)/es/(organizer)/panel/eventos/nuevo/page.tsx` | Wizard nuevo retiro |
+| `/es/panel/eventos/[id]` | `src/app/(public)/es/(organizer)/panel/eventos/[id]/page.tsx` | Editar retiro |
+| `/es/panel/eventos/[id]/reservas` | `src/app/(public)/es/(organizer)/panel/eventos/[id]/reservas/page.tsx` | Reservas del retiro |
+| `/es/panel/eventos/[id]/checkin` | `src/app/(public)/es/(organizer)/panel/eventos/[id]/checkin/page.tsx` | Check-in |
+| `/es/panel/asistentes` | `src/app/(public)/es/(organizer)/panel/asistentes/page.tsx` | Asistentes |
 | `/es/panel/mensajes` | `src/app/(public)/es/(organizer)/panel/mensajes/page.tsx` | Mensajes del organizador (+ soporte) |
-| `/es/panel/verificacion` | `src/app/(public)/es/(organizer)/panel/verificacion/page.tsx` | Redirección servidor → `/es/mis-eventos/verificacion` |
+| `/es/panel/resenas` | `src/app/(public)/es/(organizer)/panel/resenas/page.tsx` | Reseñas |
+| `/es/panel/analiticas` | `src/app/(public)/es/(organizer)/panel/analiticas/page.tsx` | Analíticas |
+| `/es/panel/verificacion` | `src/app/(public)/es/(organizer)/panel/verificacion/page.tsx` | Verificación KYC (`VerificacionClient`) |
+| `/es/panel/configuracion` | `src/app/(public)/es/(organizer)/panel/configuracion/page.tsx` | Configuración perfil organizador |
+
+**Panel EN (mismo árbol):** `src/app/(public)/en/(organizer)/panel/` — `/en/panel`, `/en/panel/eventos`, `…/nuevo`, `…/[id]`, `…/reservas`, `…/checkin`, `asistentes`, `mensajes`, `resenas`, `analiticas`, `verificacion`, `configuracion`. Asistentes y mensajes reutilizan la página ES; el resto tiene UI en inglés donde aplica.
 
 Cualquier usuario logueado (incluido admin) accede a estas secciones desde el menú de usuario.
 

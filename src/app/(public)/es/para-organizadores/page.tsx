@@ -15,12 +15,48 @@ import { jsonLdFAQ, jsonLdScript } from '@/lib/seo';
 export const metadata: Metadata = forOrganizersES;
 
 const CENTER_BENEFITS = [
-  { icon: MapPin, title: 'Presencia en el directorio', desc: 'Ficha detallada con horarios, servicios, fotos, reseñas y ubicación en mapa.', image: '/images/centro-directorio-mapa.png' },
-  { icon: Globe, title: 'Visibilidad SEO', desc: 'Tu centro aparece en búsquedas de Google. Ficha bilingüe ES/EN optimizada.', image: '/images/centro-visibilidad-seo.png' },
-  { icon: Star, title: 'Reseñas verificadas', desc: 'Los usuarios pueden valorar tu centro. Las buenas reseñas te dan más visibilidad.', image: '/images/centro-resenas-valoraciones.png' },
-  { icon: BadgeCheck, title: 'Sello de centro verificado', desc: 'Un badge de verificación transmite confianza a potenciales clientes.', image: '/images/centro-sello-verificado.png' },
-  { icon: Phone, title: 'Contacto directo', desc: 'Los interesados te contactan sin intermediarios: teléfono, email, web y redes.', image: '/images/centro-contacto-canales.png' },
-  { icon: CalendarPlus, title: 'Publica retiros', desc: 'Además del directorio, publica retiros o eventos desde tu perfil de centro.', image: '/images/centro-publicar-retiros.png' },
+  {
+    icon: MapPin,
+    title: 'Presencia en el directorio',
+    desc: 'Ficha detallada con horarios, servicios, fotos, reseñas y ubicación en mapa.',
+    detail: 'Tu centro gana una presencia cuidada y profesional dentro de Retiru, con una página pensada para que la persona entienda rápido qué ofreces, dónde estás y por qué merece la pena visitarte.',
+    image: '/images/centro-directorio-mapa.png',
+  },
+  {
+    icon: Globe,
+    title: 'Visibilidad SEO',
+    desc: 'Tu centro aparece en búsquedas de Google. Ficha bilingüe ES/EN optimizada.',
+    detail: 'No dependes solo de redes sociales o del boca a boca: trabajamos una ficha preparada para captar búsquedas orgánicas en español e inglés y ayudarte a descubrir clientes nuevos.',
+    image: '/images/centro-visibilidad-seo.png',
+  },
+  {
+    icon: Star,
+    title: 'Reseñas verificadas',
+    desc: 'Los usuarios pueden valorar tu centro. Las buenas reseñas te dan más visibilidad.',
+    detail: 'Las opiniones sociales te ayudan a convertir mejor, generan confianza desde el primer vistazo y refuerzan la credibilidad de tu espacio frente a quien aún no te conoce.',
+    image: '/images/centro-resenas-valoraciones.png',
+  },
+  {
+    icon: BadgeCheck,
+    title: 'Sello de centro verificado',
+    desc: 'Un badge de verificación transmite confianza a potenciales clientes.',
+    detail: 'Ese extra de confianza reduce fricción, te diferencia frente a opciones menos cuidadas y ayuda a que una visita interesada se convierta antes en contacto o reserva.',
+    image: '/images/centro-sello-verificado.png',
+  },
+  {
+    icon: Phone,
+    title: 'Contacto directo',
+    desc: 'Los interesados te contactan sin intermediarios: teléfono, email, web y redes.',
+    detail: 'Facilitamos que cada persona elija su canal preferido para hablar contigo, resolver dudas o pedir información, sin complicaciones ni procesos largos.',
+    image: '/images/centro-contacto-canales.png',
+  },
+  {
+    icon: CalendarPlus,
+    title: 'Publica retiros',
+    desc: 'Además del directorio, publica retiros o eventos desde tu perfil de centro.',
+    detail: 'Si además de centro organizas experiencias, no necesitas otra plataforma: puedes pasar del descubrimiento local a la captación de asistentes para retiros desde un mismo ecosistema.',
+    image: '/images/centro-publicar-retiros.png',
+  },
 ];
 
 const ORGANIZER_FEATURES = [
@@ -133,13 +169,14 @@ export default function ParaOrganizadoresPage() {
           <h2 className="font-serif text-3xl font-bold md:text-4xl mb-3">
             Pon tu centro en el mapa
           </h2>
-          <p className="text-muted-foreground max-w-2xl mb-12">
+          <p className="text-muted-foreground max-w-3xl mb-12">
             Si tienes un centro de yoga, meditación o ayurveda,
             te incluimos en nuestro directorio para que miles de personas te encuentren.
+            No se trata solo de estar listado: se trata de aparecer con una ficha sólida, creíble y preparada para convertir visitas en contactos reales.
           </p>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
-            {CENTER_BENEFITS.map(({ icon: Icon, title, desc, image }) => (
+            {CENTER_BENEFITS.map(({ icon: Icon, title, desc, detail, image }) => (
               <div key={title} className="flex flex-col overflow-hidden rounded-2xl border border-sand-200 bg-white transition-shadow hover:shadow-soft">
                 <div className="relative aspect-[16/10] shrink-0 bg-sand-100">
                   <img src={image} alt={`Ejemplo visual: ${title}`} className="absolute inset-0 h-full w-full object-cover" />
@@ -150,6 +187,7 @@ export default function ParaOrganizadoresPage() {
                   </div>
                   <h3 className="mb-2 font-semibold text-foreground">{title}</h3>
                   <p className="text-sm leading-relaxed text-muted-foreground">{desc}</p>
+                  <p className="mt-3 text-sm leading-relaxed text-[#7a6b5d]">{detail}</p>
                 </div>
               </div>
             ))}
@@ -159,9 +197,10 @@ export default function ParaOrganizadoresPage() {
           <div className="rounded-2xl bg-gradient-to-r from-sage-800 to-sage-900 text-white p-8 md:p-12 flex flex-col md:flex-row items-center gap-8">
             <div className="flex-1">
               <h3 className="font-serif text-2xl font-bold mb-3">¿Tu centro ya está en Retiru?</h3>
-              <p className="text-sage-300 leading-relaxed max-w-lg">
+              <p className="text-sage-300 leading-relaxed max-w-xl">
                 Busca tu centro en nuestro directorio y reclámalo para gestionar tu ficha, responder reseñas y publicar eventos.
                 Si no aparece, inicia sesión y propón el centro desde «Mis centros» (lo revisamos antes de publicarlo) o escríbenos y te ayudamos.
+                Queremos que un centro serio pueda activar su presencia en Retiru sin fricción y con acompañamiento desde el principio.
               </p>
             </div>
             <div className="flex flex-col gap-3 shrink-0">
@@ -193,9 +232,10 @@ export default function ParaOrganizadoresPage() {
           <h2 className="font-serif text-3xl font-bold md:text-4xl mb-3">
             Publica tus retiros <span className="text-terracotta-600">sin cuota fija</span>
           </h2>
-          <p className="text-muted-foreground max-w-2xl mb-12">
+          <p className="text-muted-foreground max-w-3xl mb-12">
             Si creas retiros o eventos de yoga, meditación o ayurveda, Retiru te da un panel de gestión completo
             sin suscripción ni pago por alta. Tu <strong className="text-foreground">primer retiro es gratis</strong> (0&nbsp;% de comisión); el segundo al 10&nbsp;%; a partir del tercero, 20&nbsp;% del PVP. El desglose es visible en el formulario antes de publicar.
+            La idea no es solo darte visibilidad: es darte una herramienta de trabajo para vender, coordinar y operar mejor tus retiros dentro de un mismo lugar.
           </p>
 
           {/* Comparison table */}
@@ -232,25 +272,34 @@ export default function ParaOrganizadoresPage() {
               </tbody>
             </table>
           </div>
+          <p className="mb-12 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+            Esta comparación resume el enfoque de Retiru: menos fricción para publicar, mejor soporte operativo para gestionar reservas y más herramientas para construir una relación real con tus asistentes antes, durante y después del retiro.
+          </p>
 
           {/* Tiered commission visual */}
           <div className="mb-12 rounded-2xl border-2 border-sand-200 bg-white p-6 md:p-8">
             <h3 className="font-serif text-xl font-bold text-foreground mb-6 text-center">Comisiones progresivas: empieza gratis</h3>
+            <p className="mx-auto mb-6 max-w-3xl text-center text-sm leading-relaxed text-muted-foreground">
+              Queremos que probar Retiru sea fácil. Por eso el primer retiro no paga comisión y cada retiro conserva para siempre el nivel con el que empezó, para que tengas previsibilidad real en tus márgenes.
+            </p>
             <div className="grid gap-4 md:grid-cols-3">
               <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-5 text-center">
                 <p className="text-xs font-bold uppercase tracking-wide text-emerald-700 mb-2">1.er retiro</p>
                 <p className="text-4xl font-bold text-emerald-700">0&nbsp;%</p>
                 <p className="text-sm text-emerald-800 mt-2">Sin comisión. Tú recibes el <strong>100&nbsp;%</strong> del PVP.</p>
+                <p className="mt-3 text-sm leading-relaxed text-emerald-900">Ideal para validar tu primer retiro en la plataforma, comprobar cómo responde la demanda y familiarizarte con el panel sin coste variable.</p>
               </div>
               <div className="rounded-xl bg-sky-50 border border-sky-200 p-5 text-center">
                 <p className="text-xs font-bold uppercase tracking-wide text-sky-700 mb-2">2.º retiro</p>
                 <p className="text-4xl font-bold text-sky-700">10&nbsp;%</p>
                 <p className="text-sm text-sky-800 mt-2">Comisión reducida. Tú recibes el <strong>90&nbsp;%</strong> del PVP.</p>
+                <p className="mt-3 text-sm leading-relaxed text-sky-900">Cuando ya has probado el sistema, mantienes una comisión muy contenida para seguir creciendo con una estructura de costes clara y asumible.</p>
               </div>
               <div className="rounded-xl bg-amber-50 border border-amber-200 p-5 text-center">
                 <p className="text-xs font-bold uppercase tracking-wide text-amber-700 mb-2">3.er retiro en adelante</p>
                 <p className="text-4xl font-bold text-amber-700">20&nbsp;%</p>
                 <p className="text-sm text-amber-800 mt-2">Comisión estándar. Tú recibes el <strong>80&nbsp;%</strong> del PVP.</p>
+                <p className="mt-3 text-sm leading-relaxed text-amber-900">Es la comisión con la que ya operas con todo el sistema de captación, gestión, comunicación y confianza de Retiru plenamente integrado en tu negocio.</p>
               </div>
             </div>
             <p className="text-xs text-muted-foreground text-center mt-4">
@@ -285,11 +334,31 @@ export default function ParaOrganizadoresPage() {
           <h2 className="mb-12 text-center font-serif text-3xl font-bold">¿Cómo funciona para organizadores?</h2>
           <div className="space-y-8">
             {[
-              { step: '01', title: 'Crea tu cuenta', desc: 'Regístrate con tu email y verifica tu cuenta. Desde «Mis eventos» podrás iniciar el alta como organizador.' },
-              { step: '02', title: 'Contrato y documentación', desc: 'En «Mis eventos» aceptas el contrato de organizador con Retiru. A continuación puedes subir la documentación requerida (identidad, alta en actividad económica, seguro de responsabilidad civil, datos fiscales y bancarios). Tu perfil queda pendiente de homologación hasta que nuestro equipo lo verifique; en paralelo ya puedes ir preparando tus eventos.' },
-              { step: '03', title: 'Crea tu retiro y envíalo a revisión', desc: 'Usa el wizard paso a paso: portada y hasta 8 fotos (la portada es la imagen principal en listados y cabecera de la ficha; el resto forma la galería). Puedes generar la portada con IA o, si no subes fotos, se crea una portada automática al guardar. Añade programa, PVP por persona (con desglose de comisión según tu nivel), mínimo de plazas si aplica y política de cancelación. Cuando esté listo, envía el retiro a revisión.' },
-              { step: '04', title: 'Homologación, publicación y reservas', desc: 'Homologamos tu perfil documental y revisamos el retiro por calidad y coherencia. Un retiro solo se publica cuando tu perfil de organizador está verificado y el retiro está aprobado (suelen ser 24-48h en cada frente cuando la documentación está completa). Una vez publicado, los asistentes reservan por la plataforma: Retiru retiene la comisión que corresponda (0 %, 10 % o 20 % según tu nivel) y te liquida el neto según el acuerdo de liquidación.' },
-            ].map(({ step, title, desc }) => (
+              {
+                step: '01',
+                title: 'Crea tu cuenta',
+                desc: 'Regístrate con tu email y verifica tu cuenta. Desde «Mis eventos» podrás iniciar el alta como organizador.',
+                detail: 'En pocos pasos ya puedes empezar a configurar tu operativa y preparar borradores, incluso antes de tener todo el proceso documental cerrado.',
+              },
+              {
+                step: '02',
+                title: 'Contrato y documentación',
+                desc: 'En «Mis eventos» aceptas el contrato de organizador con Retiru. A continuación puedes subir la documentación requerida (identidad, alta en actividad económica, seguro de responsabilidad civil, datos fiscales y bancarios). Tu perfil queda pendiente de homologación hasta que nuestro equipo lo verifique; en paralelo ya puedes ir preparando tus eventos.',
+                detail: 'Así protegemos a los asistentes y al mismo tiempo te damos una ruta clara para profesionalizar tu presencia dentro de la plataforma.',
+              },
+              {
+                step: '03',
+                title: 'Crea tu retiro y envíalo a revisión',
+                desc: 'Usa el wizard paso a paso: portada y hasta 8 fotos (la portada es la imagen principal en listados y cabecera de la ficha; el resto forma la galería). Puedes generar la portada con IA o, si no subes fotos, se crea una portada automática al guardar. Añade programa, PVP por persona (con desglose de comisión según tu nivel), mínimo de plazas si aplica y política de cancelación. Cuando esté listo, envía el retiro a revisión.',
+                detail: 'El objetivo es que puedas montar una ficha clara, comercial y coherente sin depender de procesos manuales ni herramientas dispersas.',
+              },
+              {
+                step: '04',
+                title: 'Homologación, publicación y reservas',
+                desc: 'Homologamos tu perfil documental y revisamos el retiro por calidad y coherencia. Un retiro solo se publica cuando tu perfil de organizador está verificado y el retiro está aprobado (suelen ser 24-48h en cada frente cuando la documentación está completa). Una vez publicado, los asistentes reservan por la plataforma: Retiru retiene la comisión que corresponda (0 %, 10 % o 20 % según tu nivel) y te liquida el neto según el acuerdo de liquidación.',
+                detail: 'Desde ahí, el panel te sirve para seguir todo el ciclo: captar, convertir, comunicar y operar tu evento con una trazabilidad mucho más limpia.',
+              },
+            ].map(({ step, title, desc, detail }) => (
               <div key={step} className="flex gap-6 items-start">
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-terracotta-600 text-lg font-bold text-white">
                   {step}
@@ -297,6 +366,7 @@ export default function ParaOrganizadoresPage() {
                 <div>
                   <h3 className="text-lg font-semibold text-foreground">{title}</h3>
                   <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{desc}</p>
+                  <p className="mt-3 text-sm leading-relaxed text-[#7a6b5d]">{detail}</p>
                 </div>
               </div>
             ))}
@@ -333,9 +403,10 @@ export default function ParaOrganizadoresPage() {
       <section className="section bg-gradient-to-br from-terracotta-600 to-terracotta-700 text-white text-center">
         <div className="container-narrow">
           <h2 className="font-serif text-3xl font-bold md:text-4xl">Únete a Retiru</h2>
-          <p className="mx-auto mt-4 max-w-lg text-terracotta-100">
+          <p className="mx-auto mt-4 max-w-2xl text-terracotta-100">
             Ya seas un centro de yoga, meditación o ayurveda o un organizador de retiros en ese ámbito, Retiru te da las herramientas
             y la visibilidad que necesitas. Publicar no lleva suscripción; tu primer retiro es gratis (0&nbsp;%), el segundo al 10&nbsp;% y a partir del tercero el 20&nbsp;% estándar.
+            Si buscas una plataforma que no solo te anuncie, sino que además te ayude a gestionar mejor cada reserva y cada asistente, aquí es donde queremos diferenciar Retiru.
           </p>
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link

@@ -290,7 +290,7 @@ Las APIs `/api/retreats`, `/api/centers` y `/api/catalog` exponen datos para bú
 
 Cualquier usuario logueado (incluido el admin) accede a estas secciones desde el menú de usuario.
 
-La ruta legacy `/es/panel/verificacion` **redirige** a `/es/mis-eventos/verificacion`.
+La ruta `/es/mis-eventos/verificacion` **redirige** a `/es/panel/verificacion` (misma verificación KYC). Equivalente en inglés: `/en/panel/verificacion`.
 
 ### Panel de administrador (protegido; acceso vía rol **admin** en `user_roles` / `is_admin()`)
 
@@ -391,7 +391,7 @@ Sistema de comunicación dentro de la plataforma entre usuarios y organizadores,
 - API: `POST/GET /api/messages/conversations`, `GET/POST /api/messages/conversations/[id]`, `POST /api/messages/support`, `GET /api/admin/messages`, `POST /api/admin/messages/support`, `DELETE /api/admin/messages/[messageId]`
 - UI usuario: `/es/mensajes` (lista + botón soporte) y `/es/mensajes/[id]` (chat con burbujas)
 - UI usuario: widget de chat flotante en todas las páginas públicas (`SupportChatWidget`)
-- UI organizador: `/es/panel/mensajes` (lista + botón soporte)
+- UI organizador: `/es/panel/mensajes` y `/en/panel/mensajes` (lista + botón soporte; la vista EN reexporta la misma página que ES)
 - UI admin: `/administrator/mensajes` (tabla + chat overlay flotante para soporte)
 - Componentes: `src/components/messaging/AskOrganizerButton.tsx`, `src/components/chat/SupportChatWidget.tsx`
 
@@ -472,14 +472,14 @@ src/
 │   │   │   ├── perfil/         # Datos personales
 │   │   │   ├── mis-centros/    # Centros reclamados
 │   │   │   └── mis-eventos/    # Eventos creados + wizard nuevo + edición
-│   │   ├── (organizer)/        # Panel del organizador
-│   │   │   └── panel/mensajes/ # Bandeja de mensajes del organizador + soporte
+│   │   ├── (organizer)/        # Panel del organizador (/es/panel/…)
+│   │   │   └── panel/          # Dashboard, eventos, mensajes, verificación, etc.
 │   │   └── page.tsx            # Home ES
 │   ├── api/
 │   │   ├── messages/           # API mensajería (conversations, support)
 │   │   └── admin/              # API admin (messages, center-claims)
 │   ├── administrator/         # Panel admin (protegido, /administrator)
-│   └── en/                     # Misma estructura en inglés
+│   └── en/                     # Páginas públicas EN + (organizer)/panel (/en/panel/…)
 ├── components/
 │   ├── home/
 │   │   ├── HeroSearch.tsx      # Buscador home (toggle Retiros/Centros)
