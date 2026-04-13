@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { MapPin, Star } from 'lucide-react';
 import CentrosSearch from '@/components/home/CentrosSearch';
 import { getCenterProvinces, getCentersByProvince } from '@/lib/data';
-import { getCenterTypeLabel, CENTER_TYPE_URL_ES } from '@/lib/utils';
+import { getCenterTypeLabel, CENTER_TYPE_URL_ES, stripMarkdownForPreview, isGenericDescription } from '@/lib/utils';
 import { generatePageMetadata, jsonLdItemList, jsonLdScript } from '@/lib/seo';
 
 export const revalidate = 3600;
@@ -130,9 +130,13 @@ export default async function CentrosPorProvinciaPage({ params }: { params: Prom
                         </div>
                       )}
                     </div>
-                    {c.description_es && (
-                      <p className="text-sm text-[#7a6b5d] leading-relaxed mt-2 line-clamp-2">{c.description_es}</p>
-                    )}
+                    {(() => {
+                      const raw = c.description_es;
+                      if (!raw || isGenericDescription(raw)) return null;
+                      const clean = stripMarkdownForPreview(raw);
+                      if (!clean) return null;
+                      return <p className="text-sm text-[#7a6b5d] leading-relaxed mt-2 line-clamp-2">{clean}</p>;
+                    })()}
                     {Array.isArray(c.categories) && c.categories.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 mt-3">
                         {c.categories.slice(0, 4).map((cat: string) => (

@@ -17,26 +17,34 @@ const GUARANTEES = [
   {
     icon: Lock,
     title: 'Pago seguro con retención',
-    desc: 'Tu dinero queda protegido hasta que el retiro se confirma. No se transfiere al organizador hasta que se cumplen las condiciones mínimas para celebrar el evento.',
+    desc: 'Tu dinero queda protegido hasta que el retiro se confirma. No se transfiere al organizador hasta que se cumplen las condiciones mínimas.',
+    detail: 'Utilizamos Stripe como pasarela de pago y un sistema de retención (escrow) que mantiene los fondos bloqueados hasta que el evento cumple los requisitos para celebrarse. Si algo falla, recibes un reembolso automático sin tener que reclamar nada.',
     accent: 'bg-emerald-100 text-emerald-700',
+    image: '/images/att-pago-seguro.png',
   },
   {
     icon: BadgeCheck,
     title: 'Eventos verificados',
-    desc: 'Cada retiro pasa por un proceso de revisión: verificamos al organizador documentalmente y aprobamos el contenido antes de publicar. Solo ofrecemos experiencias de calidad contrastada.',
+    desc: 'Cada retiro pasa por un proceso de revisión: verificamos al organizador documentalmente y aprobamos el contenido antes de publicar.',
+    detail: 'Comprobamos identidad, actividad económica, seguro de responsabilidad civil y datos fiscales del organizador. Después, nuestro equipo editorial revisa fotos, programa y descripción para asegurar que la información es precisa y de calidad.',
     accent: 'bg-sky-100 text-sky-700',
+    image: '/images/att-eventos-verificados.png',
   },
   {
     icon: Headphones,
     title: 'Soporte y asistencia',
-    desc: 'Nuestro equipo te acompaña antes, durante y después de la reserva. Chat en la plataforma, email y atención personalizada para cualquier incidencia.',
+    desc: 'Nuestro equipo te acompaña antes, durante y después de la reserva. Chat, email y atención personalizada.',
+    detail: 'No estás solo en ningún momento: si tienes dudas sobre un retiro, necesitas cambiar fechas o surge cualquier incidencia, nuestro equipo de soporte responde rápido y gestiona por ti con el organizador cuando haga falta.',
     accent: 'bg-amber-100 text-amber-700',
+    image: '/images/att-soporte.png',
   },
   {
     icon: Shield,
     title: 'Política de cancelación transparente',
-    desc: 'Cada retiro muestra sus condiciones de cancelación desde el principio. Si te corresponde un reembolso, lo recibes íntegro en tu método de pago.',
+    desc: 'Cada retiro muestra sus condiciones de cancelación desde el principio. Si te corresponde reembolso, lo recibes íntegro.',
+    detail: 'Antes de pagar ves exactamente qué ocurre si cancelas: plazos, porcentajes y método de devolución. Si el organizador cancela el retiro, recibes el 100 % de tu pago sin ningún trámite adicional.',
     accent: 'bg-violet-100 text-violet-700',
+    image: '/images/att-cancelacion-transparente.png',
   },
 ];
 
@@ -45,31 +53,43 @@ const WHY_RETIRU = [
     icon: CheckCircle2,
     title: 'Organizadores verificados',
     desc: 'Identidad, actividad económica, seguro de responsabilidad civil y datos fiscales comprobados por nuestro equipo.',
+    detail: 'Antes de publicar cualquier retiro verificamos documentalmente al organizador. Eso elimina estafas, experiencias improvisadas y esa sensación de "¿será fiable?" que acompaña a las reservas por redes sociales.',
+    image: '/images/att-organizadores-verificados.png',
   },
   {
     icon: CreditCard,
     title: 'Un solo pago, sin sorpresas',
-    desc: 'Pagas el precio que ves en la ficha. Sin recargos ocultos, sin transferencias a desconocidos, sin riesgo.',
+    desc: 'Pagas el precio que ves en la ficha. Sin recargos ocultos, sin transferencias a desconocidos.',
+    detail: 'El precio que muestra la ficha es el total: incluye alojamiento, comidas y actividades según lo descrito. Pagas con tarjeta a través de Stripe y recibes tu factura por email. Cero transferencias raras, cero Bizum a desconocidos.',
+    image: '/images/att-pago-unico.png',
   },
   {
     icon: Star,
     title: 'Reseñas reales',
     desc: 'Solo pueden dejar opinión quienes asistieron al retiro. Las valoraciones reflejan experiencias auténticas.',
+    detail: 'Nuestro sistema de reseñas verificadas impide opiniones falsas: solo se habilita tras completar la asistencia. Así puedes comparar retiros con confianza total en las puntuaciones.',
+    image: '/images/att-resenas-reales.png',
   },
   {
     icon: Users,
     title: 'Mínimo viable garantizado',
-    desc: 'En retiros con grupo mínimo, tu plaza queda reservada sin coste hasta que se alcance el mínimo. Si no se llega, no pagas.',
+    desc: 'En retiros con grupo mínimo, tu plaza queda reservada sin coste hasta que se alcance el mínimo.',
+    detail: 'Reservas tu plaza gratis. Si se alcanza el mínimo recibes un enlace de pago; si no se llega al número necesario, no pagas nada y la reserva se libera automáticamente. Sin riesgo, sin compromisos anticipados.',
+    image: '/images/att-minimo-viable.png',
   },
   {
     icon: Search,
     title: 'Selección curada',
-    desc: 'No publicamos todo: filtramos y verificamos para que encuentres las mejores experiencias de yoga, meditación y ayurveda.',
+    desc: 'No publicamos todo: filtramos y verificamos para que encuentres las mejores experiencias.',
+    detail: 'En Retiru no entra cualquier retiro. Nuestro equipo evalúa cada propuesta (organizador, programa, ubicación y calidad) antes de aprobarla. El resultado: una selección de calidad donde puedes navegar, filtrar y comparar sin perder tiempo en opciones poco fiables.',
+    image: '/images/att-seleccion-curada.png',
   },
   {
     icon: Clock,
     title: 'Confirmación inmediata',
     desc: 'Reserva online al instante. Recibes confirmación por email con todos los detalles de tu retiro.',
+    detail: 'En cuanto completas el pago, recibes un email con la confirmación, la dirección exacta, el programa del retiro y la información de contacto necesaria. Sin esperas, sin "te confirmo mañana".',
+    image: '/images/att-confirmacion-inmediata.png',
   },
 ];
 
@@ -96,9 +116,9 @@ const FAQS = [
 ];
 
 const STEPS = [
-  { step: '01', title: 'Explora y compara', desc: 'Busca por destino, fechas, tipo de retiro o palabra clave. Compara precios, reseñas y programas con toda la información visible.' },
-  { step: '02', title: 'Reserva con seguridad', desc: 'Paga el precio que ves en la ficha vía Stripe (Visa, Mastercard y más). Tu dinero queda protegido. Sin transferencias a desconocidos.' },
-  { step: '03', title: 'Disfruta con tranquilidad', desc: 'Recibe la confirmación, los detalles del retiro y, si necesitas algo, nuestro equipo de soporte está a un mensaje de distancia.' },
+  { step: '01', title: 'Explora y compara', desc: 'Busca por destino, fechas, tipo de retiro o palabra clave. Compara precios, reseñas y programas con toda la información visible.', detail: 'Cada ficha muestra fotos, programa día a día, qué incluye y qué no, condiciones de cancelación y reseñas verificadas. Tienes todo lo que necesitas para decidir sin buscar por fuera.' },
+  { step: '02', title: 'Reserva con seguridad', desc: 'Paga el precio que ves en la ficha vía Stripe (Visa, Mastercard y más). Tu dinero queda protegido.', detail: 'El pago se retiene en escrow hasta que el retiro cumple las condiciones para celebrarse. Recibes la confirmación por email al instante y puedes contactar con soporte si tienes cualquier duda.' },
+  { step: '03', title: 'Disfruta con tranquilidad', desc: 'Recibe la confirmación, los detalles del retiro y la ubicación exacta. Nuestro equipo está a un mensaje de distancia.', detail: 'Si necesitas modificar algo, hablar con el organizador o gestionar una incidencia, nuestro equipo media y te ayuda en todo momento, antes, durante y después de la experiencia.' },
 ];
 
 export default function ParaAsistentesPage() {
@@ -149,18 +169,27 @@ export default function ParaAsistentesPage() {
           <h2 className="font-serif text-3xl font-bold md:text-4xl mb-3 text-center">
             Tus garantías al reservar con Retiru
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-center mb-12">
+          <p className="text-muted-foreground max-w-2xl mx-auto text-center mb-5">
             No dejamos nada al azar. Cada reserva en Retiru viene acompañada de protecciones que no encontrarás si contratas directamente o por redes sociales.
+          </p>
+          <p className="text-sm text-[#7a6b5d] max-w-2xl mx-auto text-center mb-12 leading-relaxed">
+            Hemos diseñado cada paso del proceso pensando en tu tranquilidad: desde la verificación del organizador hasta la retención del pago, pasando por un equipo de soporte que responde rápido y te acompaña de principio a fin.
           </p>
 
           <div className="grid gap-6 md:grid-cols-2 mb-12">
-            {GUARANTEES.map(({ icon: Icon, title, desc, accent }) => (
-              <div key={title} className="rounded-2xl border border-sand-200 bg-white p-8 transition-shadow hover:shadow-soft">
-                <div className={`mb-5 flex h-14 w-14 items-center justify-center rounded-2xl ${accent}`}>
-                  <Icon size={28} />
+            {GUARANTEES.map(({ icon: Icon, title, desc, detail, accent, image }) => (
+              <div key={title} className="flex flex-col overflow-hidden rounded-2xl border border-sand-200 bg-white transition-shadow hover:shadow-soft">
+                <div className="relative aspect-[16/10] shrink-0 bg-sand-100">
+                  <img src={image} alt={`Ejemplo visual: ${title}`} className="absolute inset-0 h-full w-full object-cover" />
                 </div>
-                <h3 className="mb-3 text-lg font-semibold text-foreground">{title}</h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">{desc}</p>
+                <div className="flex flex-1 flex-col p-8">
+                  <div className={`mb-5 flex h-14 w-14 items-center justify-center rounded-2xl ${accent}`}>
+                    <Icon size={28} />
+                  </div>
+                  <h3 className="mb-3 text-lg font-semibold text-foreground">{title}</h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{desc}</p>
+                  <p className="mt-3 text-sm leading-relaxed text-[#7a6b5d]">{detail}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -173,9 +202,12 @@ export default function ParaAsistentesPage() {
           <h2 className="font-serif text-3xl font-bold md:text-4xl mb-3 text-center">
             ¿Reservar por tu cuenta o con Retiru?
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-center mb-12">
+          <p className="text-muted-foreground max-w-2xl mx-auto text-center mb-5">
             Buscar un retiro directamente en redes sociales o por transferencia puede parecer más económico,
             pero carece de las garantías que protegen tu inversión y tu experiencia.
+          </p>
+          <p className="text-sm text-[#7a6b5d] max-w-2xl mx-auto text-center mb-12 leading-relaxed">
+            Con Retiru pagas con tarjeta, tu dinero queda retenido hasta que el retiro se confirma y tienes un equipo de soporte pendiente de ti. Si algo falla, no tienes que perseguir a nadie: gestionamos la devolución por ti.
           </p>
 
           <div className="overflow-x-auto rounded-2xl border border-sand-200 bg-white mb-12">
@@ -246,18 +278,27 @@ export default function ParaAsistentesPage() {
           <h2 className="font-serif text-3xl font-bold md:text-4xl mb-3 text-center">
             Lo que Retiru te ofrece
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-center mb-12">
+          <p className="text-muted-foreground max-w-2xl mx-auto text-center mb-5">
             Cada detalle está pensado para que tu única preocupación sea disfrutar de la experiencia.
+          </p>
+          <p className="text-sm text-[#7a6b5d] max-w-2xl mx-auto text-center mb-12 leading-relaxed">
+            Retiru reúne verificación, pago protegido, reseñas auténticas y una selección curada en un solo lugar. Así no tienes que investigar por tu cuenta ni confiar a ciegas: todo está diseñado para que reserves con confianza total.
           </p>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {WHY_RETIRU.map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="rounded-2xl border border-sand-200 bg-white p-6 transition-shadow hover:shadow-soft">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-terracotta-100">
-                  <Icon size={24} className="text-terracotta-700" />
+            {WHY_RETIRU.map(({ icon: Icon, title, desc, detail, image }) => (
+              <div key={title} className="flex flex-col overflow-hidden rounded-2xl border border-sand-200 bg-white transition-shadow hover:shadow-soft">
+                <div className="relative aspect-[16/10] shrink-0 bg-sand-100">
+                  <img src={image} alt={`Ejemplo visual: ${title}`} className="absolute inset-0 h-full w-full object-cover" />
                 </div>
-                <h3 className="mb-2 font-semibold text-foreground">{title}</h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">{desc}</p>
+                <div className="flex flex-1 flex-col p-6">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-terracotta-100">
+                    <Icon size={24} className="text-terracotta-700" />
+                  </div>
+                  <h3 className="mb-2 font-semibold text-foreground">{title}</h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{desc}</p>
+                  <p className="mt-3 text-sm leading-relaxed text-[#7a6b5d]">{detail}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -268,8 +309,11 @@ export default function ParaAsistentesPage() {
       <section className="section bg-cream-100">
         <div className="container-narrow">
           <h2 className="mb-12 text-center font-serif text-3xl font-bold">¿Cómo funciona?</h2>
+          <p className="text-sm text-[#7a6b5d] max-w-xl mx-auto text-center mb-12 leading-relaxed">
+            Solo tres pasos para vivir tu próxima experiencia transformadora. Sin sorpresas, sin letra pequeña y con soporte en cada etapa.
+          </p>
           <div className="space-y-8">
-            {STEPS.map(({ step, title, desc }) => (
+            {STEPS.map(({ step, title, desc, detail }) => (
               <div key={step} className="flex gap-6 items-start">
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-terracotta-600 text-lg font-bold text-white">
                   {step}
@@ -277,6 +321,7 @@ export default function ParaAsistentesPage() {
                 <div>
                   <h3 className="text-lg font-semibold text-foreground">{title}</h3>
                   <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{desc}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-[#7a6b5d]">{detail}</p>
                 </div>
               </div>
             ))}
@@ -316,6 +361,9 @@ export default function ParaAsistentesPage() {
           <p className="mx-auto mt-4 max-w-lg text-terracotta-100">
             Yoga, meditación, ayurveda, naturaleza… Experiencias verificadas con pago seguro y soporte dedicado.
             Tu bienestar merece esa tranquilidad.
+          </p>
+          <p className="mx-auto mt-3 max-w-lg text-sm text-terracotta-200 leading-relaxed">
+            Explora retiros por toda España, compara programas y precios con toda la información visible, y reserva sabiendo que tu dinero y tu experiencia están protegidos de principio a fin.
           </p>
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link

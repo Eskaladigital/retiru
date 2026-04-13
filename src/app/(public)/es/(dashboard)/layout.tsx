@@ -11,7 +11,7 @@ const NAV = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="container-wide pt-24 pb-8">
+    <div className="container-wide pt-8 pb-8">
       <div className="flex gap-8">
         <aside className="hidden w-56 shrink-0 lg:block">
           <nav className="sticky top-24 space-y-1">

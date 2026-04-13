@@ -17,26 +17,34 @@ const GUARANTEES = [
   {
     icon: Lock,
     title: 'Secure escrow payment',
-    desc: 'Your money is held safely until the retreat is confirmed. The organizer doesn\u2019t receive your payment until minimum conditions are met and the event is guaranteed to take place.',
+    desc: 'Your money is held safely until the retreat is confirmed. The organizer doesn\u2019t receive your payment until minimum conditions are met.',
+    detail: 'We use Stripe as our payment gateway and an escrow system that keeps funds locked until the event meets the requirements to go ahead. If something goes wrong, you receive an automatic refund without having to file a claim.',
     accent: 'bg-emerald-100 text-emerald-700',
+    image: '/images/att-pago-seguro.png',
   },
   {
     icon: BadgeCheck,
     title: 'Verified events',
-    desc: 'Every retreat goes through a review process: we verify the organizer\u2019s identity and documents, and approve the content before it goes live. Only quality experiences make the cut.',
+    desc: 'Every retreat goes through a review process: we verify the organizer\u2019s identity and documents, and approve the content before it goes live.',
+    detail: 'We check identity, business registration, civil liability insurance and tax details. Then our editorial team reviews photos, schedule and description to ensure information is accurate and high quality.',
     accent: 'bg-sky-100 text-sky-700',
+    image: '/images/att-eventos-verificados.png',
   },
   {
     icon: Headphones,
     title: 'Dedicated support',
-    desc: 'Our team is with you before, during and after booking. In-platform chat, email and personalized attention for any issue.',
+    desc: 'Our team is with you before, during and after booking. Chat, email and personalized attention.',
+    detail: 'You\u2019re never on your own: if you have questions about a retreat, need to change dates or encounter any issue, our support team responds quickly and liaises with the organizer on your behalf when needed.',
     accent: 'bg-amber-100 text-amber-700',
+    image: '/images/att-soporte.png',
   },
   {
     icon: Shield,
     title: 'Transparent cancellation policy',
-    desc: 'Every retreat displays its cancellation terms upfront. If you\u2019re entitled to a refund, you receive the full amount back to your payment method.',
+    desc: 'Every retreat displays its cancellation terms upfront. If you\u2019re entitled to a refund, you receive the full amount.',
+    detail: 'Before paying you can see exactly what happens if you cancel: deadlines, percentages and refund method. If the organizer cancels the retreat, you receive 100% of your payment back with zero additional steps.',
     accent: 'bg-violet-100 text-violet-700',
+    image: '/images/att-cancelacion-transparente.png',
   },
 ];
 
@@ -45,31 +53,43 @@ const WHY_RETIRU = [
     icon: CheckCircle2,
     title: 'Verified organizers',
     desc: 'Identity, business registration, civil liability insurance and tax details \u2014 all checked by our team.',
+    detail: 'Before publishing any retreat we documentarily verify the organizer. This eliminates scams, improvised experiences and the "is this legit?" feeling that comes with social-media bookings.',
+    image: '/images/att-organizadores-verificados.png',
   },
   {
     icon: CreditCard,
     title: 'One payment, no surprises',
-    desc: 'You pay the price shown on the listing. No hidden fees, no bank transfers to strangers, no risk.',
+    desc: 'You pay the price shown on the listing. No hidden fees, no bank transfers to strangers.',
+    detail: 'The price on the listing is the total: accommodation, meals and activities as described. You pay by card via Stripe and receive your invoice by email. Zero dodgy transfers, zero Venmo-ing strangers.',
+    image: '/images/att-pago-unico.png',
   },
   {
     icon: Star,
     title: 'Authentic reviews',
     desc: 'Only people who actually attended can leave a review. Ratings reflect real experiences.',
+    detail: 'Our verified review system prevents fake opinions: it\u2019s only enabled after attendance is confirmed. So you can compare retreats with total confidence in the scores.',
+    image: '/images/att-resenas-reales.png',
   },
   {
     icon: Users,
     title: 'Minimum group guarantee',
-    desc: 'For retreats with a minimum group size, your spot is held at no cost until the minimum is reached. If it isn\u2019t, you don\u2019t pay.',
+    desc: 'For retreats with a minimum group size, your spot is held at no cost until the minimum is reached.',
+    detail: 'Reserve your spot for free. If the minimum is reached you receive a payment link; if not, you pay nothing and the reservation is released automatically. Zero risk, zero upfront commitments.',
+    image: '/images/att-minimo-viable.png',
   },
   {
     icon: Search,
     title: 'Curated selection',
-    desc: 'We don\u2019t publish everything: we filter and verify so you find the best yoga, meditation and ayurveda experiences.',
+    desc: 'We don\u2019t publish everything: we filter and verify so you find the best experiences.',
+    detail: 'Not just any retreat makes it onto Retiru. Our team evaluates every proposal (organizer, program, location and quality) before approving it. The result: a quality selection where you can browse, filter and compare without wasting time on unreliable options.',
+    image: '/images/att-seleccion-curada.png',
   },
   {
     icon: Clock,
     title: 'Instant confirmation',
     desc: 'Book online instantly. You receive an email confirmation with all the details of your retreat.',
+    detail: 'As soon as you complete payment, you receive an email with the confirmation, exact address, retreat schedule and necessary contact information. No waiting, no "I\u2019ll confirm tomorrow".',
+    image: '/images/att-confirmacion-inmediata.png',
   },
 ];
 
@@ -96,9 +116,9 @@ const FAQS = [
 ];
 
 const STEPS = [
-  { step: '01', title: 'Explore and compare', desc: 'Search by destination, dates, retreat type or keyword. Compare prices, reviews and programs with all the information clearly displayed.' },
-  { step: '02', title: 'Book with confidence', desc: 'Pay the price shown on the listing via Stripe (Visa, Mastercard and more). Your money stays protected. No transfers to strangers.' },
-  { step: '03', title: 'Enjoy with peace of mind', desc: 'Receive your confirmation, all retreat details, and if you need anything, our support team is just a message away.' },
+  { step: '01', title: 'Explore and compare', desc: 'Search by destination, dates, retreat type or keyword. Compare prices, reviews and programs with all the information clearly displayed.', detail: 'Each listing shows photos, day-by-day schedule, what\u2019s included and excluded, cancellation terms and verified reviews. You have everything you need to decide without searching elsewhere.' },
+  { step: '02', title: 'Book with confidence', desc: 'Pay the price shown on the listing via Stripe (Visa, Mastercard and more). Your money stays protected.', detail: 'Payment is held in escrow until the retreat meets the conditions to go ahead. You receive confirmation by email instantly and can contact support if you have any questions.' },
+  { step: '03', title: 'Enjoy with peace of mind', desc: 'Receive your confirmation, all retreat details and the exact location. Our team is just a message away.', detail: 'If you need to modify anything, talk to the organizer or manage an issue, our team mediates and helps you every step of the way \u2014 before, during and after the experience.' },
 ];
 
 export default function ForAttendeesPageEN() {
@@ -149,18 +169,27 @@ export default function ForAttendeesPageEN() {
           <h2 className="font-serif text-3xl font-bold md:text-4xl mb-3 text-center">
             Your guarantees when booking with Retiru
           </h2>
-          <p className="text-[#7a6b5d] max-w-2xl mx-auto text-center mb-12">
+          <p className="text-[#7a6b5d] max-w-2xl mx-auto text-center mb-5">
             We leave nothing to chance. Every booking on Retiru comes with protections you won&apos;t find if you book directly or through social media.
+          </p>
+          <p className="text-sm text-[#7a6b5d] max-w-2xl mx-auto text-center mb-12 leading-relaxed">
+            We&apos;ve designed every step of the process with your peace of mind in focus: from organizer verification to payment escrow, plus a support team that responds fast and accompanies you from start to finish.
           </p>
 
           <div className="grid gap-6 md:grid-cols-2 mb-12">
-            {GUARANTEES.map(({ icon: Icon, title, desc, accent }) => (
-              <div key={title} className="rounded-2xl border border-sand-200 bg-white p-8 transition-shadow hover:shadow-soft">
-                <div className={`mb-5 flex h-14 w-14 items-center justify-center rounded-2xl ${accent}`}>
-                  <Icon size={28} />
+            {GUARANTEES.map(({ icon: Icon, title, desc, detail, accent, image }) => (
+              <div key={title} className="flex flex-col overflow-hidden rounded-2xl border border-sand-200 bg-white transition-shadow hover:shadow-soft">
+                <div className="relative aspect-[16/10] shrink-0 bg-sand-100">
+                  <img src={image} alt={`Visual example: ${title}`} className="absolute inset-0 h-full w-full object-cover" />
                 </div>
-                <h3 className="mb-3 text-lg font-semibold">{title}</h3>
-                <p className="text-sm leading-relaxed text-[#7a6b5d]">{desc}</p>
+                <div className="flex flex-1 flex-col p-8">
+                  <div className={`mb-5 flex h-14 w-14 items-center justify-center rounded-2xl ${accent}`}>
+                    <Icon size={28} />
+                  </div>
+                  <h3 className="mb-3 text-lg font-semibold">{title}</h3>
+                  <p className="text-sm leading-relaxed text-[#7a6b5d]">{desc}</p>
+                  <p className="mt-3 text-sm leading-relaxed text-[#7a6b5d]">{detail}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -173,9 +202,12 @@ export default function ForAttendeesPageEN() {
           <h2 className="font-serif text-3xl font-bold md:text-4xl mb-3 text-center">
             Book on your own or with Retiru?
           </h2>
-          <p className="text-[#7a6b5d] max-w-2xl mx-auto text-center mb-12">
+          <p className="text-[#7a6b5d] max-w-2xl mx-auto text-center mb-5">
             Finding a retreat directly on social media or via bank transfer may seem cheaper,
             but it lacks the guarantees that protect your investment and your experience.
+          </p>
+          <p className="text-sm text-[#7a6b5d] max-w-2xl mx-auto text-center mb-12 leading-relaxed">
+            With Retiru you pay by card, your money is held until the retreat is confirmed, and a support team watches over you. If something goes wrong, you don&apos;t have to chase anyone: we handle the refund for you.
           </p>
 
           <div className="overflow-x-auto rounded-2xl border border-sand-200 bg-white mb-12">
@@ -246,18 +278,27 @@ export default function ForAttendeesPageEN() {
           <h2 className="font-serif text-3xl font-bold md:text-4xl mb-3 text-center">
             What Retiru offers you
           </h2>
-          <p className="text-[#7a6b5d] max-w-2xl mx-auto text-center mb-12">
+          <p className="text-[#7a6b5d] max-w-2xl mx-auto text-center mb-5">
             Every detail is designed so your only concern is enjoying the experience.
+          </p>
+          <p className="text-sm text-[#7a6b5d] max-w-2xl mx-auto text-center mb-12 leading-relaxed">
+            Retiru brings verification, protected payment, authentic reviews and a curated selection together in one place. So you don&apos;t have to do your own research or trust blindly: everything is designed so you book with total confidence.
           </p>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {WHY_RETIRU.map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="rounded-2xl border border-sand-200 bg-white p-6 transition-shadow hover:shadow-soft">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-terracotta-100">
-                  <Icon size={24} className="text-terracotta-700" />
+            {WHY_RETIRU.map(({ icon: Icon, title, desc, detail, image }) => (
+              <div key={title} className="flex flex-col overflow-hidden rounded-2xl border border-sand-200 bg-white transition-shadow hover:shadow-soft">
+                <div className="relative aspect-[16/10] shrink-0 bg-sand-100">
+                  <img src={image} alt={`Visual example: ${title}`} className="absolute inset-0 h-full w-full object-cover" />
                 </div>
-                <h3 className="mb-2 font-semibold">{title}</h3>
-                <p className="text-sm leading-relaxed text-[#7a6b5d]">{desc}</p>
+                <div className="flex flex-1 flex-col p-6">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-terracotta-100">
+                    <Icon size={24} className="text-terracotta-700" />
+                  </div>
+                  <h3 className="mb-2 font-semibold">{title}</h3>
+                  <p className="text-sm leading-relaxed text-[#7a6b5d]">{desc}</p>
+                  <p className="mt-3 text-sm leading-relaxed text-[#7a6b5d]">{detail}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -268,8 +309,11 @@ export default function ForAttendeesPageEN() {
       <section className="py-20 bg-cream-100">
         <div className="container-narrow">
           <h2 className="mb-12 text-center font-serif text-3xl font-bold">How does it work?</h2>
+          <p className="text-sm text-[#7a6b5d] max-w-xl mx-auto text-center mb-12 leading-relaxed">
+            Just three steps to your next transformative experience. No surprises, no fine print, and support at every stage.
+          </p>
           <div className="space-y-8">
-            {STEPS.map(({ step, title, desc }) => (
+            {STEPS.map(({ step, title, desc, detail }) => (
               <div key={step} className="flex gap-6 items-start">
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-terracotta-600 text-lg font-bold text-white">
                   {step}
@@ -277,6 +321,7 @@ export default function ForAttendeesPageEN() {
                 <div>
                   <h3 className="text-lg font-semibold">{title}</h3>
                   <p className="mt-1 text-sm text-[#7a6b5d] leading-relaxed">{desc}</p>
+                  <p className="mt-2 text-sm text-[#7a6b5d] leading-relaxed">{detail}</p>
                 </div>
               </div>
             ))}
@@ -316,6 +361,9 @@ export default function ForAttendeesPageEN() {
           <p className="mx-auto mt-4 max-w-lg text-terracotta-100">
             Yoga, meditation, ayurveda, nature… Verified experiences with secure payment and dedicated support.
             Your wellbeing deserves that peace of mind.
+          </p>
+          <p className="mx-auto mt-3 max-w-lg text-sm text-terracotta-200 leading-relaxed">
+            Explore retreats across Spain, compare programs and prices with all the information visible, and book knowing your money and your experience are protected from start to finish.
           </p>
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link href="/en/retreats-retiru" className="inline-block bg-white text-terracotta-700 font-bold px-8 py-4 rounded-xl hover:bg-sand-100 transition-colors">

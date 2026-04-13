@@ -51,22 +51,8 @@ export default async function CentroDetailPage({ params }: Props) {
 
   return (
     <div className="container-wide py-12">
-      <nav className="mb-6 flex items-center gap-1 text-xs text-muted-foreground flex-wrap">
-        <Link href="/es" className="hover:text-terracotta-600">Inicio</Link>
-        <span>›</span>
-        <Link href="/es/centros-retiru" className="hover:text-terracotta-600">Centros</Link>
-        {C.type && (
-          <>
-            <span>›</span>
-            <Link href={`/es/centros-${CENTER_TYPE_URL_ES[C.type] || C.type}`} className="hover:text-terracotta-600">Centros de {getCenterTypeLabel(C.type)}</Link>
-          </>
-        )}
-        <span>›</span>
-        <span className="text-foreground">{C.name}</span>
-      </nav>
-
       {mainImage && (
-        <div className="mb-8 space-y-3">
+        <div className="mb-4 space-y-3">
           <div className="w-full aspect-[21/9] rounded-2xl overflow-hidden">
             <img src={mainImage} alt={C.name} className="w-full h-full object-cover" />
           </div>
@@ -81,6 +67,20 @@ export default async function CentroDetailPage({ params }: Props) {
           )}
         </div>
       )}
+
+      <nav className="mb-6 flex items-center gap-1 text-xs text-muted-foreground flex-wrap">
+        <Link href="/es" className="hover:text-terracotta-600">Inicio</Link>
+        <span>›</span>
+        <Link href="/es/centros-retiru" className="hover:text-terracotta-600">Centros</Link>
+        {C.type && (
+          <>
+            <span>›</span>
+            <Link href={`/es/centros-${CENTER_TYPE_URL_ES[C.type] || C.type}`} className="hover:text-terracotta-600">Centros de {getCenterTypeLabel(C.type)}</Link>
+          </>
+        )}
+        <span>›</span>
+        <span className="text-foreground">{C.name}</span>
+      </nav>
 
       <div className="grid gap-8 lg:grid-cols-3">
         {/* Main content */}

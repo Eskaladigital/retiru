@@ -29,7 +29,7 @@ export default function PublicShell({ user, children }: PublicShellProps) {
   return (
     <>
       <Header locale={locale} user={user} />
-      <main className="min-h-[60vh]">{children}</main>
+      <main className="min-h-[60vh] pt-16 md:pt-[72px]">{children}</main>
       <Footer locale={locale} />
       <SupportChatWidget locale={locale} />
     </>

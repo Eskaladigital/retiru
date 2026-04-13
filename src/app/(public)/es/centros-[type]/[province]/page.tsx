@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { MapPin, Star } from 'lucide-react';
 import CentrosSearch from '@/components/home/CentrosSearch';
 import { getCenterTypeProvincePairs, getCentersByProvince, getCategoryBySlug } from '@/lib/data';
-import { getCenterTypeLabel, CENTER_TYPE_FROM_URL_ES, CENTER_TYPE_URL_ES } from '@/lib/utils';
+import { getCenterTypeLabel, CENTER_TYPE_FROM_URL_ES, CENTER_TYPE_URL_ES, stripMarkdownForPreview, isGenericDescription } from '@/lib/utils';
 import { generatePageMetadata, jsonLdItemList, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
 
 export const revalidate = 3600;
@@ -133,9 +133,13 @@ export default async function CentrosTipoProvinciaPage({ params }: { params: Pro
                         </div>
                       )}
                     </div>
-                    {c.description_es && (
-                      <p className="text-sm text-[#7a6b5d] leading-relaxed mt-2 line-clamp-2">{c.description_es}</p>
-                    )}
+                    {(() => {
+                      const raw = c.description_es;
+                      if (!raw || isGenericDescription(raw)) return null;
+                      const clean = stripMarkdownForPreview(raw);
+                      if (!clean) return null;
+                      return <p className="text-sm text-[#7a6b5d] leading-relaxed mt-2 line-clamp-2">{clean}</p>;
+                    })()}
                   </div>
                 </Link>
               );

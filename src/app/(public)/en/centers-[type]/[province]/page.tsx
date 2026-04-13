@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { MapPin, Star } from 'lucide-react';
 import CentrosSearch from '@/components/home/CentrosSearch';
 import { getCenterTypeProvincePairs, getCentersByProvince, getCategoryBySlug } from '@/lib/data';
-import { getCenterTypeLabel } from '@/lib/utils';
+import { getCenterTypeLabel, stripMarkdownForPreview, isGenericDescription } from '@/lib/utils';
 import { generatePageMetadata, jsonLdItemList, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
 
 export const revalidate = 3600;
@@ -133,9 +133,13 @@ export default async function CentersTypeProvincePage({ params }: { params: Prom
                         </div>
                       )}
                     </div>
-                    {c.description_en && (
-                      <p className="text-sm text-[#7a6b5d] leading-relaxed mt-2 line-clamp-2">{c.description_en}</p>
-                    )}
+                    {(() => {
+                      const raw = c.description_en;
+                      if (!raw || isGenericDescription(raw)) return null;
+                      const clean = stripMarkdownForPreview(raw);
+                      if (!clean) return null;
+                      return <p className="text-sm text-[#7a6b5d] leading-relaxed mt-2 line-clamp-2">{clean}</p>;
+                    })()}
                   </div>
                 </Link>
               );

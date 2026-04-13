@@ -136,7 +136,7 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbLd) }} />
 
       {/* ═══ Portada + galería (todas las imágenes del retiro) ═══ */}
-      <section className="bg-sand-100 pt-20 md:pt-[72px]">
+      <section className="bg-sand-100">
         <div className="container-wide py-4 space-y-3">
           {hasImages ? (
             <>

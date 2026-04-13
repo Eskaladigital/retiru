@@ -104,7 +104,7 @@ export default async function HomePage() {
                             max-md:bg-gradient-to-b max-md:from-[rgba(254,253,251,0.93)] max-md:via-[rgba(254,253,251,0.8)] max-md:to-[rgba(254,253,251,0.4)]" />
           </div>
 
-          <div className="container-wide relative z-10 pt-24 pb-12 md:py-16">
+          <div className="container-wide relative z-10 pb-12 max-md:pt-8 md:pt-6 md:pb-16">
             <div className="max-w-[620px] md:max-w-[900px]">
               {/* Badges */}
               <div className="flex flex-wrap gap-2 mb-6 animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)_forwards]">

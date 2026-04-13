@@ -90,7 +90,7 @@ export default async function HomePageEN() {
             <Image src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1920&q=80" alt="Person meditating at sunrise" fill priority sizes="100vw" className="object-cover" />
             <div className="absolute inset-0 bg-gradient-to-r from-[rgba(254,253,251,0.95)] via-[rgba(254,253,251,0.85)] to-[rgba(254,253,251,0.2)] max-md:bg-gradient-to-b max-md:from-[rgba(254,253,251,0.93)] max-md:via-[rgba(254,253,251,0.8)] max-md:to-[rgba(254,253,251,0.4)]" />
           </div>
-          <div className="container-wide relative z-10 pt-24 pb-12 md:py-20">
+          <div className="container-wide relative z-10 pb-12 max-md:pt-8 md:pt-2 md:pb-20">
             <div className="max-w-[620px] md:max-w-[900px]">
               <div className="flex flex-wrap gap-2 mb-6 animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)_forwards]">
                 <div className="inline-flex items-center gap-2 bg-sage-50 border border-sage-200 text-sage-700 text-[13px] font-semibold px-4 py-1.5 rounded-full">

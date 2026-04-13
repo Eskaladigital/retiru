@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 /**
- * Genera 12 imágenes (6 panel organizador + 6 beneficios centro) para /es/para-organizadores
+ * Genera 22 imágenes para las landings:
+ *   6 dashboard organizador + 6 centros   →  /es/para-organizadores
+ *   4 garantías asistente + 6 why retiru  →  /es/para-asistentes
  * Usa .env.local: OPENAI_API_KEY
  * 
  * Uso:
@@ -91,152 +93,244 @@ Reglas:
 const IMAGE_REALISM_TAIL =
   'Tomada como fotografia real con camara full frame profesional y optica de reportaje de alta calidad, luz existente fisicamente creible, color natural y balance de blancos realista, contraste moderado, grano minimo natural, detalle autentico en piel, telas, arena, piedra, vegetacion o arquitectura segun la escena; siempre de dia, luminosa y clara, nunca nocturna ni sombria, con sensacion de franja util entre 09:00 y 20:30 de verano del sur de Espana; si aparecen personas, secundarias, naturales y no posadas; sin HDR agresivo, sin acabado plastico, sin render 3D, sin pintura digital, sin ilustracion, sin tipografia ni logotipos.';
 
-// Mockups a generar
+// ──────────────────────────────────────────────────────────────
+// MOCKUPS A GENERAR — 22 imágenes, variedad máxima de composición
+// Regla: alternar dispositivos, personas, flatlay, objetos, manos,
+// escenas lifestyle. Nunca dos seguidos con la misma composición.
+// ──────────────────────────────────────────────────────────────
+
 const MOCKUPS = [
+
+  // ═══════════════════════════════════════════════════════════
+  // A) DASHBOARD ORGANIZADOR (6) — para /es/para-organizadores
+  // ═══════════════════════════════════════════════════════════
+
   {
     filename: 'dashboard-crm-asistentes.png',
     title: 'CRM de asistentes',
-    description: `Interfaz web moderna de CRM para gestion de asistentes a retiros (solo formas, sin texto legible en pantalla).
-    Vista principal: tabla de datos limpia con circulos de avatar difuminados o siluetas, filas y columnas, barras de estado en verde y amarillo pastel,
-    badges como rectangulos redondeados de color sin letras, checkmarks como iconos geometricos,
-    zona de notas como bloques grises vacios, filtros como rectangulos y chevrones abstractos,
-    paleta crema, sage suave y terracota para acentos,
-    iconografia minimalista tipo lineas y puntos,
-    diseno UI estilo Notion o Linear (espaciado generoso, cards sutiles),
-    laptop MacBook Pro con pantalla mostrando la interfaz,
-    teclado aluminio visible en primer plano,
-    luz natural de dia entrando lateral por ventana,
-    fondo desenfocado con plantas de interior tipo monstera,
-    angulo ligeramente superior,
-    reflejos naturales minimos en pantalla.`
+    description: `Manos de mujer de piel morena escribiendo en un portatil sobre mesa de madera rustica,
+    en la pantalla del portatil interfaz abstracta tipo tabla CRM con filas, circulos de avatar difuminados, badges de color y checkmarks geometricos sin texto legible,
+    al lado un cuaderno de espiral abierto con anotaciones a lapiz borrosas, taza de ceramica artesanal con cafe,
+    luz natural de manana entrando por ventanal grande, sombras suaves de persianas,
+    jardin mediterraneo desenfocado al fondo con buganvilla,
+    paleta crema sage terracota, angulo diagonal sobre manos y teclado.`
   },
   {
     filename: 'dashboard-mensajeria.png',
     title: 'Mensajería integrada',
-    description: `Interfaz de mensajeria tipo chat 1a1 (sin texto legible: solo burbujas vacias o lineas grises simulando contenido).
-    Burbujas alineadas izquierda y derecha en gris claro y sage suave,
-    avatar circular difuminado arriba,
-    panel lateral con cards blancas como rectangulos con lineas horizontales grises que sugieren plantillas, sin palabras,
-    paleta sage, crema y terracota,
-    mucho espacio blanco,
-    tablet iPad Pro en soporte sobre mesa de madera clara con vetas,
-    luz de media manana,
-    taza de ceramica mate, cuaderno abierto con lapiz, suculentas en maceta de barro,
-    fondo con estanteria desenfocada,
-    angulo diagonal suave,
-    reflejos naturales en pantalla tactil.`
+    description: `Mujer joven sentada en sofa de lino beige con tablet iPad en las manos, vista parcial (del pecho a las manos, sin rostro completo),
+    en la pantalla del tablet interfaz de chat abstracta con burbujas de mensaje vacias alineadas izquierda y derecha en gris y sage, avatar circular difuminado,
+    junto a ella en el sofa un cojin de algodon crudo y una manta de lana,
+    mesa baja de madera con vela apagada y planta pothos en maceta de barro,
+    luz calida de media tarde filtrando por cortina de lino,
+    ambiente salon acogedor mediterraneo, paleta sage crema amber.`
   },
   {
     filename: 'dashboard-checkin-qr.png',
     title: 'Check-in con QR',
-    description: `Lista de check-in digital para retiro (sin texto legible en UI).
-    Tabla con columnas: circulos de avatar difuminados, filas, toggles o switches en verde y gris,
-    patrones abstractos tipo codigo QR como cuadricula geometrica en miniatura sin datos escaneables reales,
-    icono de check verde como forma geometrica,
-    filtros superiores como pastillas de color sin etiquetas,
-    paleta terracota y crema,
-    laptop MacBook sobre mesa rustica de madera con vetas,
-    luz natural de manana,
-    tablet al lado con layout responsive en miniatura,
-    taza de cafe en cristal, romero en maceta de terracota,
-    ventanal y jardin mediterraneo desenfocado.`
+    description: `Escena real en entrada de espacio de retiro: mano sosteniendo smartphone vertical mostrando un patron QR abstracto geometrico (cuadricula sin datos escaneables reales),
+    de fondo desenfocado pasillo luminoso con pared de cal blanca, estanteria de madera con plantas y cuencos de ceramica,
+    suelo de baldosa hidraulica terracota,
+    luz de manana intensa lateral, sombras geometricas del marco de la puerta,
+    se intuye una persona al fondo de espaldas caminando,
+    paleta terracota crema blanco, composicion vertical centrada en mano y telefono.`
   },
   {
     filename: 'dashboard-analiticas.png',
     title: 'Analíticas y KPIs',
-    description: `Dashboard de analiticas estilo Stripe o Vercel (sin numeros ni palabras legibles: barras y lineas abstractas).
-    Cards superiores con bloques de color y graficos de linea suave en sage con area degradada,
-    grafica de barras horizontales como rectangulos de longitud variable,
-    lista de filas grises con puntos de color,
-    UI minimalista con mucho blanco,
-    iconos como trazos simples,
-    paleta crema, sage y terracota suaves,
-    monitor externo grande sobre escritorio de madera clara,
-    MacBook cerrado al lado, lampara de escritorio metal negro mate,
-    monstera en maceta ceramica blanca,
-    luz natural lateral, estanteria con libros desenfocada,
-    pantalla mate del monitor.`
+    description: `Vista cenital tipo flatlay de escritorio de madera clara con monitor externo mostrando dashboard abstracto con graficos de linea sage y barras horizontales de colores sin numeros legibles,
+    junto al monitor MacBook cerrado, libreta moleskine abierta con graficos a lapiz borrosos,
+    taza de te verde en cristal, gafas de pasta, un pequeno cactus en maceta blanca,
+    boligrafo metalico, clips de colores,
+    luz cenital natural, sombras suaves, angulo totalmente cenital mirando desde arriba,
+    paleta sage crema terracota, composicion ordenada tipo still life editorial.`
   },
   {
     filename: 'dashboard-wizard-creacion.png',
     title: 'Wizard de creación de retiro',
-    description: `Wizard paso a paso para crear retiro (sin texto legible en pantalla).
-    Dos columnas: izquierda formulario con campos como rectangulos, barra de progreso segmentada, chips de color, calendario como cuadricula gris,
-    derecha preview con bloque hero imagen, lineas grises que simulan titulo y parrafo, badges circulares de color,
-    boton terracota como rectangulo sin palabras,
-    paleta sage crema terracota,
-    laptop sobre microcemento gris claro,
-    luz de tarde suave,
-    taza de cristal con te, cuaderno abierto con bocetos a lapiz,
-    tablet con vista mobile del mismo layout abstracto,
-    lavanda en maceta, cuadro botanico desenfocado en pared.`
+    description: `Persona de espaldas sentada frente a escritorio amplio junto a ventanal con vista a montana verde desenfocada,
+    portatil abierto mostrando wizard de dos columnas abstracto: izquierda campos como rectangulos y barra de progreso segmentada, derecha preview con bloque imagen y lineas grises sin texto legible,
+    sobre el escritorio fotos impresas de paisajes y centros de retiro esparcidas, post-its de colores (sin texto), lapiz y regla,
+    planta de hoja grande junto a la ventana, cortina de lino ondeando suavemente,
+    luz de tarde dorada lateral, paleta sage crema terracota, composicion amplia que incluye persona y entorno.`
   },
   {
     filename: 'dashboard-resenas.png',
     title: 'Gestión de reseñas',
-    description: `Gestion de resenas (sin texto legible en UI).
-    Cards con estrellas amarillas como formas, avatar circular difuminado, bloques grises para parrafos simulados,
-    area de respuesta como rectangulo con borde terracota a la izquierda en algunas cards,
-    filtros superiores como pastillas,
-    resumen arriba con icono de estrella y barras grises cortas,
-    paleta terracota sage y crema,
-    laptop MacBook sobre madera clara,
-    tablero de corcho con fotos pegadas y post-its de colores sin leer,
-    luz de manana, cafe con latte art abstracto,
-    aloe en maceta de barro, boligrafo y bloc al lado,
-    ventana con cortina de lino desenfocada.`
+    description: `Mesa de cafe de terraza exterior con mantel de lino: smartphone en soporte mostrando cards abstractas con filas de estrellas amarillas, avatar difuminado y bloques grises sin texto,
+    al lado una libreta pequena con boligrafo, croissant en plato de ceramica, vaso de zumo de naranja,
+    silla de ratan al fondo desenfocada, macetas con romero y geranios,
+    suelo de piedra natural, pared encalada con marco de puerta azul mediterraneo,
+    luz de manana mediterranea intensa con sombras duras de toldo,
+    paleta terracota sage crema, composicion de lifestyle exterior.`
   },
+
+  // ═══════════════════════════════════════════════════════════
+  // B) CENTROS (6) — para /es/para-organizadores (sección centros)
+  // ═══════════════════════════════════════════════════════════
+
   {
     filename: 'centro-directorio-mapa.png',
     title: 'Centro · ficha y mapa en directorio',
-    description: `Fotografia de producto: pantalla de portatil o tablet mostrando interfaz abstracta de directorio de centros de bienestar,
-    mapa con pin circular difuminado, tarjeta de ficha como rectangulos blancos con franjas grises que sugieren fotos y datos sin texto legible,
-    barra de busqueda como rectangulo gris vacio,
-    paleta sage crema y terracota,
-    dispositivo sobre mesa de madera clara, planta pequena, luz de media manana mediterranea,
-    fondo ventana desenfocada.`
+    description: `Tablet apoyado en atril de madera sobre mostrador de recepcion de centro de yoga real,
+    pantalla con interfaz abstracta de mapa con pin difuminado y card blanca como rectangulos sin texto legible,
+    mostrador de madera con cuenco de piedras decorativo, vela en farolillo, folletos de papel kraft apilados sin texto,
+    pared de fondo con estanteria de madera y plantas tipo pothos colgante, buda pequeno decorativo,
+    luz calida de interior con lampara de fibra natural, paleta sage crema terracota.`
   },
   {
     filename: 'centro-visibilidad-seo.png',
     title: 'Centro · visibilidad SEO',
-    description: `Portatil en escritorio mostrando resultados de busqueda abstractos: lista de bloques horizontales grises de altura variable como filas SERP,
-    iconos de linea simples, grafica de barras diminuta en una esquina sin numeros legibles,
-    paleta blanca y sage,
-    taza de cafe, cuaderno cerrado, luz natural lateral,
-    ambiente estudio pequeno luminoso.`
+    description: `Vista aerea cenital tipo flatlay de escritorio con portatil mostrando resultados de busqueda abstractos (bloques horizontales grises sin texto legible, iconos de linea),
+    alrededor del portatil: taza de cafe, planta suculenta, tarjetas de visita de carton kraft apiladas sin texto,
+    un bloc de notas con diagrama tipo embudo dibujado a lapiz (sin palabras), un telefono movil boca abajo,
+    superficie de microcemento gris claro, luz cenital natural difusa,
+    paleta blanca sage crema, composicion cenital editorial limpia.`
   },
   {
     filename: 'centro-resenas-valoraciones.png',
     title: 'Centro · reseñas y valoraciones',
-    description: `Smartphone en soporte sobre mesa mostrando cards de valoracion abstractas: filas de estrellas amarillas como formas,
-    barras horizontales grises, circulos de avatar difuminados,
-    sin texto legible,
-    mesa de madera, luz suave de tarde, planta suculenta al lado.`
+    description: `Primer plano de manos de mujer sosteniendo smartphone horizontal sobre fondo desenfocado de sala de yoga con esterillas enrolladas y cojines de meditacion,
+    pantalla mostrando cards de valoracion abstractas con estrellas amarillas y bloques grises sin texto,
+    unas en color natural, anillos sencillos,
+    las manos estan relajadas, sin pose forzada,
+    luz natural suave de ventanal lateral, parquet de madera,
+    paleta crema sage amber, composicion centrada en manos con contexto de centro de bienestar detras.`
   },
   {
     filename: 'centro-sello-verificado.png',
     title: 'Centro · sello verificado',
-    description: `Primer plano de pantalla de portatil con badge circular grande estilo sello de verificacion abstracto en verde sage y borde dorado mate,
-    sin logotipos de marcas, sin texto legible,
-    al lado sobre la mesa tarjeta fisica de carton con relieve que sugiere credencial sin letras,
-    lino arrugado, luz de manana clara.`
+    description: `Puerta de entrada de centro de bienestar real: madera envejecida con herraje de forja, junto a la puerta en la pared una placa circular de ceramica artesanal con relieve abstracto tipo sello (sin texto ni logotipo legible) en tonos sage y borde dorado mate,
+    maceta de barro con lavanda junto al marco de la puerta, escalon de piedra natural,
+    pared encalada con textura real, sombra de arbol en la pared,
+    luz de media manana directa, cielo azul mediterraneo arriba,
+    paleta sage crema terracota dorado, composicion centrada en la placa y la entrada.`
   },
   {
     filename: 'centro-contacto-canales.png',
     title: 'Centro · contacto directo',
-    description: `Mesa de recepcion de centro de yoga: portatil abierto con fila de iconos abstractos circulares grises que sugieren telefono web email redes sin simbolos de marca,
-    bloques de color para botones sin palabras,
-    jarron de ceramica terracota, agenda de anillas, luz natural calida,
-    fondo cortina de lino beige desenfocado.`
+    description: `Recepcionista de espaldas (solo hombros y nuca visibles) sentada ante escritorio de madera con portatil abierto mostrando fila de iconos circulares abstractos (telefono web email) sin simbolos de marca,
+    telefono fijo vintage de pasta color crema sobre el escritorio, agenda de anillas abierta,
+    detras ventana con vista a patio interior con naranjo, cortina de lino ondeando,
+    lampara de mesa con pantalla de rafia, taza con cucharilla,
+    luz natural intensa de mediodia, paleta crema sage terracota, ambiente de recepcion calida.`
   },
   {
     filename: 'centro-publicar-retiros.png',
     title: 'Centro · publicar retiros',
-    description: `Tablet y portatil mostrando calendario mensual abstracto con celdas grises y algunas celdas resaltadas en terracota,
-    miniaturas de cards de evento como rectangulos con franjas de color sin titulos legibles,
-    paleta crema sage terracota,
-    superficie de madera, cafe en taza de barro, luz de manana.`
-  }
+    description: `Mesa de trabajo colaborativo: dos personas (vistas solo manos y brazos) trabajando con tablet y portatil,
+    tablet mostrando calendario mensual abstracto con celdas grises y algunas resaltadas en terracota sin texto,
+    portatil al lado mostrando grid de cards de eventos como rectangulos con franjas de color,
+    entre ambos dispositivos: tazas de cafe, lapices de colores, post-its en blanco, un bol de fruta,
+    superficie de madera, luz de media manana lateral, jardin desenfocado al fondo,
+    paleta crema sage terracota, composicion horizontal amplia tipo coworking.`
+  },
+
+  // ═══════════════════════════════════════════════════════════
+  // C) ASISTENTES — GARANTÍAS (4) — para /es/para-asistentes
+  // ═══════════════════════════════════════════════════════════
+
+  {
+    filename: 'att-pago-seguro.png',
+    title: 'Asistente · pago seguro escrow',
+    description: `Mano de mujer apoyando tarjeta de credito sobre smartphone que esta en la mesa,
+    pantalla del smartphone con interfaz abstracta: barra de progreso verde, icono de escudo, bloques de color sin texto legible,
+    un candado metalico pequeno decorativo junto al telefono,
+    pulsera de hilo y anillo sencillo en la mano,
+    mesa de madera con mantel de lino, detras una ventana con cortina blanca y planta en maceta de barro,
+    luz de manana suave y calida, sombra de la mano sobre la mesa,
+    paleta emerald crema sage, composicion centrada en mano y tarjeta con contexto de seguridad.`
+  },
+  {
+    filename: 'att-eventos-verificados.png',
+    title: 'Asistente · eventos verificados',
+    description: `Flatlay cenital sobre superficie de lino crudo con varios elementos dispuestos de forma editorial:
+    portatil abierto mostrando ficha abstracta de retiro con bloque hero imagen y badge de check circular verde sin texto,
+    al lado carpeta kraft con documentos de papel con sellos circulares abstractos difuminados,
+    pasaporte real junto a gafas de sol, ticket de avion borroso, un boli y clips,
+    taza de te, ramita de olivo decorativa,
+    luz cenital natural suave con sombras minimas, paleta sky crema sage, composicion flatlay editorial.`
+  },
+  {
+    filename: 'att-soporte.png',
+    title: 'Asistente · soporte dedicado',
+    description: `Persona recostada en hamaca de cuerda en terraza exterior, sujetando tablet con ambas manos,
+    pantalla del tablet mostrando interfaz de chat abstracta con burbujas vacias y avatar circular,
+    no se ve el rostro completo (solo de barbilla a manos), ropa de lino blanco,
+    suelo de madera de terraza, barandilla con vista a montana verde desenfocada,
+    una toalla doblada y un vaso de agua con rodaja de limon en mesita auxiliar,
+    luz de tarde dorada, ambiente relajado de vacaciones,
+    paleta amber crema sage, composicion que transmite acompanamiento y tranquilidad.`
+  },
+  {
+    filename: 'att-cancelacion-transparente.png',
+    title: 'Asistente · cancelacion transparente',
+    description: `Escritorio limpio y ordenado con portatil mostrando timeline horizontal abstracto: circulos conectados por lineas, algunos verdes otros grises, icono de flecha de retorno, bloques de color sin texto,
+    junto al portatil un sobre abierto con papel y una hoja de condiciones abstracta (lineas grises),
+    cartera de cuero abierta con tarjetas asomando, bolso de viaje tipo weekender de lona al fondo,
+    luz de media manana clara, superficie de madera, planta colgante al fondo,
+    paleta violet crema sage, composicion que sugiere planificacion tranquila y transparencia.`
+  },
+
+  // ═══════════════════════════════════════════════════════════
+  // D) ASISTENTES — WHY RETIRU (6) — para /es/para-asistentes
+  // ═══════════════════════════════════════════════════════════
+
+  {
+    filename: 'att-organizadores-verificados.png',
+    title: 'Asistente · organizadores verificados',
+    description: `Primer plano de manos entregando documentos: una mano extiende una carpeta kraft con sello circular difuminado (sin texto),
+    la otra mano recibe con gesto natural, se ven antebrazos con camisa de lino blanco y pulsera de cuerda,
+    de fondo totalmente desenfocado un espacio de recepcion luminoso con pared encalada y plantas,
+    luz natural lateral suave de ventana,
+    paleta sage crema, composicion centrada en el gesto de entrega y confianza entre personas.`
+  },
+  {
+    filename: 'att-pago-unico.png',
+    title: 'Asistente · un solo pago sin sorpresas',
+    description: `Smartphone sobre superficie de marmol blanco con vetas grises, pantalla mostrando interfaz abstracta de pago: rectangulo terracota grande (sin cifras legibles), icono de check verde, barras de desglose grises,
+    alrededor del telefono: una sola tarjeta de credito, una llave de laton vintage, un billete de avion borroso, unas gafas de lectura,
+    nada mas, minimalismo extremo,
+    luz cenital suave natural, sin sombras duras,
+    paleta terracota crema blanco, composicion minimalista tipo product shot.`
+  },
+  {
+    filename: 'att-resenas-reales.png',
+    title: 'Asistente · resenas reales',
+    description: `Grupo de tres personas sentadas en cojines de meditacion en el suelo de madera de una sala luminosa, conversando de forma natural (vistas desde atras/lateral, sin rostros directos),
+    una de ellas tiene un smartphone en la mano con pantalla mostrando estrellas amarillas abstractas y bloques sin texto,
+    ventanales grandes con vista a jardin, esterillas enrolladas al fondo, velas apagadas,
+    ropa comoda de colores neutros, sensacion real de final de retiro,
+    luz suave de tarde, paleta terracota crema sage, composicion humana y natural.`
+  },
+  {
+    filename: 'att-minimo-viable.png',
+    title: 'Asistente · minimo viable garantizado',
+    description: `Mesa de salon con portatil mostrando barra de progreso semicircular abstracta (parte rellena en sage, parte vacia en gris claro) y circulos pequenos tipo avatares debajo,
+    junto al portatil una agenda abierta con calendario mensual a lapiz (sin fechas legibles), una taza de ceramica humeante,
+    en el sofa detras un cojin y una manta doblada, la persona esta fuera de plano o solo se intuye una pierna,
+    ventana con luz de media manana, cortina de gasa,
+    paleta sage crema, composicion que transmite espera tranquila y sin prisa.`
+  },
+  {
+    filename: 'att-seleccion-curada.png',
+    title: 'Asistente · seleccion curada',
+    description: `Mujer de espaldas con sombrero de paja mirando un tablero tipo moodboard colgado en pared encalada:
+    fotos impresas de paisajes de retiros (montanas, playas, bosques) pegadas con washi tape, junto con tarjetas de carton kraft y cintas de color sin texto legible,
+    a su lado mesa auxiliar con mapa de Espana plegado, guia de viaje, taza de cafe, gafas de sol,
+    luz de manana lateral intensa con sombra de ventana,
+    paleta terracota sage crema, composicion que transmite descubrimiento y curaduria manual.`
+  },
+  {
+    filename: 'att-confirmacion-inmediata.png',
+    title: 'Asistente · confirmacion inmediata',
+    description: `Mano alzando smartphone con pantalla mostrando icono grande de check verde en circulo y bloques abstractos de color (sin texto),
+    de fondo desenfocado la entrada de una finca o casa rural con puerta de madera y jardin,
+    maleta de viaje de lona al lado de la persona (solo se ve parte de la pierna y la maleta),
+    grava en el suelo, buganvilla en la pared, cielo azul,
+    luz intensa de mediodia de verano,
+    paleta emerald crema terracota, composicion que transmite llegada y confirmacion.`
+  },
 ];
 
 async function callOpenAI(messages, temperature = 0.3) {
@@ -393,12 +487,19 @@ async function main() {
 
   const results = [];
   
+  const skipExisting = process.argv.includes('--skip-existing');
+
   for (let i = 0; i < MOCKUPS.length; i++) {
+    const outFile = join(root, 'public', 'images', MOCKUPS[i].filename);
+    if (skipExisting && existsSync(outFile)) {
+      console.log(`\n⏭️  Saltando (ya existe): ${MOCKUPS[i].filename}`);
+      continue;
+    }
+
     try {
       const result = await processMockup(MOCKUPS[i]);
       results.push(result);
       
-      // Pausa entre llamadas para evitar rate limits
       if (i < MOCKUPS.length - 1) {
         console.log('   ⏳ Esperando 3s antes de continuar...');
         await new Promise(resolve => setTimeout(resolve, 3000));

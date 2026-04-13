@@ -94,10 +94,18 @@ export function isGenericDescription(desc: string | null | undefined): boolean {
   return !!desc?.includes(GENERIC_DESC_SUFFIX);
 }
 
-/** Quita markdown para mostrar un resumen limpio en cards (sin ###, **, etc.) */
+/** Quita markdown y HTML para mostrar un resumen limpio en cards */
 export function stripMarkdownForPreview(text: string | null | undefined): string {
   if (!text?.trim()) return '';
   return text
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
     .replace(/^#{1,6}\s+/gm, '')
     .replace(/\*\*([^*]+)\*\*/g, '$1')
     .replace(/\*([^*]+)\*/g, '$1')

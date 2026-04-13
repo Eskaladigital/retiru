@@ -133,7 +133,7 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbLd) }} />
 
       {/* Cover + full gallery */}
-      <section className="bg-sand-100 pt-20 md:pt-[72px]">
+      <section className="bg-sand-100">
         <div className="container-wide py-4 space-y-3">
           {hasImages ? (
             <>
