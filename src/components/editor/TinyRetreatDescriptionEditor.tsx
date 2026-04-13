@@ -68,6 +68,9 @@ export function TinyRichTextEditor({
           rel_list: relList,
           image_title: true,
           automatic_uploads: false,
+          resize: 'both',
+          min_height: 240,
+          max_height: 800,
         }}
       />
     </div>

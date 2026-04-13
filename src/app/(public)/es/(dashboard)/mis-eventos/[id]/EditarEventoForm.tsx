@@ -109,7 +109,7 @@ interface Props {
 }
 
 const inputCls = 'w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all';
-const textareaCls = `${inputCls} resize-none`;
+const textareaCls = `${inputCls} resize-y min-h-[5rem]`;
 
 type ImgRow = { url: string; is_cover: boolean; sort_order?: number };
 
