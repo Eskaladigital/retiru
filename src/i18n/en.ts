@@ -15,6 +15,7 @@ const en: TranslationKeys = {
     retreats: 'Retreats',
     destinations: 'Destinations',
     forOrganizers: 'For centers & organizers',
+    forAttendees: 'For attendees',
     conditions: 'Terms',
     help: 'Help',
     login: 'Log in',

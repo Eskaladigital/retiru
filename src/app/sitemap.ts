@@ -26,6 +26,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/es/tienda', priority: 0.8, changeFrequency: 'weekly' as const },
     { path: '/es/retiros-retiru', priority: 0.8, changeFrequency: 'weekly' as const },
     { path: '/es/destinos', priority: 0.8, changeFrequency: 'weekly' as const },
+    { path: '/es/para-asistentes', priority: 0.7, changeFrequency: 'monthly' as const },
     { path: '/es/para-organizadores', priority: 0.7, changeFrequency: 'monthly' as const },
     { path: '/es/ayuda', priority: 0.5, changeFrequency: 'monthly' as const },
     { path: '/es/sobre-nosotros', priority: 0.4, changeFrequency: 'monthly' as const },
@@ -44,6 +45,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/en/shop', priority: 0.8, changeFrequency: 'weekly' as const },
     { path: '/en/retreats-retiru', priority: 0.8, changeFrequency: 'weekly' as const },
     { path: '/en/destinations', priority: 0.8, changeFrequency: 'weekly' as const },
+    { path: '/en/for-attendees', priority: 0.7, changeFrequency: 'monthly' as const },
     { path: '/en/for-organizers', priority: 0.7, changeFrequency: 'monthly' as const },
     { path: '/en/help', priority: 0.5, changeFrequency: 'monthly' as const },
     { path: '/en/about', priority: 0.4, changeFrequency: 'monthly' as const },
@@ -62,8 +64,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority,
     alternates: {
       languages: {
-        es: `${SITE_URL}${path.replace('/en', '/es').replace('/search', '/buscar').replace('/centers-retiru', '/centros-retiru').replace('/shop', '/tienda').replace('/retreats-retiru', '/retiros-retiru').replace('/destinations', '/destinos').replace('/for-organizers', '/para-organizadores').replace('/help', '/ayuda').replace('/about', '/sobre-nosotros').replace('/contact', '/contacto')}`,
-        en: `${SITE_URL}${path.replace('/es', '/en').replace('/buscar', '/search').replace('/centros-retiru', '/centers-retiru').replace('/tienda', '/shop').replace('/retiros-retiru', '/retreats-retiru').replace('/destinos', '/destinations').replace('/para-organizadores', '/for-organizers').replace('/ayuda', '/help').replace('/sobre-nosotros', '/about').replace('/contacto', '/contact')}`,
+        es: `${SITE_URL}${path.replace('/en', '/es').replace('/search', '/buscar').replace('/centers-retiru', '/centros-retiru').replace('/shop', '/tienda').replace('/retreats-retiru', '/retiros-retiru').replace('/destinations', '/destinos').replace('/for-attendees', '/para-asistentes').replace('/for-organizers', '/para-organizadores').replace('/help', '/ayuda').replace('/about', '/sobre-nosotros').replace('/contact', '/contacto')}`,
+        en: `${SITE_URL}${path.replace('/es', '/en').replace('/buscar', '/search').replace('/centros-retiru', '/centers-retiru').replace('/tienda', '/shop').replace('/retiros-retiru', '/retreats-retiru').replace('/destinos', '/destinations').replace('/para-asistentes', '/for-attendees').replace('/para-organizadores', '/for-organizers').replace('/ayuda', '/help').replace('/sobre-nosotros', '/about').replace('/contacto', '/contact')}`,
       },
     },
   }));

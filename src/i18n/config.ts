@@ -15,6 +15,7 @@ export const routeMap: Record<string, Record<Locale, string>> = {
   destinations:    { es: 'destinos',          en: 'destinations' },
   organizerPublic: { es: 'organizador',       en: 'organizer' },
   forOrganizers:   { es: 'para-organizadores', en: 'for-organizers' },
+  forAttendees:    { es: 'para-asistentes',    en: 'for-attendees' },
   help:            { es: 'ayuda',             en: 'help' },
   login:           { es: 'login',             en: 'login' },
   register:        { es: 'registro',          en: 'register' },

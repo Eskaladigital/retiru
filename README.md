@@ -268,6 +268,7 @@ Las APIs `/api/retreats`, `/api/centers` y `/api/catalog` exponen datos para bú
 | `/es/reclamar/[token]` | Link mágico para reclamar un centro |
 | `/es/destinos` | Destinos populares |
 | `/es/destinos/[slug]` | Destino por slug |
+| `/es/para-asistentes` | Para asistentes: garantías, pago seguro, verificación |
 | `/es/para-organizadores` | Para centros y organizadores |
 | `/es/tienda` | Tienda wellness (`shop_products`); si no hay productos, encuesta de interés (`ProductInterestSurvey`) |
 | `/es/blog` | Blog |
@@ -326,7 +327,7 @@ El sitemap se genera automáticamente en cada deploy con ISR (revalidate 1h). In
 
 | Tipo | Slugs | URLs (ES+EN) |
 |------|-------|-------------|
-| Páginas estáticas (aprox.) | ~17 ES + ~17 EN | ~34 |
+| Páginas estáticas (aprox.) | ~18 ES + ~18 EN | ~36 |
 | Centros individuales | ~858 | ~1.716 |
 | Centros por provincia | ~64 | ~128 |
 | Retiros individuales | ~10 | ~20 |
@@ -355,6 +356,7 @@ Los totales (~1.956 u otras cifras) son **orientativos** según datos en Supabas
 | `/es/reclamar/[token]` | `/en/claim/[token]` |
 | `/es/buscar` | `/en/search` |
 | `/es/destinos` | `/en/destinations` |
+| `/es/para-asistentes` | `/en/for-attendees` |
 | `/es/para-organizadores` | `/en/for-organizers` |
 | `/es/tienda` | `/en/shop` |
 | `/es/retiros-[categoría]` (ej. `/es/retiros-yoga`) | `/en/retreats-[category]` (ej. `/en/retreats-yoga`) |
@@ -457,6 +459,7 @@ src/
 │   │   │   ├── buscar/         # Buscador unificado retiros + centros
 │   │   │   ├── destinos/
 │   │   │   ├── organizador/[slug]/
+│   │   │   ├── para-asistentes/   # Garantías para asistentes
 │   │   │   ├── para-organizadores/
 │   │   │   ├── tienda/
 │   │   │   ├── blog/
@@ -497,7 +500,7 @@ src/
 
 ## Navegación y menú
 
-- **Header**: enlaces a retiros-retiru, centros-retiru, tienda, para-organizadores, blog. (Condiciones solo en footer.)
+- **Header**: enlaces a retiros-retiru, centros-retiru, tienda, para-asistentes, para-organizadores, blog. (Condiciones solo en footer.)
 - **Menú de usuario** (logueado): Mis reservas, Mi perfil, Mis centros, Mis eventos. Enlace a **Administración** si el usuario tiene rol `admin` en `user_roles`.
 - **Menú móvil (off-canvas)**: panel lateral deslizable desde la derecha, backdrop con blur, bloqueo de scroll, cierre al hacer clic fuera o en enlace.
 
@@ -765,6 +768,7 @@ El cron `/api/cron/payment-deadlines` (cada hora) gestiona la gracia y cancelaci
 - **Buscador** (`/buscar`): búsqueda unificada retiros + centros con filtros (tarjetas de retiro: valoración del organizador cuando aplica)
 - **Blog** (`/blog`, `/blog/[slug]`): artículos desde Supabase
 - **Tienda** (`/es/tienda`, `/es/tienda/[slug]`; EN: `/en/shop`): productos desde `shop_products`; si el listado público está vacío, **encuesta de interés** (cada clic 1–5 se guarda al instante vía `POST /api/shop/product-interest`; comentario opcional con botón propio) → `shop_product_interests`. Admin: `/administrator/tienda` + `docs/SHOP-SURVEY.md`
+- **Para asistentes** (`/para-asistentes`): garantías de pago seguro, organizadores verificados, soporte, comparativa vs contratación directa/redes
 - **Para centros y organizadores** (`/para-organizadores`): secciones centros + organizadores
 - **Condiciones** (`/condiciones`): modelo de precios transparente (en footer)
 

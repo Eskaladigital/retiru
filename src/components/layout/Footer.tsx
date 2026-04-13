@@ -60,6 +60,7 @@ export default function Footer({ locale }: FooterProps) {
   const eventosPath = locale === 'es' ? `${prefix}/retiros-retiru` : `${prefix}/retreats-retiru`;
   const destinationsPath = locale === 'es' ? `${prefix}/destinos` : `${prefix}/destinations`;
   const forOrgPath = locale === 'es' ? `${prefix}/para-organizadores` : `${prefix}/for-organizers`;
+  const forAttPath = locale === 'es' ? `${prefix}/para-asistentes` : `${prefix}/for-attendees`;
   const helpPath = locale === 'es' ? `${prefix}/ayuda` : `${prefix}/help`;
   const aboutPath = locale === 'es' ? `${prefix}/sobre-nosotros` : `${prefix}/about`;
   const contactPath = locale === 'es' ? `${prefix}/contacto` : `${prefix}/contact`;
@@ -114,6 +115,7 @@ export default function Footer({ locale }: FooterProps) {
               <li><Link href={shopPath} className="text-sm text-white/70 hover:text-white transition-colors">{locale === 'es' ? 'Tienda' : 'Shop'}</Link></li>
               <li><Link href={eventosPath} className="text-sm text-white/70 hover:text-white transition-colors">{t.nav.retreats}</Link></li>
               <li><Link href={destinationsPath} className="text-sm text-white/70 hover:text-white transition-colors">{t.nav.destinations}</Link></li>
+              <li><Link href={forAttPath} className="text-sm text-white/70 hover:text-white transition-colors">{locale === 'es' ? 'Para asistentes' : 'For attendees'}</Link></li>
               <li><Link href={forOrgPath} className="text-sm text-white/70 hover:text-white transition-colors">{t.nav.forOrganizers}</Link></li>
               <li><Link href={`${prefix}/blog`} className="text-sm text-white/70 hover:text-white transition-colors">Blog</Link></li>
             </ul>

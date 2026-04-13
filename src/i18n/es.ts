@@ -15,6 +15,7 @@ const es = {
     retreats: 'Retiros',
     destinations: 'Destinos',
     forOrganizers: 'Para centros y organizadores',
+    forAttendees: 'Para asistentes',
     conditions: 'Condiciones',
     help: 'Ayuda',
     login: 'Iniciar sesión',

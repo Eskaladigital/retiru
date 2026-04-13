@@ -71,6 +71,15 @@ export const forOrganizersES: Metadata = generatePageMetadata({
   keywords: ['publicar retiros', 'directorio centros yoga', 'organizar retiros', 'plataforma retiros gratis', 'ayurveda españa'],
 });
 
+export const forAttendeesES: Metadata = generatePageMetadata({
+  title: 'Para asistentes — Reserva retiros con garantía | Retiru',
+  description: 'Reserva retiros de yoga, meditación y ayurveda con pago seguro, organizadores verificados y soporte dedicado. Tu dinero protegido hasta que el evento se confirma.',
+  locale: 'es',
+  path: '/es/para-asistentes',
+  altPath: '/en/for-attendees',
+  keywords: ['reservar retiro seguro', 'retiros verificados', 'pago seguro retiro', 'retiros yoga garantía', 'retiros meditación españa'],
+});
+
 export const helpES: Metadata = generatePageMetadata({
   title: 'Centro de ayuda — Preguntas frecuentes sobre Retiru',
   description: 'Respuestas a las preguntas más comunes sobre reservas, pagos, cancelaciones, organización de retiros y uso de la plataforma Retiru.',
@@ -217,6 +226,15 @@ export const forOrganizersEN: Metadata = generatePageMetadata({
   locale: 'en',
   path: '/en/for-organizers',
   altPath: '/es/para-organizadores',
+});
+
+export const forAttendeesEN: Metadata = generatePageMetadata({
+  title: 'For attendees — Book retreats with full confidence | Retiru',
+  description: 'Book yoga, meditation and ayurveda retreats with secure payment, verified organizers and dedicated support. Your money protected until the event is confirmed.',
+  locale: 'en',
+  path: '/en/for-attendees',
+  altPath: '/es/para-asistentes',
+  keywords: ['book retreat safely', 'verified retreats', 'secure retreat payment', 'yoga retreats guarantee', 'meditation retreats spain'],
 });
 
 export const helpEN: Metadata = generatePageMetadata({

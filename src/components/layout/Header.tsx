@@ -41,6 +41,7 @@ export default function Header({ locale, user }: HeaderProps) {
   const shopPath = locale === 'es' ? `${prefix}/tienda` : `${prefix}/shop`;
   const eventosPath = locale === 'es' ? `${prefix}/retiros-retiru` : `${prefix}/retreats-retiru`;
   const forOrgPath = locale === 'es' ? `${prefix}/para-organizadores` : `${prefix}/for-organizers`;
+  const forAttPath = locale === 'es' ? `${prefix}/para-asistentes` : `${prefix}/for-attendees`;
   const loginPath = `${prefix}/login`;
   const registerPath = locale === 'es' ? `${prefix}/registro` : `${prefix}/register`;
 
@@ -100,6 +101,9 @@ export default function Header({ locale, user }: HeaderProps) {
           </Link>
           <Link href={shopPath} className="btn-ghost text-sm">
             {locale === 'es' ? 'Tienda' : 'Shop'}
+          </Link>
+          <Link href={forAttPath} className="btn-ghost text-sm text-terracotta-600">
+            {locale === 'es' ? 'Para asistentes' : 'For attendees'}
           </Link>
           <Link href={forOrgPath} className="btn-ghost text-sm text-sage-600">
             {t.nav.forOrganizers}
@@ -228,6 +232,10 @@ export default function Header({ locale, user }: HeaderProps) {
               <Link href={shopPath} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]" onClick={closeMenu}>
                 <span className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center"><ShoppingBag size={17} className="text-amber-600" /></span>
                 {locale === 'es' ? 'Tienda' : 'Shop'}
+              </Link>
+              <Link href={forAttPath} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-terracotta-50 transition-colors text-[15px]" onClick={closeMenu}>
+                <span className="w-9 h-9 rounded-xl bg-terracotta-50 flex items-center justify-center"><Shield size={17} className="text-terracotta-600" /></span>
+                {locale === 'es' ? 'Para asistentes' : 'For attendees'}
               </Link>
               <Link href={forOrgPath} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sage-50 transition-colors text-[15px]" onClick={closeMenu}>
                 <span className="w-9 h-9 rounded-xl bg-sage-50 flex items-center justify-center"><Heart size={17} className="text-sage-600" /></span>

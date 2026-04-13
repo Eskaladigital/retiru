@@ -19,6 +19,7 @@ Documentación de la arquitectura de rutas y landings.
 | `/es/destinos` | `src/app/(public)/es/destinos/page.tsx` | Destinos |
 | `/es/destinos/[slug]` | `src/app/(public)/es/destinos/[slug]/page.tsx` | Destino por slug |
 | `/es/organizador/[slug]` | `src/app/(public)/es/organizador/[slug]/page.tsx` | Perfil organizador |
+| `/es/para-asistentes` | `src/app/(public)/es/para-asistentes/page.tsx` | Para asistentes: garantías, pago seguro, verificación |
 | `/es/para-organizadores` | `src/app/(public)/es/para-organizadores/page.tsx` | Para centros y organizadores |
 | `/es/tienda` | `src/app/(public)/es/tienda/page.tsx` | Tienda (`shop_products`); si no hay productos, encuesta `ProductInterestSurvey` → `shop_product_interests` |
 | `/es/tienda/[slug]` | `src/app/(public)/es/tienda/[slug]/page.tsx` | Ficha de producto |
@@ -50,6 +51,7 @@ Documentación de la arquitectura de rutas y landings.
 | `/en/destinations` | `src/app/(public)/en/destinations/page.tsx` |
 | `/en/destinations/[slug]` | `src/app/(public)/en/destinations/[slug]/page.tsx` |
 | `/en/organizer/[slug]` | `src/app/(public)/en/organizer/[slug]/page.tsx` |
+| `/en/for-attendees` | `src/app/(public)/en/for-attendees/page.tsx` |
 | `/en/for-organizers` | `src/app/(public)/en/for-organizers/page.tsx` |
 | `/en/retreats-[category]` | `src/app/(public)/en/retreats-[category]/page.tsx` |
 | `/en/retreats-[category]/[destination]` | `src/app/(public)/en/retreats-[category]/[destination]/page.tsx` |
@@ -198,6 +200,7 @@ Código de referencia: `getOrganizerReviewStats`, `organizerHasRatingToShow` en 
 | `buscar/` | Buscador unificado |
 | `destinos/` | Destinos + `[slug]` |
 | `organizador/[slug]/` | Perfil organizador |
+| `para-asistentes/` | Garantías para asistentes |
 | `para-organizadores/` | Centros y organizadores |
 | `tienda/` | Listado + `[slug]` ficha producto (`shop_products`) |
 | `blog/` | Blog + `[slug]` |
