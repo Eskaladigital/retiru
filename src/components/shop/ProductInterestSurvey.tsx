@@ -1,124 +1,213 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { SHOP_SURVEY_CATEGORIES } from '@/lib/shop/survey-config';
 
-const PRODUCT_CATEGORIES = [
-  { id: 'esterillas-yoga', label: 'Esterillas de yoga', emoji: '🧘' },
-  { id: 'cojines-meditacion', label: 'Cojines de meditación', emoji: '🪷' },
-  { id: 'bloques-yoga', label: 'Bloques y props de yoga', emoji: '🧱' },
-  { id: 'ropa-deportiva', label: 'Ropa deportiva y yoga', emoji: '👕' },
-  { id: 'termos-botellas', label: 'Termos y botellas', emoji: '🫗' },
-  { id: 'incienso-velas', label: 'Incienso y velas', emoji: '🕯️' },
-  { id: 'aceites-esenciales', label: 'Aceites esenciales', emoji: '🌿' },
-  { id: 'libros-mindfulness', label: 'Libros de mindfulness y bienestar', emoji: '📚' },
-  { id: 'mantas-bolsters', label: 'Mantas y bolsters', emoji: '🛏️' },
-  { id: 'joyeria-espiritual', label: 'Joyería y accesorios espirituales', emoji: '📿' },
-];
+const STORAGE_SID = 'retiru_shop_survey_sid';
+const STORAGE_LEVELS = 'retiru_shop_survey_levels';
+
+type ErrCode = string;
 
 interface ProductInterestSurveyProps {
   lang?: 'es' | 'en';
 }
 
+function getOrCreateSessionId(): string {
+  if (typeof window === 'undefined') return '';
+  try {
+    let sid = sessionStorage.getItem(STORAGE_SID);
+    if (sid && /^[a-zA-Z0-9_-]{12,128}$/.test(sid)) return sid;
+    sid =
+      typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? `retiru-${crypto.randomUUID()}`
+        : `retiru-${Date.now()}_${Math.random().toString(36).slice(2, 18)}`;
+    sessionStorage.setItem(STORAGE_SID, sid);
+    return sid;
+  } catch {
+    return `retiru-${Date.now()}_${Math.random().toString(36).slice(2, 18)}`;
+  }
+}
+
+function loadStoredLevels(): Record<string, number> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = localStorage.getItem(STORAGE_LEVELS);
+    if (!raw) return {};
+    const o = JSON.parse(raw) as unknown;
+    if (!o || typeof o !== 'object') return {};
+    const out: Record<string, number> = {};
+    for (const [k, v] of Object.entries(o as Record<string, unknown>)) {
+      const n = Number(v);
+      if (n >= 1 && n <= 5) out[k] = n;
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+function persistLevels(levels: Record<string, number>) {
+  try {
+    localStorage.setItem(STORAGE_LEVELS, JSON.stringify(levels));
+  } catch {
+    /* ignore */
+  }
+}
+
 export function ProductInterestSurvey({ lang = 'es' }: ProductInterestSurveyProps) {
   const supabase = createClient();
-  const [submitted, setSubmitted] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const [selectedInterests, setSelectedInterests] = useState<Record<string, number>>({});
+  const [sessionId, setSessionId] = useState('');
+  const [levels, setLevels] = useState<Record<string, number>>({});
+  const [savingCategory, setSavingCategory] = useState<string | null>(null);
+  const [errorByCategory, setErrorByCategory] = useState<Record<string, ErrCode>>({});
   const [comments, setComments] = useState('');
+  const [commentSaving, setCommentSaving] = useState(false);
+  const [commentError, setCommentError] = useState('');
+  const [commentSaved, setCommentSaved] = useState(false);
 
   const texts = {
     es: {
       title: '¿Qué te gustaría encontrar aquí?',
-      subtitle: 'Ayúdanos a crear la tienda perfecta para ti. Dinos qué productos te interesan más.',
-      interestLabel: 'Nivel de interés',
+      subtitle:
+        'Toca un número del 1 al 5 en cada categoría: se guarda al instante (puedes valorar solo las que quieras).',
       levels: ['Sin interés', 'Poco', 'Algo', 'Bastante', 'Mucho interés'],
       commentsLabel: 'Comentarios adicionales (opcional)',
       commentsPlaceholder: '¿Algún producto específico que te gustaría ver? ¿Marcas favoritas? Cuéntanos...',
-      submitButton: 'Enviar respuestas',
-      submittingButton: 'Enviando...',
-      thankYouTitle: '¡Gracias por tu opinión!',
-      thankYouMessage: 'Tus respuestas nos ayudarán a crear una tienda que realmente necesitas.',
-      errorMessage: 'Hubo un error al enviar. Por favor, intenta de nuevo.',
-      minVotesWarning: 'Por favor, valora al menos 3 categorías de productos.',
+      saveComment: 'Guardar comentario',
+      savingComment: 'Guardando…',
+      saved: 'Guardado',
+      saving: 'Guardando…',
+      errors: {
+        SAVE_FAILED: 'No se pudo guardar. Inténtalo de nuevo.',
+        INVALID_SESSION: 'Sesión no válida. Recarga la página.',
+        COMMENT_NEED_RATING: 'Valora al menos una categoría antes de guardar el comentario.',
+        EMPTY_COMMENT: 'Escribe un comentario o cancela.',
+        INTERNAL: 'Error inesperado.',
+      },
     },
     en: {
       title: 'What would you like to find here?',
-      subtitle: 'Help us create the perfect shop for you. Tell us which products interest you most.',
-      interestLabel: 'Interest level',
+      subtitle: 'Tap 1–5 for each category — it saves instantly (answer as many or as few as you like).',
       levels: ['Not interested', 'Low', 'Some', 'Good', 'Very interested'],
       commentsLabel: 'Additional comments (optional)',
       commentsPlaceholder: 'Any specific products you\'d like to see? Favorite brands? Tell us...',
-      submitButton: 'Submit answers',
-      submittingButton: 'Submitting...',
-      thankYouTitle: 'Thank you for your feedback!',
-      thankYouMessage: 'Your answers will help us create a shop you truly need.',
-      errorMessage: 'There was an error submitting. Please try again.',
-      minVotesWarning: 'Please rate at least 3 product categories.',
+      saveComment: 'Save comment',
+      savingComment: 'Saving…',
+      saved: 'Saved',
+      saving: 'Saving…',
+      errors: {
+        SAVE_FAILED: 'Could not save. Please try again.',
+        INVALID_SESSION: 'Invalid session. Reload the page.',
+        COMMENT_NEED_RATING: 'Rate at least one category before saving a comment.',
+        EMPTY_COMMENT: 'Write a comment first.',
+        INTERNAL: 'Unexpected error.',
+      },
     },
   };
 
   const t = texts[lang];
 
-  const handleInterestChange = (categoryId: string, level: number) => {
-    setSelectedInterests((prev) => ({
-      ...prev,
-      [categoryId]: level,
-    }));
+  const errorMessages = useMemo(() => t.errors, [t.errors]);
+
+  const errMsg = (code: string | undefined) => {
+    if (!code) return errorMessages.SAVE_FAILED;
+    const k = code as keyof typeof errorMessages;
+    return errorMessages[k] ?? errorMessages.SAVE_FAILED;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+  useEffect(() => {
+    setSessionId(getOrCreateSessionId());
+    setLevels(loadStoredLevels());
+  }, []);
 
-    const votedCategories = Object.keys(selectedInterests).filter((k) => selectedInterests[k] > 0);
-    
-    if (votedCategories.length < 3) {
-      setError(t.minVotesWarning);
+  const postRating = useCallback(
+    async (categoryId: string, level: number) => {
+      setSavingCategory(categoryId);
+      setErrorByCategory((prev) => {
+        const next = { ...prev };
+        delete next[categoryId];
+        return next;
+      });
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      const body: Record<string, unknown> = {
+        action: 'rating',
+        productCategory: categoryId,
+        interestLevel: level,
+      };
+      if (!user) body.sessionId = sessionId || getOrCreateSessionId();
+
+      try {
+        const res = await fetch('/api/shop/product-interest', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = (await res.json().catch(() => ({}))) as { ok?: boolean; code?: string };
+        if (!res.ok || !data.ok) {
+          setErrorByCategory((prev) => ({
+            ...prev,
+            [categoryId]: data.code || 'SAVE_FAILED',
+          }));
+          return;
+        }
+        setLevels((prev) => {
+          const next = { ...prev, [categoryId]: level };
+          persistLevels(next);
+          return next;
+        });
+        setCommentSaved(false);
+      } catch {
+        setErrorByCategory((prev) => ({ ...prev, [categoryId]: 'SAVE_FAILED' }));
+      } finally {
+        setSavingCategory(null);
+      }
+    },
+    [sessionId, supabase],
+  );
+
+  const handleLevelClick = (categoryId: string, level: number) => {
+    void postRating(categoryId, level);
+  };
+
+  const handleSaveComment = async () => {
+    const trimmed = comments.trim();
+    if (!trimmed) {
+      setCommentError(errorMessages.EMPTY_COMMENT);
       return;
     }
+    setCommentError('');
+    setCommentSaving(true);
+    setCommentSaved(false);
 
-    setIsSubmitting(true);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const body: Record<string, unknown> = { action: 'comment', comment: trimmed };
+    if (!user) body.sessionId = sessionId || getOrCreateSessionId();
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      // Generar un session_id único si no hay usuario
-      const sessionId = user?.id || `anon_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-
-      const entries = votedCategories.map((categoryId) => ({
-        user_id: user?.id || null,
-        session_id: user?.id ? null : sessionId,
-        product_category: categoryId,
-        interest_level: selectedInterests[categoryId],
-        comments: comments.trim() || null,
-      }));
-
-      const { error: insertError } = await supabase
-        .from('shop_product_interests')
-        .insert(entries);
-
-      if (insertError) throw insertError;
-
-      setSubmitted(true);
-    } catch (err: any) {
-      console.error('Error submitting survey:', err);
-      setError(t.errorMessage);
+      const res = await fetch('/api/shop/product-interest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = (await res.json().catch(() => ({}))) as { ok?: boolean; code?: string };
+      if (!res.ok || !data.ok) {
+        setCommentError(errMsg(data.code));
+        return;
+      }
+      setCommentSaved(true);
+    } catch {
+      setCommentError(errorMessages.SAVE_FAILED);
     } finally {
-      setIsSubmitting(false);
+      setCommentSaving(false);
     }
   };
-
-  if (submitted) {
-    return (
-      <div className="bg-sage-50 border-2 border-sage-200 rounded-2xl p-8 md:p-12 max-w-2xl mx-auto text-center">
-        <div className="text-5xl mb-4">✨</div>
-        <h3 className="font-serif text-2xl text-foreground mb-3">{t.thankYouTitle}</h3>
-        <p className="text-[#7a6b5d] leading-relaxed">{t.thankYouMessage}</p>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-white border border-sand-200 rounded-2xl p-6 md:p-10 max-w-4xl mx-auto">
@@ -127,21 +216,33 @@ export function ProductInterestSurvey({ lang = 'es' }: ProductInterestSurveyProp
         <p className="text-[#7a6b5d] text-sm md:text-base">{t.subtitle}</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-6">
         <div className="grid gap-4">
-          {PRODUCT_CATEGORIES.map((category) => {
-            const currentLevel = selectedInterests[category.id] || 0;
+          {SHOP_SURVEY_CATEGORIES.map((category) => {
+            const label = lang === 'en' ? category.labelEn : category.labelEs;
+            const currentLevel = levels[category.id] || 0;
+            const errCode = errorByCategory[category.id];
+            const isSaving = savingCategory === category.id;
+
             return (
               <div
                 key={category.id}
                 className="bg-sand-50 rounded-xl p-4 hover:bg-sand-100/50 transition-colors"
               >
-                <div className="flex items-start gap-3 mb-3">
-                  <span className="text-2xl" role="img" aria-label={category.label}>
-                    {category.emoji}
-                  </span>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-foreground">{category.label}</h4>
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="flex items-start gap-3 min-w-0">
+                    <span className="text-2xl shrink-0" role="img" aria-label={label}>
+                      {category.emoji}
+                    </span>
+                    <div className="min-w-0">
+                      <h4 className="font-semibold text-foreground">{label}</h4>
+                    </div>
+                  </div>
+                  <div className="shrink-0 text-xs text-[#a09383] min-h-[1.25rem]">
+                    {isSaving ? <span className="text-terracotta-600">{t.saving}</span> : null}
+                    {!isSaving && currentLevel > 0 ? (
+                      <span className="text-sage-700 font-semibold">✓ {t.saved}</span>
+                    ) : null}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -149,8 +250,9 @@ export function ProductInterestSurvey({ lang = 'es' }: ProductInterestSurveyProp
                     <button
                       key={level}
                       type="button"
-                      onClick={() => handleInterestChange(category.id, level)}
-                      className={`flex-1 py-2 px-1 text-xs md:text-sm font-medium rounded-lg transition-all ${
+                      disabled={isSaving}
+                      onClick={() => handleLevelClick(category.id, level)}
+                      className={`flex-1 py-2 px-1 text-xs md:text-sm font-medium rounded-lg transition-all disabled:opacity-60 ${
                         currentLevel === level
                           ? 'bg-terracotta-600 text-white shadow-sm scale-105'
                           : 'bg-white border border-sand-200 text-[#7a6b5d] hover:border-terracotta-300'
@@ -165,6 +267,9 @@ export function ProductInterestSurvey({ lang = 'es' }: ProductInterestSurveyProp
                   <span>{t.levels[0]}</span>
                   <span>{t.levels[4]}</span>
                 </div>
+                {errCode ? (
+                  <p className="text-xs text-red-600 mt-2">{errMsg(errCode)}</p>
+                ) : null}
               </div>
             );
           })}
@@ -178,26 +283,30 @@ export function ProductInterestSurvey({ lang = 'es' }: ProductInterestSurveyProp
             id="comments"
             rows={4}
             value={comments}
-            onChange={(e) => setComments(e.target.value)}
+            onChange={(e) => {
+              setComments(e.target.value);
+              setCommentSaved(false);
+              setCommentError('');
+            }}
             placeholder={t.commentsPlaceholder}
             className="w-full px-4 py-3 border border-sand-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-terracotta-400 focus:border-transparent resize-none text-sm"
           />
+          {commentError ? (
+            <p className="text-sm text-red-600 mt-2">{commentError}</p>
+          ) : null}
+          {commentSaved ? (
+            <p className="text-sm text-sage-700 font-medium mt-2">✓ {t.saved}</p>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => void handleSaveComment()}
+            disabled={commentSaving || !comments.trim()}
+            className="mt-3 inline-flex items-center justify-center px-5 py-2.5 rounded-full text-sm font-semibold border border-sand-300 text-[#7a6b5d] hover:border-terracotta-400 hover:text-terracotta-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {commentSaving ? t.savingComment : t.saveComment}
+          </button>
         </div>
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700">
-            {error}
-          </div>
-        )}
-
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full bg-terracotta-600 text-white font-semibold py-4 rounded-xl hover:bg-terracotta-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isSubmitting ? t.submittingButton : t.submitButton}
-        </button>
-      </form>
+      </div>
     </div>
   );
 }

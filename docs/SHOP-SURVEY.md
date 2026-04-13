@@ -8,9 +8,16 @@ Validación de demanda antes de stock: los visitantes puntúan categorías (1–
 |--------|------|--------|
 | Público ES | `/es/tienda` | `src/app/(public)/es/tienda/page.tsx` + `src/components/shop/ProductInterestSurvey.tsx` |
 | Público EN | `/en/shop` | `src/app/(public)/en/shop/page.tsx` (mismo componente) |
+| API | `POST /api/shop/product-interest` | `src/app/api/shop/product-interest/route.ts` — guarda cada valoración al instante (service role + categorías permitidas en `src/lib/shop/survey-config.ts`) |
 | Admin | `/administrator/tienda` | `src/app/administrator/tienda/page.tsx`, `SurveyResultsClient.tsx` |
 
 La encuesta solo se muestra cuando **no** hay filas en `shop_products` con `is_available = true` (misma condición que el mensaje «Próximamente disponible»).
+
+### Comportamiento (público)
+
+- Cada clic en **1–5** en una categoría envía **de inmediato** esa fila (no hay botón global «Enviar»). Puede responder solo las categorías que quiera.
+- Visitantes anónimos: `session_id` estable en `sessionStorage` (`retiru_shop_survey_sid`); las valoraciones se recuerdan en `localStorage` (`retiru_shop_survey_levels`) para rellenar la UI al volver.
+- **Comentario opcional:** botón «Guardar comentario»; la API exige **al menos una** categoría ya valorada y replica el texto en todas las filas de ese usuario o sesión.
 
 ## Base de datos
 

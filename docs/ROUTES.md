@@ -253,6 +253,7 @@ Protegido por middleware y comprobación de admin. No indexado en buscadores.
 | DELETE | `/api/retreats/[id]` | Eliminar retiro (propietario, solo sin reservas confirmadas) |
 | POST | `/api/storage/retreat-images` | Subir imagen al bucket `retreat-images` con service role (legacy/integraciones; el wizard del organizador usa subida directa desde el cliente para evitar límite de tamaño del body en serverless) |
 | PATCH | `/api/profile` | Actualizar perfil propio (`full_name`, `phone` obligatorio con ≥9 dígitos, `bio`) |
+| POST | `/api/shop/product-interest` | Encuesta tienda «próximamente»: guardar valoración por categoría (`action: rating`) o comentario en filas existentes (`action: comment`); sesión anónima vía `sessionId` en body; service role en servidor |
 | GET | `/api/messages/conversations` | Listar conversaciones del usuario |
 | POST | `/api/messages/conversations` | Crear/recuperar conversación sobre un retiro |
 | GET | `/api/messages/conversations/[id]` | Obtener mensajes de una conversación |

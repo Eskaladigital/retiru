@@ -35,7 +35,7 @@ const SECTIONS = [
       },
       {
         q: 'How do I start publishing retreats?',
-        a: 'Create your account with email, verify it and create your first retreat from your dashboard. Our team reviews it within 24-48h. Once your first retreat is approved, you become a verified organizer.',
+        a: 'Create your account with email and verify it. In "My events" accept the organizer agreement and upload the documents we require (ID, business registration, civil liability insurance, tax and bank details). You can create drafts and send them for review in parallel. For a retreat to go live, our team must validate your profile and approve the retreat (often within 24-48h once documents are complete). More detail on For centers & organizers.',
       },
       {
         q: 'How do I get paid?',
@@ -43,7 +43,7 @@ const SECTIONS = [
       },
       {
         q: 'Are my retreats reviewed?',
-        a: 'Your first retreat is reviewed to ensure quality (24-48h). Once verified as an organizer, subsequent retreats are published directly.',
+        a: 'We review retreat content for quality. Your organizer profile must also be documentally validated before we can approve and publish any retreat. Once you have at least one published retreat, new ones may go live directly without the review queue (progressive trust).',
       },
       {
         q: 'Can I generate the cover image with AI?',

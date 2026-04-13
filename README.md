@@ -678,9 +678,11 @@ Antes de poder publicar eventos, el organizador debe completar un proceso de ver
 
 4. **Mientras tanto**: el organizador puede crear eventos como borrador y enviarlos a revisión, pero el admin **no puede aprobar un retiro si el organizador no está verificado**. La tabla de retiros muestra "No verificado" junto al organizador y el botón Aprobar está deshabilitado.
 
+**Texto público alineado con este flujo:** `/es/para-organizadores`, `/en/for-organizers`, `/es/ayuda`, `/en/help` y la FAQ rápida de `/es/contacto`.
+
 ### Verificación del primer evento (admin)
 
-Es fundamental que **ningún retiro se publique sin revisión del admin**. El flujo:
+La **primera publicación** de un retiro exige perfil de organizador verificado y aprobación admin. El flujo:
 
 1. Organizador acepta contrato → puede acceder a `/es/mis-eventos`
 2. Crea evento → estado `draft`
@@ -690,7 +692,9 @@ Es fundamental que **ningún retiro se publique sin revisión del admin**. El fl
    - Si organizador **verificado** → puede aprobar (`published`) o rechazar (`rejected` con motivo)
 5. Si aprobado: el retiro se publica y es visible en el frontend
 
-Esto protege la calidad de la plataforma y asegura que solo organizadores verificados documentalmente puedan tener eventos publicados.
+Cuando el organizador **ya tiene al menos un retiro publicado**, las nuevas publicaciones desde el panel pueden ir directo a `published` sin cola de revisión admin (confianza progresiva en API `PATCH /api/retreats/[id]`).
+
+Esto protege la calidad de la plataforma y asegura que solo organizadores verificados documentalmente puedan tener la **primera** publicación; después se aplica el modelo de confianza progresiva.
 
 ### Estados visuales de retiros (derivados de fecha + reservas)
 
@@ -760,7 +764,7 @@ El cron `/api/cron/payment-deadlines` (cada hora) gestiona la gracia y cancelaci
 - **Organizador** (`/organizador/[slug]`): perfil público con retiros publicados (en cada retiro del grid solo se muestra valoración si el organizador tiene reseñas)
 - **Buscador** (`/buscar`): búsqueda unificada retiros + centros con filtros (tarjetas de retiro: valoración del organizador cuando aplica)
 - **Blog** (`/blog`, `/blog/[slug]`): artículos desde Supabase
-- **Tienda** (`/es/tienda`, `/es/tienda/[slug]`; EN: `/en/shop`): productos desde `shop_products`; si el listado público está vacío, **encuesta de interés** (categorías 1–5 + comentario opcional) en `shop_product_interests`. En admin: `/administrator/tienda` muestra agregados y comentarios (`docs/SHOP-SURVEY.md`)
+- **Tienda** (`/es/tienda`, `/es/tienda/[slug]`; EN: `/en/shop`): productos desde `shop_products`; si el listado público está vacío, **encuesta de interés** (cada clic 1–5 se guarda al instante vía `POST /api/shop/product-interest`; comentario opcional con botón propio) → `shop_product_interests`. Admin: `/administrator/tienda` + `docs/SHOP-SURVEY.md`
 - **Para centros y organizadores** (`/para-organizadores`): secciones centros + organizadores
 - **Condiciones** (`/condiciones`): modelo de precios transparente (en footer)
 
