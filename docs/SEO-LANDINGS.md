@@ -11,8 +11,8 @@ Documento de referencia sobre la estructura de contenido único de las landings 
 | **Retiros por ciudad** | `/es/retiros-retiru/[slug]` | Ciudad/destino (murcia, ibiza, barcelona) | Hero + H1 + lista filtrada |
 | **Centros por ciudad** | `/es/centros-retiru/[slug]` | Ciudad (madrid, barcelona, murcia) | Hero + H1 + lista filtrada |
 | **Destinos** | `/es/destinos/[slug]` | Destino (ibiza, mallorca) | H1 + lista filtrada |
-| **Ficha retiro** | `/es/retiro/[slug]` | Retiro individual | Portada grande + bloque «Galería del retiro» (resto de fotos), descripción, programa, reseñas, CTA |
-| **Ficha centro** | `/es/centro/[slug]` | Centro individual | Galería, descripción, servicios, reseñas |
+| **Ficha retiro** | `/es/retiro/[slug]` | Retiro individual | Portada + galería → **breadcrumb** → título y cuerpo (descripción, programa, reseñas) + sidebar reserva / CTA móvil |
+| **Ficha centro** | `/es/centro/[slug]` | Centro individual | Galería → **breadcrumb** → título y cuerpo (descripción, servicios, reseñas) + barra lateral contacto/mapa |
 | **Ficha producto** | `/es/tienda/[slug]` | Producto | Detalle de producto |
 | **Perfil organizador** | `/es/organizador/[slug]` | Organizador | Perfil público |
 | **Artículo blog** | `/es/blog/[slug]` | Post | Contenido editorial |

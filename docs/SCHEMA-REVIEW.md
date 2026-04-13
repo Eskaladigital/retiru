@@ -505,7 +505,7 @@ Nota: `Order.items` está definido como `OrderItem[]` en el tipo, lo que sugiere
 
 ## Actualización producto (abril 2026)
 
-- **`retreat_images`:** el organizador puede subir hasta **8** URLs por retiro (bucket `retreat-images` + filas con `is_cover`, `sort_order`). La **ficha pública** (`/es/retiro/[slug]`, `/en/retreat/[slug]`) muestra la portada destacada y un bloque de **galería** con el resto de fotos. Creación/edición: `mis-eventos/nuevo`, `mis-eventos/[id]` y APIs `POST /api/retreats/create`, `PATCH /api/retreats/[id]`.
+- **`retreat_images`:** el organizador puede subir hasta **8** URLs por retiro (bucket `retreat-images` + filas con `is_cover`, `sort_order`). La **ficha pública** (`/es/retiro/[slug]`, `/en/retreat/[slug]`) muestra portada + **galería** y, debajo, el breadcrumb y el contenido (mismo orden visual que la ficha de centro). Creación/edición: `mis-eventos/nuevo`, `mis-eventos/[id]` y APIs `POST /api/retreats/create`, `PATCH /api/retreats/[id]`.
 - **`shop_product_interests`:** votos por categoría de producto (1–5) y comentario opcional para la tienda «próximamente»; migraciones `030_shop_product_interest_survey.sql` + **`032_shop_product_interests_unique_fix.sql`** (unicidad anónima por `session_id`). Verificación: `npm run verify-shop-survey-db`. Documentación: `docs/SHOP-SURVEY.md`.
 - **`user_roles` + helpers SQL / `src/lib/roles.ts`:** multi-rol; `is_admin()` para RLS; trigger de `attendee` en nuevos perfiles (027).
 - **Comisiones escalonadas:** lógica y columnas asociadas en migración `028_tiered_commissions.sql`; desglose en UI vía `GET /api/organizer/commission-tier`.

@@ -12,10 +12,10 @@ Documentación de la arquitectura de rutas y landings.
 | `/es/buscar` | `src/app/(public)/es/buscar/page.tsx` | Buscador general (retiros + centros) |
 | `/es/retiros-retiru` | `src/app/(public)/es/retiros-retiru/page.tsx` | Lista retiros (hero + EventosSearch + EventosClient) |
 | `/es/retiros-retiru/[slug]` | `src/app/(public)/es/retiros-retiru/[slug]/page.tsx` | Retiros por ciudad/destino |
-| `/es/retiro/[slug]` | `src/app/(public)/es/retiro/[slug]/page.tsx` | Ficha de retiro (portada + galería `retreat_images`) |
+| `/es/retiro/[slug]` | `src/app/(public)/es/retiro/[slug]/page.tsx` | Ficha de retiro (galería `retreat_images` → breadcrumb → contenido + sidebar reserva; mismo patrón visual que centro) |
 | `/es/centros-retiru` | `src/app/(public)/es/centros-retiru/page.tsx` | Directorio centros |
 | `/es/centros-retiru/[slug]` | `src/app/(public)/es/centros-retiru/[slug]/page.tsx` | Centros por provincia |
-| `/es/centro/[slug]` | `src/app/(public)/es/centro/[slug]/page.tsx` | Ficha de centro |
+| `/es/centro/[slug]` | `src/app/(public)/es/centro/[slug]/page.tsx` | Ficha de centro (galería → breadcrumb → contenido + contacto / mapa) |
 | `/es/destinos` | `src/app/(public)/es/destinos/page.tsx` | Destinos |
 | `/es/destinos/[slug]` | `src/app/(public)/es/destinos/[slug]/page.tsx` | Destino por slug |
 | `/es/organizador/[slug]` | `src/app/(public)/es/organizador/[slug]/page.tsx` | Perfil organizador |
@@ -141,6 +141,12 @@ Cualquier usuario logueado (incluido admin) accede a estas secciones desde el me
 - **retiro/[slug]** / **retreat/[slug]**: slug = identificador del retiro
 - **organizador/[slug]** / **organizer/[slug]**: slug = identificador del organizador
 
+### Fichas de detalle (retiro y centro) — layout público
+
+- **Orden:** imágenes (portada + galería) **primero**; **breadcrumb de texto debajo** (ancho completo del `container-wide`, separador `›`), **no** encima de la imagen; después título, metadatos y cuerpo.
+- **Fondo:** bloque de fotos sobre `bg-background` (misma base que el `body`), sin franja de color distinta en el hero de la ficha de retiro (alineado con la ficha de centro).
+- **Implementación:** `es/retiro/[slug]/page.tsx`, `en/retreat/[slug]/page.tsx`, `es/centro/[slug]/page.tsx`, `en/center/[slug]/page.tsx`.
+
 ---
 
 ## Landings SEO programáticas (implementadas)
@@ -208,8 +214,8 @@ Código de referencia: `getOrganizerReviewStats`, `organizerHasRatingToShow` en 
 | `retiros-[category]/` | Landing por categoría + `[destination]/` |
 | `centros-retiru/` | Directorio, `[slug]/` por provincia |
 | `centros/[tipo]/` | Por tipo BD (URL ES `meditacion` ↔ BD `meditation`) + `[provincia]/` |
-| `retiro/[slug]/` | Ficha retiro (portada + galería) |
-| `centro/[slug]/` | Ficha centro |
+| `retiro/[slug]/` | Ficha retiro (galería → breadcrumb → contenido + sidebar) |
+| `centro/[slug]/` | Ficha centro (galería → breadcrumb → contenido + sidebar) |
 | `buscar/` | Buscador unificado |
 | `destinos/` | Destinos + `[slug]` |
 | `organizador/[slug]/` | Perfil organizador |

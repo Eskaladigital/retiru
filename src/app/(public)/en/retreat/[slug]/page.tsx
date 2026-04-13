@@ -8,7 +8,7 @@ import { notFound } from 'next/navigation';
 import { getRetreatBySlug } from '@/lib/data';
 import { createStaticSupabase } from '@/lib/supabase/server';
 import { generatePageMetadata, jsonLdEvent, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
-import { Star, MapPin, Calendar, Clock, Users, Globe, Shield, Zap, Heart, Share2, ChevronRight, Check, X as XIcon } from 'lucide-react';
+import { Star, MapPin, Calendar, Clock, Users, Globe, Shield, Zap, Heart, Share2, Check, X as XIcon } from 'lucide-react';
 import AskOrganizerButton from '@/components/messaging/AskOrganizerButton';
 import ReserveButton from '@/components/booking/ReserveButton';
 import { RetreatDescriptionBody, LinkifyText } from '@/components/ui/retreat-description-body';
@@ -134,12 +134,12 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(eventLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbLd) }} />
 
-      {/* Cover + full gallery */}
-      <section className="bg-sand-100">
-        <div className="container-wide py-4 space-y-3">
+      {/* Same order as center detail: gallery → full-width breadcrumb → main + sidebar */}
+      <div className="container-wide py-12">
+        <div className="mb-4 space-y-3">
           {hasImages ? (
             <>
-              <div className="rounded-2xl overflow-hidden border border-sand-200/80 bg-sand-200/30">
+              <div className="rounded-2xl overflow-hidden border border-sand-200">
                 <img
                   src={sortedImages[0].url}
                   alt={sortedImages[0].alt_text ?? (r.title_en || r.title_es)}
@@ -153,7 +153,7 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
                     {sortedImages.slice(1).map((img, i) => (
                       <div
                         key={img.id ?? `${img.url}-${i}`}
-                        className="relative rounded-xl overflow-hidden border border-sand-200/80 aspect-[4/3] bg-sand-200/30"
+                        className="relative rounded-xl overflow-hidden border border-sand-200 aspect-[4/3] bg-background"
                       >
                         <img
                           src={img.url}
@@ -167,31 +167,28 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
               )}
             </>
           ) : (
-            <div className="flex items-center justify-center rounded-2xl bg-sand-200 text-muted-foreground" style={{ height: '320px' }}>
+            <div className="flex items-center justify-center rounded-2xl border border-dashed border-sand-200 bg-sand-50 text-muted-foreground" style={{ height: '320px' }}>
               <span className="text-sm">No images available</span>
             </div>
           )}
         </div>
-      </section>
 
-      {/* Content */}
-      <div className="container-wide py-8">
+        <nav className="mb-6 flex items-center gap-1 text-xs text-muted-foreground flex-wrap">
+          <Link href="/en" className="hover:text-terracotta-600">Home</Link>
+          <span>›</span>
+          <Link href="/en/retreats-retiru" className="hover:text-terracotta-600">Retreats</Link>
+          {primaryCat && (
+            <>
+              <span>›</span>
+              <Link href={`/en/retreats-${primaryCatEnSlug}`} className="hover:text-terracotta-600">{primaryCat.name_en} Retreats</Link>
+            </>
+          )}
+          <span>›</span>
+          <span className="text-foreground">{r.title_en || r.title_es}</span>
+        </nav>
+
         <div className="flex gap-10">
           <div className="flex-1 max-w-3xl">
-            <nav className="mb-4 flex items-center gap-1 text-xs text-muted-foreground flex-wrap">
-              <Link href="/en" className="hover:text-terracotta-600">Home</Link>
-              <ChevronRight size={12} />
-              <Link href="/en/retreats-retiru" className="hover:text-terracotta-600">Retreats</Link>
-              {primaryCat && (
-                <>
-                  <ChevronRight size={12} />
-                  <Link href={`/en/retreats-${primaryCatEnSlug}`} className="hover:text-terracotta-600">{primaryCat.name_en} Retreats</Link>
-                </>
-              )}
-              <ChevronRight size={12} />
-              <span className="text-foreground">{r.title_en || r.title_es}</span>
-            </nav>
-
             <div className="mb-6">
               <div className="mb-2 flex flex-wrap gap-2">
                 {r.categories?.map((cat) => (

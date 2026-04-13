@@ -249,7 +249,7 @@ Las páginas consumen datos a través de `src/lib/data/index.ts`:
 
 Las APIs `/api/retreats`, `/api/centers` y `/api/catalog` exponen datos para búsqueda y filtros.
 
-**Valoraciones en cards de retiros (listados públicos):** la estrella y el número entre paréntesis reflejan la media y el total de reseñas **del organizador** (`organizer_profiles`, agregadas desde `reviews` por `organizer_id`), no las del retiro concreto — así tiene sentido en ediciones futuras sin reseñas propias. Si el organizador no tiene reseñas visibles, **no se muestra** ese bloque (no se enseña `0.0 (0)`). En la **ficha del retiro** (`/retiro/[slug]`) el bloque principal de opiniones sigue siendo el **de ese retiro** (`retreat_id`); la valoración del organizador aparece **aparte** (p. ej. junto al nombre). Utilidades en código: `getOrganizerReviewStats` y `organizerHasRatingToShow` en `src/lib/utils/index.ts`.
+**Valoraciones en cards de retiros (listados públicos):** la estrella y el número entre paréntesis reflejan la media y el total de reseñas **del organizador** (`organizer_profiles`, agregadas desde `reviews` por `organizer_id`), no las del retiro concreto — así tiene sentido en ediciones futuras sin reseñas propias. Si el organizador no tiene reseñas visibles, **no se muestra** ese bloque (no se enseña `0.0 (0)`). En la **ficha del retiro** (`/es/retiro/[slug]`, `/en/retreat/[slug]`) el bloque principal de opiniones sigue siendo el **de ese retiro** (`retreat_id`); la valoración del organizador aparece **aparte** (p. ej. junto al nombre). Utilidades en código: `getOrganizerReviewStats` y `organizerHasRatingToShow` en `src/lib/utils/index.ts`.
 
 ---
 
@@ -262,11 +262,11 @@ Las APIs `/api/retreats`, `/api/centers` y `/api/catalog` exponen datos para bú
 | `/es` | Home genérica |
 | `/es/buscar` | Buscador general |
 | `/es/retiros-retiru` | Retiros y escapadas (hero + buscador + lista) |
-| `/es/retiros-retiru/[slug]` | Retiros filtrados por ciudad (ej. `/retiros-retiru/murcia`) |
-| `/es/retiro/[slug]` | Ficha individual de retiro (portada + galería de fotos) |
+| `/es/retiros-retiru/[slug]` | Retiros filtrados por ciudad (ej. `/es/retiros-retiru/murcia`) |
+| `/es/retiro/[slug]` | Ficha de retiro: galería → breadcrumb → contenido + reserva (mismo orden visual que ficha centro) |
 | `/es/centros-retiru` | Directorio de centros (hero + CentrosSearch) |
-| `/es/centros-retiru/[slug]` | Centros filtrados por ciudad (ej. `/centros-retiru/murcia`) |
-| `/es/centro/[slug]` | Ficha individual de centro (ej. `/centro/yoga-sala-madrid`) |
+| `/es/centros-retiru/[slug]` | Centros filtrados por ciudad (ej. `/es/centros-retiru/murcia`) |
+| `/es/centro/[slug]` | Ficha de centro: galería → breadcrumb → contenido + contacto (ej. `/es/centro/yoga-sala-madrid`) |
 | `/es/reclamar/[token]` | Link mágico para reclamar un centro |
 | `/es/destinos` | Destinos populares |
 | `/es/destinos/[slug]` | Destino por slug |
@@ -452,12 +452,13 @@ src/
 │   │   │   │   ├── page.tsx
 │   │   │   │   ├── EventosClient.tsx
 │   │   │   │   └── [slug]/     # Por ciudad (murcia, barcelona...)
-│   │   │   ├── retiro/[slug]/  # Ficha retiro: portada + galería (retreat_images)
+│   │   │   ├── retiro/[slug]/  # Ficha retiro: galería → breadcrumb → contenido (retreat_images)
 │   │   │   ├── centros-retiru/ # Centros (hero + CentrosClient)
 │   │   │   │   ├── page.tsx
 │   │   │   │   ├── CentrosClient.tsx
 │   │   │   │   └── [slug]/     # Por ciudad
-│   │   │   ├── centro/[slug]/   # Ficha individual de centro
+│   │   │   ├── centros/[tipo]/ # Landings por tipo (/es/centros/yoga, …/[provincia])
+│   │   │   ├── centro/[slug]/   # Ficha centro: galería → breadcrumb → contenido
 │   │   │   ├── buscar/         # Buscador unificado retiros + centros
 │   │   │   ├── destinos/
 │   │   │   ├── organizador/[slug]/
@@ -760,15 +761,15 @@ El cron `/api/cron/payment-deadlines` (cada hora) gestiona la gracia y cancelaci
 
 ### Front público
 - **Homepage** con H1 "Centros y retiros de yoga, meditación y ayurveda", sección "Dos mundos, un solo lugar" (Directorio + Retiros), HeroSearch (toggle Retiros/Centros), centros destacados, retiros populares (en cards: valoración del **organizador** si tiene reseñas) y destinos desde Supabase; bloque **Tienda** solo si hay filas en `shop_products` con `is_available`
-- **Retiros** (`/retiros-retiru`): hero + buscador (texto, destino, fechas) + lista con filtros; filtros/orden por valoración usan datos del **organizador** — Supabase
-- **Retiros por ciudad** (`/retiros-retiru/[slug]`): retiros filtrados por destino/ciudad (misma lógica de estrellas en card que el listado general)
-- **Ficha de retiro** (`/retiro/[slug]`): **portada** + **galería del retiro** (todas las fotos extra de `retreat_images`, hasta 8 en creación/edición); precio (PVP), progreso si hay mínimo viable, **reseñas del retiro** + valoración del organizador en cabecera, CTA sticky — Supabase
-- **Centros** (`/centros-retiru`): hero + CentrosSearch (texto, tipo, ciudad) + directorio con filtros — datos desde Supabase
-- **Centros por ciudad** (`/centros-retiru/[slug]`): centros filtrados por ciudad
-- **Ficha de centro** (`/centro/[slug]`): galería, servicios, horarios, contacto — datos desde Supabase
-- **Organizador** (`/organizador/[slug]`): perfil público con retiros publicados (en cada retiro del grid solo se muestra valoración si el organizador tiene reseñas)
-- **Buscador** (`/buscar`): búsqueda unificada retiros + centros con filtros (tarjetas de retiro: valoración del organizador cuando aplica)
-- **Blog** (`/blog`, `/blog/[slug]`): artículos desde Supabase
+- **Retiros** (`/es/retiros-retiru`, EN `/en/retreats-retiru`): hero + buscador (texto, destino, fechas) + lista con filtros; filtros/orden por valoración usan datos del **organizador** — Supabase
+- **Retiros por ciudad** (`/es/retiros-retiru/[slug]`): retiros filtrados por destino/ciudad (misma lógica de estrellas en card que el listado general)
+- **Ficha de retiro** (`/es/retiro/[slug]`, EN `/en/retreat/[slug]`): **galería** (portada + resto de `retreat_images`, hasta 8 en creación/edición), **breadcrumb debajo de las fotos** (como en centro), título y cuerpo; precio (PVP), progreso si hay mínimo viable, **reseñas del retiro** + valoración del organizador, CTA sticky en móvil — Supabase
+- **Centros** (`/es/centros-retiru`, EN `/en/centers-retiru`): hero + CentrosSearch (texto, tipo, ciudad) + directorio con filtros — datos desde Supabase
+- **Centros por ciudad** (`/es/centros-retiru/[slug]`): centros filtrados por ciudad
+- **Ficha de centro** (`/es/centro/[slug]`, EN `/en/center/[slug]`): galería, breadcrumb, servicios, horarios, contacto — datos desde Supabase
+- **Organizador** (`/es/organizador/[slug]`, EN `/en/organizer/[slug]`): perfil público con retiros publicados (en cada retiro del grid solo se muestra valoración si el organizador tiene reseñas)
+- **Buscador** (`/es/buscar`, EN `/en/search`): búsqueda unificada retiros + centros con filtros (tarjetas de retiro: valoración del organizador cuando aplica)
+- **Blog** (`/es/blog`, `/es/blog/[slug]`; EN `/en/blog/…`): artículos desde Supabase
 - **Tienda** (`/es/tienda`, `/es/tienda/[slug]`; EN: `/en/shop`): productos desde `shop_products`; si el listado público está vacío, **encuesta de interés** (cada clic 1–5 se guarda al instante vía `POST /api/shop/product-interest`; comentario opcional con botón propio) → `shop_product_interests`. Admin: `/administrator/tienda` + `docs/SHOP-SURVEY.md`
 - **Para asistentes** (`/para-asistentes`): garantías de pago seguro, organizadores verificados, soporte, comparativa vs contratación directa/redes
 - **Para centros y organizadores** (`/para-organizadores`): secciones centros + organizadores
