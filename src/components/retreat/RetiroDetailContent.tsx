@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { Star, MapPin, Calendar, Clock, Users, Globe, Shield, Zap, ChevronRight, Check, X as XIcon } from 'lucide-react';
 import AskOrganizerButton from '@/components/messaging/AskOrganizerButton';
-import { RetreatDescriptionBody } from '@/components/ui/retreat-description-body';
+import { RetreatDescriptionBody, LinkifyText } from '@/components/ui/retreat-description-body';
 import type { Retreat } from '@/types';
 
 const dateFmt = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -148,7 +148,7 @@ export function RetiroDetailContent({ retreat, isPreview }: Props) {
                     <h4 className="mb-2 font-semibold text-foreground">Día {day.day}: {day.title_es}</h4>
                     <ul className="space-y-1">
                       {day.items.map((item, i) => (
-                        <li key={i} className="text-sm text-muted-foreground">{item.time} {item.title_es}</li>
+                        <li key={i} className="text-sm text-muted-foreground">{item.time} <LinkifyText>{item.title_es}</LinkifyText></li>
                       ))}
                     </ul>
                   </div>

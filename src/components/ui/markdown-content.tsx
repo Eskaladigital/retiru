@@ -142,9 +142,15 @@ function inlineFormat(line: string): string {
   let out = line;
   out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   out = out.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
+  // Markdown links: [texto](url)
   out = out.replace(
     /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
     '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>',
+  );
+  // Auto-linkify bare URLs not already inside an href="..."
+  out = out.replace(
+    /(?<!href="|">)(https?:\/\/[^\s<)]+)/g,
+    '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>',
   );
   return out;
 }
@@ -194,10 +200,33 @@ function collectListItems(
   return { items, endIdx: i };
 }
 
+/**
+ * Pre-procesa texto donde el markdown viene "aplastado" en una sola línea:
+ *  - Separa ## / ### / #### inline en líneas propias
+ *  - Convierte secuencias "• item • item" inline en líneas de lista
+ */
+function normalizeInlineMarkdown(raw: string): string {
+  let t = raw;
+
+  // 0. Limpiar backslashes de escape que a veces llegan de editores:
+  //    \## → ##,  \*\* → **
+  t = t.replace(/\\(#{1,4}\s)/g, '$1');
+  t = t.replace(/\\\*\\\*/g, '**');
+
+  // 1. Separar encabezados markdown que vienen pegados al texto anterior.
+  //    Patrón: "...texto ## Título" → "...texto\n\n## Título"
+  t = t.replace(/([^\n#])[ \t]+(#{1,4})[ \t]+(\S)/g, '$1\n\n$2 $3');
+
+  // 2. Convertir bullets "•" inline en líneas de lista
+  t = t.replace(/([^\n])[ \t]+•[ \t]+/g, '$1\n• ');
+
+  return t;
+}
+
 function markdownToHtml(text: string): string {
   if (!text?.trim()) return '';
 
-  const lines = text.split('\n');
+  const lines = normalizeInlineMarkdown(text).split('\n');
   const result: string[] = [];
   let i = 0;
 

@@ -11,7 +11,7 @@ import { generatePageMetadata, jsonLdEvent, jsonLdBreadcrumb, jsonLdScript } fro
 import { Star, MapPin, Calendar, Clock, Users, Globe, Shield, Zap, Heart, Share2, ChevronRight, Check, X as XIcon } from 'lucide-react';
 import AskOrganizerButton from '@/components/messaging/AskOrganizerButton';
 import ReserveButton from '@/components/booking/ReserveButton';
-import { RetreatDescriptionBody } from '@/components/ui/retreat-description-body';
+import { RetreatDescriptionBody, LinkifyText } from '@/components/ui/retreat-description-body';
 
 const dateFmt = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1200&q=80';
@@ -250,7 +250,7 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
                       <h4 className="mb-2 font-semibold text-foreground">Day {day.day}: {day.title_en || day.title_es}</h4>
                       <ul className="space-y-1">
                         {day.items.map((item, i) => (
-                          <li key={i} className="text-sm text-muted-foreground">{item.time} {item.title_en || item.title_es}</li>
+                          <li key={i} className="text-sm text-muted-foreground">{item.time} <LinkifyText>{item.title_en || item.title_es}</LinkifyText></li>
                         ))}
                       </ul>
                     </div>
