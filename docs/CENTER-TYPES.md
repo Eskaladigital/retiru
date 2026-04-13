@@ -10,6 +10,8 @@
 
 La columna `categories` (`text[]`) en `centers` sigue siendo libre para etiquetas auxiliares; no sustituye al `type`.
 
+**URLs públicas:** el directorio por tipo usa rutas dinámicas `centros-[type]` (ej. `/es/centros-yoga`, `/es/centros-meditacion`, `/en/centers-meditation`). Provincia opcional: `/es/centros-yoga/madrid`. Ver `docs/ROUTES.md` y `docs/SEO-LANDINGS.md`.
+
 ---
 
 ## Reclasificación con IA (OpenAI)

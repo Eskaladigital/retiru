@@ -1,20 +1,21 @@
 # RETIRU — Revisión del Schema de BD vs Funcionalidades
 
-Auditoría completa de todas las páginas (usuario, organizador, admin, públicas) contra los tipos definidos en `src/types/index.ts`.
+Documento de **trabajo**: contrasta páginas y tipos en `src/types/index.ts` con el esquema real. Parte del análisis es **histórico** (p. ej. checklist de tablas “propuestas”); para el **estado de producto** (roles, verificación KYC, encuesta tienda, comisiones escalonadas) prevalece `README.md` + migraciones **027–032**.
 
 **Orden de migraciones en Supabase:** el esquema “oficial” es la carpeta `supabase/migrations/` aplicada en orden numérico. Varios cambios van en **dos archivos seguidos** (enums + uso en la siguiente migración); no ejecutar solo la segunda. Detalle y tabla de pares: `README.md` → sección *Base de datos (Supabase)*.
 
 ---
 
-## Resumen ejecutivo
+## Resumen ejecutivo (abril 2026)
 
-El schema actual cubre bien el **80%** de las funcionalidades. Se han detectado **12 gaps** que necesitan nuevas tablas o campos para que la app funcione completamente.
+- **Implementado en BD y flujo:** `user_roles` (027), campos SEO en `categories` / `destinations` (028 + 029), comisiones escalonadas por retiro (028_tiered_commissions), `shop_product_interests` + RPC estadísticas (030 + 032), verificación de organizador: `contract_accepted_at`, `organizer_verification_steps` con `file_url`, bucket `organizer-docs`, ampliación de enum de pasos (031a + 031b).
+- **Siguen siendo gaps reales** para partes del roadmap: facturas dedicadas, `product_reviews`, `refunds` como entidad, preferencias de notificación, tags CRM, analytics de páginas, algunos campos opcionales en `organizer_profiles` / `products` (ver secciones siguientes).
 
-| Prioridad | Gaps |
-|-----------|------|
-| **Crítica** | 3 (Invoice, Blog, ProductReview) |
-| **Alta** | 5 (Refund, OrganizerProfile campos, notification preferences, verification steps, attendee tags) |
-| **Media** | 4 (Product features/badge, analytics, naming inconsistencies) |
+| Prioridad | Temas aún abiertos (resumen) |
+|-----------|------------------------------|
+| **Crítica** | Invoice (si la página `/es/facturas` se expone), reseñas de producto en tienda |
+| **Alta** | Refunds como tabla, notification preferences, campos extra en `organizer_profiles`, attendee tags |
+| **Media** | Product badge/features, page views / analytics, naming UI ↔ types |
 
 ---
 
@@ -310,22 +311,22 @@ updated_at          timestamptz DEFAULT now()
 
 ---
 
-### 3.2 Verification Steps — ALTA
+### 3.2 Verification Steps — ✅ IMPLEMENTADO (migraciones 031a + 031b)
 
-**Página:** verificacion del organizador (4 pasos con estado individual)
+**Páginas:** `/es/mis-eventos/verificacion`, `/administrator/organizadores/[id]/verificar`, APIs `/api/organizer/verification`, `POST /api/organizer/verification/[step]`, admin `GET/POST /api/admin/organizers/[id]`, `GET /api/admin/organizers/[id]/doc-url`.
+
+La tabla **`organizer_verification_steps`** existe en producción con pasos alineados al código (`identity_doc`, `economic_activity`, `insurance`, `tax_info`, `bank_info`), estado por paso, `file_url` en Storage privado `organizer-docs`, revisión admin. `organizer_profiles` incluye `contract_accepted_at`.
+
+El texto siguiente queda como **referencia de forma** (no “pendiente de crear tabla”):
 
 ```
-Tabla propuesta: organizer_verification_steps
+organizer_verification_steps (resumen)
 ─────────────────────────────────────
-id                  uuid        PK
-organizer_id        uuid        FK → organizer_profiles.id
-step                text        (personal_data | identity_doc | tax_info | bank_info)
-status              text        (pending | submitted | in_review | approved | rejected)
-submitted_at        timestamptz nullable
-reviewed_at         timestamptz nullable
-reviewed_by         uuid        nullable (admin)
-notes               text        nullable
-created_at          timestamptz DEFAULT now()
+organizer_id   → organizer_profiles.id
+step           → enum / texto según migración 031a
+status         → pending | submitted | in_review | approved | rejected
+file_url       → objeto en organizer-docs
+reviewed_by, notes, fechas …
 ```
 
 ---
@@ -445,7 +446,9 @@ created_at          timestamptz DEFAULT now()
 | `product_reviews` | Crítica | tienda/[slug] | Pendiente |
 | `refunds` | Alta | administrator/reembolsos | Pendiente |
 | `notification_preferences` | Alta | configuracion | Pendiente |
-| `organizer_verification_steps` | Alta | verificacion | Pendiente |
+| `organizer_verification_steps` | Alta | verificacion | ✅ Migraciones 031a + 031b |
+| `user_roles` | Alta | RLS mensajes, admin, asignación roles | ✅ Migración 027 |
+| `shop_product_interests` | Media | Encuesta tienda | ✅ Migraciones 030 + 032 |
 | `organizer_attendee_tags` | Alta | asistentes | Pendiente |
 | `page_views` | Media | analiticas | Pendiente |
 
@@ -489,7 +492,7 @@ Nota: `Order.items` está definido como `OrderItem[]` en el tipo, lo que sugiere
 ### Fase 2 — Altos (antes de beta)
 5. Crear tabla `refunds` + tipo `Refund`
 6. Crear tabla `notification_preferences`
-7. Crear tabla `organizer_verification_steps`
+7. ~~Crear tabla `organizer_verification_steps`~~ ✅ Hecho (031a + 031b)
 8. Crear tabla `organizer_attendee_tags`
 9. Añadir campos a `products`: `features_es`, `features_en`, `badge`
 
@@ -504,7 +507,9 @@ Nota: `Order.items` está definido como `OrderItem[]` en el tipo, lo que sugiere
 
 - **`retreat_images`:** el organizador puede subir hasta **8** URLs por retiro (bucket `retreat-images` + filas con `is_cover`, `sort_order`). La **ficha pública** (`/es/retiro/[slug]`, `/en/retreat/[slug]`) muestra la portada destacada y un bloque de **galería** con el resto de fotos. Creación/edición: `mis-eventos/nuevo`, `mis-eventos/[id]` y APIs `POST /api/retreats/create`, `PATCH /api/retreats/[id]`.
 - **`shop_product_interests`:** votos por categoría de producto (1–5) y comentario opcional para la tienda «próximamente»; migraciones `030_shop_product_interest_survey.sql` + **`032_shop_product_interests_unique_fix.sql`** (unicidad anónima por `session_id`). Verificación: `npm run verify-shop-survey-db`. Documentación: `docs/SHOP-SURVEY.md`.
+- **`user_roles` + helpers SQL / `src/lib/roles.ts`:** multi-rol; `is_admin()` para RLS; trigger de `attendee` en nuevos perfiles (027).
+- **Comisiones escalonadas:** lógica y columnas asociadas en migración `028_tiered_commissions.sql`; desglose en UI vía `GET /api/organizer/commission-tier`.
 
 ---
 
-*Generado automáticamente. Última revisión: Marzo 2026 (texto de producto arriba: abril 2026).*
+*Última revisión documental: abril 2026.*

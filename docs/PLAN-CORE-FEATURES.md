@@ -6,7 +6,13 @@ Plan de desarrollo para las funcionalidades críticas que generan dependencia (l
 
 ---
 
-## Estado actual (Marzo 2026)
+## Aviso (abril 2026)
+
+Las secciones siguientes reflejan un **snapshot de marzo 2026** (checkout “placeholder”, etc.). Desde entonces se han integrado **Stripe checkout**, webhooks, modelo de pago 100 %, comisiones escalonadas, verificación de organizador, landings SEO programáticas, encuesta de tienda y más. **Para el estado real del producto** usa `README.md`, `docs/ROUTES.md` y el código en `src/app/api/checkout`, `src/app/api/webhooks/stripe`, etc. Este archivo se conserva como **historia del plan**, no como checklist operativo actual.
+
+---
+
+## Estado actual (Marzo 2026) — archivado
 
 | Feature | Estado | % |
 |---------|--------|---|
@@ -16,7 +22,7 @@ Plan de desarrollo para las funcionalidades críticas que generan dependencia (l
 | Panel de pagos | Mock/placeholder | 5% |
 | Comunicación + automatizaciones | Mensajería 1:1 real, emails transaccionales activados | 70% |
 
-**Conclusión:** La infraestructura de BD está muy avanzada (tablas, enums, campos), pero la lógica de negocio y las interfaces están sin conectar.
+**Conclusión (marzo):** La infraestructura de BD estaba muy avanzada; había huecos entre UI y APIs. Esa brecha se ha reducido de forma importante en desarrollos posteriores (ver aviso arriba).
 
 ---
 

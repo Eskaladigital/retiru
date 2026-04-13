@@ -21,15 +21,19 @@ Documento de referencia sobre la estructura de contenido único de las landings 
 
 ## 2. Qué tienen hoy (SEO)
 
-| Landing | Metadata | JSON-LD | Breadcrumb | OG image |
-|---------|----------|---------|------------|----------|
-| retiros-retiru/[slug] | ✅ title, description | ❌ | ❌ | ❌ |
-| centros-retiru/[slug] | ✅ title, description | ❌ | ❌ | ❌ |
-| destinos/[slug] | ✅ | ❌ | ❌ | ❌ |
-| retiro/[slug] | ✅ title, description, keywords | ✅ Event, BreadcrumbList | ✅ visual | Dinámica |
-| centro/[slug] | ✅ title, description, keywords | ❌ | ❌ | ❌ |
-| tienda/[slug] | ✅ dinámica | ❌ | ❌ | ❌ |
-| blog/[slug] | ✅ dinámica | ❌ | ❌ | ❌ |
+Resumen rápido; el detalle de schemas implementados está en **§4.B** (p. ej. `ItemList` + `FAQPage` en listas por ciudad cuando aplica, `Event`/`LocalBusiness`/`Product`/`BlogPosting` en fichas).
+
+| Landing | Metadata | JSON-LD destacado | OG image |
+|---------|----------|-------------------|----------|
+| retiros-retiru/[slug] | ✅ | ✅ ItemList (lista) + FAQ si hay contenido BD | Según hero |
+| centros-retiru/[slug] | ✅ | ✅ ItemList + FAQ si aplica | Según hero |
+| retiros-[category] / + destino | ✅ intros/meta BD | ✅ ItemList / FAQ combinados | Por defecto |
+| centros-[type] / + provincia | ✅ | ✅ ItemList | Por defecto |
+| destinos/[slug] | ✅ | ItemList / Place (según implementación) | — |
+| retiro/[slug] | ✅ | ✅ Event + BreadcrumbList | Dinámica |
+| centro/[slug] | ✅ | ✅ LocalBusiness + BreadcrumbList | Dinámica |
+| tienda/[slug] | ✅ | ✅ Product + BreadcrumbList | Dinámica |
+| blog/[slug] | ✅ | ✅ BlogPosting + BreadcrumbList | Por artículo |
 
 ---
 
@@ -164,7 +168,7 @@ El sitemap se genera en build time con ISR (`revalidate = 3600`). Genera URLs **
 | Blog | `blog_articles` (published) | `/es/blog/[slug]` | `/en/blog/[slug_en \|\| slug]` | Siempre; canonical EN usa `slug_en` si existe; redirección 301 desde slug ES en `/en/blog/` |
 | Destinos | `destinations` (active) | `/es/destinos/[slug]` | `/en/destinations/[slug]` | Siempre |
 | Organizadores | `organizer_profiles` (verified) | `/es/organizador/[slug]` | `/en/organizer/[slug]` | Siempre |
-| Productos | `products` (active) | `/es/tienda/[slug]` | `/en/shop/[slug]` | Siempre |
+| Productos | `products` (`status=active`) en **sitemap**; fichas `/es/tienda/*` leen **`shop_products`** | `/es/tienda/[slug]` | `/en/shop/[slug]` | Entradas sitemap si hay filas en `products`; alinear con `shop_products` si en tu proyecto solo usas una tabla |
 | Retiros por categoría | `getCategoriesWithRetreats()` | `/es/retiros-[cat]` | `/en/retreats-[cat]` | Solo categorías con retiros |
 | Retiros cat+destino | `getCategoryDestinationPairs()` | `/es/retiros-[cat]/[dest]` | `/en/retreats-[cat]/[dest]` | Solo pares con retiros |
 | Centros por tipo | Fijo (3 tipos) | `/es/centros-[type]` | `/en/centers-[type]` | Siempre |

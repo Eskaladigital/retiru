@@ -76,6 +76,7 @@ Copia `.env.example` a `.env.local` y rellena los valores:
 | `NEXT_PUBLIC_APP_URL` | URL base de la app |
 | `NEXT_PUBLIC_APP_NAME` | Nombre de la app (`Retiru`) |
 | `OPENAI_API_KEY` | (opcional) Descripciones IA, blog, centros y **portadas de eventos**: agente **GPT-4o** sintetiza un dossier completo del evento (destino, fechas, categorías, programa, incluidos…) en un prompt en español; **GPT Image 1.5** genera la imagen panorámica (`POST /api/retreats/generate-cover-image`; definir también en Vercel). Objetivo visual: **fotografía editorial hiperrealista**, evitando look ilustrado o “IA” |
+| `ANTHROPIC_API_KEY` | (opcional) Moderación de contenido de retiros antes de publicar (`POST /api/admin/retreats/moderate`, Claude vía SDK `ai`). Si no está definida, el flujo de aprobación en admin **omite** la revisión automática |
 | `NEXT_PUBLIC_TINYMCE_API_KEY` | (opcional) Clave [Tiny Cloud](https://www.tiny.cloud/) para el editor visual de la **descripción** en crear/editar evento (`/es/mis-eventos/...`) y del **cuerpo del artículo** en `/administrator/blog/...`. Si está vacía se usa `no-api-key` (solo adecuado en desarrollo; en producción conviene clave y dominio aprobados) |
 | `GOOGLE_PLACES_API_KEY` | (opcional) Para obtener reseñas de Google Places |
 | `CRON_SECRET` | (recomendado en producción) Secreto `Bearer` para `POST /api/cron/*` (p. ej. `payment-deadlines`). Si está vacío, los cron no exigen autorización (solo aceptable en local) |
@@ -97,6 +98,8 @@ npm run lint             # Linter (ESLint)
 npm run db:types         # Generar tipos TypeScript desde el esquema de Supabase
 npm run db:verify-schema       # Comprueba esquema vía .env.local (031a/031b, user_roles, bucket organizer-docs, pasos por org)
 npm run verify-shop-survey-db  # Tabla + RPC encuesta tienda y unicidad anónima (migraciones 030 + 032)
+node scripts/generate-seo-content.mjs   # Rellenar intros/FAQ/meta en categories y destinations (opciones: --categories, --destinations, --force)
+node scripts/moderate-retreat.mjs       # Probar moderación IA de un retiro por slug (requiere ANTHROPIC_API_KEY en .env.local)
 npm run stripe:listen    # Escuchar webhooks de Stripe en local
 
 # Centros — descripciones IA (scraping web + Google Places + OpenAI, temp 0.2)
@@ -111,7 +114,7 @@ npm run blog:backfill-slugs-en                        # Rellenar slug_en del blo
 npm run blog:translate-en                             # Traducir posts publicados ES→EN (OpenAI); --force retraduce todo
 npm run blog:import-csv                               # Genera `supabase/seed/016_blog_from_csv.sql` desde `Table 1-Grid view.csv` (orden barajado, fechas escalonadas)
 npm run blog:import-csv:push                          # Igual + inserta/actualiza en Supabase usando `.env.local` (service role)
-npm run blog:backfill-covers-ai                       # Portadas blog con el mismo agente que retiros (GPT-4o×2 + gpt-image-1.5); por defecto solo si portada vacía o URL de stock. Ver `agente generador de imágenes.txt`. Flags: `--dry-run`, `--force`, `--regenerate-blog-ai` (vuelve a generar portadas ya en `blog/ai-cover-*`), `--inline`, `--limit=N`, `--concurrency=2`, `--id=uuid`
+npm run blog:backfill-covers-ai                       # Portadas blog con el mismo agente que retiros (GPT-4o×2 + gpt-image-1.5); por defecto solo si portada vacía o URL de stock. Flags: `--dry-run`, `--force`, `--regenerate-blog-ai` (vuelve a generar portadas ya en `blog/ai-cover-*`), `--inline`, `--limit=N`, `--concurrency=2`, `--id=uuid`
 
 # Centros — emails
 npm run centers:emails        # Sincronizar emails desde CSV
@@ -281,16 +284,20 @@ Las APIs `/api/retreats`, `/api/centers` y `/api/catalog` exponen datos para bú
 | `/es/mis-eventos` | Lista de eventos/retiros creados |
 | `/es/mis-eventos/nuevo` | Wizard crear evento (portada + hasta 8 fotos / galería, IA opcional) |
 | `/es/mis-eventos/[id]` | Editar evento (misma gestión de imágenes) |
+| `/es/mis-eventos/verificacion` | Verificación KYC del organizador (documentos; bucket `organizer-docs`) |
 
 Cualquier usuario logueado (incluido el admin) accede a estas secciones desde el menú de usuario.
 
-### Panel de administrador (protegido)
+La ruta legacy `/es/panel/verificacion` **redirige** a `/es/mis-eventos/verificacion`.
+
+### Panel de administrador (protegido; acceso vía rol **admin** en `user_roles` / `is_admin()`)
 
 | Ruta | Descripción |
 |------|-------------|
 | `/administrator` | Dashboard admin (KPIs y listas de pendientes desde Supabase) |
 | `/administrator/usuarios` | Gestión de usuarios |
 | `/administrator/organizadores` | Gestión organizadores |
+| `/administrator/organizadores/[id]/verificar` | Revisión de documentos de verificación del organizador |
 | `/administrator/retiros` | Gestión retiros (aprobar/rechazar) |
 | `/administrator/centros` | Gestión centros |
 | `/administrator/claims` | Gestión claims de centros |
@@ -303,33 +310,39 @@ Cualquier usuario logueado (incluido el admin) accede a estas secciones desde el
 ### Estrategia de landings (SEO)
 
 - **1 landing genérica**: Home (`/es`) — no compite por términos específicos.
-- **4 tipos × N localidades** (localidades desde base de datos):
-  1. `centros-retiru/[slug]` — Centros en [ciudad] ✅ Conectado a Supabase
-  2. `retiros-retiru/[slug]` — Retiros en [ciudad] ✅ Conectado a Supabase
-  3. `centros-[tipo]/[slug]` — Centros de [tipo] en [ciudad] *(planificado)*
-  4. `retiros-[tipo]/[slug]` — Retiros de [tipo] en [ciudad] *(planificado)*
+- **Listas por ciudad/destino** (slugs desde BD):
+  1. `centros-retiru/[slug]` — Centros en [provincia/ciudad] ✅ Supabase
+  2. `retiros-retiru/[slug]` — Retiros en [destino] ✅ Supabase
+- **Retiros por categoría** (segmento dinámico Next: carpeta `retiros-[category]/`): ej. `/es/retiros-yoga`, `/es/retiros-yoga/ibiza` (destino = slug BD). Solo se generan combinaciones con al menos un retiro publicado.
+- **Centros por tipo** (tres valores BD `yoga` / `meditation` / `ayurveda`; en URL ES `meditation` → `meditacion`): ej. `/es/centros-yoga`, `/es/centros-yoga/madrid`. Índice de tipos siempre; **tipo + provincia** solo si hay centros activos en esa pareja.
 
-Ejemplos: centros-yoga/murcia, retiros-yoga/madrid.
+Detalle de slugs EN de categorías y del sitemap: [`docs/ROUTES.md`](docs/ROUTES.md), [`docs/SEO-LANDINGS.md`](docs/SEO-LANDINGS.md).
 
-**Generación estática condicional:** Las páginas por provincia/destino solo se generan en el deploy si hay al menos 1 centro/retiro en esa provincia/destino. Evita "thin content" vacío.
+**Generación estática condicional:** Provincias, destinos y pares categoría+destino / tipo+provincia solo entran en `generateStaticParams` (y en el sitemap) cuando hay datos; evita páginas vacías.
 
 ### Sitemap dinámico (`/sitemap.xml`)
 
-El sitemap se genera automáticamente en cada deploy con ISR (revalidate 1h). Incluye **~1.956 URLs bilingües** (ES + EN):
+El sitemap se genera automáticamente en cada deploy con ISR (revalidate 1h). Incluye **URLs bilingües** (ES + EN) para estáticas, fichas, listas por provincia/destino, landings por categoría y por tipo de centro, blog, etc. (el total depende de los datos en Supabase):
 
 | Tipo | Slugs | URLs (ES+EN) |
 |------|-------|-------------|
-| Páginas estáticas | 26 | 26 |
+| Páginas estáticas (aprox.) | ~17 ES + ~17 EN | ~34 |
 | Centros individuales | ~858 | ~1.716 |
 | Centros por provincia | ~64 | ~128 |
 | Retiros individuales | ~10 | ~20 |
 | Retiros por destino | ~10 | ~20 |
+| Retiros por categoría | variable | variable ×2 |
+| Retiros categoría + destino | variable | variable ×2 |
+| Centros por tipo (3) | 3 | 6 |
+| Centros tipo + provincia | variable | variable ×2 |
 | Blog | ~10 | ~20 |
 | Destinos | ~12 | ~24 |
 | Organizadores | ~1 | ~2 |
-| Productos | 0 | 0 |
+| Productos (tabla `products` en sitemap) | según BD | según BD ×2 |
 
-Cada entrada incluye `alternates` hreflang ES/EN. Solo se generan entradas para provincias con centros y destinos con retiros.
+Cada entrada incluye `alternates` hreflang ES/EN. Las páginas de tienda (`/es/tienda`, fichas) leen **`shop_products`** (`is_available`); el sitemap de productos consulta hoy **`products`** (`status=active`) — conviene mantener ambas tablas alineadas o unificar criterio en código.
+
+Los totales (~1.956 u otras cifras) son **orientativos** según datos en Supabase en cada deploy.
 
 ### Rutas EN (equivalente)
 
@@ -344,6 +357,10 @@ Cada entrada incluye `alternates` hreflang ES/EN. Solo se generan entradas para 
 | `/es/destinos` | `/en/destinations` |
 | `/es/para-organizadores` | `/en/for-organizers` |
 | `/es/tienda` | `/en/shop` |
+| `/es/retiros-[categoría]` (ej. `/es/retiros-yoga`) | `/en/retreats-[category]` (ej. `/en/retreats-yoga`) |
+| `/es/retiros-[categoría]/[destino]` | `/en/retreats-[category]/[destination]` |
+| `/es/centros-[tipo]` (ej. `/es/centros-meditacion`) | `/en/centers-[type]` (ej. `/en/centers-meditation`) |
+| `/es/centros-[tipo]/[provincia]` | `/en/centers-[type]/[province]` |
 
 ---
 
@@ -481,10 +498,10 @@ src/
 ## Navegación y menú
 
 - **Header**: enlaces a retiros-retiru, centros-retiru, tienda, para-organizadores, blog. (Condiciones solo en footer.)
-- **Menú de usuario** (logueado): Mis reservas, Mi perfil, Mis centros, Mis eventos. Admin adicional para role=admin.
+- **Menú de usuario** (logueado): Mis reservas, Mi perfil, Mis centros, Mis eventos. Enlace a **Administración** si el usuario tiene rol `admin` en `user_roles`.
 - **Menú móvil (off-canvas)**: panel lateral deslizable desde la derecha, backdrop con blur, bloqueo de scroll, cierre al hacer clic fuera o en enlace.
 
-> **Documentación**: [`docs/ROUTES.md`](docs/ROUTES.md) · [`docs/SEO-LANDINGS.md`](docs/SEO-LANDINGS.md) (estructura de contenido y SEO).
+> **Documentación**: [`docs/ROUTES.md`](docs/ROUTES.md) · [`docs/SEO-LANDINGS.md`](docs/SEO-LANDINGS.md) · [`docs/SHOP-SURVEY.md`](docs/SHOP-SURVEY.md) · [`docs/SCHEMA-REVIEW.md`](docs/SCHEMA-REVIEW.md) (auditoría BD / gaps).
 
 
 ---
@@ -758,17 +775,17 @@ El cron `/api/cron/payment-deadlines` (cada hora) gestiona la gracia y cancelaci
   - Auto-creación de `organizer_profile` al crear el primer evento
 - **"Reclama tu centro"**: botón en cada ficha pública de centro + link mágico en email de bienvenida
 
-### Panel de administrador (solo role=admin)
+### Panel de administrador (usuarios con rol `admin`)
 - Dashboard con métricas generales
 - **Usuarios** — tabla con todos los perfiles (buscador, filtro por rol)
 - **Organizadores** — gestión de organizadores verificados (datos desde `organizer_profiles`)
-- **Retiros** — gestión de retiros (aprobar/rechazar los `pending_review`, ver todos)
+- **Retiros** — gestión de retiros (aprobar/rechazar los `pending_review`, ver todos; moderación de contenido opcional con `ANTHROPIC_API_KEY` vía `POST /api/admin/retreats/moderate`)
 - **Centros** — gestión de centros (buscador, filtros, exportar CSV/Excel, generar descripciones IA, editar, ver ficha pública, despublicar/publicar, aprobar propuestas de usuario `pending_review` → `active` + titular, eliminar)
 - **Claims** — gestión de reclamaciones de centros (aprobar/rechazar)
 - **Mensajes** — moderación de conversaciones usuario-organizador + lectura y respuesta en chats de soporte (como "Andrea")
 - Gestión de tienda (productos, categorías, pedidos) y **resultados de la encuesta** de interés de productos
 - Reembolsos y reporting
-- Acceso en `/administrator` (protegido por middleware + rol)
+- Acceso en `/administrator` (middleware + comprobación de rol admin)
 
 ---
 

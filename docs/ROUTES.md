@@ -8,26 +8,30 @@ Documentación de la arquitectura de rutas y landings.
 
 | Ruta | Archivo | Descripción |
 |------|---------|-------------|
-| `/es` | `app/es/page.tsx` | Home |
-| `/es/buscar` | `app/es/(public)/buscar/page.tsx` | Buscador general (retiros + centros) |
-| `/es/retiros-retiru` | `app/es/(public)/retiros-retiru/page.tsx` | Lista retiros (hero + EventosSearch + EventosClient) |
-| `/es/retiros-retiru/[slug]` | `app/es/(public)/retiros-retiru/[slug]/page.tsx` | Retiros por ciudad |
-| `/es/retiro/[slug]` | `app/es/(public)/retiro/[slug]/page.tsx` | Ficha de retiro (portada + galería con todas las `retreat_images` extra; móvil y escritorio) |
-| `/es/centros-retiru` | `app/es/(public)/centros-retiru/page.tsx` | Directorio centros (hero + CentrosClient) |
-| `/es/centros-retiru/[slug]` | `app/es/(public)/centros-retiru/[slug]/page.tsx` | Centros por ciudad |
-| `/es/centro/[slug]` | `app/es/(public)/centro/[slug]/page.tsx` | Ficha de centro |
-| `/es/destinos` | `app/es/(public)/destinos/page.tsx` | Destinos |
-| `/es/destinos/[slug]` | `app/es/(public)/destinos/[slug]/page.tsx` | Destino por slug |
-| `/es/organizador/[slug]` | `app/es/(public)/organizador/[slug]/page.tsx` | Perfil organizador |
-| `/es/para-organizadores` | `app/es/(public)/para-organizadores/page.tsx` | Para centros y organizadores |
+| `/es` | `src/app/(public)/es/page.tsx` | Home |
+| `/es/buscar` | `src/app/(public)/es/buscar/page.tsx` | Buscador general (retiros + centros) |
+| `/es/retiros-retiru` | `src/app/(public)/es/retiros-retiru/page.tsx` | Lista retiros (hero + EventosSearch + EventosClient) |
+| `/es/retiros-retiru/[slug]` | `src/app/(public)/es/retiros-retiru/[slug]/page.tsx` | Retiros por ciudad/destino |
+| `/es/retiro/[slug]` | `src/app/(public)/es/retiro/[slug]/page.tsx` | Ficha de retiro (portada + galería `retreat_images`) |
+| `/es/centros-retiru` | `src/app/(public)/es/centros-retiru/page.tsx` | Directorio centros |
+| `/es/centros-retiru/[slug]` | `src/app/(public)/es/centros-retiru/[slug]/page.tsx` | Centros por provincia |
+| `/es/centro/[slug]` | `src/app/(public)/es/centro/[slug]/page.tsx` | Ficha de centro |
+| `/es/destinos` | `src/app/(public)/es/destinos/page.tsx` | Destinos |
+| `/es/destinos/[slug]` | `src/app/(public)/es/destinos/[slug]/page.tsx` | Destino por slug |
+| `/es/organizador/[slug]` | `src/app/(public)/es/organizador/[slug]/page.tsx` | Perfil organizador |
+| `/es/para-organizadores` | `src/app/(public)/es/para-organizadores/page.tsx` | Para centros y organizadores |
 | `/es/tienda` | `src/app/(public)/es/tienda/page.tsx` | Tienda (`shop_products`); si no hay productos, encuesta `ProductInterestSurvey` → `shop_product_interests` |
 | `/es/tienda/[slug]` | `src/app/(public)/es/tienda/[slug]/page.tsx` | Ficha de producto |
-| `/es/blog` | `app/es/(public)/blog/page.tsx` | Blog |
-| `/es/blog/[slug]` | `app/es/(public)/blog/[slug]/page.tsx` | Artículo de blog |
-| `/es/sobre-nosotros` | `app/es/(public)/sobre-nosotros/page.tsx` | Sobre nosotros |
-| `/es/ayuda` | `app/es/(public)/ayuda/page.tsx` | Centro de ayuda (FAQs) |
-| `/es/contacto` | `app/es/(public)/contacto/page.tsx` | Contacto |
-| `/es/condiciones` | `app/es/(public)/condiciones/page.tsx` | Condiciones de uso y precios |
+| `/es/blog` | `src/app/(public)/es/blog/page.tsx` | Blog |
+| `/es/blog/[slug]` | `src/app/(public)/es/blog/[slug]/page.tsx` | Artículo de blog |
+| `/es/sobre-nosotros` | `src/app/(public)/es/sobre-nosotros/page.tsx` | Sobre nosotros |
+| `/es/ayuda` | `src/app/(public)/es/ayuda/page.tsx` | Centro de ayuda (FAQs) |
+| `/es/contacto` | `src/app/(public)/es/contacto/page.tsx` | Contacto |
+| `/es/condiciones` | `src/app/(public)/es/condiciones/page.tsx` | Condiciones de uso y precios |
+| `/es/retiros-[category]` | `src/app/(public)/es/retiros-[category]/page.tsx` | Landing SEO por categoría de retiro (ej. `/es/retiros-yoga`) |
+| `/es/retiros-[category]/[destination]` | `src/app/(public)/es/retiros-[category]/[destination]/page.tsx` | Categoría + destino |
+| `/es/centros-[type]` | `src/app/(public)/es/centros-[type]/page.tsx` | Centros por tipo (`yoga` / `meditacion` / `ayurveda` en URL ES) |
+| `/es/centros-[type]/[province]` | `src/app/(public)/es/centros-[type]/[province]/page.tsx` | Tipo + provincia |
 
 ---
 
@@ -35,26 +39,30 @@ Documentación de la arquitectura de rutas y landings.
 
 | Ruta | Archivo |
 |------|---------|
-| `/en` | `app/en/page.tsx` |
-| `/en/search` | `app/en/(public)/search/page.tsx` |
-| `/en/retreats-retiru` | `app/en/(public)/retreats-retiru/page.tsx` |
-| `/en/retreats-retiru/[slug]` | `app/en/(public)/retreats-retiru/[slug]/page.tsx` |
-| `/en/retreat/[slug]` | `app/en/(public)/retreat/[slug]/page.tsx` — ficha retiro (portada + galería, equivalente a ES) |
-| `/en/centers-retiru` | `app/en/(public)/centers-retiru/page.tsx` |
-| `/en/centers-retiru/[slug]` | `app/en/(public)/centers-retiru/[slug]/page.tsx` |
-| `/en/center/[slug]` | `app/en/(public)/center/[slug]/page.tsx` |
-| `/en/destinations` | `app/en/(public)/destinations/page.tsx` |
-| `/en/destinations/[slug]` | `app/en/(public)/destinations/[slug]/page.tsx` |
-| `/en/organizer/[slug]` | `app/en/(public)/organizer/[slug]/page.tsx` |
-| `/en/for-organizers` | `app/en/(public)/for-organizers/page.tsx` |
+| `/en` | `src/app/(public)/en/page.tsx` |
+| `/en/search` | `src/app/(public)/en/search/page.tsx` |
+| `/en/retreats-retiru` | `src/app/(public)/en/retreats-retiru/page.tsx` |
+| `/en/retreats-retiru/[slug]` | `src/app/(public)/en/retreats-retiru/[slug]/page.tsx` |
+| `/en/retreat/[slug]` | `src/app/(public)/en/retreat/[slug]/page.tsx` |
+| `/en/centers-retiru` | `src/app/(public)/en/centers-retiru/page.tsx` |
+| `/en/centers-retiru/[slug]` | `src/app/(public)/en/centers-retiru/[slug]/page.tsx` |
+| `/en/center/[slug]` | `src/app/(public)/en/center/[slug]/page.tsx` |
+| `/en/destinations` | `src/app/(public)/en/destinations/page.tsx` |
+| `/en/destinations/[slug]` | `src/app/(public)/en/destinations/[slug]/page.tsx` |
+| `/en/organizer/[slug]` | `src/app/(public)/en/organizer/[slug]/page.tsx` |
+| `/en/for-organizers` | `src/app/(public)/en/for-organizers/page.tsx` |
+| `/en/retreats-[category]` | `src/app/(public)/en/retreats-[category]/page.tsx` |
+| `/en/retreats-[category]/[destination]` | `src/app/(public)/en/retreats-[category]/[destination]/page.tsx` |
+| `/en/centers-[type]` | `src/app/(public)/en/centers-[type]/page.tsx` |
+| `/en/centers-[type]/[province]` | `src/app/(public)/en/centers-[type]/[province]/page.tsx` |
 | `/en/shop` | `src/app/(public)/en/shop/page.tsx` — misma lógica que `/es/tienda` (encuesta si no hay productos) |
 | `/en/shop/[slug]` | `src/app/(public)/en/shop/[slug]/page.tsx` |
-| `/en/blog` | `app/en/(public)/blog/page.tsx` |
-| `/en/blog/[slug]` | `app/en/(public)/blog/[slug]/page.tsx` |
-| `/en/about` | `app/en/(public)/about/page.tsx` |
-| `/en/help` | `app/en/(public)/help/page.tsx` |
-| `/en/contact` | `app/en/(public)/contact/page.tsx` |
-| `/en/condiciones` | `app/en/(public)/condiciones/page.tsx` |
+| `/en/blog` | `src/app/(public)/en/blog/page.tsx` |
+| `/en/blog/[slug]` | `src/app/(public)/en/blog/[slug]/page.tsx` |
+| `/en/about` | `src/app/(public)/en/about/page.tsx` |
+| `/en/help` | `src/app/(public)/en/help/page.tsx` |
+| `/en/contact` | `src/app/(public)/en/contact/page.tsx` |
+| `/en/condiciones` | `src/app/(public)/en/condiciones/page.tsx` |
 
 ---
 
@@ -72,10 +80,10 @@ El enlace **English / Español** no apunta solo a la home: calcula la ruta equiv
 
 | Ruta | Archivo | Descripción |
 |------|---------|-------------|
-| `/es/login` | `app/es/(public)/(auth)/login/page.tsx` | Inicio de sesión (solo email/contraseña) |
-| `/es/registro` | `app/es/(public)/(auth)/registro/page.tsx` | Registro (solo email, sin Google OAuth) |
-| `/en/login` | `app/en/(public)/(auth)/login/page.tsx` | Login (EN) |
-| `/en/register` | `app/en/(public)/(auth)/register/page.tsx` | Register (EN) |
+| `/es/login` | `src/app/(public)/es/(auth)/login/page.tsx` | Inicio de sesión (solo email/contraseña) |
+| `/es/registro` | `src/app/(public)/es/(auth)/registro/page.tsx` | Registro (solo email, sin Google OAuth) |
+| `/en/login` | `src/app/(public)/en/(auth)/login/page.tsx` | Login (EN) |
+| `/en/register` | `src/app/(public)/en/(auth)/register/page.tsx` | Register (EN) |
 
 Parámetros opcionales en registro: `?redirect=/ruta&claim=true` (redirige tras registro y contextualiza para reclamar centro).
 
@@ -85,15 +93,17 @@ Parámetros opcionales en registro: `?redirect=/ruta&claim=true` (redirige tras 
 
 | Ruta | Archivo | Descripción |
 |------|---------|-------------|
-| `/es/mis-reservas` | `app/es/(dashboard)/mis-reservas/page.tsx` | Reservas como asistente |
-| `/es/mensajes` | `app/es/(dashboard)/mensajes/page.tsx` | Bandeja de mensajes (+ botón soporte) |
-| `/es/mensajes/[id]` | `app/es/(dashboard)/mensajes/[id]/page.tsx` | Conversación individual (chat / soporte) |
-| `/es/perfil` | `app/es/(dashboard)/perfil/page.tsx` | Datos personales desde `profiles` (Supabase); guardar vía `PATCH /api/profile` |
-| `/es/mis-centros` | `app/es/(dashboard)/mis-centros/page.tsx` | Centros reclamados, propuestas pendientes, reclamar / proponer nuevo |
-| `/es/mis-eventos` | `app/es/(dashboard)/mis-eventos/page.tsx` | Eventos/retiros creados |
-| `/es/mis-eventos/nuevo` | `app/es/(dashboard)/mis-eventos/nuevo/page.tsx` | Wizard para crear evento (portada + hasta 8 fotos: subida directa al bucket `retreat-images` desde el navegador con RLS; IA opcional `POST /api/retreats/generate-cover-image`) |
-| `/es/mis-eventos/[id]` | `app/es/(dashboard)/mis-eventos/[id]/page.tsx` | Editar evento (misma gestión de portada y galería) |
-| `/es/panel/mensajes` | `app/es/(organizer)/panel/mensajes/page.tsx` | Bandeja de mensajes del organizador (+ botón soporte) |
+| `/es/mis-reservas` | `src/app/(public)/es/(dashboard)/mis-reservas/page.tsx` | Reservas como asistente |
+| `/es/mensajes` | `src/app/(public)/es/(dashboard)/mensajes/page.tsx` | Bandeja de mensajes (+ botón soporte) |
+| `/es/mensajes/[id]` | `src/app/(public)/es/(dashboard)/mensajes/[id]/page.tsx` | Conversación individual (chat / soporte) |
+| `/es/perfil` | `src/app/(public)/es/(dashboard)/perfil/page.tsx` | Datos personales desde `profiles` (Supabase); guardar vía `PATCH /api/profile` |
+| `/es/mis-centros` | `src/app/(public)/es/(dashboard)/mis-centros/page.tsx` | Centros reclamados, propuestas pendientes, reclamar / proponer nuevo |
+| `/es/mis-eventos` | `src/app/(public)/es/(dashboard)/mis-eventos/page.tsx` | Eventos/retiros creados (contrato + banner de verificación si aplica) |
+| `/es/mis-eventos/nuevo` | `src/app/(public)/es/(dashboard)/mis-eventos/nuevo/page.tsx` | Wizard crear evento (TinyMCE descripción, portada + hasta 8 fotos, RLS `retreat-images`) |
+| `/es/mis-eventos/[id]` | `src/app/(public)/es/(dashboard)/mis-eventos/[id]/page.tsx` | Editar evento |
+| `/es/mis-eventos/verificacion` | `src/app/(public)/es/(dashboard)/mis-eventos/verificacion/page.tsx` | Pasos KYC organizador + subida a `organizer-docs` |
+| `/es/panel/mensajes` | `src/app/(public)/es/(organizer)/panel/mensajes/page.tsx` | Mensajes del organizador (+ soporte) |
+| `/es/panel/verificacion` | `src/app/(public)/es/(organizer)/panel/verificacion/page.tsx` | Redirección servidor → `/es/mis-eventos/verificacion` |
 
 Cualquier usuario logueado (incluido admin) accede a estas secciones desde el menú de usuario.
 
@@ -103,8 +113,8 @@ Cualquier usuario logueado (incluido admin) accede a estas secciones desde el me
 
 | Ruta | Archivo | Descripción |
 |------|---------|-------------|
-| `/es/reclamar/[token]` | `app/es/(public)/reclamar/[token]/page.tsx` | Link mágico de email |
-| `/en/claim/[token]` | `app/en/(public)/claim/[token]/page.tsx` | Magic link (EN) |
+| `/es/reclamar/[token]` | `src/app/(public)/es/reclamar/[token]/page.tsx` | Link mágico de email |
+| `/en/claim/[token]` | `src/app/(public)/en/claim/[token]/page.tsx` | Magic link (EN) |
 
 ---
 
@@ -144,10 +154,9 @@ Tipos ES: yoga, meditacion, ayurveda. Tipos EN (= BD): yoga, meditation, ayurved
 
 Contenido único por categoría y destino generado con IA y almacenado en BD (tablas `categories` y `destinations`): `intro_es`, `intro_en`, `meta_title_*`, `meta_description_*`, `faq` (JSONB).
 
-Script: `node scripts/generate-seo-content.mjs [--categories] [--destinations] [--force]`
-| ... | Más tipos de retiro según categorías de la BD |
+**Contenido en BD:** intros, meta y FAQ por categoría y destino (`scripts/generate-seo-content.mjs`; flags `--categories`, `--destinations`, `--force`). Migraciones `028_categories_seo_fields.sql`, `029_destinations_meta_seo.sql`.
 
-Localidades y categorías vienen de la base de datos.
+Las URLs concretas salen de slugs en BD (categorías con retiros, destinos, provincias con centros por tipo).
 
 ---
 
@@ -174,56 +183,52 @@ Código de referencia: `getOrganizerReviewStats`, `organizerHasRatingToShow` en 
 
 ---
 
-## Carpetas en `src/app/es/(public)`
+## Carpetas en `src/app/(public)/es`
 
-### Implementadas
+### Público principal
 
 | Carpeta | Contenido |
 |---------|-----------|
-| `retiros-retiru/` | page.tsx, EventosClient.tsx, [slug]/page.tsx |
-| `centros-retiru/` | page.tsx, CentrosClient.tsx, [slug]/page.tsx |
-| `retiro/[slug]/` | Ficha de retiro (portada + sección galería con el resto de imágenes) |
-| `centro/[slug]/` | Ficha de centro |
-| `buscar/` | Buscador general (retiros + centros) |
-| `destinos/` | Destinos + [slug] |
+| `retiros-retiru/` | Lista, `EventosClient`, `[slug]/` por destino |
+| `retiros-[category]/` | Landing por categoría + `[destination]/` |
+| `centros-retiru/` | Directorio, `[slug]/` por provincia |
+| `centros-[type]/` | Por tipo BD (URL ES `meditacion` ↔ BD `meditation`) + `[province]/` |
+| `retiro/[slug]/` | Ficha retiro (portada + galería) |
+| `centro/[slug]/` | Ficha centro |
+| `buscar/` | Buscador unificado |
+| `destinos/` | Destinos + `[slug]` |
 | `organizador/[slug]/` | Perfil organizador |
-| `para-organizadores/` | Para centros y organizadores |
-| `tienda/` | Tienda + [slug] |
-| `blog/` | Blog + [slug] |
+| `para-organizadores/` | Centros y organizadores |
+| `tienda/` | Listado + `[slug]` ficha producto (`shop_products`) |
+| `blog/` | Blog + `[slug]` |
 | `legal/` | Términos, privacidad, cookies |
-| `sobre-nosotros/`, `contacto/`, `ayuda/`, `condiciones/` | Páginas estáticas |
+| `sobre-nosotros/`, `contacto/`, `ayuda/`, `condiciones/` | Estáticas |
 
-### Pendientes (landings por tipo + ciudad)
+### Landings dinámicas (implementadas, no carpetas literales `centros-yoga`)
 
-| Carpeta | Ejemplo URL |
-|---------|-------------|
-| `centros-yoga/[slug]/` | /centros-yoga/murcia |
-| `centros-meditacion/[slug]/` | /centros-meditacion/madrid |
-| `centros-ayurveda/[slug]/` | /centros-ayurveda/valencia |
-| `retiros-yoga/[slug]/` | /retiros-yoga/ibiza |
-| `retiros-gastronomia/[slug]/` | /retiros-gastronomia/madrid |
-| ... | Más según categorías de retiros en BD |
+Las URLs amigables (`/es/centros-yoga`, `/es/retiros-meditacion/ibiza`, etc.) las resuelven las carpetas **`centros-[type]`** y **`retiros-[category]`** del App Router (segmentos dinámicos). Ver tablas arriba y `docs/SEO-LANDINGS.md`.
 
 ---
 
-## Panel de administrador (protegido, solo role=admin)
+## Panel de administrador (protegido; rol `admin` en `user_roles`)
 
 | Ruta | Archivo | Descripción |
 |------|---------|-------------|
-| `/administrator` | `app/administrator/page.tsx` | Dashboard admin |
-| `/administrator/usuarios` | `app/administrator/usuarios/page.tsx` | Gestión usuarios (+ botón Mensaje para abrir chat de soporte) |
-| `/administrator/organizadores` | `app/administrator/organizadores/page.tsx` | Gestión organizadores (+ botón Mensaje para abrir chat de soporte) |
-| `/administrator/retiros` | `app/administrator/retiros/page.tsx` | Gestión retiros (ver, editar, aprobar, rechazar, cancelar, eliminar). Query `?filter=pending_review` abre el listado filtrado (p. ej. desde el dashboard admin) |
-| `/administrator/retiros/[id]/editar` | `app/administrator/retiros/[id]/editar/page.tsx` | Editar retiro (admin) |
-| `/administrator/centros` | `app/administrator/centros/page.tsx` | Gestión centros |
-| `/administrator/claims` | `app/administrator/claims/page.tsx` | Gestión claims de centros |
-| `/administrator/mensajes` | `app/administrator/mensajes/page.tsx` | Moderación de conversaciones + respuesta en soporte. Parámetro `?open=convId` abre una conversación al cargar |
-| `/administrator/blog` | `app/administrator/blog/page.tsx` | Gestión blog |
-| `/administrator/tienda` | `src/app/administrator/tienda/page.tsx` | Gestión tienda + bloque «Encuesta de productos» (`get_shop_interest_stats`, comentarios) |
-| `/administrator/reembolsos` | `app/administrator/reembolsos/page.tsx` | Reembolsos |
-| `/administrator/reporting` | `app/administrator/reporting/page.tsx` | Reporting y métricas |
+| `/administrator` | `src/app/administrator/page.tsx` | Dashboard admin |
+| `/administrator/usuarios` | `src/app/administrator/usuarios/page.tsx` | Gestión usuarios (`user_roles` en UI) + Mensaje → soporte |
+| `/administrator/organizadores` | `src/app/administrator/organizadores/page.tsx` | Gestión organizadores + enlace a verificación |
+| `/administrator/organizadores/[id]/verificar` | `src/app/administrator/organizadores/[id]/verificar/page.tsx` | Revisar pasos KYC y documentos (`organizer_verification_steps`, signed URLs) |
+| `/administrator/retiros` | `src/app/administrator/retiros/page.tsx` | Aprobar/rechazar (moderación IA opcional si `ANTHROPIC_API_KEY`), filtros por estado visual |
+| `/administrator/retiros/[id]/editar` | `src/app/administrator/retiros/[id]/editar/page.tsx` | Editar retiro (admin) |
+| `/administrator/centros` | `src/app/administrator/centros/page.tsx` | Gestión centros |
+| `/administrator/claims` | `src/app/administrator/claims/page.tsx` | Gestión claims de centros |
+| `/administrator/mensajes` | `src/app/administrator/mensajes/page.tsx` | Moderación + soporte (`?open=convId`) |
+| `/administrator/blog` | `src/app/administrator/blog/page.tsx` | Gestión blog |
+| `/administrator/tienda` | `src/app/administrator/tienda/page.tsx` | Productos + resultados encuesta (`docs/SHOP-SURVEY.md`) |
+| `/administrator/reembolsos` | `src/app/administrator/reembolsos/page.tsx` | Reembolsos |
+| `/administrator/reporting` | `src/app/administrator/reporting/page.tsx` | Reporting y métricas |
 
-Protegido por middleware (role=admin). No indexado en buscadores.
+Protegido por middleware y comprobación de admin. No indexado en buscadores.
 
 ---
 
@@ -236,7 +241,11 @@ Protegido por middleware (role=admin). No indexado en buscadores.
 | GET | `/api/admin/center-claims` | Listar claims (admin) |
 | POST | `/api/admin/center-claims` | Aprobar/rechazar claim (admin) |
 | POST | `/api/admin/retreats` | Aprobar, rechazar, cancelar, archivar o eliminar retiro (admin) |
+| POST | `/api/admin/retreats/moderate` | Moderación IA de texto/precios (admin; opcional sin `ANTHROPIC_API_KEY`) |
 | PATCH | `/api/admin/retreats/[id]` | Editar retiro (admin) |
+| GET | `/api/admin/organizers/[id]` | Detalle organizador para admin (verificación) |
+| POST | `/api/admin/organizers/[id]` | Aprobar/rechazar pasos de verificación u operaciones de revisión (admin) |
+| GET | `/api/admin/organizers/[id]/doc-url` | URL firmada temporal para documento en `organizer-docs` |
 | POST | `/api/retreats/create` | Crear retiro (auto-crea organizer_profile) |
 | POST | `/api/retreats/generate-cover-image` | Portada IA: cuerpo con **briefing completo** del evento (textos, destino, fechas, categorías, programa, incluidos…); **GPT-4o** genera un único párrafo-prompt en español; **GPT Image 1.5** genera la imagen (`1536x1024`, `high`); usuario autenticado; `OPENAI_API_KEY`; bucket `retreat-images` |
 | PATCH | `/api/retreats/[id]` | Actualizar retiro (solo propietario) |
@@ -257,6 +266,10 @@ Protegido por middleware (role=admin). No indexado en buscadores.
 | PATCH | `/api/bookings/[id]` | Organizador confirma/rechaza reserva |
 | GET | `/api/bookings/[id]/form` | Obtener formulario post-reserva del asistente |
 | POST | `/api/bookings/[id]/form` | Guardar respuestas del formulario post-reserva |
+| GET | `/api/organizer/commission-tier` | Nivel de comisión escalonada del organizador autenticado (para formulario PVP) |
+| POST | `/api/organizer/contract` | Aceptar contrato (crea `organizer_profile`, `contract_accepted_at`, rol `organizer` vía `assignRole`) |
+| GET | `/api/organizer/verification` | Estado global de verificación KYC |
+| POST | `/api/organizer/verification/[step]` | Marcar paso enviado / subir metadatos de documento |
 | GET | `/api/organizer/dashboard` | KPIs reales del organizador |
 | GET | `/api/organizer/attendees` | Listar todos los asistentes cross-evento |
 | GET | `/api/organizer/events/[id]/bookings` | Listar bookings de un evento |
