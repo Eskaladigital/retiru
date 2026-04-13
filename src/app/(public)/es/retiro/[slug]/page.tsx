@@ -117,15 +117,18 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
     url: `/es/retiro/${r.slug}`,
     organizer: r.organizer?.business_name ?? 'Retiru',
     availability,
-    rating: r.avg_rating > 0 ? r.avg_rating : undefined,
-    reviewCount: r.review_count > 0 ? r.review_count : undefined,
+    rating: r.review_count > 0 ? r.avg_rating : ((r.organizer?.review_count ?? 0) > 0 ? r.organizer?.avg_rating : undefined),
+    reviewCount: r.review_count > 0 ? r.review_count : ((r.organizer?.review_count ?? 0) > 0 ? r.organizer?.review_count : undefined),
   });
 
-  const breadcrumbLd = jsonLdBreadcrumb([
+  const primaryCat = r.categories?.[0];
+  const breadcrumbItems = [
     { name: 'Inicio', url: '/es' },
     { name: 'Retiros', url: '/es/retiros-retiru' },
+    ...(primaryCat ? [{ name: `Retiros de ${primaryCat.name_es}`, url: `/es/retiros-${primaryCat.slug}` }] : []),
     { name: r.title_es, url: `/es/retiro/${r.slug}` },
-  ]);
+  ];
+  const breadcrumbLd = jsonLdBreadcrumb(breadcrumbItems);
 
   return (
     <div>
@@ -178,10 +181,16 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
           {/* ─── Main content ─── */}
           <div className="flex-1 max-w-3xl">
             {/* Breadcrumb */}
-            <nav className="mb-4 flex items-center gap-1 text-xs text-muted-foreground">
+            <nav className="mb-4 flex items-center gap-1 text-xs text-muted-foreground flex-wrap">
               <Link href="/es" className="hover:text-terracotta-600">Inicio</Link>
               <ChevronRight size={12} />
               <Link href="/es/retiros-retiru" className="hover:text-terracotta-600">Retiros</Link>
+              {primaryCat && (
+                <>
+                  <ChevronRight size={12} />
+                  <Link href={`/es/retiros-${primaryCat.slug}`} className="hover:text-terracotta-600">Retiros de {primaryCat.name_es}</Link>
+                </>
+              )}
               <ChevronRight size={12} />
               <span className="text-foreground">{r.title_es}</span>
             </nav>
@@ -190,7 +199,7 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
             <div className="mb-6">
               <div className="mb-2 flex flex-wrap gap-2">
                 {r.categories?.map((cat) => (
-                  <span key={cat.id} className="badge-sand">{cat.name_es}</span>
+                  <Link key={cat.id} href={`/es/retiros-${cat.slug}`} className="badge-sand hover:bg-sand-200 transition-colors">{cat.name_es}</Link>
                 ))}
                 {r.confirmation_type === 'automatic' && <span className="badge-sage"><Zap size={12} /> Confirmación inmediata</span>}
               </div>
@@ -411,12 +420,17 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
                   className="w-full py-4 text-base"
                 />
 
-                <p className="mt-3 text-center text-xs text-muted-foreground">
-                  <Shield size={12} className="inline mr-1" />
-                  {minReached
-                    ? 'Pago seguro con Stripe · Reembolso según política de cancelación'
-                    : 'Reserva gratuita · Solo pagas cuando se confirme el retiro'}
-                </p>
+                <div className="mt-4 rounded-lg bg-sage-50/60 border border-sage-200/60 p-3 text-center">
+                  <p className="text-xs text-muted-foreground">
+                    <Shield size={12} className="inline mr-1 text-sage-600" />
+                    {minReached
+                      ? 'Pago 100 % seguro con Stripe · Reembolso según política de cancelación'
+                      : 'Reserva gratuita · Solo pagas cuando se confirme el retiro'}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground/70 mt-1.5">
+                    Visa, Mastercard y más · Tus datos nunca pasan por nuestros servidores
+                  </p>
+                </div>
 
                 <div className="mt-4">
                   <AskOrganizerButton retreatId={r.id} locale="es" />
@@ -432,7 +446,7 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
         <div className="flex items-center justify-between gap-3">
           <div className="shrink-0">
             <p className="text-lg font-bold text-foreground">{r.total_price}€</p>
-            <p className="text-xs text-muted-foreground">por persona</p>
+            <p className="text-[10px] text-muted-foreground">por persona · <Shield size={10} className="inline" /> Pago seguro</p>
           </div>
           <div className="flex items-center gap-2">
             <AskOrganizerButton retreatId={r.id} locale="es" compact />

@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 const TinyRetreatDescriptionEditor = dynamic(
@@ -134,6 +134,14 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
   const [uploading, setUploading] = useState(false);
   const [generatingCover, setGeneratingCover] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [commissionPercent, setCommissionPercent] = useState(20);
+
+  useEffect(() => {
+    fetch('/api/organizer/commission-tier')
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d?.commissionPercent != null) setCommissionPercent(d.commissionPercent); })
+      .catch(() => {});
+  }, []);
 
   const [form, setForm] = useState({
     title_es: '',
@@ -632,10 +640,8 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
                 onChange={(html) => set('description_es', html)}
                 placeholder="Describe tu evento: qué ofreces, a quién va dirigido, qué lo hace especial…"
               />
-              <p className="text-xs text-[#a09383] mt-1.5 leading-relaxed">
-                Editor visual (TinyMCE). En la ficha pública se verá con títulos, listas y enlaces. Para producción, registra tu dominio en Tiny Cloud y define{' '}
-                <code className="text-[11px] bg-sand-100 px-1 rounded">NEXT_PUBLIC_TINYMCE_API_KEY</code> en <code className="text-[11px] bg-sand-100 px-1 rounded">.env.local</code>
-                {' '}(mientras tanto se usa una clave de desarrollo). No incluyas teléfonos ni emails en la descripción.
+              <p className="text-xs text-red-600 mt-1.5 leading-relaxed bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                <strong>Normas de contenido:</strong> No incluyas teléfonos, emails, WhatsApp ni enlaces de reserva externos. El contacto se hace a través de Retiru. Contenido con datos de contacto será rechazado en la revisión.
               </p>
             </div>
             <div>
@@ -913,11 +919,11 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
               <input type="number" min="50" value={form.total_price} onChange={(e) => set('total_price', e.target.value)} placeholder="790" className={`${inputCls} max-w-xs`} />
               <p className="text-xs text-[#7a6b5d] mt-1.5 leading-relaxed max-w-2xl">
                 <strong className="text-foreground">PVP</strong> = precio de venta público: lo que paga cada asistente en Retiru (no se suma nada más en el pago).
-                Tú cobras <strong className="text-foreground">solo el 80&nbsp;%</strong> de ese importe; el <strong className="text-foreground">20&nbsp;%</strong> es comisión de Retiru. El desglose lo detalla.
+                La comisión de Retiru depende de tu nivel: <strong className="text-foreground">0&nbsp;%</strong> en tu primer retiro, <strong className="text-foreground">10&nbsp;%</strong> en el segundo, <strong className="text-foreground">20&nbsp;%</strong> a partir del tercero. El desglose lo detalla.
               </p>
             </div>
             <div className="mt-3">
-              <OrganizerPriceBreakdown priceInput={form.total_price} />
+              <OrganizerPriceBreakdown priceInput={form.total_price} commissionPercent={commissionPercent} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
               <div>

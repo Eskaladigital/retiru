@@ -1,6 +1,7 @@
 // /en/centers-retiru/[slug] — Centers filtered by province (real Supabase data)
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { MapPin, Star } from 'lucide-react';
 import { getCenterProvinces, getCentersByProvince } from '@/lib/data';
 import { getCenterTypeLabel } from '@/lib/utils';
@@ -52,6 +53,20 @@ export default async function CentersByProvincePageEN({ params }: { params: Prom
       <h1 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground mb-2">Centers in {provinceName}</h1>
       <p className="text-sm text-[#a09383] mb-6">{centers.length} center{centers.length !== 1 ? 's' : ''} in {provinceName}</p>
 
+      {(() => {
+        const typeMap = new Map<string, string>();
+        centers.forEach(c => { if (c.type && !typeMap.has(c.type)) typeMap.set(c.type, getCenterTypeLabel(c.type, 'en')); });
+        const types = Array.from(typeMap.entries());
+        return types.length > 0 ? (
+          <div className="flex flex-wrap gap-2 mb-8">
+            <span className="text-xs text-muted-foreground self-center mr-1">Filter by type:</span>
+            {types.map(([type, label]) => (
+              <Link key={type} href={`/en/centers-${type}/${slug}`} className="text-xs font-medium px-3 py-1.5 rounded-full bg-sage-50 text-sage-700 border border-sage-200 hover:bg-sage-100 transition-colors">{label} Centers</Link>
+            ))}
+          </div>
+        ) : null;
+      })()}
+
       {centers.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-4xl mb-4">🔍</p>
@@ -70,7 +85,7 @@ export default async function CentersByProvincePageEN({ params }: { params: Prom
               >
                 <div className="w-full md:w-52 h-40 rounded-xl overflow-hidden shrink-0 relative bg-sand-100">
                   {img ? (
-                    <img src={img} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <Image src={img} alt={c.name} fill loading="lazy" className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 208px" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-3xl text-sand-300">🏢</div>
                   )}

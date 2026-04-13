@@ -1,6 +1,6 @@
 # RETIRU — Marketplace de Retiros y Escapadas
 
-Plataforma web bilingüe (ES/EN) donde las personas descubren y reservan retiros y eventos centrados en **yoga, meditación y ayurveda**, y los organizadores publican y gestionan sus retiros de forma gratuita.
+Plataforma web bilingüe (ES/EN) donde las personas descubren y reservan retiros y eventos centrados en **yoga, meditación y ayurveda**, y los organizadores publican y gestionan sus retiros sin cuota de suscripción (comisión escalonada por retiro).
 
 > "Airbnb de los retiros" — pensado para España y el mercado hispanohablante.
 
@@ -13,7 +13,7 @@ Plataforma web bilingüe (ES/EN) donde las personas descubren y reservan retiros
 | Frontend | Next.js 14 (App Router), React 18, TypeScript |
 | Estilos | Tailwind CSS, Radix UI, Lucide Icons |
 | Backend | Supabase (PostgreSQL, Auth, Storage, Realtime, Edge Functions) |
-| Pagos | Stripe (PVP = precio público por persona; el asistente paga ese importe íntegro; **20 %** comisión Retiru y **80 %** neto para el organizador; cobro 100 % al reservar salvo flujo «mínimo viable»; payout manual; reembolsos vía webhooks) |
+| Pagos | Stripe (PVP = precio público por persona; el asistente paga ese importe íntegro; **comisión escalonada**: 0 % 1.er retiro, 10 % 2.º, 20 % a partir del 3.º — cada retiro mantiene su nivel; cobro 100 % al reservar salvo flujo «mínimo viable»; payout manual; reembolsos vía webhooks) |
 | Emails | Resend |
 | i18n | next-intl (ES base + EN completo) |
 | Formularios | React Hook Form + Zod |
@@ -95,6 +95,8 @@ npm run build            # Build de producción
 npm run start            # Servidor de producción
 npm run lint             # Linter (ESLint)
 npm run db:types         # Generar tipos TypeScript desde el esquema de Supabase
+npm run db:verify-schema       # Comprueba esquema vía .env.local (031a/031b, user_roles, bucket organizer-docs, pasos por org)
+npm run verify-shop-survey-db  # Tabla + RPC encuesta tienda y unicidad anónima (migraciones 030 + 032)
 npm run stripe:listen    # Escuchar webhooks de Stripe en local
 
 # Centros — descripciones IA (scraping web + Google Places + OpenAI, temp 0.2)
@@ -179,6 +181,7 @@ Ejecutar en el **SQL Editor** de Supabase (con service_role) en este orden:
 | `012_centers_user_proposals.sql` | `013_centers_user_proposals_rls.sql` | `pending_review` en `center_status` → luego `submitted_by`, índice y política |
 | `018_full_payment_model.sql` | `019_full_payment_model_columns.sql` | Valores nuevos en `remaining_payment_status` → columnas payout y `DEFAULT` |
 | `022_reserved_no_payment_status.sql` | `023_reserved_no_payment_index.sql` | `reserved_no_payment` en `booking_status` → índice parcial |
+| `030_shop_product_interest_survey.sql` | `032_shop_product_interests_unique_fix.sql` | La 030 crea un `UNIQUE` sobre `(user_id, product_category)` que bloquea **más de un** voto anónimo por categoría; la 032 lo sustituye por índices únicos parciales |
 
 Con **Supabase CLI** (`supabase link` + `supabase db push`) se aplican solas en orden. Con **SQL Editor**, ejecuta **un archivo por ejecución**, en orden numérico. Si pegas solo `013` sin `012`, verás `22P02` / `pending_review`.
 
@@ -207,6 +210,15 @@ Con **Supabase CLI** (`supabase link` + `supabase db push`) se aplican solas en 
 23. `supabase/migrations/023_reserved_no_payment_index.sql` — índice parcial `idx_bk_reserved` (ejecutar después de 022)
 24. `supabase/migrations/024_backfill_min_attendees_equals_max.sql` — backfill `retreats.min_attendees = max_attendees` en datos legacy
 25. `supabase/migrations/025_storage_retreat_images_bucket_ensure.sql` — idempotente: crea bucket público `retreat-images` + políticas (si en producción falta el bucket y fallan las subidas de fotos de eventos, ejecutar este SQL en el panel)
+26. `supabase/migrations/026_centers_facebook.sql` — columna `facebook` en centros
+27. `supabase/migrations/027_user_roles_table.sql` — tabla `user_roles` (multi-rol por usuario), migración de datos, funciones helper `has_role()` / `user_roles_array()`, actualización de `is_admin()` y políticas RLS de mensajería, trigger `tr_new_profile_role` para asignar `attendee` a nuevos usuarios
+28. `supabase/migrations/028_categories_seo_fields.sql` — campos SEO en categorías
+29. `supabase/migrations/028_tiered_commissions.sql` — comisiones escalonadas
+30. `supabase/migrations/029_destinations_meta_seo.sql` — campos meta SEO en destinos
+31. `supabase/migrations/030_shop_product_interest_survey.sql` — encuesta de interés de la tienda: tabla `shop_product_interests`, RLS, función `get_shop_interest_stats()`
+32. `supabase/migrations/031a_verification_enum_extend.sql` — amplía enum `verification_step` con `economic_activity` e `insurance` (debe ejecutarse y commitearse antes de 031b)
+33. `supabase/migrations/031b_organizer_verification_v2.sql` — sistema de verificación de organizadores: añade `contract_accepted_at` a `organizer_profiles`, `file_url` a `organizer_verification_steps`, actualiza trigger `handle_new_organizer` (5 pasos sin `personal_data`), crea bucket privado `organizer-docs` con políticas RLS, migra organizadores existentes verificados
+34. `supabase/migrations/032_shop_product_interests_unique_fix.sql` — **tras 030**: corrige unicidad para que **varios visitantes anónimos** puedan votar la misma categoría (índices únicos parciales por `user_id` o `session_id`). Comprueba con `npm run verify-shop-survey-db`.
 
 **Seeds** (después de las migraciones):
 
@@ -220,7 +232,7 @@ Con **Supabase CLI** (`supabase link` + `supabase db push`) se aplican solas en 
 Las páginas consumen datos a través de `src/lib/data/index.ts`:
 
 - `getCategories(locale)`, `getDestinations(locale)`, `getDestinationBySlug(slug)`
-- `getHomeShopProducts(limit)` — productos `shop_products` para la home (misma tabla que `/es/tienda`)
+- `getHomeShopProducts(limit)` — productos `shop_products` para la home (misma tabla que `/es/tienda`). La encuesta pública escribe en `shop_product_interests` (ver `docs/SHOP-SURVEY.md`); el admin agrega resultados con `get_shop_interest_stats()` en `/administrator/tienda`
 - `getPublishedRetreats(filters)`, `getRetreatBySlug(slug)`
 - `getOrganizerBySlug(slug)`, `getActiveCenters(filters)`, `getCenterBySlug(slug)`
 - `getCenterProvinces()` — provincias únicas con centros activos (para `generateStaticParams` y sitemap)
@@ -254,7 +266,7 @@ Las APIs `/api/retreats`, `/api/centers` y `/api/catalog` exponen datos para bú
 | `/es/destinos` | Destinos populares |
 | `/es/destinos/[slug]` | Destino por slug |
 | `/es/para-organizadores` | Para centros y organizadores |
-| `/es/tienda` | Tienda wellness |
+| `/es/tienda` | Tienda wellness (`shop_products`); si no hay productos, encuesta de interés (`ProductInterestSurvey`) |
 | `/es/blog` | Blog |
 
 ### Dashboard de usuario (requiere login)
@@ -284,7 +296,7 @@ Cualquier usuario logueado (incluido el admin) accede a estas secciones desde el
 | `/administrator/claims` | Gestión claims de centros |
 | `/administrator/mensajes` | Moderación de conversaciones + respuesta en chats de soporte |
 | `/administrator/blog` | Gestión blog |
-| `/administrator/tienda` | Gestión tienda |
+| `/administrator/tienda` | Gestión tienda + resultados agregados de la encuesta de interés |
 | `/administrator/reembolsos` | Reembolsos |
 | `/administrator/reporting` | Reporting y métricas |
 
@@ -479,20 +491,28 @@ src/
 
 ## Modelo de negocio
 
-### Retiros (marketplace) — Modelo "Booking" (pago 100 %)
+### Retiros (marketplace) — Modelo "Booking" (pago 100 %) con comisiones escalonadas
 
 - El **organizador publica gratis**. Sin suscripción ni comisión directa.
-- Al reservar, el **asistente paga el 100 %** del precio total a Retiru vía Stripe en un solo paso.
-- Retiru retiene su comisión (20 %) y **transfiere el 80 % al organizador** (payout manual por transferencia bancaria).
-- Ejemplo: retiro de 500 € → el asistente paga 500 € → Retiru retiene 100 € y transfiere 400 € al organizador.
+- Al reservar, el **asistente paga el 100 %** del precio total (PVP) a Retiru vía Stripe en un solo paso.
+- **Comisiones escalonadas** según retiros previos del organizador con al menos 1 reserva pagada:
+
+| Retiro | Comisión Retiru | Neto organizador |
+|--------|-----------------|-------------------|
+| 1.er retiro con reserva pagada | **0 %** | **100 %** |
+| 2.º retiro con reserva pagada | **10 %** | **90 %** |
+| 3.er retiro en adelante | **20 %** | **80 %** |
+
+- Cada retiro **mantiene de forma permanente** su nivel de comisión asignado al crearlo.
+- Ejemplo (comisión estándar): retiro de 500 € → el asistente paga 500 € → Retiru retiene 100 € (20 %) y transfiere 400 € (80 %) al organizador.
 - **Ventajas**: un solo pago para el asistente, mayor conversión, control total del flujo financiero, sin pagos pendientes.
 - **Cancelaciones**: el organizador define políticas flexibles (porcentajes y plazos sobre el importe pagado). Si al asistente le corresponde reembolso según esa política, recibe ese importe íntegro en su método de pago. La compensación de la comisión de Retiru en supuestos de cancelación se regula en el **acuerdo comercial con el organizador**, no como retención adicional sobre el reembolso del asistente.
 
 ### Directorio de centros (suscripción)
 
-- El directorio será de **pago** (cuota mensual) para los centros.
-- Fase de lanzamiento: los centros se importan desde un directorio CSV y se les ofrece **6 meses de membresía gratuita** para que valoren el impacto.
-- Tras los 6 meses, los centros que quieran continuar pasan a la cuota de pago.
+- El directorio es de **pago**: **20 €/mes** (cuota fija) para los centros. Retiru no intermedia ni cobra comisiones en la contratación de servicios del centro; solo ofrece presencia en el directorio.
+- Fase de lanzamiento: los centros importados disfrutan de **6 meses de cortesía** para que valoren el impacto.
+- Tras los 6 meses, los centros que quieran mantener su ficha activa pasan a la cuota de 20 €/mes.
 - Los centros que no respondan o no quieran pagar se eliminan (o se conservan los ~100 mejor valorados como base).
 
 ---
@@ -528,7 +548,7 @@ node scripts/quick-stats.mjs                           # Estadísticas rápidas
 #### Fase 1 — Notificación (email de bienvenida + claim)
 
 - Enviar `mailing/retiru-bienvenida-centro.html` a todos los centros con email.
-- Mensaje: "Enhorabuena, tu centro ha sido seleccionado para Retiru. Te regalamos 6 meses de membresía gratuita."
+- Mensaje: "Enhorabuena, tu centro ha sido seleccionado para Retiru. Te ofrecemos 6 meses de cortesía para que pruebes el directorio."
 - Cada email incluye un **link mágico** (`/es/reclamar/{{TOKEN}}`) que permite al dueño reclamar su centro con un clic.
 - Objetivo: que visiten su perfil, lo reclamen, validen la información y se registren.
 - **Pendiente:** configurar Resend para envío masivo personalizado.
@@ -568,9 +588,9 @@ El dueño de un centro puede vincularse como propietario verificado mediante:
 #### Fase 3 — Monetización (mes 6)
 
 - Contactar a los centros para evaluar su experiencia.
-- Los que vean valor → pasan a cuota de pago mensual.
+- Los que vean valor → pasan a cuota de 20 €/mes.
 - Los que no respondan / no quieran pagar → se eliminan del directorio.
-- Posible alternativa: conservar los ~100 centros con mejor valoración como base gratuita.
+- Posible alternativa: conservar los ~100 centros con mejor valoración como base de cortesía.
 
 ### Métricas clave a seguir
 
@@ -586,46 +606,91 @@ El dueño de un centro puede vincularse como propietario verificado mediante:
 
 ## Roles y tipos de usuario
 
-### Roles en base de datos
+### Roles en base de datos (multi-rol)
 
-La tabla `profiles` tiene un campo `role` con 3 valores posibles: `attendee`, `organizer`, `admin`.
+Los roles se gestionan en la tabla `user_roles` (tabla puente, N roles por usuario). Un usuario tiene **al menos** el rol `attendee` y puede acumular varios roles simultáneamente.
 
 ```
-user_role: 'attendee' | 'organizer' | 'admin'
+user_roles: 'attendee' | 'organizer' | 'center' | 'admin'
 ```
+
+La columna legacy `profiles.role` se mantiene por compatibilidad pero está deprecada; la fuente de verdad es `user_roles`.
+
+**Funciones SQL helper:**
+- `has_role(uid, 'admin')` — comprueba si el usuario tiene un rol concreto
+- `user_roles_array(uid)` — devuelve array con todos los roles del usuario
+- `is_admin(uid)` — alias de `has_role(uid, 'admin')`, usado en políticas RLS
+
+**Helper TypeScript:** `src/lib/roles.ts` — `hasRole()`, `isAdmin()`, `isOrganizer()`, `isCenter()`, `getRolesFromSupabase()`, `assignRole()`.
 
 ### Tipos funcionales de usuario
 
-| Tipo funcional | Rol en BD | Cómo se llega | Capacidades |
+| Tipo funcional | Roles en BD | Cómo se llega | Capacidades |
 |---|---|---|---|
 | **Visitante** | Sin cuenta | Navega sin registrarse | Buscar, ver retiros, centros, blog, tienda |
 | **Asistente** | `attendee` | Se registra con email y teléfono obligatorio | Reservar retiros, gestionar perfil, reclamar centros |
-| **Propietario de centro** | `attendee` | Reclama un centro (claim aprobado) o propuesta aprobada por admin (`centers.claimed_by`) | Todo lo de asistente + editar su centro, publicar eventos |
-| **Organizador** | `organizer` | Crea su primer evento y el admin lo aprueba | Todo lo de asistente + crear/gestionar retiros (ya sin aprobación previa) |
-| **Admin** | `admin` | Asignado manualmente | Todo + panel `/administrator`, modera claims, retiros, centros |
+| **Propietario de centro** | `attendee` + `center` | Reclama un centro (claim aprobado) o propuesta aprobada por admin | Todo lo de asistente + editar su centro, publicar eventos |
+| **Organizador** | `attendee` + `organizer` | Crea su primer evento (auto) o el admin aprueba un retiro | Todo lo de asistente + crear/gestionar retiros |
+| **Admin** | `attendee` + `admin` (+ otros) | Asignado manualmente | Todo + panel `/administrator`, modera claims, retiros, centros |
 
-### Flujo de promoción de rol
+Un usuario puede combinar roles: por ejemplo, `attendee` + `organizer` + `center` + `admin`.
 
-1. **Registro**: todo usuario nuevo se crea como `attendee`.
-2. **Reclamar o proponer centro**: un `attendee` puede reclamar un centro existente (claim revisado en `center_claims`) o proponer uno nuevo (`POST /api/centers/propose`, revisión en `/administrator/centros`). Si se aprueba, `centers.claimed_by` apunta al usuario y puede editar la ficha; sigue siendo `attendee`.
-3. **Crear primer evento**: cualquier `attendee` puede crear un retiro/evento desde "Mis eventos". Al crear el primero:
-   - Se auto-crea un `organizer_profile` vinculado al usuario.
-   - El retiro se guarda como `draft` y pasa a `pending_review`.
-   - **El admin debe verificar y aprobar** el primer retiro desde `/administrator/retiros`.
-   - Al aprobarlo, el retiro se publica y el rol del usuario se actualiza a `organizer`.
-4. **Eventos posteriores**: una vez que el usuario es `organizer` (su primer retiro fue aprobado), los siguientes retiros siguen el mismo flujo de revisión pero el admin ya tiene confianza en el organizador.
+### Flujo de asignación de roles (automático)
+
+1. **Registro**: todo usuario nuevo recibe el rol `attendee` (trigger `tr_new_profile_role`).
+2. **Reclamar centro (claim aprobado)**: al aprobar un claim (admin o auto-aprobación por email match), se añade el rol `center` automáticamente vía `assignRole()`.
+3. **Aceptar contrato de organizador**: al aceptar el contrato en `/es/mis-eventos`, se crea `organizer_profile` con `status: 'pending'` y se añade el rol `organizer`.
+4. **Aprobar retiro**: al aprobar un retiro desde `/administrator/retiros`, se añade el rol `organizer` al dueño (idempotente).
+
+### Verificación del organizador (KYC)
+
+Antes de poder publicar eventos, el organizador debe completar un proceso de verificación:
+
+1. **Aceptar contrato**: al acceder a `/es/mis-eventos` por primera vez, el usuario ve una pantalla bloqueante con el contrato de Retiru. Debe aceptarlo para continuar. Esto crea el `organizer_profile` con `contract_accepted_at` y `status: 'pending'`.
+
+2. **Subir documentación**: en `/es/mis-eventos/verificacion`, el organizador sube 5 documentos:
+   - **Documento de identidad** (DNI/NIE/pasaporte)
+   - **Alta en actividad económica** (certificado de autónomo o escritura de sociedad)
+   - **Seguro de responsabilidad civil** (póliza vigente)
+   - **Datos fiscales** (NIF/CIF + documento acreditativo)
+   - **Datos bancarios** (IBAN + certificado de titularidad)
+
+   Los documentos se suben al bucket privado `organizer-docs` en Storage. La tabla `organizer_verification_steps` registra el estado de cada paso.
+
+3. **Revisión por admin**: en `/administrator/organizadores/[id]/verificar`, el admin ve cada documento, lo descarga y aprueba o rechaza individualmente con motivo. Cuando todos los pasos están aprobados, `organizer_profiles.status` pasa automáticamente a `'verified'`.
+
+4. **Mientras tanto**: el organizador puede crear eventos como borrador y enviarlos a revisión, pero el admin **no puede aprobar un retiro si el organizador no está verificado**. La tabla de retiros muestra "No verificado" junto al organizador y el botón Aprobar está deshabilitado.
 
 ### Verificación del primer evento (admin)
 
 Es fundamental que **ningún retiro se publique sin revisión del admin**. El flujo:
 
-1. Usuario crea evento → estado `draft`
-2. Usuario envía a revisión → estado `pending_review`
-3. Admin revisa en `/administrator/retiros` → aprueba (`published`) o rechaza (`rejected` con motivo)
-4. Si aprobado: el retiro se publica y es visible en el frontend
-5. El rol del usuario se promueve a `organizer` si era su primer retiro aprobado
+1. Organizador acepta contrato → puede acceder a `/es/mis-eventos`
+2. Crea evento → estado `draft`
+3. Envía a revisión → estado `pending_review`
+4. Admin revisa en `/administrator/retiros`:
+   - Si organizador **no verificado** → botón Aprobar deshabilitado, aviso visual
+   - Si organizador **verificado** → puede aprobar (`published`) o rechazar (`rejected` con motivo)
+5. Si aprobado: el retiro se publica y es visible en el frontend
 
-Esto protege la calidad de la plataforma y evita contenido fraudulento o de baja calidad.
+Esto protege la calidad de la plataforma y asegura que solo organizadores verificados documentalmente puedan tener eventos publicados.
+
+### Estados visuales de retiros (derivados de fecha + reservas)
+
+En el panel de admin (`/administrator/retiros`) y en «Mis eventos» del organizador, el estado `published` de BD se desglosa visualmente según las fechas y las reservas confirmadas:
+
+| Estado visual | Condición | Badge |
+|---------------|-----------|-------|
+| **Publicado** | `status = published`, `start_date` futuro | Verde |
+| **En curso** | `status = published`, entre `start_date` y `end_date`, con reservas confirmadas > 0 | Esmeralda |
+| **Expirado** | `status = published`, `start_date` ya pasó y `confirmed_bookings = 0` | Naranja |
+| **Finalizado** | `status = published`, `end_date` ya pasó y `confirmed_bookings > 0` | Gris/Slate |
+
+Estos estados son **puramente visuales** (no modifican el enum `retreat_status` de la BD). Los filtros/pestañas del admin permiten filtrar por cada uno de ellos.
+
+### Visualización de roles (admin)
+
+En `/administrator/usuarios`, la columna "Rol" muestra **todos los roles** del usuario como badges individuales (Admin, Organizador, Centro, Asistente). El filtro permite seleccionar usuarios que **tienen** un rol concreto (no excluyente). La tabla incluye **registro** (`profiles.created_at`) y **último acceso** (`last_sign_in_at` de Supabase Auth vía service role).
 
 ### Dashboard del usuario (4 secciones)
 
@@ -640,7 +705,7 @@ El admin tiene además acceso a `/administrator` desde el menú.
 
 ### Precio público (PVP) y reparto (organizador / Retiru)
 
-En el wizard de **Mis eventos** el organizador indica el **PVP por persona** (precio público final que ve el asistente en la ficha). **No hay recargo extra** al asistente: paga exactamente ese importe (o reserva sin pago en el flujo de mínimo viable). Del PVP percibido, **Retiru retiene el 20 %** como comisión de gestión y **el organizador recibe el 80 %** neto (liquidación según acuerdo). El formulario muestra el desglose en tiempo real (`OrganizerPriceBreakdown`).
+En el wizard de **Mis eventos** el organizador indica el **PVP por persona** (precio público final que ve el asistente en la ficha). **No hay recargo extra** al asistente: paga exactamente ese importe (o reserva sin pago en el flujo de mínimo viable). La comisión de Retiru es **escalonada**: 0 % en el primer retiro con reservas pagadas, 10 % en el segundo, 20 % a partir del tercero. Cada retiro mantiene su nivel permanentemente. El formulario muestra el desglose en tiempo real (`OrganizerPriceBreakdown`) según el tier del organizador, obtenido de `GET /api/organizer/commission-tier`.
 
 ### Flujo de reserva con mínimo viable ("crowdfunding de plazas")
 
@@ -678,7 +743,7 @@ El cron `/api/cron/payment-deadlines` (cada hora) gestiona la gracia y cancelaci
 - **Organizador** (`/organizador/[slug]`): perfil público con retiros publicados (en cada retiro del grid solo se muestra valoración si el organizador tiene reseñas)
 - **Buscador** (`/buscar`): búsqueda unificada retiros + centros con filtros (tarjetas de retiro: valoración del organizador cuando aplica)
 - **Blog** (`/blog`, `/blog/[slug]`): artículos desde Supabase
-- **Tienda** (`/tienda`, `/tienda/[slug]`): productos desde Supabase
+- **Tienda** (`/es/tienda`, `/es/tienda/[slug]`; EN: `/en/shop`): productos desde `shop_products`; si el listado público está vacío, **encuesta de interés** (categorías 1–5 + comentario opcional) en `shop_product_interests`. En admin: `/administrator/tienda` muestra agregados y comentarios (`docs/SHOP-SURVEY.md`)
 - **Para centros y organizadores** (`/para-organizadores`): secciones centros + organizadores
 - **Condiciones** (`/condiciones`): modelo de precios transparente (en footer)
 
@@ -701,7 +766,7 @@ El cron `/api/cron/payment-deadlines` (cada hora) gestiona la gracia y cancelaci
 - **Centros** — gestión de centros (buscador, filtros, exportar CSV/Excel, generar descripciones IA, editar, ver ficha pública, despublicar/publicar, aprobar propuestas de usuario `pending_review` → `active` + titular, eliminar)
 - **Claims** — gestión de reclamaciones de centros (aprobar/rechazar)
 - **Mensajes** — moderación de conversaciones usuario-organizador + lectura y respuesta en chats de soporte (como "Andrea")
-- Gestión de tienda (productos, categorías, pedidos)
+- Gestión de tienda (productos, categorías, pedidos) y **resultados de la encuesta** de interés de productos
 - Reembolsos y reporting
 - Acceso en `/administrator` (protegido por middleware + rol)
 

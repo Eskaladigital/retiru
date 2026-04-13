@@ -66,7 +66,7 @@ export default function TerminosPageEn() {
             </div>
 
             <p className="mt-4 text-sm text-muted-foreground">
-              There is no subscription to publish. Retiru retains <strong>20%</strong> of the PVP paid by the guest; the organizer receives <strong>80%</strong> net. See our{' '}
+              There is no subscription to publish. Commission is progressive: <strong>0%</strong> on the first retreat, <strong>10%</strong> on the second, <strong>20%</strong> from the third onward — always on the PVP paid by the guest. See our{' '}
               <Link href="/en/condiciones" className="text-terracotta-600 hover:underline font-medium">Terms &amp; pricing</Link>{' '}
               for detail and examples.
             </p>

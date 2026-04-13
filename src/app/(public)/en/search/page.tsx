@@ -7,6 +7,7 @@
 import { Suspense, useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Flame, MapPin, Search, Star, Tag, Zap } from 'lucide-react';
+import Image from 'next/image';
 import { getCenterTypeLabel, getOrganizerReviewStats, organizerHasRatingToShow } from '@/lib/utils';
 
 const TYPES_FILTER = ['All', 'Retreats', 'Centers'];
@@ -174,7 +175,7 @@ function RetreatCard({ item }: { item: any }) {
     <Link href={`/en/retreat/${item.slug}`} className="group bg-white rounded-2xl overflow-hidden border border-sand-200 transition-all duration-[350ms] hover:shadow-elevated hover:-translate-y-1">
       <div className="relative aspect-[16/10] overflow-hidden">
         {coverImage ? (
-          <img src={coverImage} alt={title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+          <Image src={coverImage} alt={title} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
         ) : (
           <div className="w-full h-full bg-sand-100 flex items-center justify-center text-[#a09383] text-sm">No image</div>
         )}
@@ -229,7 +230,7 @@ function CenterCard({ item }: { item: any }) {
     <Link href={`/en/center/${item.slug}`} className="group bg-white rounded-2xl overflow-hidden border border-sand-200 transition-all duration-[350ms] hover:shadow-elevated hover:-translate-y-1">
       <div className="relative aspect-[16/10] overflow-hidden">
         {imgSrc ? (
-          <img src={imgSrc} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+          <Image src={imgSrc} alt={item.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
         ) : (
           <div className="w-full h-full bg-sand-100 flex items-center justify-center text-[#a09383] text-sm">No image</div>
         )}

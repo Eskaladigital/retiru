@@ -63,6 +63,15 @@ async function main() {
   if (profErr) console.error('Error perfil:', profErr.message);
   else console.log('✓ Perfil admin asegurado');
 
+  // Roles (tabla user_roles)
+  for (const role of ['attendee', 'admin', 'organizer']) {
+    await supabase.from('user_roles').upsert(
+      { user_id: userId, role },
+      { onConflict: 'user_id,role' },
+    );
+  }
+  console.log('✓ Roles asignados (attendee + admin + organizer)');
+
   // 3. Buscar o crear organizer_profile para este usuario
   const { data: existingOrg } = await supabase
     .from('organizer_profiles')

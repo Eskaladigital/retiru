@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Convierte descripciones de retiros de Markdown a HTML en Supabase.
- * Solo toca retiros cuyo contenido NO parece HTML (legacy markdown).
+ * Convierte descripciones de retiros, centros y productos de Markdown a HTML en Supabase.
+ * Solo toca registros cuyo contenido NO parece HTML (legacy markdown / texto plano).
  *
  * Uso:
  *   node scripts/convert-retreat-descriptions-to-html.mjs           # dry-run
@@ -133,63 +133,79 @@ function markdownToHtml(text) {
   return result.join('\n');
 }
 
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+async function convertTable(supabase, { table, label, nameField, fields }) {
+  const { data: rows, error: err } = await supabase
+    .from(table)
+    .select(['id', nameField, 'slug', ...fields].join(', '))
+    .order('created_at', { ascending: false });
+
+  if (err) { console.warn(`⚠️  Tabla ${table} no accesible: ${err.message} — saltando.`); return 0; }
+
+  console.log(`\n📋 ${label}: ${rows.length} registros`);
+  console.log('─'.repeat(60));
+
+  let converted = 0;
+  for (const row of rows) {
+    const updates = {};
+    for (const f of fields) {
+      if (row[f]?.trim() && !contentLooksLikeHtml(row[f])) {
+        updates[f] = markdownToHtml(row[f]);
+      }
+    }
+    if (!Object.keys(updates).length) continue;
+
+    converted++;
+    console.log(`\n🔄 ${row[nameField] || row.slug}`);
+    for (const [f, html] of Object.entries(updates)) {
+      console.log(`   → ${f}: markdown → HTML (${row[f].length} → ${html.length} chars)`);
+      console.log(`   Preview: ${html.slice(0, 120)}...`);
+    }
+
+    if (doUpdate) {
+      updates.updated_at = new Date().toISOString();
+      const { error: upErr } = await supabase.from(table).update(updates).eq('id', row.id);
+      if (upErr) console.error(`   ❌ Error: ${upErr.message}`);
+      else console.log('   ✅ Actualizado en BD');
+    }
+  }
+
+  console.log(`\n  → ${converted} de ${rows.length} ${label.toLowerCase()} con markdown detectado.`);
+  return converted;
+}
+
 // ─── Main ───────────────────────────────────────────────────────────────────
 
 const supabase = createClient(url, key);
-
-const { data: retreats, error } = await supabase
-  .from('retreats')
-  .select('id, title_es, slug, description_es, description_en')
-  .order('created_at', { ascending: false });
-
-if (error) { console.error('Error:', error.message); process.exit(1); }
-
-console.log(`\n📋 Total retiros: ${retreats.length}`);
-console.log(`   Modo: ${doUpdate ? '🔴 ACTUALIZAR BD' : '🟡 DRY-RUN (solo mostrar)'}\n`);
+console.log(`\nModo: ${doUpdate ? '🔴 ACTUALIZAR BD' : '🟡 DRY-RUN (solo mostrar)'}\n`);
 console.log('━'.repeat(70));
 
-let converted = 0;
+let totalConverted = 0;
 
-for (const r of retreats) {
-  const needsEs = r.description_es?.trim() && !contentLooksLikeHtml(r.description_es);
-  const needsEn = r.description_en?.trim() && !contentLooksLikeHtml(r.description_en);
+totalConverted += await convertTable(supabase, {
+  table: 'retreats',
+  label: 'Retiros',
+  nameField: 'title_es',
+  fields: ['description_es', 'description_en'],
+});
 
-  if (!needsEs && !needsEn) continue;
+totalConverted += await convertTable(supabase, {
+  table: 'centers',
+  label: 'Centros',
+  nameField: 'name',
+  fields: ['description_es', 'description_en'],
+});
 
-  converted++;
-  console.log(`\n🔄 ${r.title_es || r.slug}`);
-  if (needsEs) console.log('   → description_es: markdown → HTML');
-  if (needsEn) console.log('   → description_en: markdown → HTML');
-
-  const updates = {};
-  if (needsEs) {
-    const html = markdownToHtml(r.description_es);
-    updates.description_es = html;
-    console.log(`   ES antes (${r.description_es.length} chars) → después (${html.length} chars)`);
-    console.log(`   Preview: ${html.slice(0, 120)}...`);
-  }
-  if (needsEn) {
-    const html = markdownToHtml(r.description_en);
-    updates.description_en = html;
-    console.log(`   EN antes (${r.description_en.length} chars) → después (${html.length} chars)`);
-  }
-
-  if (doUpdate) {
-    updates.updated_at = new Date().toISOString();
-    const { error: upErr } = await supabase
-      .from('retreats')
-      .update(updates)
-      .eq('id', r.id);
-    if (upErr) {
-      console.error(`   ❌ Error: ${upErr.message}`);
-    } else {
-      console.log('   ✅ Actualizado en BD');
-    }
-  }
-}
+totalConverted += await convertTable(supabase, {
+  table: 'shop_products',
+  label: 'Productos tienda',
+  nameField: 'name_es',
+  fields: ['description_es', 'description_en'],
+});
 
 console.log('\n' + '━'.repeat(70));
-console.log(`\n📊 Resultado: ${converted} retiro(s) con markdown detectado de ${retreats.length} total.`);
-if (!doUpdate && converted > 0) {
+console.log(`\n📊 Total: ${totalConverted} registro(s) con markdown detectado.`);
+if (!doUpdate && totalConverted > 0) {
   console.log('   Ejecuta con --update para aplicar los cambios en BD.\n');
 }

@@ -49,22 +49,34 @@ export async function createServerSupabase() {
 }
 
 /**
- * Obtiene el usuario actual para el Header (name, role).
+ * Obtiene el usuario actual para el Header (name, roles[]).
  * Retorna null si no hay sesión.
  */
-export async function getCurrentUserForHeader(): Promise<{ name: string; role: string } | null> {
+export async function getCurrentUserForHeader(): Promise<{ name: string; roles: string[] } | null> {
   try {
     const supabase = await createServerSupabase();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('full_name, role')
-      .eq('id', user.id)
-      .single();
+
+    const [{ data: profile }, { data: userRoles }] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single(),
+      supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id),
+    ]);
+
+    const roles = userRoles && userRoles.length > 0
+      ? userRoles.map((r: { role: string }) => r.role)
+      : ['attendee'];
+
     return {
       name: profile?.full_name || user.email?.split('@')[0] || 'Usuario',
-      role: profile?.role || 'user',
+      roles,
     };
   } catch {
     return null;

@@ -10,14 +10,16 @@ interface UserRow {
   full_name: string;
   avatar_url: string | null;
   phone: string | null;
-  role: string;
+  roles: string[];
   preferred_locale: string;
   bio: string | null;
   created_at: string;
   updated_at: string;
+  /** ISO de Supabase Auth; null si nunca ha iniciado sesión o no hay dato en auth */
+  last_sign_in_at: string | null;
 }
 
-type SortKey = 'full_name' | 'email' | 'role' | 'created_at';
+type SortKey = 'full_name' | 'email' | 'roles' | 'created_at' | 'last_sign_in_at';
 type SortDir = 'asc' | 'desc';
 
 const PAGE_SIZE = 50;
@@ -25,15 +27,24 @@ const PAGE_SIZE = 50;
 const ROLE_BADGE: Record<string, { label: string; cls: string }> = {
   admin: { label: 'Admin', cls: 'bg-red-100 text-red-700' },
   organizer: { label: 'Organizador', cls: 'bg-amber-100 text-amber-700' },
+  center: { label: 'Centro', cls: 'bg-blue-100 text-blue-700' },
   attendee: { label: 'Asistente', cls: 'bg-sand-200 text-[#7a6b5d]' },
 };
+
+const ROLE_PRIORITY: Record<string, number> = { admin: 0, center: 1, organizer: 2, attendee: 3 };
+
+function rolesSortValue(roles: string[]): string {
+  const min = Math.min(...roles.map((r) => ROLE_PRIORITY[r] ?? 9));
+  return String(min).padStart(2, '0') + roles.length;
+}
 
 function getSortValue(u: UserRow, key: SortKey): string {
   switch (key) {
     case 'full_name': return (u.full_name || '').toLowerCase();
     case 'email': return (u.email || '').toLowerCase();
-    case 'role': return u.role || '';
+    case 'roles': return rolesSortValue(u.roles);
     case 'created_at': return u.created_at || '';
+    case 'last_sign_in_at': return u.last_sign_in_at || '';
   }
 }
 
@@ -141,13 +152,14 @@ export function UsuariosTableClient({ users, currentUserId }: { users: UserRow[]
     const words = query.toLowerCase().trim() ? query.toLowerCase().trim().split(/\s+/) : [];
     return users.filter((u) => {
       if (words.length > 0) {
-        const searchable = `${u.full_name || ''} ${u.email || ''} ${u.phone || ''} ${u.role || ''}`
+        const rolesText = u.roles.map((r) => ROLE_BADGE[r]?.label || r).join(' ');
+        const searchable = `${u.full_name || ''} ${u.email || ''} ${u.phone || ''} ${rolesText}`
           .toLowerCase()
           .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
         const normed = words.map(w => w.normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
         if (!normed.every(w => searchable.includes(w))) return false;
       }
-      if (filterRole && u.role !== filterRole) return false;
+      if (filterRole && !u.roles.includes(filterRole)) return false;
       return true;
     });
   }, [users, query, filterRole]);
@@ -155,6 +167,17 @@ export function UsuariosTableClient({ users, currentUserId }: { users: UserRow[]
   const sorted = useMemo(() => {
     const copy = [...filtered];
     copy.sort((a, b) => {
+      if (sortKey === 'last_sign_in_at') {
+        const ta = a.last_sign_in_at ? new Date(a.last_sign_in_at).getTime() : NaN;
+        const tb = b.last_sign_in_at ? new Date(b.last_sign_in_at).getTime() : NaN;
+        const aNull = Number.isNaN(ta);
+        const bNull = Number.isNaN(tb);
+        if (aNull && bNull) return 0;
+        if (aNull) return 1;
+        if (bNull) return -1;
+        const cmp = ta - tb;
+        return sortDir === 'asc' ? cmp : -cmp;
+      }
       const va = getSortValue(a, sortKey);
       const vb = getSortValue(b, sortKey);
       if (va < vb) return sortDir === 'asc' ? -1 : 1;
@@ -170,7 +193,10 @@ export function UsuariosTableClient({ users, currentUserId }: { users: UserRow[]
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
-    else { setSortKey(key); setSortDir('asc'); }
+    else {
+      setSortKey(key);
+      setSortDir(key === 'created_at' || key === 'last_sign_in_at' ? 'desc' : 'asc');
+    }
     setPage(0);
   };
 
@@ -199,6 +225,7 @@ export function UsuariosTableClient({ users, currentUserId }: { users: UserRow[]
           <option value="">Todos los roles</option>
           <option value="admin">Admin</option>
           <option value="organizer">Organizador</option>
+          <option value="center">Centro</option>
           <option value="attendee">Asistente</option>
         </select>
         {hasFilters && (
@@ -220,22 +247,32 @@ export function UsuariosTableClient({ users, currentUserId }: { users: UserRow[]
                 <ThSortable label="Nombre" sortKey="full_name" current={sortKey} dir={sortDir} onSort={handleSort} />
                 <ThSortable label="Email" sortKey="email" current={sortKey} dir={sortDir} onSort={handleSort} />
                 <th className="text-left py-3 px-4 font-semibold text-[#7a6b5d]">Teléfono</th>
-                <ThSortable label="Rol" sortKey="role" current={sortKey} dir={sortDir} onSort={handleSort} align="center" />
+                <ThSortable label="Rol" sortKey="roles" current={sortKey} dir={sortDir} onSort={handleSort} align="center" />
                 <ThSortable label="Registro" sortKey="created_at" current={sortKey} dir={sortDir} onSort={handleSort} />
+                <ThSortable label="Último acceso" sortKey="last_sign_in_at" current={sortKey} dir={sortDir} onSort={handleSort} />
                 <th className="text-right py-3 px-4 font-semibold text-[#a09383] w-24">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {pageData.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-[#999]">
+                  <td colSpan={8} className="py-12 text-center text-[#999]">
                     {hasFilters ? 'No hay usuarios que coincidan con los filtros.' : 'No hay usuarios en la base de datos.'}
                   </td>
                 </tr>
               ) : (
                 pageData.map((u) => {
-                  const badge = ROLE_BADGE[u.role] || ROLE_BADGE.attendee;
+                  const sortedRoles = [...u.roles].sort((a, b) => (ROLE_PRIORITY[a] ?? 9) - (ROLE_PRIORITY[b] ?? 9));
                   const date = u.created_at ? new Date(u.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+                  const lastIn = u.last_sign_in_at
+                    ? new Date(u.last_sign_in_at).toLocaleString('es-ES', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })
+                    : '—';
                   return (
                     <tr key={u.id} className="border-b border-sand-100 hover:bg-sand-50/50 transition-colors">
                       <td className="py-2 px-4">
@@ -255,11 +292,19 @@ export function UsuariosTableClient({ users, currentUserId }: { users: UserRow[]
                       </td>
                       <td className="py-3 px-4 text-[#7a6b5d]">{u.phone || '—'}</td>
                       <td className="py-3 px-4 text-center">
-                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${badge.cls}`}>
-                          {badge.label}
-                        </span>
+                        <div className="flex flex-wrap items-center justify-center gap-1">
+                          {sortedRoles.map((role) => {
+                            const badge = ROLE_BADGE[role] || ROLE_BADGE.attendee;
+                            return (
+                              <span key={role} className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${badge.cls}`}>
+                                {badge.label}
+                              </span>
+                            );
+                          })}
+                        </div>
                       </td>
                       <td className="py-3 px-4 text-[#7a6b5d] text-sm">{date}</td>
+                      <td className="py-3 px-4 text-[#7a6b5d] text-sm whitespace-nowrap">{lastIn}</td>
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <button

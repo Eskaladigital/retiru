@@ -21,12 +21,25 @@ interface Retreat {
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
   published: { label: 'Publicado', color: 'bg-sage-100 text-sage-700' },
+  in_progress: { label: 'En curso', color: 'bg-emerald-100 text-emerald-700' },
+  expired: { label: 'Expirado', color: 'bg-orange-100 text-orange-600' },
+  finished: { label: 'Finalizado', color: 'bg-slate-100 text-slate-600' },
   draft: { label: 'Borrador', color: 'bg-sand-200 text-[#7a6b5d]' },
   pending_review: { label: 'En revisión', color: 'bg-amber-100 text-amber-700' },
   rejected: { label: 'Rechazado', color: 'bg-red-100 text-red-700' },
   cancelled: { label: 'Cancelado', color: 'bg-gray-100 text-gray-500' },
   archived: { label: 'Archivado', color: 'bg-blue-50 text-blue-600' },
 };
+
+function deriveDisplayStatus(r: Retreat): string {
+  if (r.status !== 'published') return r.status;
+  const today = new Date().toISOString().slice(0, 10);
+  const started = (r.start_date ?? '') <= today;
+  const ended = (r.end_date ?? '') < today;
+  if (ended) return r.confirmed_bookings > 0 ? 'finished' : 'expired';
+  if (started) return r.confirmed_bookings > 0 ? 'in_progress' : 'expired';
+  return 'published';
+}
 
 export function MisEventosClient({ retreats: initial }: { retreats: Retreat[] }) {
   const [retreats, setRetreats] = useState(initial);
@@ -84,7 +97,8 @@ export function MisEventosClient({ retreats: initial }: { retreats: Retreat[] })
       {retreats.length > 0 ? (
         <div className="space-y-3">
           {retreats.map((r) => {
-            const s = STATUS_MAP[r.status] || STATUS_MAP.draft;
+            const displaySt = deriveDisplayStatus(r);
+            const s = STATUS_MAP[displaySt] || STATUS_MAP.draft;
             const totalEnrolled = r.confirmed_bookings + r.reserved_bookings;
             const occupancy = r.max_attendees ? Math.round((totalEnrolled / r.max_attendees) * 100) : 0;
             const confirmedPct = r.max_attendees ? Math.round((r.confirmed_bookings / r.max_attendees) * 100) : 0;

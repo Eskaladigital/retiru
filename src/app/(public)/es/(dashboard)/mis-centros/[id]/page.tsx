@@ -34,13 +34,14 @@ export default async function EditarCentroPage({ params }: Props) {
   if (!center) notFound();
 
   // Verify ownership
-  const { data: profile } = await admin
-    .from('profiles')
+  const { data: adminRole } = await admin
+    .from('user_roles')
     .select('role')
-    .eq('id', user.id)
-    .single();
+    .eq('user_id', user.id)
+    .eq('role', 'admin')
+    .maybeSingle();
 
-  if (center.claimed_by !== user.id && profile?.role !== 'admin') {
+  if (center.claimed_by !== user.id && !adminRole) {
     redirect('/es/mis-centros');
   }
 

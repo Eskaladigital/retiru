@@ -298,7 +298,7 @@ export default function EventsClientEN({ retreats, categories, destinations }: E
 
       <div className="mt-6 bg-gradient-to-br from-terracotta-600 to-terracotta-700 rounded-2xl p-8 md:p-10 text-white text-center">
         <h2 className="font-serif text-2xl mb-3">Do you organize yoga, meditation or ayurveda retreats?</h2>
-        <p className="text-white/80 max-w-lg mx-auto mb-6">Publish with no subscription: 20% of the PVP to Retiru and 80% net to you. Full management panel.</p>
+        <p className="text-white/80 max-w-lg mx-auto mb-6">Publish with no subscription: first retreat free (0%), second at 10%, then 20% of the PVP. Full management panel.</p>
         <Link href="/en/for-organizers#organizers" className="inline-flex bg-white text-terracotta-700 font-bold px-8 py-3 rounded-xl hover:-translate-y-0.5 hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)] transition-all text-sm">Start for free</Link>
       </div>
     </div>

@@ -1,8 +1,22 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CENTER_FILTER_OPTIONS_ES } from '@/lib/utils';
+import { contentLooksLikeHtml } from '@/lib/sanitize-rich-html';
+import { markdownToHtml, plainBlogBodyToMarkdown } from '@/components/ui/markdown-content';
+
+const TinyRichTextEditor = dynamic(
+  () => import('@/components/editor/TinyRetreatDescriptionEditor').then((m) => m.TinyRichTextEditor),
+  { ssr: false, loading: () => <div className="min-h-[240px] bg-sand-100 animate-pulse rounded-xl border border-sand-200" /> },
+);
+
+function ensureHtmlForEditor(text: string): string {
+  if (!text?.trim()) return '';
+  if (contentLooksLikeHtml(text)) return text;
+  return markdownToHtml(plainBlogBodyToMarkdown(text));
+}
 
 interface Props {
   center: any;
@@ -22,8 +36,8 @@ export function EditarCentroForm({ center }: Props) {
 
   const [form, setForm] = useState({
     name: center.name || '',
-    description_es: center.description_es || '',
-    description_en: center.description_en || '',
+    description_es: ensureHtmlForEditor(center.description_es || ''),
+    description_en: ensureHtmlForEditor(center.description_en || ''),
     type: center.type || 'yoga',
     cover_url: center.cover_url || '',
     logo_url: center.logo_url || '',
@@ -150,12 +164,26 @@ export function EditarCentroForm({ center }: Props) {
           </div>
           <div>
             <label className={labelCls}>Descripción (ES) *</label>
-            <textarea rows={6} value={form.description_es} onChange={(e) => set('description_es', e.target.value)} className={textareaCls} placeholder="Describe tu centro, servicios, filosofía..." />
-            <p className="text-xs text-[#a09383] mt-1">{form.description_es.length} caracteres</p>
+            <TinyRichTextEditor
+              id="center-desc-es"
+              value={form.description_es}
+              onChange={(html) => set('description_es', html)}
+              placeholder="Describe tu centro, servicios, filosofía..."
+              height={280}
+              language="es"
+            />
+            <p className="text-xs text-[#a09383] mt-1">Editor visual. Usa encabezados, listas y negritas para un texto atractivo.</p>
           </div>
           <div>
             <label className={labelCls}>Descripción (EN)</label>
-            <textarea rows={4} value={form.description_en} onChange={(e) => set('description_en', e.target.value)} className={textareaCls} placeholder="English description (optional)" />
+            <TinyRichTextEditor
+              id="center-desc-en"
+              value={form.description_en}
+              onChange={(html) => set('description_en', html)}
+              placeholder="English description (optional)"
+              height={220}
+              language="en"
+            />
           </div>
         </div>
       </section>

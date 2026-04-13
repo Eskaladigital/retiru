@@ -54,11 +54,19 @@ export async function GET(request: NextRequest) {
     }
 
     if (data?.user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role, full_name, created_at')
-        .eq('id', data.user.id)
-        .single();
+      const [{ data: profile }, { data: adminRole }] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('full_name, created_at')
+          .eq('id', data.user.id)
+          .single(),
+        supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', data.user.id)
+          .eq('role', 'admin')
+          .maybeSingle(),
+      ]);
 
       const isNewUser = profile?.created_at &&
         (Date.now() - new Date(profile.created_at).getTime()) < 5 * 60 * 1000;
@@ -75,7 +83,7 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      if (profile?.role === 'admin') {
+      if (adminRole) {
         return NextResponse.redirect(new URL('/administrator', request.url));
       }
     }

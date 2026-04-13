@@ -28,8 +28,8 @@ function LoginForm() {
         return;
       }
       if (data.user) {
-        const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).single();
-        if (profile?.role === 'admin') {
+        const { data: adminRole } = await supabase.from('user_roles').select('role').eq('user_id', data.user.id).eq('role', 'admin').maybeSingle();
+        if (adminRole) {
           router.push('/administrator');
           router.refresh();
           return;

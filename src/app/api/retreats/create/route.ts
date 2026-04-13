@@ -1,6 +1,7 @@
 // POST /api/retreats/create — Crear retiro (cualquier usuario autenticado)
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
+import { getCommissionTier } from '@/lib/utils';
 
 function slugify(text: string): string {
   return text
@@ -50,40 +51,18 @@ export async function POST(request: NextRequest) {
 
     const admin = createAdminSupabase();
 
-    // Asegurar que el usuario tiene organizer_profile
-    let { data: orgProfile } = await admin
+    // Verificar que el usuario tiene organizer_profile con contrato aceptado
+    const { data: orgProfile } = await admin
       .from('organizer_profiles')
-      .select('id')
+      .select('id, contract_accepted_at')
       .eq('user_id', user.id)
       .single();
 
-    if (!orgProfile) {
-      const { data: profile } = await admin
-        .from('profiles')
-        .select('full_name')
-        .eq('id', user.id)
-        .single();
-
-      const businessName = profile?.full_name || user.email?.split('@')[0] || 'Organizador';
-      const orgSlug = slugify(businessName) + '-' + Date.now().toString(36);
-
-      const { data: newOrg, error: orgErr } = await admin
-        .from('organizer_profiles')
-        .insert({
-          user_id: user.id,
-          business_name: businessName,
-          slug: orgSlug,
-          status: 'verified',
-          verified_at: new Date().toISOString(),
-          languages: ['es'],
-        })
-        .select('id')
-        .single();
-
-      if (orgErr) {
-        return NextResponse.json({ error: `Error creando perfil organizador: ${orgErr.message}` }, { status: 500 });
-      }
-      orgProfile = newOrg;
+    if (!orgProfile || !orgProfile.contract_accepted_at) {
+      return NextResponse.json(
+        { error: 'Debes aceptar el contrato de organizador antes de crear eventos. Ve a "Mis eventos" para aceptarlo.' },
+        { status: 403 },
+      );
     }
 
     const retreatSlug = slugify(title_es) + '-' + Date.now().toString(36);
@@ -96,6 +75,16 @@ export async function POST(request: NextRequest) {
       .eq('status', 'published');
 
     const isVerifiedOrganizer = (publishedCount ?? 0) > 0;
+
+    // Tiered commission: count retreats with paid bookings to determine tier
+    const { count: paidRetreatsCount } = await admin
+      .from('retreats')
+      .select('id', { count: 'exact', head: true })
+      .eq('organizer_id', orgProfile!.id)
+      .in('status', ['published', 'archived', 'cancelled'])
+      .gt('confirmed_bookings', 0);
+
+    const commissionPercent = getCommissionTier(paidRetreatsCount ?? 0);
 
     const insertData: Record<string, unknown> = {
       organizer_id: orgProfile!.id,
@@ -113,6 +102,7 @@ export async function POST(request: NextRequest) {
       start_date,
       end_date,
       total_price: parseFloat(total_price),
+      commission_percent: commissionPercent,
       max_attendees: maxN,
       min_attendees: minN,
       destination_id: destination_id || null,

@@ -1,6 +1,7 @@
 // /es/retiros-retiru/[slug] — Retiros filtrados por destino (datos reales de Supabase)
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { MapPin, Star, CalendarDays, Users } from 'lucide-react';
 import EventosSearch from '@/components/home/EventosSearch';
 import { getDestinationsWithRetreats, getDestinationBySlug, getPublishedRetreats } from '@/lib/data';
@@ -52,7 +53,7 @@ export default async function RetirosPorDestinoPage({ params }: { params: Promis
         <div className="absolute inset-0 z-0">
           {dest.cover_image_url ? (
             <>
-              <img src={dest.cover_image_url} alt={`Retiros en ${dest.name_es}`} className="w-full h-full object-cover" />
+              <Image src={dest.cover_image_url} alt={`Retiros en ${dest.name_es}`} fill priority className="object-cover" sizes="100vw" />
               <div className="absolute inset-0 bg-gradient-to-r from-[rgba(254,253,251,0.95)] via-[rgba(254,253,251,0.85)] to-[rgba(254,253,251,0.2)] max-md:bg-gradient-to-b max-md:from-[rgba(254,253,251,0.93)] max-md:to-[rgba(254,253,251,0.4)]" />
             </>
           ) : (
@@ -78,6 +79,20 @@ export default async function RetirosPorDestinoPage({ params }: { params: Promis
           Todos los retiros
         </Link>
 
+        {(() => {
+          const catMap = new Map<string, { slug: string; name: string }>();
+          retreats.forEach(r => r.categories?.forEach((c: any) => { if (!catMap.has(c.slug)) catMap.set(c.slug, { slug: c.slug, name: c.name_es }); }));
+          const cats = Array.from(catMap.values());
+          return cats.length > 0 ? (
+            <div className="flex flex-wrap gap-2 mb-8">
+              <span className="text-xs text-muted-foreground self-center mr-1">Filtrar por categoría:</span>
+              {cats.map(c => (
+                <Link key={c.slug} href={`/es/retiros-${c.slug}/${slug}`} className="text-xs font-medium px-3 py-1.5 rounded-full bg-sand-100 text-[#7a6b5d] border border-sand-200 hover:bg-sand-200 transition-colors">{c.name}</Link>
+              ))}
+            </div>
+          ) : null;
+        })()}
+
         {retreats.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-4xl mb-4">🔍</p>
@@ -101,7 +116,7 @@ export default async function RetirosPorDestinoPage({ params }: { params: Promis
                 >
                   <div className="relative aspect-[16/10] overflow-hidden bg-sand-100">
                     {coverImg ? (
-                      <img src={coverImg} alt={r.title_es} loading="lazy" className="w-full h-full object-cover transition-transform duration-[600ms] group-hover:scale-105" />
+                      <Image src={coverImg} alt={r.title_es} fill loading="lazy" className="object-cover transition-transform duration-[600ms] group-hover:scale-105" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-4xl text-sand-300">🧘</div>
                     )}

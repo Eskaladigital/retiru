@@ -128,23 +128,23 @@ Las listas filtran por BD pero **no tienen contenido editorial único**. Para SE
 3. ~~**Alto**: Conectar centros-retiru/[slug] y retiros-retiru/[slug] a Supabase (eliminar datos hardcodeados)~~ ✅ Hecho.
 4. ~~**Alto**: Completar sitemap bilingüe con centros por provincia, retiros por destino, organizadores, productos (~1.956 URLs)~~ ✅ Hecho.
 5. ~~**Alto**: Generación estática condicional — solo generar páginas de provincia/destino con contenido real~~ ✅ Hecho.
-6. **Alto**: JSON-LD LocalBusiness en centro/[slug].
-7. **Alto**: Párrafo introductorio por ciudad en retiros-retiru y centros-retiru.
-8. **Medio**: Crear landings por tipo+ciudad (centros-yoga/[slug], retiros-yoga/[slug], etc.)
-9. **Medio**: JSON-LD ItemList en listas por ciudad.
-10. **Medio**: FAQ por destino + schema FAQPage.
+6. ~~**Alto**: JSON-LD LocalBusiness en centro/[slug]~~ ✅ Hecho.
+7. ~~**Alto**: Párrafo introductorio por ciudad en retiros-retiru y centros-retiru~~ ✅ Hecho — contenido generado por IA en BD.
+8. ~~**Medio**: Crear landings por tipo+ciudad (centros-yoga/[slug], retiros-yoga/[slug], etc.)~~ ✅ Implementado.
+9. ~~**Medio**: JSON-LD ItemList en listas por ciudad~~ ✅ Implementado.
+10. ~~**Medio**: FAQ por destino + schema FAQPage~~ ✅ Implementado.
 11. **Medio**: OG images dinámicas por centro (retiro ya tiene).
-12. **Bajo**: JSON-LD Article en blog.
+12. ~~**Bajo**: JSON-LD Article en blog~~ ✅ Hecho.
 
 ---
 
 ## 6. Fuentes de contenido único
 
-Para no duplicar contenido entre landings:
+Contenido diferenciador almacenado en BD (generado con IA via `scripts/generate-seo-content.mjs`):
 
-- **BD**: tabla `destinations` o `cities` con campos `seo_title`, `seo_description`, `intro_text`, `faq_json`.
-- **CMS**: si se usa un CMS, gestionar textos por destino.
-- **Archivos**: `content/destinos/[slug].md` con frontmatter (title, description, intro, faq).
+- **Categorías** (`categories`): `intro_es`, `intro_en`, `meta_title_*`, `meta_description_*`, `faq` (JSONB). Migraciones 028.
+- **Destinos** (`destinations`): `intro_es`, `intro_en`, `meta_title_*`, `meta_description_*`, `faq` (JSONB). Migraciones original + 029.
+- **Combinaciones** (categoría+destino, tipo+provincia): contenido combinado de ambas fuentes en la página.
 
 ---
 
@@ -165,6 +165,10 @@ El sitemap se genera en build time con ISR (`revalidate = 3600`). Genera URLs **
 | Destinos | `destinations` (active) | `/es/destinos/[slug]` | `/en/destinations/[slug]` | Siempre |
 | Organizadores | `organizer_profiles` (verified) | `/es/organizador/[slug]` | `/en/organizer/[slug]` | Siempre |
 | Productos | `products` (active) | `/es/tienda/[slug]` | `/en/shop/[slug]` | Siempre |
+| Retiros por categoría | `getCategoriesWithRetreats()` | `/es/retiros-[cat]` | `/en/retreats-[cat]` | Solo categorías con retiros |
+| Retiros cat+destino | `getCategoryDestinationPairs()` | `/es/retiros-[cat]/[dest]` | `/en/retreats-[cat]/[dest]` | Solo pares con retiros |
+| Centros por tipo | Fijo (3 tipos) | `/es/centros-[type]` | `/en/centers-[type]` | Siempre |
+| Centros tipo+provincia | `getCenterTypeProvincePairs()` | `/es/centros-[type]/[prov]` | `/en/centers-[type]/[prov]` | Solo pares con centros |
 
 Todas las entradas incluyen `alternates` con hreflang ES/EN.
 
@@ -180,8 +184,11 @@ Así no se generan páginas vacías ("thin content") en el deploy.
 
 ## 8. Resumen
 
-- **Listas**: filtran por BD pero necesitan contenido editorial único (intro, FAQ, tips) y schema ItemList.
-- **Fichas**: retiros y centros tienen buen contenido; falta JSON-LD y OG dinámico.
-- **Destinos**: sin metadata y sin contenido único; prioridad alta.
-- **Blog**: contenido editorial; falta schema Article y metadata por artículo.
-- **Sitemap**: ✅ Completo y bilingüe (~1.956 URLs), con generación condicional.
+- **Listas por destino/provincia**: ✅ Contenido editorial (intro, FAQ) generado por IA en BD, schema ItemList.
+- **Landings por categoría**: ✅ `/es/retiros-yoga`, `/es/retiros-meditacion`, etc. con intro, FAQ, destinos, JSON-LD.
+- **Landings categoría+destino**: ✅ `/es/retiros-yoga/ibiza` con contenido combinado, FAQ, JSON-LD.
+- **Landings centros por tipo**: ✅ `/es/centros-yoga`, `/es/centros-meditacion`, `/es/centros-ayurveda` con provincias, JSON-LD.
+- **Landings tipo+provincia**: ✅ `/es/centros-yoga/madrid` con listado filtrado, JSON-LD.
+- **Fichas**: ✅ JSON-LD Event, LocalBusiness, Product, BlogPosting, BreadcrumbList.
+- **Sitemap**: ✅ Completo y bilingüe, con todas las landings programáticas incluidas.
+- **Internal linking**: ✅ Home enlaza a categorías, categorías enlazan a destinos, breadcrumbs en todas las landings.

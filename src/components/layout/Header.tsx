@@ -16,7 +16,7 @@ import LocaleSwitchLink from '@/components/layout/LocaleSwitchLink';
 
 interface HeaderProps {
   locale: Locale;
-  user?: { name: string; role: string } | null;
+  user?: { name: string; roles: string[] } | null;
 }
 
 export default function Header({ locale, user }: HeaderProps) {
@@ -107,7 +107,7 @@ export default function Header({ locale, user }: HeaderProps) {
           <Link href={`${prefix}/blog`} className="btn-ghost text-sm">
             Blog
           </Link>
-          {user?.role === 'admin' && (
+          {user?.roles?.includes('admin') && (
             <Link href="/administrator" className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-terracotta-600 hover:bg-terracotta-50 hover:text-terracotta-700 transition-colors">
               <Shield size={14} /> Admin
             </Link>
@@ -148,7 +148,7 @@ export default function Header({ locale, user }: HeaderProps) {
                     <span className="text-base w-5">📅</span> {locale === 'es' ? 'Mis eventos' : 'My events'}
                   </Link>
                   <hr className="my-1 border-sand-100" />
-                  {user.role === 'admin' && (
+                  {user.roles?.includes('admin') && (
                     <Link href="/administrator" className="flex items-center gap-2 px-4 py-2.5 text-sm text-terracotta-600 hover:bg-terracotta-50" onClick={() => setUserMenuOpen(false)}>
                       <Shield size={14} /> Admin
                     </Link>
@@ -237,7 +237,7 @@ export default function Header({ locale, user }: HeaderProps) {
                 <span className="w-9 h-9 rounded-xl bg-sand-100 flex items-center justify-center"><BookOpen size={17} className="text-sand-600" /></span>
                 Blog
               </Link>
-              {user?.role === 'admin' && (
+              {user?.roles?.includes('admin') && (
                 <Link href="/administrator" className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-terracotta-50 text-terracotta-600 font-semibold transition-colors text-[15px]" onClick={closeMenu}>
                   <span className="w-9 h-9 rounded-xl bg-terracotta-50 flex items-center justify-center"><Shield size={17} className="text-terracotta-600" /></span>
                   Admin
@@ -274,7 +274,7 @@ export default function Header({ locale, user }: HeaderProps) {
                     <span className="text-base">📅</span> {locale === 'es' ? 'Mis eventos' : 'My events'}
                   </Link>
                   <hr className="my-1 border-sand-100" />
-                  {user.role === 'admin' && (
+                  {user.roles?.includes('admin') && (
                     <Link href="/administrator" className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-terracotta-50 text-terracotta-600 transition-colors text-[15px]" onClick={closeMenu}>
                       <Shield size={17} /> Admin
                     </Link>

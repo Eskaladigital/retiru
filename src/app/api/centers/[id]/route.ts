@@ -29,14 +29,15 @@ export async function PATCH(
       return NextResponse.json({ error: 'Centro no encontrado' }, { status: 404 });
     }
 
-    const { data: profile } = await admin
-      .from('profiles')
+    const { data: adminRole } = await admin
+      .from('user_roles')
       .select('role')
-      .eq('id', user.id)
-      .single();
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
 
     const isOwner = center.claimed_by === user.id;
-    const isAdmin = profile?.role === 'admin';
+    const isAdmin = !!adminRole;
 
     if (!isOwner && !isAdmin) {
       return NextResponse.json({ error: 'No tienes permiso para editar este centro' }, { status: 403 });

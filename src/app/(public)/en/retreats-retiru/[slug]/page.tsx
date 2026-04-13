@@ -1,9 +1,10 @@
 // /en/retreats-retiru/[slug] — Retreats filtered by destination (real Supabase data)
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { MapPin, Star, CalendarDays, Users } from 'lucide-react';
 import { getDestinationsWithRetreats, getDestinationBySlug, getPublishedRetreats } from '@/lib/data';
-import { getOrganizerReviewStats, organizerHasRatingToShow } from '@/lib/utils';
+import { getOrganizerReviewStats, organizerHasRatingToShow, CATEGORY_SLUG_EN } from '@/lib/utils';
 import { generatePageMetadata, jsonLdItemList, jsonLdScript } from '@/lib/seo';
 
 export const revalidate = 3600;
@@ -55,6 +56,20 @@ export default async function RetreatsByDestinationPageEN({ params }: { params: 
       <h1 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground mb-2">Retreats in {destName}</h1>
       <p className="text-sm text-[#a09383] mb-6">{total} retreat{total !== 1 ? 's' : ''} in {destName}</p>
 
+      {(() => {
+        const catMap = new Map<string, { slug: string; name: string }>();
+        retreats.forEach(r => r.categories?.forEach((c: any) => { if (!catMap.has(c.slug)) catMap.set(c.slug, { slug: c.slug, name: c.name_en || c.name_es }); }));
+        const cats = Array.from(catMap.values());
+        return cats.length > 0 ? (
+          <div className="flex flex-wrap gap-2 mb-8">
+            <span className="text-xs text-muted-foreground self-center mr-1">Filter by category:</span>
+            {cats.map(c => (
+              <Link key={c.slug} href={`/en/retreats-${CATEGORY_SLUG_EN[c.slug] || c.slug}/${slug}`} className="text-xs font-medium px-3 py-1.5 rounded-full bg-sand-100 text-[#7a6b5d] border border-sand-200 hover:bg-sand-200 transition-colors">{c.name}</Link>
+            ))}
+          </div>
+        ) : null;
+      })()}
+
       {retreats.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-4xl mb-4">🔍</p>
@@ -77,7 +92,7 @@ export default async function RetreatsByDestinationPageEN({ params }: { params: 
               >
                 <div className="relative aspect-[16/10] overflow-hidden bg-sand-100">
                   {coverImg ? (
-                    <img src={coverImg} alt={r.title_en || r.title_es} loading="lazy" className="w-full h-full object-cover transition-transform duration-[600ms] group-hover:scale-105" />
+                    <Image src={coverImg} alt={r.title_en || r.title_es} fill loading="lazy" className="object-cover transition-transform duration-[600ms] group-hover:scale-105" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-4xl text-sand-300">🧘</div>
                   )}

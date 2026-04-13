@@ -6,7 +6,7 @@ export type Locale = 'es' | 'en';
 
 // ─── Enums ─────────────────────────────────────────────────────────────────
 
-export type UserRole = 'attendee' | 'organizer' | 'admin';
+export type UserRole = 'attendee' | 'organizer' | 'center' | 'admin';
 export type OrganizerStatus = 'pending' | 'verified' | 'suspended' | 'rejected';
 export type RetreatStatus = 'draft' | 'pending_review' | 'published' | 'rejected' | 'archived' | 'cancelled';
 export type RetreatConfirmationType = 'automatic' | 'manual';
@@ -38,7 +38,7 @@ export type CenterType = 'yoga' | 'meditation' | 'ayurveda';
 export type ProductStatus = 'active' | 'draft' | 'out_of_stock';
 export type OrderStatus = 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
 export type InvoiceStatus = 'draft' | 'issued' | 'paid' | 'voided';
-export type VerificationStep = 'personal_data' | 'identity_doc' | 'tax_info' | 'bank_info';
+export type VerificationStep = 'identity_doc' | 'economic_activity' | 'insurance' | 'tax_info' | 'bank_info';
 export type VerificationStepStatus = 'pending' | 'submitted' | 'in_review' | 'approved' | 'rejected';
 
 // ─── Profile ───────────────────────────────────────────────────────────────
@@ -49,11 +49,20 @@ export interface Profile {
   full_name: string;
   avatar_url: string | null;
   phone: string | null;
+  /** @deprecated Usar `roles` (array). Se mantiene por compatibilidad con código legacy. */
   role: UserRole;
+  roles: UserRole[];
   preferred_locale: Locale;
   bio: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface UserRoleRow {
+  id: string;
+  user_id: string;
+  role: UserRole;
+  created_at: string;
 }
 
 // ─── Organizer ─────────────────────────────────────────────────────────────
@@ -77,6 +86,7 @@ export interface OrganizerProfile {
   tax_address: string | null;
   iban: string | null;
   status: OrganizerStatus;
+  contract_accepted_at: string | null;
   id_document_url: string | null;
   verified_at: string | null;
   rejection_reason: string | null;
@@ -100,8 +110,15 @@ export interface Category {
   slug: string;
   description_es: string | null;
   description_en: string | null;
+  intro_es: string | null;
+  intro_en: string | null;
+  meta_title_es: string | null;
+  meta_title_en: string | null;
+  meta_description_es: string | null;
+  meta_description_en: string | null;
   icon: string | null;
   cover_image_url: string | null;
+  faq: DestinationFAQ[];
   sort_order: number;
   is_active: boolean;
 }
@@ -117,6 +134,10 @@ export interface Destination {
   description_en: string | null;
   intro_es: string | null;
   intro_en: string | null;
+  meta_title_es: string | null;
+  meta_title_en: string | null;
+  meta_description_es: string | null;
+  meta_description_en: string | null;
   cover_image_url: string | null;
   country: string;
   region: string | null;
@@ -389,8 +410,10 @@ export interface OrganizerVerificationStep {
   step: VerificationStep;
   status: VerificationStepStatus;
   data: Record<string, unknown>;
+  file_url: string | null;
   submitted_at: string | null;
   reviewed_at: string | null;
+  reviewed_by: string | null;
   notes: string | null;
   created_at: string;
 }

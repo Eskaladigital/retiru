@@ -12,7 +12,7 @@ import SupportChatWidget from '@/components/chat/SupportChatWidget';
 import type { Locale } from '@/i18n/config';
 
 interface PublicShellProps {
-  user: { name: string; role: string } | null;
+  user: { name: string; roles: string[] } | null;
   children: React.ReactNode;
 }
 

@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
 import { sendRetreatPendingReviewEmail, sendRetreatCancelledToAttendeeEmail } from '@/lib/email';
+import { getCommissionTier } from '@/lib/utils';
 
 async function getOwnership(id: string) {
   const supabase = await createServerSupabase();
@@ -172,6 +173,17 @@ export async function PATCH(
         return NextResponse.json({ error: 'El máximo no puede ser menor que el mínimo de plazas' }, { status: 400 });
       }
     }
+    // Recalculate commission when total_price changes (trigger handles fee derivation)
+    if (total_price !== undefined) {
+      const { count: paidRetreatsCount } = await admin
+        .from('retreats')
+        .select('id', { count: 'exact', head: true })
+        .eq('organizer_id', orgProfile.id)
+        .in('status', ['published', 'archived', 'cancelled'])
+        .gt('confirmed_bookings', 0);
+      updateData.commission_percent = getCommissionTier(paidRetreatsCount ?? 0);
+    }
+
     if (destination_id !== undefined) updateData.destination_id = destination_id || null;
     if (address !== undefined) updateData.address = address || null;
     if (confirmation_type !== undefined) updateData.confirmation_type = confirmation_type;

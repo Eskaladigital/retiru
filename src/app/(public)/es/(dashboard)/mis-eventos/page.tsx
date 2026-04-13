@@ -2,6 +2,8 @@
 import { redirect } from 'next/navigation';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
 import { MisEventosClient } from './MisEventosClient';
+import { ContratoOrganizador } from './ContratoOrganizador';
+import { VerificacionBanner } from './VerificacionBanner';
 
 export default async function MisEventosPage() {
   const supabase = await createServerSupabase();
@@ -12,9 +14,31 @@ export default async function MisEventosPage() {
 
   const { data: orgProfile } = await admin
     .from('organizer_profiles')
-    .select('id')
+    .select('id, status, contract_accepted_at')
     .eq('user_id', user.id)
     .single();
+
+  // No tiene organizer_profile o no ha aceptado contrato → pantalla de contrato
+  if (!orgProfile || !orgProfile.contract_accepted_at) {
+    return <ContratoOrganizador />;
+  }
+
+  // Cargar pasos de verificación para el banner
+  let verificationProgress = { submitted: 0, approved: 0, total: 5 };
+  if (orgProfile.status !== 'verified') {
+    const { data: steps } = await admin
+      .from('organizer_verification_steps')
+      .select('status')
+      .eq('organizer_id', orgProfile.id);
+
+    if (steps) {
+      verificationProgress = {
+        submitted: steps.filter((s: { status: string }) => s.status === 'submitted' || s.status === 'in_review' || s.status === 'approved').length,
+        approved: steps.filter((s: { status: string }) => s.status === 'approved').length,
+        total: steps.length,
+      };
+    }
+  }
 
   let retreats: any[] = [];
   if (orgProfile) {
@@ -33,7 +57,6 @@ export default async function MisEventosPage() {
     retreats = data || [];
   }
 
-  // Count reserved_no_payment bookings per retreat
   const retreatIds = retreats.map((r: any) => r.id);
   const reservedMap: Record<string, number> = {};
   if (retreatIds.length > 0) {
@@ -62,5 +85,15 @@ export default async function MisEventosPage() {
     cover: r.retreat_images?.find((i: any) => i.is_cover)?.url || r.retreat_images?.[0]?.url || null,
   }));
 
-  return <MisEventosClient retreats={list} />;
+  return (
+    <div>
+      {orgProfile.status !== 'verified' && (
+        <VerificacionBanner
+          organizerStatus={orgProfile.status}
+          progress={verificationProgress}
+        />
+      )}
+      <MisEventosClient retreats={list} />
+    </div>
+  );
 }

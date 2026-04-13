@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     default: 'Retiru — Yoga, meditation & ayurveda retreats and centers',
     template: '%s | Retiru',
   },
-  description: 'Discover and book yoga, meditation and ayurveda retreats and events in Spain. Center directory and shop. Organizers: no subscription; 20% platform fee on the PVP (80% net to you).',
+  description: 'Discover and book yoga, meditation and ayurveda retreats and events in Spain. Center directory and shop. Organizers: no subscription; first retreat free, then 10% and 20% on the PVP.',
   metadataBase: new URL(SITE_URL),
   applicationName: 'Retiru',
   authors: [{ name: 'Retiru', url: SITE_URL }],

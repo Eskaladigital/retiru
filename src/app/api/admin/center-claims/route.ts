@@ -2,14 +2,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
 import { sendClaimApprovedEmail, sendClaimRejectedEmail } from '@/lib/email';
+import { assignRole } from '@/lib/roles';
 
 export async function POST(request: NextRequest) {
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'admin') {
+  const { data: adminRole } = await supabase.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').maybeSingle();
+  if (!adminRole) {
     return NextResponse.json({ error: 'Solo administradores' }, { status: 403 });
   }
 
@@ -76,6 +77,7 @@ export async function POST(request: NextRequest) {
       .from('centers')
       .update({ claimed_by: claim.user_id, updated_at: now })
       .eq('id', claim.center_id);
+    await assignRole(admin, claim.user_id, 'center');
   } else if (claim.status === 'approved' && (action === 'reject' || action === 'revert_to_pending')) {
     await admin
       .from('centers')
@@ -134,8 +136,8 @@ export async function GET(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'admin') {
+  const { data: adminRole } = await supabase.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').maybeSingle();
+  if (!adminRole) {
     return NextResponse.json({ error: 'Solo administradores' }, { status: 403 });
   }
 

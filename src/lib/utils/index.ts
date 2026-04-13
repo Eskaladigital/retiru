@@ -51,14 +51,24 @@ export function formatDateRange(start: string, end: string, locale: 'es' | 'en' 
   return `${formatShortDate(start, locale)} - ${formatShortDate(end, locale)} ${e.getFullYear()}`;
 }
 
-/** Calculate platform fee (20%) */
-export function calculatePlatformFee(totalPrice: number): number {
-  return Math.round(totalPrice * 0.2 * 100) / 100;
+/** Calculate platform fee based on commission percent (default 20%) */
+export function calculatePlatformFee(totalPrice: number, commissionPercent: number = 20): number {
+  return Math.round(totalPrice * (commissionPercent / 100) * 100) / 100;
 }
 
-/** Calculate organizer amount (80%) */
-export function calculateOrganizerAmount(totalPrice: number): number {
-  return Math.round(totalPrice * 0.8 * 100) / 100;
+/** Calculate organizer amount based on commission percent (default 20%) */
+export function calculateOrganizerAmount(totalPrice: number, commissionPercent: number = 20): number {
+  return Math.round(totalPrice * (1 - commissionPercent / 100) * 100) / 100;
+}
+
+/**
+ * Tiered commission: 0% for 1st retreat with paid bookings,
+ * 10% for 2nd, 20% for 3rd onward.
+ */
+export function getCommissionTier(paidRetreatsCount: number): number {
+  if (paidRetreatsCount === 0) return 0;
+  if (paidRetreatsCount === 1) return 10;
+  return 20;
 }
 
 /** Generate slug from text */
@@ -147,8 +157,15 @@ export function filterPublicRetreatCategories(categories: Category[]): Category[
         slug: 'ayurveda',
         description_es: null,
         description_en: null,
+        intro_es: null,
+        intro_en: null,
+        meta_title_es: null,
+        meta_title_en: null,
+        meta_description_es: null,
+        meta_description_en: null,
         icon: '🪷',
         cover_image_url: null,
+        faq: [],
         sort_order: 11,
         is_active: true,
       };
@@ -191,6 +208,40 @@ export function getCenterTypeLabel(type: string | null | undefined, locale: 'es'
   const labels = locale === 'es' ? CENTER_TYPE_LABELS_ES : CENTER_TYPE_LABELS_EN;
   return labels[type] ?? type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
+
+// ─── Mapas de slugs para landings SEO programáticas ──────────────────────
+
+/** category.slug → segmento EN para la URL (e.g. 'meditacion' → 'meditation') */
+export const CATEGORY_SLUG_EN: Record<string, string> = {
+  yoga: 'yoga',
+  meditacion: 'meditation',
+  ayurveda: 'ayurveda',
+  detox: 'detox',
+  naturaleza: 'nature',
+  gastronomia: 'gastronomy',
+  wellness: 'wellness',
+  aventura: 'adventure',
+  silencio: 'silent',
+  'arte-creatividad': 'art-creativity',
+  'desarrollo-personal': 'personal-growth',
+};
+
+/** Inverso: segmento EN → category.slug */
+export const CATEGORY_SLUG_FROM_EN: Record<string, string> = Object.fromEntries(
+  Object.entries(CATEGORY_SLUG_EN).map(([es, en]) => [en, es]),
+);
+
+/** center.type (BD) → segmento URL ES (e.g. 'meditation' → 'meditacion') */
+export const CENTER_TYPE_URL_ES: Record<string, string> = {
+  yoga: 'yoga',
+  meditation: 'meditacion',
+  ayurveda: 'ayurveda',
+};
+
+/** Inverso: segmento URL ES → center.type (BD) */
+export const CENTER_TYPE_FROM_URL_ES: Record<string, string> = Object.fromEntries(
+  Object.entries(CENTER_TYPE_URL_ES).map(([type, urlEs]) => [urlEs, type]),
+);
 
 /** Booking status colors */
 export function getBookingStatusColor(status: string): string {

@@ -5,21 +5,21 @@ export const metadata: Metadata = helpES;
 
 const SECTIONS = [
   { title: 'Para asistentes', items: [
-    { q: '¿Cómo funciona la reserva?', a: 'En la mayoría de retiros pagas el PVP (precio publicado por persona) en un solo pago seguro con tarjeta (Stripe). Si el retiro tiene un mínimo de plazas y aún no se ha alcanzado, puedes reservar plaza sin pagar hasta que se cumpla el mínimo; después te enviamos un enlace para pagar dentro del plazo. Retiru gestiona la reserva y el reparto con el organizador (20 % comisión / 80 % neto, sin recargo extra para ti).' },
+    { q: '¿Cómo funciona la reserva?', a: 'En la mayoría de retiros pagas el PVP (precio publicado por persona) en un solo pago seguro con tarjeta (Stripe). Si el retiro tiene un mínimo de plazas y aún no se ha alcanzado, puedes reservar plaza sin pagar hasta que se cumpla el mínimo; después te enviamos un enlace para pagar dentro del plazo. Retiru gestiona la reserva y el reparto con el organizador, sin recargo extra para ti.' },
     { q: '¿Puedo cancelar mi reserva?', a: 'Sí. Cada retiro tiene su política de cancelación (plazos y porcentajes sobre lo que pagaste). Si te corresponde reembolso, recibes ese importe íntegro; no aplicamos una retención extra tipo «cuota no reembolsable» sobre tu devolución.' },
     { q: '¿Cómo contacto al organizador?', a: 'Una vez confirmada tu reserva, tendrás acceso al chat directo con el organizador desde tu panel.' },
     { q: '¿El precio incluye alojamiento?', a: 'Depende de cada retiro. Revisa la sección "Qué incluye" en la ficha del retiro.' },
   ]},
   { title: 'Para organizadores', items: [
-    { q: '¿Cuánto cuesta publicar retiros?', a: 'No hay suscripción ni cuota fija. La comisión de Retiru (20 % del PVP) está incluida en lo que paga el asistente; tú cobras el 80 % neto, sin recargos encima del precio publicado.' },
+    { q: '¿Cuánto cuesta publicar retiros?', a: 'No hay suscripción ni cuota fija. Además, tu primer retiro es completamente gratis (0 % de comisión); el segundo lleva un 10 %; y a partir del tercero la comisión estándar es del 20 % del PVP. El asistente siempre paga el PVP sin recargos.' },
     { q: '¿Cómo empiezo a publicar retiros?', a: 'Crea tu cuenta con email, verifica tu email y crea tu primer retiro desde tu panel. Nuestro equipo lo revisa en 24-48h. Una vez aprobado tu primer retiro, te conviertes en organizador verificado.' },
-    { q: '¿Cómo cobro mis retiros?', a: 'El asistente paga el PVP por la plataforma cuando toca el cobro (o reserva sin pago hasta el mínimo de plazas, si lo configuraste). Retiru retiene el 20 % del PVP y te transfiere el 80 % neto según los acuerdos de liquidación vigentes.' },
+    { q: '¿Cómo cobro mis retiros?', a: 'El asistente paga el PVP por la plataforma cuando toca el cobro (o reserva sin pago hasta el mínimo de plazas, si lo configuraste). Retiru retiene la comisión según tu nivel (0 %, 10 % o 20 %) y te transfiere el neto según los acuerdos de liquidación vigentes.' },
     { q: '¿Mis retiros pasan revisión?', a: 'Tu primer retiro se revisa para garantizar la calidad (24-48h). Una vez verificado como organizador, los siguientes retiros se publican directamente.' },
     { q: '¿Puedo generar la foto de portada con IA?', a: 'Sí. Al crear o editar un evento puedes subir hasta 8 fotos: una es la portada (listados y cabecera de la ficha) y el resto aparecen en la galería de la ficha pública. Puedes usar «Generar portada con IA» para crear una imagen fotorrealista con GPT Image 1.5 a partir del título y los textos. Si no subes ninguna imagen, al guardar el evento se genera una portada automáticamente (si el servidor tiene configurada la API de OpenAI).' },
   ]},
   { title: 'Para centros', items: [
     { q: '¿Cómo reclamo o propongo mi centro?', a: 'Si ya está en el directorio, búscalo y usa «Reclamar este centro». Si no aparece, inicia sesión, ve a «Mis centros» y «Proponer nuevo centro»: eliges el lugar en Google Maps y nuestro equipo revisa la propuesta antes de publicarla.' },
-    { q: '¿Cuánto cuesta estar en el directorio?', a: 'Ofrecemos 6 meses de membresía gratuita a los centros seleccionados. Tras ese periodo, evaluaremos el impacto contigo.' },
+    { q: '¿Cuánto cuesta estar en el directorio?', a: 'El directorio tiene una cuota de 20 €/mes. En la fase de lanzamiento, los centros seleccionados disfrutan de 6 meses de cortesía. Después, quienes quieran mantener su ficha activa pasan a la cuota mensual.' },
     { q: '¿Qué puedo hacer una vez reclame mi centro?', a: 'Podrás editar tu ficha (fotos, descripción, horarios, servicios), responder a reseñas y publicar retiros y eventos desde tu perfil.' },
   ]},
   { title: 'Pagos y seguridad', items: [

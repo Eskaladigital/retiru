@@ -7,13 +7,14 @@ export async function GET(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
 
-  const { data: profile } = await supabase
-    .from('profiles')
+  const { data: adminRole } = await supabase
+    .from('user_roles')
     .select('role')
-    .eq('id', user.id)
-    .single();
+    .eq('user_id', user.id)
+    .eq('role', 'admin')
+    .maybeSingle();
 
-  if (profile?.role !== 'admin') {
+  if (!adminRole) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
   }
 

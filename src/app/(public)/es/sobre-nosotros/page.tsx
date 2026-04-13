@@ -8,7 +8,7 @@ export const metadata: Metadata = aboutES;
 const VALUES = [
   { icon: Heart, title: 'Pasión por el bienestar', text: 'Creemos que mereces desconectar, reconectar contigo y vivir experiencias que transformen —en yoga, meditación, ayurveda y todo lo que os haga bien de verdad.' },
   { icon: Shield, title: 'Transparencia total', text: 'Desglosamos cada euro. Sin comisiones ocultas ni letra pequeña: sabes qué pagas, cuándo y a quién.' },
-  { icon: Users, title: 'Centros y organizadores', text: 'Son quienes hacen posible cada experiencia. Les damos herramientas gratuitas para publicar, gestionar reservas y hablar con quien reserva.' },
+  { icon: Users, title: 'Centros y organizadores', text: 'Son quienes hacen posible cada experiencia. Les damos herramientas para publicar, gestionar reservas y hablar con quien reserva.' },
   { icon: Globe, title: 'España como hogar', text: 'Ibiza, Mallorca, la costa, la montaña… La península tiene un potencial enorme para el bienestar consciente y queremos que se vea.' },
   { icon: Leaf, title: 'Impacto positivo', text: 'Apostamos por retiros responsables, turismo más consciente y prácticas que cuidan a las personas y al entorno.' },
   { icon: Target, title: 'Calidad al alcance', text: 'Buscamos experiencias que aporten valor: desde una escapada de fin de semana hasta inmersivos más largos.' },
@@ -17,8 +17,8 @@ const VALUES = [
 const STATS = [
   { value: '500+', label: 'Retiros en España' },
   { value: '9', label: 'Destinos destacados' },
-  { value: '20 %', label: 'Comisión Retiru (sobre el PVP)' },
-  { value: '80 %', label: 'Neto organizador' },
+  { value: '0–20 %', label: 'Comisión Retiru (escalonada)' },
+  { value: '80–100 %', label: 'Neto organizador' },
 ];
 
 export default function SobreNosotrosPage() {
@@ -233,15 +233,15 @@ export default function SobreNosotrosPage() {
               </p>
             </div>
             <div className="rounded-2xl bg-white border border-sand-200 p-5 md:p-6">
-              <p className="font-serif text-3xl text-terracotta-600 font-bold tabular-nums">80/20</p>
-              <p className="font-semibold text-foreground mt-2">Reparto del PVP</p>
+              <p className="font-serif text-3xl text-terracotta-600 font-bold tabular-nums">0 → 20 %</p>
+              <p className="font-semibold text-foreground mt-2">Comisión escalonada</p>
               <p className="text-sm text-[#7a6b5d] mt-2 leading-relaxed">
-                Publicar no lleva suscripción. De cada venta, el organizador percibe el 80 % neto y Retiru el 20 % de gestión, incluido en el PVP que paga el asistente.
+                Publicar retiros no lleva suscripción. La comisión de Retiru es escalonada: 0 % en el primer retiro, 10 % en el segundo, 20 % a partir del tercero. Siempre incluida en el PVP que paga el asistente.
               </p>
             </div>
           </div>
           <p className="text-[15px] text-[#7a6b5d] leading-[1.8] mb-4">
-            El panel y la publicación no tienen cuota fija: el modelo es comisión sobre ventas (20 % / 80 %), con desglose visible al crear el retiro.
+            El panel y la publicación de retiros no tienen cuota fija: el modelo es comisión escalonada sobre ventas (0 % → 10 % → 20 %), con desglose visible al crear el retiro.
           </p>
           <p className="text-sm text-[#7a6b5d]">
             <Link href="/es/condiciones" className="text-terracotta-700 font-medium underline underline-offset-2 hover:text-terracotta-800">

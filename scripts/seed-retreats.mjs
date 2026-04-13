@@ -65,6 +65,15 @@ const { error: profErr } = await supabase.from('profiles').upsert({
 if (profErr) console.error('Error perfil:', profErr.message);
 else console.log('✓ Perfil creado/actualizado');
 
+// Roles (tabla user_roles)
+for (const role of ['attendee', 'organizer']) {
+  await supabase.from('user_roles').upsert(
+    { user_id: demoUserId, role },
+    { onConflict: 'user_id,role' },
+  );
+}
+console.log('✓ Roles asignados (attendee + organizer)');
+
 // Organizador
 const { error: orgErr } = await supabase.from('organizer_profiles').upsert({
   id: demoOrgId,

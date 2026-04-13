@@ -1,6 +1,6 @@
 // ============================================================================
 // RETIRU · Condiciones — /es/condiciones
-// Cómo se cobra, modelo de precios (pago 100%)
+// Cómo se cobra, modelo de precios (pago 100%) con comisiones escalonadas
 // ============================================================================
 
 import Link from 'next/link';
@@ -55,14 +55,32 @@ export default function CondicionesPage() {
             Cómo se financia Retiru
           </h2>
           <p className="text-[15px] leading-relaxed text-foreground mb-4">
-            Retiru cobra una comisión del <strong>20%</strong> incluida en el PVP que fija el organizador (él percibe el <strong>80%</strong> neto). Es nuestra forma de financiar la plataforma, el soporte y el desarrollo.
+            Retiru cobra una comisión incluida en el PVP que fija el organizador. La comisión es <strong>progresiva</strong> para que los nuevos organizadores prueben la plataforma sin riesgo:
           </p>
+
+          <div className="grid gap-4 md:grid-cols-3 mb-6">
+            <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-5 text-center">
+              <p className="text-xs font-bold uppercase tracking-wide text-emerald-700 mb-1">1.er retiro</p>
+              <p className="text-3xl font-bold text-emerald-700">0&nbsp;%</p>
+              <p className="text-sm text-emerald-800 mt-1">100&nbsp;% para el organizador</p>
+            </div>
+            <div className="rounded-xl bg-sky-50 border border-sky-200 p-5 text-center">
+              <p className="text-xs font-bold uppercase tracking-wide text-sky-700 mb-1">2.º retiro</p>
+              <p className="text-3xl font-bold text-sky-700">10&nbsp;%</p>
+              <p className="text-sm text-sky-800 mt-1">90&nbsp;% para el organizador</p>
+            </div>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 p-5 text-center">
+              <p className="text-xs font-bold uppercase tracking-wide text-amber-700 mb-1">3.er retiro en adelante</p>
+              <p className="text-3xl font-bold text-amber-700">20&nbsp;%</p>
+              <p className="text-sm text-amber-800 mt-1">80&nbsp;% para el organizador</p>
+            </div>
+          </div>
 
           <div className="bg-terracotta-50 border border-terracotta-100 rounded-2xl p-6 md:p-8">
             <ul className="space-y-3 text-[15px] leading-relaxed">
               <li className="flex gap-3">
                 <span className="text-terracotta-600 font-bold">•</span>
-                <span><strong>Sin suscripción para publicar:</strong> no hay cuota fija por usar el panel. La remuneración de Retiru es el <strong>20 % del PVP</strong> que paga el asistente; el organizador percibe el <strong>80 % neto</strong>.</span>
+                <span><strong>Sin suscripción para publicar:</strong> no hay cuota fija por usar el panel. La comisión es progresiva (0&nbsp;% → 10&nbsp;% → 20&nbsp;% del PVP) y el asistente no paga recargos.</span>
               </li>
               <li className="flex gap-3">
                 <span className="text-terracotta-600 font-bold">•</span>
@@ -72,6 +90,10 @@ export default function CondicionesPage() {
                 <span className="text-terracotta-600 font-bold">•</span>
                 <span><strong>Retiru transfiere al organizador</strong> su parte una vez confirmada la reserva.</span>
               </li>
+              <li className="flex gap-3">
+                <span className="text-terracotta-600 font-bold">•</span>
+                <span><strong>Cada retiro mantiene su nivel</strong> de comisión de forma permanente. El 1.er retiro siempre será al 0&nbsp;%, el 2.º al 10&nbsp;%, independientemente de cuántos publiques después.</span>
+              </li>
             </ul>
           </div>
         </section>
@@ -79,34 +101,89 @@ export default function CondicionesPage() {
         {/* ═══ EJEMPLO PRÁCTICO ═══ */}
         <section>
           <h2 className="font-serif text-2xl font-bold text-foreground mb-4">
-            Ejemplo práctico
+            Ejemplos prácticos
           </h2>
-          <div className="bg-white border-2 border-sand-200 rounded-2xl p-6 md:p-8">
-            <p className="text-sm font-semibold text-muted-foreground mb-4">Retiro de 500€</p>
-            <div className="space-y-3 text-[15px]">
-              <div className="flex justify-between items-center py-3 border-b border-sand-100">
-                <span>El asistente paga</span>
-                <span className="text-xl font-bold">500€</span>
-              </div>
-              <div className="flex justify-between items-center py-3 border-b border-sand-100">
-                <span className="flex items-center gap-2">
-                  El organizador recibe
-                  <span className="text-[11px] font-semibold uppercase bg-sage-100 text-sage-700 px-2 py-0.5 rounded-full">Organizador</span>
-                </span>
-                <span className="font-bold">400€</span>
-              </div>
-              <div className="flex justify-between items-center py-3 border-b border-sand-100">
-                <span className="flex items-center gap-2">
-                  Comisión Retiru
-                  <span className="text-[11px] font-semibold uppercase bg-terracotta-100 text-terracotta-700 px-2 py-0.5 rounded-full">Retiru</span>
-                </span>
-                <span className="font-bold text-terracotta-600">100€</span>
+
+          <div className="space-y-6">
+            {/* Ejemplo 1: primer retiro */}
+            <div className="bg-white border-2 border-emerald-200 rounded-2xl p-6 md:p-8">
+              <p className="text-sm font-semibold text-emerald-700 mb-4">Tu primer retiro — 500€ (comisión 0&nbsp;%)</p>
+              <div className="space-y-3 text-[15px]">
+                <div className="flex justify-between items-center py-3 border-b border-sand-100">
+                  <span>El asistente paga</span>
+                  <span className="text-xl font-bold">500€</span>
+                </div>
+                <div className="flex justify-between items-center py-3 border-b border-sand-100">
+                  <span className="flex items-center gap-2">
+                    El organizador recibe
+                    <span className="text-[11px] font-semibold uppercase bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">100&nbsp;%</span>
+                  </span>
+                  <span className="font-bold text-emerald-700">500€</span>
+                </div>
+                <div className="flex justify-between items-center py-3">
+                  <span className="flex items-center gap-2">
+                    Comisión Retiru
+                    <span className="text-[11px] font-semibold uppercase bg-sand-100 text-muted-foreground px-2 py-0.5 rounded-full">0&nbsp;%</span>
+                  </span>
+                  <span className="font-bold text-muted-foreground">0€</span>
+                </div>
               </div>
             </div>
-            <p className="mt-4 text-sm text-muted-foreground">
-              Al reservar pagas 500€. Retiru transfiere 400€ al organizador y retiene 100€ como comisión de gestión. Un solo pago, sin costes adicionales.
-            </p>
+
+            {/* Ejemplo 2: segundo retiro */}
+            <div className="bg-white border-2 border-sky-200 rounded-2xl p-6 md:p-8">
+              <p className="text-sm font-semibold text-sky-700 mb-4">Tu segundo retiro — 500€ (comisión 10&nbsp;%)</p>
+              <div className="space-y-3 text-[15px]">
+                <div className="flex justify-between items-center py-3 border-b border-sand-100">
+                  <span>El asistente paga</span>
+                  <span className="text-xl font-bold">500€</span>
+                </div>
+                <div className="flex justify-between items-center py-3 border-b border-sand-100">
+                  <span className="flex items-center gap-2">
+                    El organizador recibe
+                    <span className="text-[11px] font-semibold uppercase bg-sky-100 text-sky-700 px-2 py-0.5 rounded-full">90&nbsp;%</span>
+                  </span>
+                  <span className="font-bold text-sky-700">450€</span>
+                </div>
+                <div className="flex justify-between items-center py-3">
+                  <span className="flex items-center gap-2">
+                    Comisión Retiru
+                    <span className="text-[11px] font-semibold uppercase bg-sky-100 text-sky-700 px-2 py-0.5 rounded-full">10&nbsp;%</span>
+                  </span>
+                  <span className="font-bold text-sky-600">50€</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Ejemplo 3: tercer retiro en adelante */}
+            <div className="bg-white border-2 border-sand-200 rounded-2xl p-6 md:p-8">
+              <p className="text-sm font-semibold text-muted-foreground mb-4">Tercer retiro en adelante — 500€ (comisión 20&nbsp;%)</p>
+              <div className="space-y-3 text-[15px]">
+                <div className="flex justify-between items-center py-3 border-b border-sand-100">
+                  <span>El asistente paga</span>
+                  <span className="text-xl font-bold">500€</span>
+                </div>
+                <div className="flex justify-between items-center py-3 border-b border-sand-100">
+                  <span className="flex items-center gap-2">
+                    El organizador recibe
+                    <span className="text-[11px] font-semibold uppercase bg-sage-100 text-sage-700 px-2 py-0.5 rounded-full">80&nbsp;%</span>
+                  </span>
+                  <span className="font-bold">400€</span>
+                </div>
+                <div className="flex justify-between items-center py-3">
+                  <span className="flex items-center gap-2">
+                    Comisión Retiru
+                    <span className="text-[11px] font-semibold uppercase bg-terracotta-100 text-terracotta-700 px-2 py-0.5 rounded-full">20&nbsp;%</span>
+                  </span>
+                  <span className="font-bold text-terracotta-600">100€</span>
+                </div>
+              </div>
+            </div>
           </div>
+
+          <p className="mt-4 text-sm text-muted-foreground">
+            En todos los casos, el asistente paga 500€. Retiru transfiere al organizador el neto correspondiente y retiene su comisión según el nivel. Un solo pago, sin costes adicionales.
+          </p>
         </section>
 
         {/* ═══ DIRECTORIO DE CENTROS ═══ */}
@@ -116,10 +193,10 @@ export default function CondicionesPage() {
           </h2>
           <div className="space-y-4 text-[15px] leading-relaxed text-muted-foreground">
             <p>
-              <strong className="text-foreground">Membresía gratuita inicial:</strong> Los centros seleccionados para nuestro directorio reciben 6 meses de membresía gratuita. Durante ese periodo, tu ficha está activa con todos los beneficios: visibilidad SEO, reseñas, contacto directo y gestión desde tu panel.
+              <strong className="text-foreground">Cuota mensual:</strong> Estar en el directorio tiene un coste de <strong>20&nbsp;€/mes</strong>. Durante la fase de lanzamiento, los centros seleccionados disfrutan de <strong>6 meses de cortesía</strong> con todos los beneficios activos: visibilidad SEO, reseñas, contacto directo y gestión desde tu panel.
             </p>
             <p>
-              <strong className="text-foreground">Tras el periodo gratuito:</strong> Evaluaremos juntos el impacto del directorio en tu negocio. Si deseas continuar, pasarás a una cuota mensual asequible. Si no, tu ficha se desactivará sin compromiso.
+              <strong className="text-foreground">Tras el periodo de cortesía:</strong> Los centros que deseen mantener su ficha activa pasan a la cuota mensual de 20&nbsp;€/mes. Si no deseas continuar, tu ficha se desactivará sin compromiso.
             </p>
             <p>
               <strong className="text-foreground">Reclama tu centro:</strong> Si tu centro ya aparece en el directorio, puedes reclamarlo creando una cuenta y haciendo clic en &quot;Reclamar este centro&quot; en tu ficha. Nuestro equipo verificará tu identidad como propietario.

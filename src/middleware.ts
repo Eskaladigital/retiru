@@ -124,15 +124,16 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // Admin / Administrator → check admin role
+    // Admin / Administrator → check admin role via user_roles
     if (pathname.startsWith('/administrator') || pathname.startsWith('/admin')) {
-      const { data: profile } = await supabase
-        .from('profiles')
+      const { data: adminRole } = await supabase
+        .from('user_roles')
         .select('role')
-        .eq('id', user.id)
-        .single();
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
 
-      if (profile?.role !== 'admin') {
+      if (!adminRole) {
         const locale = pathname.startsWith('/en') ? 'en' : 'es';
         return NextResponse.redirect(new URL(`/${locale}`, request.url));
       }

@@ -9,7 +9,7 @@ import type { Metadata } from 'next';
 
 export const homeES: Metadata = generatePageMetadata({
   title: 'Retiru — Retiros y centros de yoga, meditación y ayurveda en España',
-  description: 'Descubre y reserva retiros y eventos de yoga, meditación y ayurveda en España. Directorio de centros y tienda. Organizadores: sin suscripción; 20 % sobre el PVP, 80 % neto.',
+  description: 'Descubre y reserva retiros y eventos de yoga, meditación y ayurveda en España. Directorio de centros y tienda. Organizadores: sin suscripción; primer retiro gratis, después 10 % y 20 % sobre el PVP.',
   locale: 'es',
   path: '/es',
   altPath: '/en',
@@ -64,7 +64,7 @@ export const shopES: Metadata = generatePageMetadata({
 
 export const forOrganizersES: Metadata = generatePageMetadata({
   title: 'Para centros y organizadores — Retiru',
-  description: 'Centros de yoga, meditación y ayurveda: directorio sin cuota de alta. Organizadores: panel completo sin suscripción; 20 % comisión sobre el PVP (80 % neto).',
+  description: 'Centros de yoga, meditación y ayurveda: directorio con 6 meses de cortesía y después 20 €/mes. Organizadores de retiros: sin suscripción; primer retiro gratis (0 %), segundo al 10 %, después 20 % del PVP.',
   locale: 'es',
   path: '/es/para-organizadores',
   altPath: '/en/for-organizers',
@@ -159,7 +159,7 @@ export const conditionsES: Metadata = generatePageMetadata({
 
 export const homeEN: Metadata = generatePageMetadata({
   title: 'Retiru — Yoga, meditation & ayurveda retreats and centers in Spain',
-  description: 'Discover and book yoga, meditation and ayurveda retreats and events in Spain. Center directory and shop. Organizers: no subscription; 20% on the PVP, 80% net.',
+  description: 'Discover and book yoga, meditation and ayurveda retreats and events in Spain. Center directory and shop. Organizers: no subscription; first retreat free, then 10% and 20% on the PVP.',
   locale: 'en',
   path: '/en',
   altPath: '/es',
@@ -213,7 +213,7 @@ export const shopEN: Metadata = generatePageMetadata({
 
 export const forOrganizersEN: Metadata = generatePageMetadata({
   title: 'For centers & organizers — Retiru',
-  description: 'Yoga, meditation and ayurveda centers: list in our directory with no listing fee. Organizers: full panel with no subscription; 20% commission on the PVP (80% net).',
+  description: 'Yoga, meditation and ayurveda centers: directory with 6-month courtesy, then €20/month. Retreat organizers: no subscription; first retreat free (0%), second at 10%, then 20% of the PVP.',
   locale: 'en',
   path: '/en/for-organizers',
   altPath: '/es/para-organizadores',

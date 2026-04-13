@@ -2,7 +2,14 @@
 import type { MetadataRoute } from 'next';
 import { getSiteUrl } from '@/lib/site-url';
 import { createStaticSupabase } from '@/lib/supabase/server';
-import { getCenterProvinces, getDestinationsWithRetreats } from '@/lib/data';
+import {
+  getCenterProvinces,
+  getDestinationsWithRetreats,
+  getCategoriesWithRetreats,
+  getCategoryDestinationPairs,
+  getCenterTypeProvincePairs,
+} from '@/lib/data';
+import { CATEGORY_SLUG_EN } from '@/lib/utils';
 
 export const revalidate = 3600;
 
@@ -65,48 +72,76 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createStaticSupabase();
   const dynamicEntries: MetadataRoute.Sitemap = [];
 
-  function pushBilingual(esPath: string, enPath: string, freq: MetadataRoute.Sitemap[0]['changeFrequency'], prio: number) {
+  function pushBilingual(esPath: string, enPath: string, freq: MetadataRoute.Sitemap[0]['changeFrequency'], prio: number, date?: string | null) {
     const alt = { languages: { es: `${SITE_URL}${esPath}`, en: `${SITE_URL}${enPath}` } };
+    const lastMod = date || now;
     dynamicEntries.push(
-      { url: `${SITE_URL}${esPath}`, lastModified: now, changeFrequency: freq, priority: prio, alternates: alt },
-      { url: `${SITE_URL}${enPath}`, lastModified: now, changeFrequency: freq, priority: prio, alternates: alt },
+      { url: `${SITE_URL}${esPath}`, lastModified: lastMod, changeFrequency: freq, priority: prio, alternates: alt },
+      { url: `${SITE_URL}${enPath}`, lastModified: lastMod, changeFrequency: freq, priority: prio, alternates: alt },
     );
   }
 
   // 1) Centros individuales
-  const { data: centerSlugs } = await supabase.from('centers').select('slug').eq('status', 'active');
-  (centerSlugs || []).forEach((c) => pushBilingual(`/es/centro/${c.slug}`, `/en/center/${c.slug}`, 'weekly', 0.7));
+  const { data: centerSlugs } = await supabase.from('centers').select('slug, updated_at').eq('status', 'active');
+  (centerSlugs || []).forEach((c) => pushBilingual(`/es/centro/${c.slug}`, `/en/center/${c.slug}`, 'weekly', 0.7, c.updated_at));
 
   // 2) Centros por provincia — solo provincias con >= 1 centro
   const provinces = await getCenterProvinces();
   provinces.forEach((p) => pushBilingual(`/es/centros-retiru/${p.slug}`, `/en/centers-retiru/${p.slug}`, 'weekly', 0.8));
 
   // 3) Retiros individuales
-  const { data: retreatSlugs } = await supabase.from('retreats').select('slug').eq('status', 'published').gte('end_date', today);
-  (retreatSlugs || []).forEach((r) => pushBilingual(`/es/retiro/${r.slug}`, `/en/retreat/${r.slug}`, 'weekly', 0.8));
+  const { data: retreatSlugs } = await supabase.from('retreats').select('slug, updated_at').eq('status', 'published').gte('end_date', today);
+  (retreatSlugs || []).forEach((r) => pushBilingual(`/es/retiro/${r.slug}`, `/en/retreat/${r.slug}`, 'weekly', 0.8, r.updated_at));
 
   // 4) Retiros por destino — solo destinos con >= 1 retiro
   const destinationsWithRetreats = await getDestinationsWithRetreats();
   destinationsWithRetreats.forEach((d) => pushBilingual(`/es/retiros-retiru/${d.slug}`, `/en/retreats-retiru/${d.slug}`, 'weekly', 0.8));
 
   // 5) Blog — EN usa slug_en cuando existe (alineado con canonical)
-  const { data: blogRows } = await supabase.from('blog_articles').select('slug, slug_en').eq('is_published', true);
-  (blogRows || []).forEach((b: { slug: string; slug_en: string | null }) => {
+  const { data: blogRows } = await supabase.from('blog_articles').select('slug, slug_en, updated_at').eq('is_published', true);
+  (blogRows || []).forEach((b: { slug: string; slug_en: string | null; updated_at?: string }) => {
     const enSlug = b.slug_en || b.slug;
-    pushBilingual(`/es/blog/${b.slug}`, `/en/blog/${enSlug}`, 'monthly', 0.6);
+    pushBilingual(`/es/blog/${b.slug}`, `/en/blog/${enSlug}`, 'monthly', 0.6, b.updated_at);
   });
 
   // 6) Destinos
-  const { data: destSlugs } = await supabase.from('destinations').select('slug').eq('is_active', true);
-  (destSlugs || []).forEach((d) => pushBilingual(`/es/destinos/${d.slug}`, `/en/destinations/${d.slug}`, 'monthly', 0.7));
+  const { data: destSlugs } = await supabase.from('destinations').select('slug, updated_at').eq('is_active', true);
+  (destSlugs || []).forEach((d) => pushBilingual(`/es/destinos/${d.slug}`, `/en/destinations/${d.slug}`, 'monthly', 0.7, d.updated_at));
 
   // 7) Organizadores verificados
-  const { data: orgSlugs } = await supabase.from('organizer_profiles').select('slug').eq('status', 'verified');
-  (orgSlugs || []).forEach((o) => pushBilingual(`/es/organizador/${o.slug}`, `/en/organizer/${o.slug}`, 'monthly', 0.5));
+  const { data: orgSlugs } = await supabase.from('organizer_profiles').select('slug, updated_at').eq('status', 'verified');
+  (orgSlugs || []).forEach((o) => pushBilingual(`/es/organizador/${o.slug}`, `/en/organizer/${o.slug}`, 'monthly', 0.5, o.updated_at));
 
   // 8) Productos de la tienda
-  const { data: prodSlugs } = await supabase.from('products').select('slug').eq('status', 'active');
-  (prodSlugs || []).forEach((p) => pushBilingual(`/es/tienda/${p.slug}`, `/en/shop/${p.slug}`, 'weekly', 0.6));
+  const { data: prodSlugs } = await supabase.from('products').select('slug, updated_at').eq('status', 'active');
+  (prodSlugs || []).forEach((p) => pushBilingual(`/es/tienda/${p.slug}`, `/en/shop/${p.slug}`, 'weekly', 0.6, p.updated_at));
+
+  // 9) Retiros por categoría (landings SEO)
+  const categoriesWithRetreats = await getCategoriesWithRetreats();
+  categoriesWithRetreats.forEach((c) => {
+    const enSlug = CATEGORY_SLUG_EN[c.slug] || c.slug;
+    pushBilingual(`/es/retiros-${c.slug}`, `/en/retreats-${enSlug}`, 'weekly', 0.8);
+  });
+
+  // 10) Retiros por categoría + destino
+  const catDestPairs = await getCategoryDestinationPairs();
+  catDestPairs.forEach((p) => {
+    const enSlug = CATEGORY_SLUG_EN[p.category] || p.category;
+    pushBilingual(`/es/retiros-${p.category}/${p.destination}`, `/en/retreats-${enSlug}/${p.destination}`, 'weekly', 0.7);
+  });
+
+  // 11) Centros por tipo
+  const TYPE_ES_MAP: Record<string, string> = { yoga: 'yoga', meditation: 'meditacion', ayurveda: 'ayurveda' };
+  for (const [dbType, esSlug] of Object.entries(TYPE_ES_MAP)) {
+    pushBilingual(`/es/centros-${esSlug}`, `/en/centers-${dbType}`, 'weekly', 0.8);
+  }
+
+  // 12) Centros por tipo + provincia
+  const typeProvPairs = await getCenterTypeProvincePairs();
+  typeProvPairs.forEach((p) => {
+    const esSlug = TYPE_ES_MAP[p.type] || p.type;
+    pushBilingual(`/es/centros-${esSlug}/${p.province}`, `/en/centers-${p.type}/${p.province}`, 'weekly', 0.7);
+  });
 
   return [...staticEntries, ...dynamicEntries];
 }

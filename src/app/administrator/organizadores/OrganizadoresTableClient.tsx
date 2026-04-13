@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, Shield } from 'lucide-react';
 import { EmailLink } from '@/components/ui/email-link';
 
 interface OrganizerRow {
@@ -94,6 +94,26 @@ export function OrganizadoresTableClient({ organizers }: { organizers: Organizer
                   <td className="py-3 px-4 text-[#a09383]">{date}</td>
                   <td className="py-3 px-4 text-right">
                     <div className="flex items-center justify-end gap-2">
+                      {o.status !== 'verified' && (
+                        <a
+                          href={`/administrator/organizadores/${o.id}/verificar`}
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 hover:text-amber-800 hover:bg-amber-50 px-2 py-1.5 rounded-lg transition-colors"
+                          title="Verificar organizador"
+                        >
+                          <Shield size={14} />
+                          Verificar
+                        </a>
+                      )}
+                      {o.status === 'verified' && (
+                        <a
+                          href={`/administrator/organizadores/${o.id}/verificar`}
+                          className="inline-flex items-center gap-1 text-xs font-medium text-sage-600 hover:text-sage-700 hover:bg-sage-50 px-2 py-1.5 rounded-lg transition-colors"
+                          title="Ver verificación"
+                        >
+                          <Shield size={14} />
+                          Docs
+                        </a>
+                      )}
                       {o.user_id && (
                         <button
                           onClick={() => handleMessage(o.user_id!)}

@@ -234,15 +234,15 @@ export default function AboutPageEN() {
               </p>
             </div>
             <div className="rounded-2xl bg-white border border-sand-200 p-5 md:p-6">
-              <p className="font-serif text-3xl text-terracotta-600 font-bold tabular-nums">80/20</p>
-              <p className="font-semibold text-foreground mt-2">Split of the PVP</p>
+              <p className="font-serif text-3xl text-terracotta-600 font-bold tabular-nums">0 → 20 %</p>
+              <p className="font-semibold text-foreground mt-2">Progressive commission</p>
               <p className="text-sm text-[#7a6b5d] mt-2 leading-relaxed">
-                No subscription to publish. On each sale the organizer receives 80% net and Retiru 20%, included in the PVP the guest pays.
+                No subscription to publish. First retreat free (0%), second at 10%, then 20% — always included in the PVP the guest pays.
               </p>
             </div>
           </div>
           <p className="text-[15px] text-[#7a6b5d] leading-[1.8] mb-4">
-            Listing and the dashboard have no fixed fee: we use a sales commission (20% / 80%) with a clear breakdown when you create a retreat.
+            Listing and the dashboard have no fixed fee: we use a progressive sales commission (0% → 10% → 20%) with a clear breakdown when you create a retreat.
           </p>
           <p className="text-sm text-[#7a6b5d]">
             <Link href="/en/condiciones" className="text-terracotta-700 font-medium underline underline-offset-2 hover:text-terracotta-800">

@@ -29,8 +29,8 @@ export async function GET(req: NextRequest, ctx: Ctx) {
   const orgUserId = (conv as any).organizer_profiles?.user_id;
   const isOrganizer = !isSupport && orgUserId === user.id;
   const isUser = conv.user_id === user.id;
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  const isAdmin = profile?.role === 'admin';
+  const { data: adminRoleRow } = await supabase.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').maybeSingle();
+  const isAdmin = !!adminRoleRow;
 
   if (!isUser && !isOrganizer && !isAdmin) {
     return NextResponse.json({ error: 'Sin acceso' }, { status: 403 });
@@ -115,8 +115,8 @@ export async function POST(req: NextRequest, ctx: Ctx) {
   const isOrganizer = !isSupport && orgUserId === user.id;
   const isUser = conv.user_id === user.id;
 
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  const isAdmin = profile?.role === 'admin';
+  const { data: adminRoleRow2 } = await supabase.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').maybeSingle();
+  const isAdmin = !!adminRoleRow2;
 
   // En conversaciones de soporte: admin y usuario pueden escribir
   // En conversaciones normales: usuario y organizador pueden escribir

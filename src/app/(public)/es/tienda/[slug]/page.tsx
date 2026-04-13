@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { generatePageMetadata, jsonLdProduct, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
 import { getShopProductSlugs } from '@/lib/data';
 import { createServerSupabase } from '@/lib/supabase/server';
+import { RetreatDescriptionBody } from '@/components/ui/retreat-description-body';
 
 export async function generateStaticParams() {
   const slugs = await getShopProductSlugs();
@@ -97,26 +98,27 @@ export default async function ProductoDetailPage({ params }: { params: Promise<{
           {/* Quantity + Add to cart */}
           <div className="flex gap-3 mb-8">
             <div className="flex items-center border border-sand-300 rounded-xl overflow-hidden">
-              <button className="w-10 h-12 text-lg text-[#7a6b5d] hover:bg-sand-50 transition-colors">−</button>
+              <button aria-label="Disminuir cantidad" className="w-10 h-12 text-lg text-[#7a6b5d] hover:bg-sand-50 transition-colors">−</button>
               <span className="w-12 h-12 flex items-center justify-center text-sm font-semibold border-x border-sand-300">1</span>
-              <button className="w-10 h-12 text-lg text-[#7a6b5d] hover:bg-sand-50 transition-colors">+</button>
+              <button aria-label="Aumentar cantidad" className="w-10 h-12 text-lg text-[#7a6b5d] hover:bg-sand-50 transition-colors">+</button>
             </div>
             <button className="flex-1 bg-terracotta-600 text-white font-semibold py-3 rounded-xl hover:bg-terracotta-700 transition-colors shadow-[0_2px_8px_rgba(200,90,48,0.3)]">
               🛒 Añadir al carrito
             </button>
           </div>
 
-          <div className="flex gap-4 text-xs text-[#7a6b5d] mb-8">
+          <div className="flex flex-wrap gap-4 text-xs text-[#7a6b5d] mb-8">
             <span>🚚 Envío gratis +50€</span>
             <span>↩️ Devolución 30 días</span>
-            <span>🔒 Pago seguro (Stripe)</span>
+            <span>🔒 Pago 100 % seguro con Stripe</span>
+            <span>💳 Visa, Mastercard y más</span>
           </div>
 
           {/* Description */}
           {p.description_es && (
             <div className="mb-6">
               <h2 className="font-serif text-xl mb-3">Descripción</h2>
-              <div className="text-sm text-[#7a6b5d] leading-[1.8] whitespace-pre-line">{p.description_es}</div>
+              <RetreatDescriptionBody content={p.description_es} />
             </div>
           )}
         </div>

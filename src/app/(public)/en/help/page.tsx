@@ -10,11 +10,11 @@ const SECTIONS = [
     items: [
       {
         q: 'How does booking work?',
-        a: 'For most retreats you pay the PVP (listed price per person) in one secure card payment (Stripe). If the retreat has a minimum group size that is not yet met, you can hold a spot without paying until it is reached; you then get a link to pay by the deadline. Retiru handles the booking and the split with the organizer (20% commission / 80% net to the organizer, no extra surcharge to you).',
+        a: 'For most retreats you pay the PVP (listed price per person) in one secure card payment (Stripe). If the retreat has a minimum group size that is not yet met, you can hold a spot without paying until it is reached; you then get a link to pay by the deadline. Retiru handles the booking and the split with the organizer, with no extra surcharge to you.',
       },
       {
         q: 'Can I cancel my booking?',
-        a: 'Yes. Each retreat has its cancellation policy (deadlines and percentages based on what you paid). If a refund applies, you receive that amount in full—we do not keep an extra non-refundable “platform fee” from your refund.',
+        a: 'Yes. Each retreat has its cancellation policy (deadlines and percentages based on what you paid). If a refund applies, you receive that amount in full—we do not keep an extra non-refundable "platform fee" from your refund.',
       },
       {
         q: 'How do I contact the organizer?',
@@ -31,7 +31,7 @@ const SECTIONS = [
     items: [
       {
         q: 'How much does it cost to list retreats?',
-        a: "There is no subscription or listing fee. Retiru's commission (20% of the PVP) is included in what the guest pays; you receive 80% net, with no surcharges on top of the listed price.",
+        a: "There is no subscription or listing fee. Plus, your first retreat is completely free (0% commission); the second has a 10% fee; and from the third onward the standard commission is 20% of the PVP. The attendee always pays the PVP with no surcharges.",
       },
       {
         q: 'How do I start publishing retreats?',
@@ -39,7 +39,7 @@ const SECTIONS = [
       },
       {
         q: 'How do I get paid?',
-        a: 'The attendee pays the PVP through the platform when payment is due (or holds a spot without payment until the minimum group size is met, if you set one). Retiru retains 20% and transfers 80% net according to the settlement terms in place.',
+        a: 'The attendee pays the PVP through the platform when payment is due (or holds a spot without payment until the minimum group size is met, if you set one). Retiru retains the commission for your tier (0%, 10% or 20%) and transfers the net according to the settlement terms in place.',
       },
       {
         q: 'Are my retreats reviewed?',
@@ -60,7 +60,7 @@ const SECTIONS = [
       },
       {
         q: 'How much does a directory listing cost?',
-        a: "We offer 6 months of free membership to selected centers. After that period, we'll assess the impact with you.",
+        a: "The directory has a monthly fee of €20/month. During the launch phase, selected centers enjoy 6 months of courtesy. After that, centers that wish to keep their listing active move to the monthly fee.",
       },
       {
         q: 'What can I do once I claim my center?',

@@ -33,12 +33,12 @@ const ORGANIZER_FEATURES = [
 ];
 
 const FAQS = [
-  { q: '¿Hay suscripción o cuota por publicar?', a: 'No: publicar y usar el panel no lleva cuota fija. Fijas el PVP (precio público por persona) que ve el asistente; de ese importe Retiru retiene un 20 % de gestión y tú percibes el 80 % neto (el asistente no paga recargos encima del PVP).' },
-  { q: '¿Qué precio debo poner en mi retiro?', a: 'El que quieres cobrar por persona como precio final en la ficha: es el PVP. En el formulario verás el desglose: lo que recibirás tú (80 %) y la comisión Retiru (20 %).' },
+  { q: '¿Hay suscripción o cuota por publicar?', a: 'No: publicar y usar el panel no lleva cuota fija. Además, tu primer retiro es completamente gratis (0 % de comisión); el segundo lleva un 10 %; y a partir del tercero la comisión estándar es del 20 % del PVP. El asistente siempre paga el PVP, sin recargos.' },
+  { q: '¿Qué precio debo poner en mi retiro?', a: 'El que quieres cobrar por persona como precio final en la ficha: es el PVP. En el formulario verás el desglose según tu nivel de comisión (0 %, 10 % o 20 %).' },
   { q: '¿Cómo funciona el directorio de centros?', a: 'Tu centro aparece en nuestro directorio con ficha completa: fotos, servicios, horarios, ubicación y reseñas. Los usuarios pueden encontrarte buscando por zona, tipo de disciplina o nombre. Si tu centro ya está en Retiru, puedes reclamarlo desde su ficha. Si no aparece, con cuenta iniciada puedes proponerlo desde «Mis centros»; nuestro equipo lo revisa antes de publicarlo.' },
-  { q: '¿Cuánto cuesta aparecer en el directorio?', a: 'Actualmente ofrecemos 6 meses de membresía gratuita a los centros seleccionados. Tras ese periodo, evaluaremos el impacto contigo y podrás continuar con una cuota mensual asequible.' },
+  { q: '¿Cuánto cuesta aparecer en el directorio?', a: 'El directorio tiene una cuota mensual de 20 €/mes. En la fase de lanzamiento, los centros seleccionados disfrutan de 6 meses de cortesía. Después de ese periodo, quienes quieran mantener su ficha activa pasan a la cuota mensual.' },
   { q: '¿Puedo ser centro y organizador a la vez?', a: 'Sí. Si eres un centro que organiza retiros u otros eventos, puedes tener tu ficha en el directorio y además publicarlos con todas las herramientas del panel.' },
-  { q: '¿Cómo cobro a mis asistentes?', a: 'El asistente paga el PVP por la plataforma (o reserva plaza sin pago si tu retiro tiene mínimo de plazas y aún no se ha alcanzado). Cuando corresponda el cobro con tarjeta, Retiru retiene el 20 % y te transfiere el 80 % neto según el acuerdo de liquidación.' },
+  { q: '¿Cómo cobro a mis asistentes?', a: 'El asistente paga el PVP por la plataforma (o reserva plaza sin pago si tu retiro tiene mínimo de plazas y aún no se ha alcanzado). Retiru retiene la comisión que corresponda según tu nivel (0 %, 10 % o 20 %) y te transfiere el neto según el acuerdo de liquidación.' },
   { q: '¿Necesito verificarme para publicar retiros?', a: 'No necesitas subir documentos. Simplemente crea tu cuenta, crea tu primer retiro y nuestro equipo lo revisará en 24-48h. Una vez aprobado tu primer retiro, te conviertes en organizador verificado y puedes seguir publicando.' },
   { q: '¿Cómo reclamo o doy de alta mi centro?', a: 'Si tu centro ya está en el directorio, búscalo y usa «Reclamar este centro» (o regístrate si aún no tienes cuenta). Si no está listado, entra en «Mis centros» tras iniciar sesión, elige «Proponer nuevo centro» y localiza el lugar en Google Maps; enviaremos la propuesta a revisión y, al aprobarla, podrás gestionar la ficha.' },
   { q: '¿Y si un asistente cancela?', a: 'Tú configuras la política de cancelación (plazos y porcentajes sobre lo pagado). Si al asistente le corresponde reembolso, se le devuelve ese importe íntegro. La compensación de la comisión de Retiru en esos casos se regula en el acuerdo comercial contigo, no como retención adicional sobre el reembolso del asistente.' },
@@ -61,7 +61,8 @@ export default function ParaOrganizadoresPage() {
           <p className="mx-auto mt-6 max-w-2xl text-lg text-sage-300 leading-relaxed">
             Si tienes un centro de yoga, meditación o ayurveda, o si organizas retiros y eventos de ese tipo,
             Retiru es tu plataforma. <strong className="font-semibold text-white">Sin suscripción</strong> para publicar.
-            Sobre cada reserva pagada aplicamos una <strong className="font-semibold text-white">comisión del 20 %</strong> incluida en el PVP que paga el asistente; tú percibes el <strong className="font-semibold text-white">80 % neto</strong>, sin recargos ocultos para quien reserva.
+            Tu <strong className="font-semibold text-white">primer retiro sin comisión</strong> (0&nbsp;%), el segundo al <strong className="font-semibold text-white">10&nbsp;%</strong> y a partir del tercero
+            la comisión estándar del <strong className="font-semibold text-white">20&nbsp;%</strong> incluida en el PVP. Sin recargos ocultos para quien reserva.
           </p>
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <a href="#centros" className="btn-primary bg-terracotta-600 hover:bg-terracotta-700 px-8 py-4 text-base">
@@ -141,7 +142,7 @@ export default function ParaOrganizadoresPage() {
           </h2>
           <p className="text-muted-foreground max-w-2xl mb-12">
             Si creas retiros o eventos de yoga, meditación o ayurveda, Retiru te da un panel de gestión completo
-            sin suscripción ni pago por alta. El modelo es el habitual del sector: <strong className="text-foreground">comisión sobre ventas</strong> (20 % del PVP para Retiru, 80 % neto para ti), visible en el formulario antes de publicar.
+            sin suscripción ni pago por alta. Tu <strong className="text-foreground">primer retiro es gratis</strong> (0&nbsp;% de comisión); el segundo al 10&nbsp;%; a partir del tercero, 20&nbsp;% del PVP. El desglose es visible en el formulario antes de publicar.
           </p>
 
           {/* Comparison table */}
@@ -158,7 +159,8 @@ export default function ParaOrganizadoresPage() {
               <tbody>
                 {[
                   ['Suscripción / cuota por publicar', 'No (0 €)', 'Sí / varía', 'Varía'],
-                  ['Comisión sobre ventas (PVP)', '20 % (transparente)', '20–30 %', '10–25 %'],
+                  ['Comisión sobre ventas (PVP)', '0 % → 10 % → 20 %', '20–30 %', '10–25 %'],
+                  ['Primer retiro gratis (sin comisión)', '✓', '✗', '✗'],
                   ['Panel de gestión', 'Completo, sin cuota fija', 'Básico', 'Limitado'],
                   ['CRM de asistentes', '✓', '✗', '✗'],
                   ['Mensajería integrada', '✓', 'Limitada', '✗'],
@@ -176,6 +178,31 @@ export default function ParaOrganizadoresPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Tiered commission visual */}
+          <div className="mb-12 rounded-2xl border-2 border-sand-200 bg-white p-6 md:p-8">
+            <h3 className="font-serif text-xl font-bold text-foreground mb-6 text-center">Comisiones progresivas: empieza gratis</h3>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-5 text-center">
+                <p className="text-xs font-bold uppercase tracking-wide text-emerald-700 mb-2">1.er retiro</p>
+                <p className="text-4xl font-bold text-emerald-700">0&nbsp;%</p>
+                <p className="text-sm text-emerald-800 mt-2">Sin comisión. Tú recibes el <strong>100&nbsp;%</strong> del PVP.</p>
+              </div>
+              <div className="rounded-xl bg-sky-50 border border-sky-200 p-5 text-center">
+                <p className="text-xs font-bold uppercase tracking-wide text-sky-700 mb-2">2.º retiro</p>
+                <p className="text-4xl font-bold text-sky-700">10&nbsp;%</p>
+                <p className="text-sm text-sky-800 mt-2">Comisión reducida. Tú recibes el <strong>90&nbsp;%</strong> del PVP.</p>
+              </div>
+              <div className="rounded-xl bg-amber-50 border border-amber-200 p-5 text-center">
+                <p className="text-xs font-bold uppercase tracking-wide text-amber-700 mb-2">3.er retiro en adelante</p>
+                <p className="text-4xl font-bold text-amber-700">20&nbsp;%</p>
+                <p className="text-sm text-amber-800 mt-2">Comisión estándar. Tú recibes el <strong>80&nbsp;%</strong> del PVP.</p>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground text-center mt-4">
+              Cada retiro mantiene de forma permanente su nivel de comisión. Sin letra pequeña.
+            </p>
           </div>
 
           {/* Features grid */}
@@ -200,9 +227,9 @@ export default function ParaOrganizadoresPage() {
           <div className="space-y-8">
             {[
               { step: '01', title: 'Crea tu cuenta', desc: 'Regístrate con tu email y verifica tu cuenta. Cualquier usuario puede crear retiros u otros eventos desde su panel.' },
-              { step: '02', title: 'Crea tu primer retiro', desc: 'Usa nuestro wizard paso a paso para crear tu retiro o evento. Elige la portada (foto principal en listados y cabecera de la ficha) y añade hasta 8 fotos en total; el resto forman la galería que los visitantes ven en la ficha debajo de la portada. Puedes generar la portada con IA a partir del título y la descripción; si no subes ninguna imagen, al guardar se crea una portada automáticamente. Añade programa, PVP por persona (con desglose 80 % / 20 % en pantalla), mínimo de plazas si aplica, y tu política de cancelación.' },
+              { step: '02', title: 'Crea tu primer retiro', desc: 'Usa nuestro wizard paso a paso para crear tu retiro o evento. Elige la portada (foto principal en listados y cabecera de la ficha) y añade hasta 8 fotos en total; el resto forman la galería que los visitantes ven en la ficha debajo de la portada. Puedes generar la portada con IA a partir del título y la descripción; si no subes ninguna imagen, al guardar se crea una portada automáticamente. Añade programa, PVP por persona (con desglose de comisión según tu nivel en pantalla), mínimo de plazas si aplica, y tu política de cancelación.' },
               { step: '03', title: 'Revisamos y publicamos', desc: 'Nuestro equipo revisa tu primer retiro en 24-48h para asegurar la calidad. Una vez aprobado, se publica y te conviertes en organizador verificado.' },
-              { step: '04', title: 'Recibe reservas y cobra', desc: 'Los asistentes pagan el PVP por la plataforma (o reservan sin pago hasta alcanzar el mínimo de plazas, si lo configuraste). Retiru retiene el 20 % y te liquida el 80 % neto. Tú gestionas la experiencia; nosotros el flujo de reserva y pagos.' },
+              { step: '04', title: 'Recibe reservas y cobra', desc: 'Los asistentes pagan el PVP por la plataforma (o reservan sin pago hasta alcanzar el mínimo de plazas, si lo configuraste). Retiru retiene la comisión que corresponda (0 %, 10 % o 20 % según tu nivel) y te liquida el neto. Tú gestionas la experiencia; nosotros el flujo de reserva y pagos.' },
             ].map(({ step, title, desc }) => (
               <div key={step} className="flex gap-6 items-start">
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-terracotta-600 text-lg font-bold text-white">
@@ -249,7 +276,7 @@ export default function ParaOrganizadoresPage() {
           <h2 className="font-serif text-3xl font-bold md:text-4xl">Únete a Retiru</h2>
           <p className="mx-auto mt-4 max-w-lg text-terracotta-100">
             Ya seas un centro de yoga, meditación o ayurveda o un organizador de retiros en ese ámbito, Retiru te da las herramientas
-            y la visibilidad que necesitas. Publicar no lleva suscripción; las reservas se reparten 80 % / 20 % sobre el PVP, como en otras plataformas, con el desglose claro en tu panel.
+            y la visibilidad que necesitas. Publicar no lleva suscripción; tu primer retiro es gratis (0&nbsp;%), el segundo al 10&nbsp;% y a partir del tercero el 20&nbsp;% estándar.
           </p>
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link

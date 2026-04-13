@@ -12,6 +12,7 @@ import { Star, MapPin, Calendar, Clock, Users, Globe, Shield, Zap, Heart, Share2
 import AskOrganizerButton from '@/components/messaging/AskOrganizerButton';
 import ReserveButton from '@/components/booking/ReserveButton';
 import { RetreatDescriptionBody, LinkifyText } from '@/components/ui/retreat-description-body';
+import { CATEGORY_SLUG_EN } from '@/lib/utils';
 
 const dateFmt = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1200&q=80';
@@ -112,15 +113,19 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
     url: `/en/retreat/${r.slug}`,
     organizer: r.organizer?.business_name ?? 'Retiru',
     availability,
-    rating: r.avg_rating > 0 ? r.avg_rating : undefined,
-    reviewCount: r.review_count > 0 ? r.review_count : undefined,
+    rating: r.review_count > 0 ? r.avg_rating : ((r.organizer?.review_count ?? 0) > 0 ? r.organizer?.avg_rating : undefined),
+    reviewCount: r.review_count > 0 ? r.review_count : ((r.organizer?.review_count ?? 0) > 0 ? r.organizer?.review_count : undefined),
   });
 
-  const breadcrumbLd = jsonLdBreadcrumb([
+  const primaryCat = r.categories?.[0];
+  const primaryCatEnSlug = primaryCat ? (CATEGORY_SLUG_EN[primaryCat.slug] || primaryCat.slug) : '';
+  const breadcrumbItems = [
     { name: 'Home', url: '/en' },
     { name: 'Retreats', url: '/en/retreats-retiru' },
+    ...(primaryCat ? [{ name: `${primaryCat.name_en} Retreats`, url: `/en/retreats-${primaryCatEnSlug}` }] : []),
     { name: r.title_en || r.title_es, url: `/en/retreat/${r.slug}` },
-  ]);
+  ];
+  const breadcrumbLd = jsonLdBreadcrumb(breadcrumbItems);
 
   return (
     <div>
@@ -171,10 +176,16 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
       <div className="container-wide py-8">
         <div className="flex gap-10">
           <div className="flex-1 max-w-3xl">
-            <nav className="mb-4 flex items-center gap-1 text-xs text-muted-foreground">
+            <nav className="mb-4 flex items-center gap-1 text-xs text-muted-foreground flex-wrap">
               <Link href="/en" className="hover:text-terracotta-600">Home</Link>
               <ChevronRight size={12} />
               <Link href="/en/retreats-retiru" className="hover:text-terracotta-600">Retreats</Link>
+              {primaryCat && (
+                <>
+                  <ChevronRight size={12} />
+                  <Link href={`/en/retreats-${primaryCatEnSlug}`} className="hover:text-terracotta-600">{primaryCat.name_en} Retreats</Link>
+                </>
+              )}
               <ChevronRight size={12} />
               <span className="text-foreground">{r.title_en || r.title_es}</span>
             </nav>
@@ -182,7 +193,7 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
             <div className="mb-6">
               <div className="mb-2 flex flex-wrap gap-2">
                 {r.categories?.map((cat) => (
-                  <span key={cat.id} className="badge-sand">{cat.name_en || cat.name_es}</span>
+                  <Link key={cat.id} href={`/en/retreats-${CATEGORY_SLUG_EN[cat.slug] || cat.slug}`} className="badge-sand hover:bg-sand-200 transition-colors">{cat.name_en || cat.name_es}</Link>
                 ))}
                 {r.confirmation_type === 'automatic' && <span className="badge-sage"><Zap size={12} /> Instant confirmation</span>}
               </div>
@@ -402,12 +413,17 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
                   className="w-full py-4 text-base"
                 />
 
-                <p className="mt-3 text-center text-xs text-muted-foreground">
-                  <Shield size={12} className="inline mr-1" />
-                  {minReached
-                    ? 'Secure payment with Stripe · Refund per cancellation policy'
-                    : 'Free reservation · You only pay when the retreat is confirmed'}
-                </p>
+                <div className="mt-4 rounded-lg bg-sage-50/60 border border-sage-200/60 p-3 text-center">
+                  <p className="text-xs text-muted-foreground">
+                    <Shield size={12} className="inline mr-1 text-sage-600" />
+                    {minReached
+                      ? '100% secure payment with Stripe · Refund per cancellation policy'
+                      : 'Free reservation · You only pay when the retreat is confirmed'}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground/70 mt-1.5">
+                    Visa, Mastercard & more · Your data never touches our servers
+                  </p>
+                </div>
 
                 <div className="mt-4">
                   <AskOrganizerButton retreatId={r.id} locale="en" />
@@ -423,7 +439,7 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
         <div className="flex items-center justify-between gap-3">
           <div className="shrink-0">
             <p className="text-lg font-bold text-foreground">{r.total_price}€</p>
-            <p className="text-xs text-muted-foreground">per person</p>
+            <p className="text-[10px] text-muted-foreground">per person · <Shield size={10} className="inline" /> Secure payment</p>
           </div>
           <div className="flex items-center gap-2">
             <AskOrganizerButton retreatId={r.id} locale="en" compact />

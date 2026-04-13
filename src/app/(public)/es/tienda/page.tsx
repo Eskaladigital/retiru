@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { shopES } from '@/lib/seo/page-metadata';
 import { createServerSupabase } from '@/lib/supabase/server';
+import { ProductInterestSurvey } from '@/components/shop/ProductInterestSurvey';
 
 export const metadata: Metadata = shopES;
 
@@ -65,8 +66,8 @@ export default async function TiendaPage() {
           })}
         </div>
       ) : (
-        <section className="py-20 md:py-28">
-          <div className="max-w-2xl mx-auto text-center">
+        <section className="py-12 md:py-20">
+          <div className="max-w-2xl mx-auto text-center mb-12">
             <span className="inline-block text-xs font-bold uppercase tracking-[0.2em] text-terracotta-600 mb-4">Tienda Retiru</span>
             <h2 className="font-serif text-[clamp(26px,3.5vw,38px)] text-foreground leading-tight mb-5">Próximamente disponible</h2>
             <div className="w-12 h-px bg-terracotta-300 mx-auto mb-6" />
@@ -77,20 +78,23 @@ export default async function TiendaPage() {
             <p className="text-[#a09383] text-sm leading-relaxed mb-10">
               Calidad premium, precios justos y envío gratis a partir de 50€. Muy pronto aquí.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link
-                href="/es/retiros"
-                className="inline-flex items-center justify-center px-6 py-3 rounded-full text-sm font-semibold bg-terracotta-600 text-white hover:bg-terracotta-700 transition-colors"
-              >
-                Explorar retiros
-              </Link>
-              <Link
-                href="/es/contacto"
-                className="inline-flex items-center justify-center px-6 py-3 rounded-full text-sm font-semibold border border-sand-300 text-[#7a6b5d] hover:border-terracotta-300 hover:text-terracotta-600 transition-colors"
-              >
-                Contactar
-              </Link>
-            </div>
+          </div>
+
+          <ProductInterestSurvey lang="es" />
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-12">
+            <Link
+              href="/es/retiros"
+              className="inline-flex items-center justify-center px-6 py-3 rounded-full text-sm font-semibold bg-terracotta-600 text-white hover:bg-terracotta-700 transition-colors"
+            >
+              Explorar retiros
+            </Link>
+            <Link
+              href="/es/contacto"
+              className="inline-flex items-center justify-center px-6 py-3 rounded-full text-sm font-semibold border border-sand-300 text-[#7a6b5d] hover:border-terracotta-300 hover:text-terracotta-600 transition-colors"
+            >
+              Contactar
+            </Link>
           </div>
         </section>
       )}

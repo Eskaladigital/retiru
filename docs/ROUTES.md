@@ -20,8 +20,8 @@ Documentación de la arquitectura de rutas y landings.
 | `/es/destinos/[slug]` | `app/es/(public)/destinos/[slug]/page.tsx` | Destino por slug |
 | `/es/organizador/[slug]` | `app/es/(public)/organizador/[slug]/page.tsx` | Perfil organizador |
 | `/es/para-organizadores` | `app/es/(public)/para-organizadores/page.tsx` | Para centros y organizadores |
-| `/es/tienda` | `app/es/(public)/tienda/page.tsx` | Tienda |
-| `/es/tienda/[slug]` | `app/es/(public)/tienda/[slug]/page.tsx` | Ficha de producto |
+| `/es/tienda` | `src/app/(public)/es/tienda/page.tsx` | Tienda (`shop_products`); si no hay productos, encuesta `ProductInterestSurvey` → `shop_product_interests` |
+| `/es/tienda/[slug]` | `src/app/(public)/es/tienda/[slug]/page.tsx` | Ficha de producto |
 | `/es/blog` | `app/es/(public)/blog/page.tsx` | Blog |
 | `/es/blog/[slug]` | `app/es/(public)/blog/[slug]/page.tsx` | Artículo de blog |
 | `/es/sobre-nosotros` | `app/es/(public)/sobre-nosotros/page.tsx` | Sobre nosotros |
@@ -47,8 +47,8 @@ Documentación de la arquitectura de rutas y landings.
 | `/en/destinations/[slug]` | `app/en/(public)/destinations/[slug]/page.tsx` |
 | `/en/organizer/[slug]` | `app/en/(public)/organizer/[slug]/page.tsx` |
 | `/en/for-organizers` | `app/en/(public)/for-organizers/page.tsx` |
-| `/en/shop` | `app/en/(public)/shop/page.tsx` |
-| `/en/shop/[slug]` | `app/en/(public)/shop/[slug]/page.tsx` |
+| `/en/shop` | `src/app/(public)/en/shop/page.tsx` — misma lógica que `/es/tienda` (encuesta si no hay productos) |
+| `/en/shop/[slug]` | `src/app/(public)/en/shop/[slug]/page.tsx` |
 | `/en/blog` | `app/en/(public)/blog/page.tsx` |
 | `/en/blog/[slug]` | `app/en/(public)/blog/[slug]/page.tsx` |
 | `/en/about` | `app/en/(public)/about/page.tsx` |
@@ -118,15 +118,33 @@ Cualquier usuario logueado (incluido admin) accede a estas secciones desde el me
 
 ---
 
-## Landings planificadas (pendientes)
+## Landings SEO programáticas (implementadas)
 
-| Ruta | Descripción |
-|------|-------------|
-| `/es/centros-yoga/[slug]` | Centros de yoga en [ciudad] |
-| `/es/centros-meditacion/[slug]` | Centros de meditación en [ciudad] |
-| `/es/centros-ayurveda/[slug]` | Centros de ayurveda en [ciudad] |
-| `/es/retiros-yoga/[slug]` | Retiros de yoga en [ciudad] |
-| `/es/retiros-gastronomia/[slug]` | Retiros gastronómicos en [ciudad] |
+### Retiros por categoría (ES / EN)
+
+| Ruta ES | Ruta EN | Descripción |
+|---------|---------|-------------|
+| `/es/retiros-[category]` | `/en/retreats-[category]` | Índice de retiros por categoría (yoga, meditacion, ayurveda, etc.) |
+| `/es/retiros-[category]/[destination]` | `/en/retreats-[category]/[destination]` | Retiros de categoría en destino específico |
+
+Categorías disponibles: yoga, meditacion, ayurveda, detox, naturaleza, gastronomia, wellness, aventura, silencio, arte-creatividad, desarrollo-personal.
+
+Slug EN equivalente: yoga, meditation, ayurveda, detox, nature, gastronomy, wellness, adventure, silent, art-creativity, personal-growth.
+
+### Centros por tipo (ES / EN)
+
+| Ruta ES | Ruta EN | Descripción |
+|---------|---------|-------------|
+| `/es/centros-[type]` | `/en/centers-[type]` | Índice de centros por tipo (yoga, meditacion, ayurveda) |
+| `/es/centros-[type]/[province]` | `/en/centers-[type]/[province]` | Centros de tipo en provincia específica |
+
+Tipos ES: yoga, meditacion, ayurveda. Tipos EN (= BD): yoga, meditation, ayurveda.
+
+### Generación de contenido
+
+Contenido único por categoría y destino generado con IA y almacenado en BD (tablas `categories` y `destinations`): `intro_es`, `intro_en`, `meta_title_*`, `meta_description_*`, `faq` (JSONB).
+
+Script: `node scripts/generate-seo-content.mjs [--categories] [--destinations] [--force]`
 | ... | Más tipos de retiro según categorías de la BD |
 
 Localidades y categorías vienen de la base de datos.
@@ -201,7 +219,7 @@ Código de referencia: `getOrganizerReviewStats`, `organizerHasRatingToShow` en 
 | `/administrator/claims` | `app/administrator/claims/page.tsx` | Gestión claims de centros |
 | `/administrator/mensajes` | `app/administrator/mensajes/page.tsx` | Moderación de conversaciones + respuesta en soporte. Parámetro `?open=convId` abre una conversación al cargar |
 | `/administrator/blog` | `app/administrator/blog/page.tsx` | Gestión blog |
-| `/administrator/tienda` | `app/administrator/tienda/page.tsx` | Gestión tienda |
+| `/administrator/tienda` | `src/app/administrator/tienda/page.tsx` | Gestión tienda + bloque «Encuesta de productos» (`get_shop_interest_stats`, comentarios) |
 | `/administrator/reembolsos` | `app/administrator/reembolsos/page.tsx` | Reembolsos |
 | `/administrator/reporting` | `app/administrator/reporting/page.tsx` | Reporting y métricas |
 

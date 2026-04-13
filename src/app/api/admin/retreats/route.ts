@@ -3,12 +3,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
 import { sendRetreatApprovedEmail, sendRetreatRejectedEmail } from '@/lib/email';
+import { assignRole } from '@/lib/roles';
+import { getCommissionTier } from '@/lib/utils';
 
 async function requireAdmin(supabase: Awaited<ReturnType<typeof createServerSupabase>>) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'admin') return null;
+  const { data: adminRole } = await supabase.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').maybeSingle();
+  if (!adminRole) return null;
   return user;
 }
 
@@ -48,6 +50,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Bloquear aprobación si el organizador no está verificado
+    if (action === 'approve') {
+      const { data: orgStatus } = await admin
+        .from('organizer_profiles')
+        .select('status')
+        .eq('id', retreat.organizer_id)
+        .single();
+
+      if (orgStatus?.status !== 'verified') {
+        return NextResponse.json(
+          { error: 'No se puede aprobar: el organizador no ha completado la verificación documental. Verifica al organizador primero desde la sección de Organizadores.' },
+          { status: 409 },
+        );
+      }
+    }
+
     const now = new Date().toISOString();
     const newStatus = action === 'approve' ? 'published' : 'rejected';
 
@@ -58,6 +76,14 @@ export async function POST(request: NextRequest) {
     };
     if (action === 'approve') {
       updateData.published_at = now;
+      // Recalculate tiered commission at approval time
+      const { count: paidCount } = await admin
+        .from('retreats')
+        .select('id', { count: 'exact', head: true })
+        .eq('organizer_id', retreat.organizer_id)
+        .in('status', ['published', 'archived', 'cancelled'])
+        .gt('confirmed_bookings', 0);
+      updateData.commission_percent = getCommissionTier(paidCount ?? 0);
     }
     if (action === 'reject' && rejectionReason) {
       updateData.rejection_reason = rejectionReason;
@@ -81,6 +107,10 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (orgProfile?.user_id) {
+        if (action === 'approve') {
+          await assignRole(admin, orgProfile.user_id, 'organizer');
+        }
+
         const { data: orgUser } = await admin
           .from('profiles')
           .select('email, preferred_locale')
@@ -195,7 +225,7 @@ export async function GET(request: NextRequest) {
     .select(`
       id, title_es, slug, status, total_price, max_attendees, confirmed_bookings,
       start_date, end_date, created_at, published_at, reviewed_at, rejection_reason,
-      organizer_profiles!organizer_id(id, business_name, slug, user_id,
+      organizer_profiles!organizer_id(id, business_name, slug, status, user_id,
         profiles!user_id(id, full_name, email)
       )
     `)

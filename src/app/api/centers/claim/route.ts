@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
 import { sendNewClaimPendingEmail } from '@/lib/email';
+import { assignRole } from '@/lib/roles';
 
 export async function POST(request: NextRequest) {
   try {
@@ -73,6 +74,7 @@ export async function POST(request: NextRequest) {
             .from('centers')
             .update({ claimed_by: user.id, updated_at: now })
             .eq('id', centerId);
+          await assignRole(admin, user.id, 'center');
         } else {
           try {
             const { data: profile } = await admin
@@ -129,6 +131,7 @@ export async function POST(request: NextRequest) {
         .from('centers')
         .update({ claimed_by: user.id, updated_at: new Date().toISOString() })
         .eq('id', centerId);
+      await assignRole(admin, user.id, 'center');
     } else {
       try {
         const { data: profile } = await admin

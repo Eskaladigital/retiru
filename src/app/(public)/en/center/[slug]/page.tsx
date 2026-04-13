@@ -2,7 +2,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { MarkdownContent } from '@/components/ui/markdown-content';
+import { RetreatDescriptionBody } from '@/components/ui/retreat-description-body';
 import { CenterMap } from '@/components/ui/center-map';
 import { ClaimCenterButton } from '@/components/ui/claim-center-button';
 import { EmailLink } from '@/components/ui/email-link';
@@ -53,10 +53,19 @@ export default async function CenterDetailEN({ params }: Props) {
 
   return (
     <div className="container-wide py-12">
-      <Link href="/en/centers-retiru" className="inline-flex items-center gap-1.5 text-sm text-terracotta-600 font-medium hover:gap-2.5 transition-all mb-6">
-        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg>
-        Centers directory
-      </Link>
+      <nav className="mb-6 flex items-center gap-1 text-xs text-muted-foreground flex-wrap">
+        <Link href="/en" className="hover:text-terracotta-600">Home</Link>
+        <span>›</span>
+        <Link href="/en/centers-retiru" className="hover:text-terracotta-600">Centers</Link>
+        {C.type && (
+          <>
+            <span>›</span>
+            <Link href={`/en/centers-${C.type}`} className="hover:text-terracotta-600">{getCenterTypeLabel(C.type, 'en')} Centers</Link>
+          </>
+        )}
+        <span>›</span>
+        <span className="text-foreground">{C.name}</span>
+      </nav>
 
       {mainImage && (
         <div className="mb-8 space-y-3">
@@ -82,7 +91,7 @@ export default async function CenterDetailEN({ params }: Props) {
             <h1 className="font-serif text-[clamp(24px,3vw,36px)] text-foreground">{C.name}</h1>
           </div>
           <div className="flex flex-wrap items-center gap-3 text-sm text-[#7a6b5d] mb-6">
-            {C.type && <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-sage-100 text-sage-700">{getCenterTypeLabel(C.type, 'en')}</span>}
+            {C.type && <Link href={`/en/centers-${C.type}`} className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-sage-100 text-sage-700 hover:bg-sage-200 transition-colors">{getCenterTypeLabel(C.type, 'en')}</Link>}
             {(C.city || C.province) && <span>📍 {C.city}{C.province ? `, ${C.province}` : ''}</span>}
             {C.avg_rating != null && (
               <span className="flex items-center gap-1">
@@ -97,7 +106,7 @@ export default async function CenterDetailEN({ params }: Props) {
             <div className="mb-8">
               <h2 className="font-serif text-xl mb-3">About</h2>
               {C.description_en ? (
-                <MarkdownContent content={C.description_en} />
+                <RetreatDescriptionBody content={C.description_en} />
               ) : (
                 <div className="rounded-xl border border-sand-200 bg-sand-50/80 p-5 text-sm text-[#7a6b5d] leading-relaxed">
                   <p className="mb-3">We are adding an English description for this center.</p>
@@ -155,10 +164,10 @@ export default async function CenterDetailEN({ params }: Props) {
                 <div className="text-sm"><span className="text-[#a09383] block text-xs uppercase tracking-wider font-semibold mb-0.5">Email</span><EmailLink email={C.email} className="text-foreground hover:text-terracotta-600 transition-colors break-all" /></div>
               )}
               {C.instagram && (
-                <div className="text-sm"><span className="text-[#a09383] block text-xs uppercase tracking-wider font-semibold mb-0.5">Instagram</span><a href={`https://instagram.com/${C.instagram.replace('@', '')}`} target="_blank" rel="noopener" className="text-foreground hover:text-terracotta-600 transition-colors">{C.instagram}</a></div>
+                <div className="text-sm"><span className="text-[#a09383] block text-xs uppercase tracking-wider font-semibold mb-0.5">Instagram</span><a href={`https://instagram.com/${C.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="text-foreground hover:text-terracotta-600 transition-colors">{C.instagram}</a></div>
               )}
               {facebookProfileHref(C.facebook) && (
-                <div className="text-sm"><span className="text-[#a09383] block text-xs uppercase tracking-wider font-semibold mb-0.5">Facebook</span><a href={facebookProfileHref(C.facebook)!} target="_blank" rel="noopener" className="text-foreground hover:text-terracotta-600 transition-colors break-all">View page</a></div>
+                <div className="text-sm"><span className="text-[#a09383] block text-xs uppercase tracking-wider font-semibold mb-0.5">Facebook</span><a href={facebookProfileHref(C.facebook)!} target="_blank" rel="noopener noreferrer" className="text-foreground hover:text-terracotta-600 transition-colors break-all">View page</a></div>
               )}
             </div>
 
@@ -167,7 +176,7 @@ export default async function CenterDetailEN({ params }: Props) {
                 <a
                   href={C.google_maps_url || `https://www.google.com/maps/place/?q=place_id:${C.google_place_id}`}
                   target="_blank"
-                  rel="noopener"
+                  rel="noopener noreferrer"
                   className="w-full inline-flex items-center justify-center gap-2 bg-white border border-sand-300 text-foreground font-semibold py-3 rounded-xl hover:bg-sand-50 transition-colors text-sm"
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -178,7 +187,7 @@ export default async function CenterDetailEN({ params }: Props) {
                 <a
                   href={`https://www.google.com/maps/dir/?api=1&destination=${C.latitude},${C.longitude}`}
                   target="_blank"
-                  rel="noopener"
+                  rel="noopener noreferrer"
                   className="w-full inline-flex items-center justify-center gap-2 bg-white border border-sand-300 text-foreground font-semibold py-3 rounded-xl hover:bg-sand-50 transition-colors text-sm"
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
@@ -186,7 +195,7 @@ export default async function CenterDetailEN({ params }: Props) {
                 </a>
               )}
               {C.website && (
-                <a href={C.website} target="_blank" rel="noopener" className="w-full inline-flex items-center justify-center gap-2 bg-terracotta-600 text-white font-semibold py-3 rounded-xl hover:bg-terracotta-700 transition-colors text-sm">
+                <a href={C.website} target="_blank" rel="noopener noreferrer" className="w-full inline-flex items-center justify-center gap-2 bg-terracotta-600 text-white font-semibold py-3 rounded-xl hover:bg-terracotta-700 transition-colors text-sm">
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                   Visit website
                 </a>
@@ -242,6 +251,7 @@ export default async function CenterDetailEN({ params }: Props) {
           __html: jsonLdScript(jsonLdBreadcrumb([
             { name: 'Retiru', url: '/en' },
             { name: 'Centers', url: '/en/centers-retiru' },
+            ...(C.type ? [{ name: `${getCenterTypeLabel(C.type, 'en')} Centers`, url: `/en/centers-${C.type}` }] : []),
             { name: C.name, url: `/en/center/${slug}` },
           ])),
         }}

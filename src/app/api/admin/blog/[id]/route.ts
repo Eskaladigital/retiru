@@ -7,8 +7,8 @@ async function requireAdmin() {
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'No autorizado', status: 401 as const };
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'admin') return { error: 'Solo administradores', status: 403 as const };
+  const { data: adminRole } = await supabase.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').maybeSingle();
+  if (!adminRole) return { error: 'Solo administradores', status: 403 as const };
   return { user };
 }
 

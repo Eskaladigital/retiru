@@ -138,6 +138,16 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [acting, setActing] = useState(false);
+  const [commissionPercent, setCommissionPercent] = useState<number>((retreat as any).commission_percent ?? 20);
+
+  useEffect(() => {
+    if (!isAdmin) {
+      fetch('/api/organizer/commission-tier')
+        .then((r) => r.ok ? r.json() : null)
+        .then((d) => { if (d?.commissionPercent != null) setCommissionPercent(d.commissionPercent); })
+        .catch(() => {});
+    }
+  }, [isAdmin]);
 
   const [images, setImages] = useState<LocalImage[]>(() => {
     const sorted = sortRetreatImages(retreat.retreat_images as ImgRow[] | undefined);
@@ -526,11 +536,11 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
         <input type="number" min="50" value={form.total_price} onChange={(e) => set('total_price', e.target.value)} className={`${inputCls} max-w-xs`} />
         <p className="text-xs text-[#7a6b5d] mt-1.5 leading-relaxed max-w-2xl">
           <strong className="text-foreground">PVP</strong> = lo que paga el público por plaza en Retiru (sin cargos extra en checkout).
-          Tú percibes <strong className="text-foreground">solo el 80&nbsp;%</strong> (0,8 de cada euro); el <strong className="text-foreground">20&nbsp;%</strong> (0,2 de cada euro) es comisión Retiru. Ver desglose debajo.
+          La comisión de Retiru depende de tu nivel: <strong className="text-foreground">0&nbsp;%</strong> en tu primer retiro, <strong className="text-foreground">10&nbsp;%</strong> en el segundo, <strong className="text-foreground">20&nbsp;%</strong> a partir del tercero. Ver desglose debajo.
         </p>
       </div>
       <div className="mt-3">
-        <OrganizerPriceBreakdown priceInput={form.total_price} />
+        <OrganizerPriceBreakdown priceInput={form.total_price} commissionPercent={commissionPercent} />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
         <div>

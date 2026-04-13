@@ -1,5 +1,6 @@
 // Contenido de la ficha de retiro — reutilizable en página pública y preview admin
 import Link from 'next/link';
+import Image from 'next/image';
 import { Star, MapPin, Calendar, Clock, Users, Globe, Shield, Zap, ChevronRight, Check, X as XIcon } from 'lucide-react';
 import AskOrganizerButton from '@/components/messaging/AskOrganizerButton';
 import { RetreatDescriptionBody, LinkifyText } from '@/components/ui/retreat-description-body';
@@ -56,18 +57,18 @@ export function RetiroDetailContent({ retreat, isPreview }: Props) {
           {hasImages ? (
             sortedImages.length >= 3 ? (
               <div className="grid gap-2 md:grid-cols-4 md:grid-rows-2 rounded-xl overflow-hidden" style={{ maxHeight: '400px' }}>
-                <div className="md:col-span-2 md:row-span-2 relative">
-                  <img src={sortedImages[0].url} alt={sortedImages[0].alt_text ?? r.title_es} className="h-full w-full object-cover" style={{ minHeight: '250px' }} />
+                <div className="md:col-span-2 md:row-span-2 relative" style={{ minHeight: '250px' }}>
+                  <Image src={sortedImages[0].url} alt={sortedImages[0].alt_text ?? r.title_es} fill priority className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
                 </div>
                 {sortedImages.slice(1, 5).map((img, i) => (
                   <div key={img.id ?? i} className="hidden md:block relative">
-                    <img src={img.url} alt={img.alt_text || `${r.title_es} — foto ${i + 2}`} className="h-full w-full object-cover" />
+                    <Image src={img.url} alt={img.alt_text || `${r.title_es} — foto ${i + 2}`} fill className="object-cover" sizes="25vw" />
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="rounded-xl overflow-hidden" style={{ maxHeight: '360px' }}>
-                <img src={sortedImages[0].url} alt={sortedImages[0].alt_text ?? r.title_es} className="w-full h-full object-cover" style={{ minHeight: '240px', maxHeight: '360px' }} />
+              <div className="rounded-xl overflow-hidden relative" style={{ minHeight: '240px', maxHeight: '360px' }}>
+                <Image src={sortedImages[0].url} alt={sortedImages[0].alt_text ?? r.title_es} fill priority className="object-cover" sizes="100vw" />
               </div>
             )
           ) : (
@@ -161,9 +162,11 @@ export function RetiroDetailContent({ retreat, isPreview }: Props) {
             <section className="mb-10 rounded-2xl border border-sand-200 p-6">
               <h2 className="mb-4 font-serif text-2xl font-semibold">Organizador</h2>
               <div className="flex items-center gap-4">
-                {r.organizer.logo_url ? (
-                  <img src={r.organizer.logo_url} alt={r.organizer.business_name} className="h-16 w-16 rounded-full object-cover" />
-                ) : (
+                  {r.organizer.logo_url ? (
+                    <div className="relative h-16 w-16 shrink-0">
+                      <Image src={r.organizer.logo_url} alt={r.organizer.business_name} fill sizes="64px" className="rounded-full object-cover" />
+                    </div>
+                  ) : (
                   <div className="flex h-16 w-16 items-center justify-center rounded-full bg-sage-100 text-xl font-bold text-sage-700">
                     {r.organizer.business_name[0]}
                   </div>

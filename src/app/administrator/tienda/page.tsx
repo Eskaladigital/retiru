@@ -2,6 +2,7 @@
 import { unstable_noStore } from 'next/cache';
 import { createAdminSupabase } from '@/lib/supabase/server';
 import { TiendaClient } from './TiendaClient';
+import { SurveyResultsClient } from './SurveyResultsClient';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,9 +27,21 @@ export default async function AdminTiendaPage() {
     .order('created_at', { ascending: false })
     .limit(50);
 
+  // Survey results
+  const { data: surveyStats, error: errSurvey } = await supabase
+    .rpc('get_shop_interest_stats');
+
+  const { data: surveyComments } = await supabase
+    .from('shop_product_interests')
+    .select('product_category, comments, created_at')
+    .not('comments', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(100);
+
   if (errProducts) console.error('Error products:', errProducts);
   if (errCategories) console.error('Error categories:', errCategories);
   if (errOrders) console.error('Error orders:', errOrders);
+  if (errSurvey) console.error('Error survey:', errSurvey);
 
   const productList = (products || []) as any[];
   const categoryList = (categories || []) as any[];
@@ -90,17 +103,46 @@ export default async function AdminTiendaPage() {
   const totalSold = productsWithCategory.reduce((s, p) => s + p.sold, 0);
   const activeProducts = productsWithCategory.filter((p) => p.status === 'active').length;
 
+  const surveyStatsList = (surveyStats || []).map((s: any) => ({
+    category: s.category,
+    total_votes: Number(s.total_votes),
+    avg_interest: Number(s.avg_interest),
+    level_1: Number(s.level_1),
+    level_2: Number(s.level_2),
+    level_3: Number(s.level_3),
+    level_4: Number(s.level_4),
+    level_5: Number(s.level_5),
+  }));
+
+  const surveyCommentsList = (surveyComments || []).map((c: any) => ({
+    category: c.product_category,
+    comment: c.comments,
+    created_at: c.created_at,
+  }));
+
   return (
-    <TiendaClient
-      products={productsWithCategory}
-      categories={categoriesWithCount}
-      recentOrders={recentOrders}
-      stats={{
-        activeProducts,
-        totalSold,
-        totalRevenue,
-        categoriesCount: categoriesWithCount.length,
-      }}
-    />
+    <div className="space-y-8">
+      <TiendaClient
+        products={productsWithCategory}
+        categories={categoriesWithCount}
+        recentOrders={recentOrders}
+        stats={{
+          activeProducts,
+          totalSold,
+          totalRevenue,
+          categoriesCount: categoriesWithCount.length,
+        }}
+      />
+
+      <div className="border-t-2 border-sand-200 pt-8">
+        <div className="mb-6">
+          <h2 className="font-serif text-2xl text-foreground mb-2">Encuesta de productos</h2>
+          <p className="text-sm text-[#7a6b5d]">
+            Resultados de la encuesta de interés de productos de los usuarios
+          </p>
+        </div>
+        <SurveyResultsClient stats={surveyStatsList} comments={surveyCommentsList} />
+      </div>
+    </div>
   );
 }

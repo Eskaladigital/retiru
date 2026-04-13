@@ -21,14 +21,20 @@ interface RetreatRow {
   rejection_reason: string | null;
   organizer_name: string | null;
   organizer_email: string | null;
+  organizer_status: string;
 }
 
-type FilterStatus = 'all' | 'pending_review' | 'draft' | 'published' | 'rejected' | 'archived' | 'cancelled';
+type FilterStatus = 'all' | 'pending_review' | 'draft' | 'published' | 'in_progress' | 'expired' | 'finished' | 'rejected' | 'archived' | 'cancelled';
 
-const STATUS_BADGE: Record<string, { label: string; className: string }> = {
+type DisplayStatus = Exclude<FilterStatus, 'all'>;
+
+const STATUS_BADGE: Record<DisplayStatus, { label: string; className: string }> = {
   draft: { label: 'Borrador', className: 'bg-gray-100 text-gray-600 border-gray-200' },
   pending_review: { label: 'Pendiente revisión', className: 'bg-amber-50 text-amber-700 border-amber-200' },
   published: { label: 'Publicado', className: 'bg-green-50 text-green-700 border-green-200' },
+  in_progress: { label: 'En curso', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  expired: { label: 'Expirado', className: 'bg-orange-50 text-orange-600 border-orange-200' },
+  finished: { label: 'Finalizado', className: 'bg-slate-50 text-slate-600 border-slate-200' },
   rejected: { label: 'Rechazado', className: 'bg-red-50 text-red-700 border-red-200' },
   archived: { label: 'Archivado', className: 'bg-blue-50 text-blue-600 border-blue-200' },
   cancelled: { label: 'Cancelado', className: 'bg-gray-50 text-gray-500 border-gray-200' },
@@ -39,10 +45,27 @@ const FILTER_OPTIONS: { value: FilterStatus; label: string }[] = [
   { value: 'pending_review', label: 'Pendientes' },
   { value: 'draft', label: 'Borradores' },
   { value: 'published', label: 'Publicados' },
+  { value: 'in_progress', label: 'En curso' },
+  { value: 'expired', label: 'Expirados' },
+  { value: 'finished', label: 'Finalizados' },
   { value: 'rejected', label: 'Rechazados' },
   { value: 'cancelled', label: 'Cancelados' },
   { value: 'archived', label: 'Archivados' },
 ];
+
+function deriveDisplayStatus(r: RetreatRow): DisplayStatus {
+  if (r.status !== 'published') return r.status as DisplayStatus;
+  const today = new Date().toISOString().slice(0, 10);
+  const started = r.start_date <= today;
+  const ended = r.end_date < today;
+  if (ended) {
+    return r.confirmed_bookings > 0 ? 'finished' : 'expired';
+  }
+  if (started) {
+    return r.confirmed_bookings > 0 ? 'in_progress' : 'expired';
+  }
+  return 'published';
+}
 
 function parseInitialFilter(value: string | undefined): FilterStatus {
   if (!value) return 'all';
@@ -62,9 +85,14 @@ export function RetirosTableClient({
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
 
+  const retreatsWithDisplay = useMemo(
+    () => retreats.map((r) => ({ ...r, displayStatus: deriveDisplayStatus(r) })),
+    [retreats],
+  );
+
   const filtered = useMemo(
-    () => (filter === 'all' ? retreats : retreats.filter((r) => r.status === filter)),
-    [retreats, filter],
+    () => (filter === 'all' ? retreatsWithDisplay : retreatsWithDisplay.filter((r) => r.displayStatus === filter)),
+    [retreatsWithDisplay, filter],
   );
 
   const pendingCount = retreats.filter((r) => r.status === 'pending_review').length;
@@ -188,7 +216,7 @@ export function RetirosTableClient({
                 </tr>
               ) : (
                 filtered.map((r) => {
-                  const badge = STATUS_BADGE[r.status] || STATUS_BADGE.draft;
+                  const badge = STATUS_BADGE[r.displayStatus] || STATUS_BADGE.draft;
                   return (
                     <tr key={r.id} id={`retreat-${r.id}`} className="hover:bg-sand-50/50 transition-colors scroll-mt-24">
                       <td className="px-4 py-3">
@@ -211,7 +239,7 @@ export function RetirosTableClient({
                             <a
                               href={r.status === 'published' ? `/es/retiro/${r.slug}` : `/administrator/retiros/preview/${r.slug}`}
                               target={r.status === 'published' ? '_blank' : undefined}
-                              rel={r.status === 'published' ? 'noopener' : undefined}
+                              rel={r.status === 'published' ? 'noopener noreferrer' : undefined}
                               className="text-terracotta-600 hover:underline font-medium line-clamp-2"
                             >
                               {r.title_es}
@@ -226,6 +254,11 @@ export function RetirosTableClient({
                       </td>
                       <td className="px-4 py-3 hidden md:table-cell">
                         <span className="font-medium text-xs">{r.organizer_name || '—'}</span>
+                        {r.organizer_status !== 'verified' && (
+                          <span className="ml-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                            No verificado
+                          </span>
+                        )}
                         {r.organizer_email ? (
                           <EmailLink
                             email={r.organizer_email}
@@ -256,13 +289,22 @@ export function RetirosTableClient({
                         <div className="flex flex-wrap gap-1.5 items-center">
                           {r.status === 'pending_review' && (
                             <>
-                              <button
-                                onClick={() => handleApprove(r.id)}
-                                disabled={acting === r.id}
-                                className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50"
-                              >
-                                Aprobar
-                              </button>
+                              {r.organizer_status !== 'verified' ? (
+                                <span
+                                  className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-gray-200 text-gray-500 cursor-not-allowed"
+                                  title="No se puede aprobar: el organizador no está verificado"
+                                >
+                                  Aprobar (org. no verificado)
+                                </span>
+                              ) : (
+                                <button
+                                  onClick={() => handleApprove(r.id)}
+                                  disabled={acting === r.id}
+                                  className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50"
+                                >
+                                  Aprobar
+                                </button>
+                              )}
                               <button
                                 onClick={() => setRejectId(r.id)}
                                 disabled={acting === r.id}

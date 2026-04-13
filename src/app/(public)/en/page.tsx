@@ -4,11 +4,12 @@
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Brain, Flame, Flower2, Leaf, ShoppingBag, Sparkles, Star, Zap } from 'lucide-react';
 import { homeEN } from '@/lib/seo/page-metadata';
 import { ImageWithFallback } from '@/components/ui/image-with-fallback';
 import { getCategories, getDestinations, getHomeShopProducts, getPublishedRetreats } from '@/lib/data';
-import { filterPublicRetreatCategories, getOrganizerReviewStats, organizerHasRatingToShow } from '@/lib/utils';
+import { filterPublicRetreatCategories, getOrganizerReviewStats, organizerHasRatingToShow, CATEGORY_SLUG_EN } from '@/lib/utils';
 
 export const metadata: Metadata = homeEN;
 
@@ -86,7 +87,7 @@ export default async function HomePageEN() {
         {/* HERO */}
         <section className="relative min-h-[100vh] flex items-center overflow-hidden">
           <div className="absolute inset-0 z-0">
-            <img src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1920&q=80" alt="Person meditating at sunrise" className="w-full h-full object-cover" />
+            <Image src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1920&q=80" alt="Person meditating at sunrise" fill priority sizes="100vw" className="object-cover" />
             <div className="absolute inset-0 bg-gradient-to-r from-[rgba(254,253,251,0.95)] via-[rgba(254,253,251,0.85)] to-[rgba(254,253,251,0.2)] max-md:bg-gradient-to-b max-md:from-[rgba(254,253,251,0.93)] max-md:via-[rgba(254,253,251,0.8)] max-md:to-[rgba(254,253,251,0.4)]" />
           </div>
           <div className="container-wide relative z-10 pt-24 pb-12 md:py-20">
@@ -128,9 +129,9 @@ export default async function HomePageEN() {
                 </form>
               </div>
               <div className="flex flex-wrap gap-6 mt-8 pt-6 border-t border-sand-200 animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)_0.5s_forwards] opacity-0">
-                <div className="flex items-center gap-2.5 text-sm text-[#7a6b5d]"><div className="w-9 h-9 bg-sage-50 rounded-full flex items-center justify-center shrink-0"><IconShield /></div>Secure payments</div>
+                <div className="flex items-center gap-2.5 text-sm text-[#7a6b5d]"><div className="w-9 h-9 bg-sage-50 rounded-full flex items-center justify-center shrink-0"><IconShield /></div>Secure payments with Stripe</div>
                 <div className="flex items-center gap-2.5 text-sm text-[#7a6b5d]"><div className="w-9 h-9 bg-sage-50 rounded-full flex items-center justify-center shrink-0"><IconVerified /></div>Verified organizers</div>
-                <div className="flex items-center gap-2.5 text-sm text-[#7a6b5d]"><div className="w-9 h-9 bg-sage-50 rounded-full flex items-center justify-center shrink-0"><IconHeartsm /></div>Transparent pricing</div>
+                <div className="flex items-center gap-2.5 text-sm text-[#7a6b5d]"><div className="w-9 h-9 bg-sage-50 rounded-full flex items-center justify-center shrink-0"><IconHeartsm /></div>Visa, Mastercard & more</div>
               </div>
             </div>
           </div>
@@ -183,7 +184,7 @@ export default async function HomePageEN() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-5 max-w-4xl mx-auto">
               {cats.map((c) => (
-                <Link key={c.slug} href={`/en/retreats-retiru?tipo=${c.slug}`} className="group relative rounded-2xl overflow-hidden aspect-[3/4] cursor-pointer transition-transform duration-[400ms] hover:-translate-y-1">
+                <Link key={c.slug} href={`/en/retreats-${CATEGORY_SLUG_EN[c.slug] || c.slug}`} className="group relative rounded-2xl overflow-hidden aspect-[3/4] cursor-pointer transition-transform duration-[400ms] hover:-translate-y-1">
                   <ImageWithFallback
                     src={c.cover_image_url || CAT_IMAGES[c.slug] || CAT_IMAGES.yoga}
                     alt={c.name_en || c.name_es}
@@ -209,6 +210,11 @@ export default async function HomePageEN() {
               <div><h2 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground">Featured centers</h2><p className="text-base text-[#7a6b5d] mt-2 max-w-[480px]">Yoga, meditation &amp; ayurveda directory across Spain</p></div>
               <Link href="/en/centers-retiru" className="text-[15px] font-semibold text-terracotta-600 inline-flex items-center gap-1.5 hover:gap-2.5 transition-all whitespace-nowrap">View directory <IconChevron /></Link>
             </div>
+            <div className="flex flex-wrap gap-3 mb-8">
+              <Link href="/en/centers-yoga" className="inline-flex items-center gap-2 px-4 py-2.5 bg-sage-50 border border-sage-200 rounded-full text-sm font-medium text-sage-700 hover:bg-sage-100 transition-colors">Yoga Centers</Link>
+              <Link href="/en/centers-meditation" className="inline-flex items-center gap-2 px-4 py-2.5 bg-sage-50 border border-sage-200 rounded-full text-sm font-medium text-sage-700 hover:bg-sage-100 transition-colors">Meditation Centers</Link>
+              <Link href="/en/centers-ayurveda" className="inline-flex items-center gap-2 px-4 py-2.5 bg-sage-50 border border-sage-200 rounded-full text-sm font-medium text-sage-700 hover:bg-sage-100 transition-colors">Ayurveda Centers</Link>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {[
                 { slug: 'yoga-sala-madrid', name: 'Yoga Sala Madrid', type: 'Yoga', city: 'Madrid', rating: 4.9, reviews: 87, services: ['Hatha', 'Vinyasa', 'Ashtanga'], img: 'https://images.unsplash.com/photo-1545389336-cf090694435e?w=500&q=80' },
@@ -217,7 +223,7 @@ export default async function HomePageEN() {
               ].map((c) => (
                 <Link key={c.slug} href={`/en/center/${c.slug}`} className="group bg-white rounded-2xl overflow-hidden border border-sand-200 hover:shadow-elevated hover:-translate-y-1 transition-all duration-[350ms]">
                   <div className="relative aspect-[16/10] overflow-hidden">
-                    <img src={c.img} alt={c.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <Image src={c.img} alt={c.name} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
                     <div className="absolute top-3 left-3 flex gap-1.5"><span className="text-[10px] font-bold uppercase tracking-wider bg-sage-700 text-white px-2 py-0.5 rounded-full">Center</span><span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm">{c.type}</span></div>
                     <span className="absolute top-3 right-3 text-[10px] font-bold bg-amber-400 text-amber-900 px-2 py-0.5 rounded-full inline-flex items-center gap-0.5">
                       <Star className="w-3 h-3 shrink-0 fill-amber-900 text-amber-900" aria-hidden />
@@ -255,7 +261,7 @@ export default async function HomePageEN() {
                 return (
                 <Link key={r.slug} href={`/en/retreat/${r.slug}`} className="group bg-white rounded-2xl overflow-hidden border border-sand-200 transition-all duration-[350ms] hover:shadow-elevated hover:-translate-y-1 hover:border-sand-300">
                   <div className="relative aspect-[16/10] overflow-hidden">
-                    <img src={img} alt={r.title_en || r.title_es} className="w-full h-full object-cover transition-transform duration-[600ms] group-hover:scale-105" />
+                    <Image src={img} alt={r.title_en || r.title_es} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover transition-transform duration-[600ms] group-hover:scale-105" />
                     <div className="absolute top-3 left-3 flex gap-1.5">
                       <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground">{category}</span>
                       {instant && (
@@ -305,7 +311,7 @@ export default async function HomePageEN() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-6">
               {[
                 { n: 1, t: 'Explore', d: 'Browse our center directory or discover retreats by destination, date or discipline.' },
-                { n: 2, t: 'Book your spot', d: 'Pay the listed PVP by card when payment is due, or hold a spot without paying until the minimum group size is met if the retreat uses that model. All through the platform.' },
+                { n: 2, t: 'Book your spot', d: '100% secure payment with Stripe (Visa, Mastercard & more). Pay the listed PVP by card when payment is due, or hold a spot without paying until the minimum group size is met. Your data never touches our servers.' },
                 { n: 3, t: 'Coordinate', d: 'Chat directly with the organizer. Fill in the questionnaire and prepare your experience.' },
                 { n: 4, t: 'Live the experience', d: 'Enjoy the experience. Cancellation refunds, when they apply, follow the retreat policy on what you paid.' },
               ].map(({ n, t, d }) => (
@@ -322,12 +328,13 @@ export default async function HomePageEN() {
               <h3 className="font-serif text-[28px] text-center mb-2">100% transparent pricing</h3>
               <p className="text-center text-[#7a6b5d] mb-8">You&apos;ll always know exactly what you pay and to whom</p>
               <div className="bg-sand-100 rounded-2xl p-6 mb-6">
-                <p className="text-xs uppercase tracking-wider font-semibold text-[#a09383] mb-4">Example: 500€ retreat</p>
-                <div className="flex justify-between items-center py-2.5"><span className="text-[15px] flex items-center gap-2">Booking management fee <span className="text-[11px] font-semibold uppercase tracking-wider bg-terracotta-100 text-terracotta-700 px-2 py-0.5 rounded-full">Retiru</span></span><span className="text-lg font-bold">100€</span></div>
-                <div className="flex justify-between items-center py-2.5 border-t border-sand-200"><span className="text-[15px] flex items-center gap-2">Payment to organizer <span className="text-[11px] font-semibold uppercase tracking-wider bg-sage-100 text-sage-700 px-2 py-0.5 rounded-full">Organizer</span></span><span className="text-lg font-bold">400€</span></div>
+                <p className="text-xs uppercase tracking-wider font-semibold text-[#a09383] mb-4">Example: €500 retreat (standard commission)</p>
+                <div className="flex justify-between items-center py-2.5"><span className="text-[15px] flex items-center gap-2">Booking management fee <span className="text-[11px] font-semibold uppercase tracking-wider bg-terracotta-100 text-terracotta-700 px-2 py-0.5 rounded-full">Retiru</span></span><span className="text-lg font-bold">€0–100</span></div>
+                <div className="flex justify-between items-center py-2.5 border-t border-sand-200"><span className="text-[15px] flex items-center gap-2">Payment to organizer <span className="text-[11px] font-semibold uppercase tracking-wider bg-sage-100 text-sage-700 px-2 py-0.5 rounded-full">Organizer</span></span><span className="text-lg font-bold">€400–500</span></div>
                 <div className="flex justify-between items-center pt-4 mt-2 border-t-2 border-foreground"><span className="text-base font-semibold">Total retreat price</span><span className="text-2xl font-bold">500€</span></div>
               </div>
-              <p className="text-center text-sm text-[#7a6b5d] leading-relaxed"><strong className="text-foreground">€500 is the PVP</strong> (listed price per person). <strong className="text-foreground">You pay that amount in one charge</strong> when payment is due at booking. Of that, Retiru retains €100 (20% fee) and transfers €400 (80% net) to the organizer. No hidden surcharges on top of the PVP.</p>
+              <p className="text-center text-sm text-[#7a6b5d] leading-relaxed"><strong className="text-foreground">€500 is the PVP</strong> (listed price per person). <strong className="text-foreground">You pay that amount in one charge.</strong> Retiru&apos;s commission is progressive: <strong className="text-foreground">0%</strong> on the organizer&apos;s first retreat, <strong className="text-foreground">10%</strong> on the second, and <strong className="text-foreground">20%</strong> from the third onward. No hidden surcharges on top of the PVP.</p>
+              <p className="text-center text-xs text-[#a09383] mt-4 flex items-center justify-center gap-2">🔒 Secure payment with Stripe · Visa, Mastercard & more · Your data never touches our servers</p>
             </div>
           </div>
         </section>
@@ -380,7 +387,7 @@ export default async function HomePageEN() {
                   <Link key={p.id} href={`/en/shop/${p.slug}`} className="group bg-white rounded-2xl border border-sand-200 overflow-hidden hover:shadow-soft hover:-translate-y-0.5 transition-all">
                     <div className="relative aspect-square overflow-hidden bg-sand-50">
                       {img ? (
-                        <img src={img} alt={name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <Image src={img} alt={name} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover group-hover:scale-105 transition-transform duration-500" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-sage-50 text-sage-400">
                           <ShoppingBag className="w-12 h-12" strokeWidth={1.25} aria-hidden />
@@ -431,11 +438,11 @@ export default async function HomePageEN() {
             <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-sage-800 to-sage-900 px-10 py-16 md:px-16 md:py-20 text-white">
               <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle at 25% 25%, white 1px, transparent 1px), radial-gradient(circle at 75% 75%, white 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
               <div className="relative z-10 max-w-[600px]">
-                <div className="inline-flex items-center gap-1.5 bg-white/15 border border-white/20 px-4 py-1.5 rounded-full text-[13px] font-semibold tracking-wide mb-6">No subscription · 80/20 on the PVP</div>
+                <div className="inline-flex items-center gap-1.5 bg-white/15 border border-white/20 px-4 py-1.5 rounded-full text-[13px] font-semibold tracking-wide mb-6">No subscription · 1st retreat free</div>
                 <h2 className="font-serif text-[clamp(28px,4vw,42px)] text-white mb-4">Organize retreats? Publish with no listing fee.</h2>
-                <p className="text-[17px] text-white/80 leading-[1.7] mb-8">Full professional dashboard with no subscription. On each paid booking, a 20% fee is included in the PVP the guest pays and you receive 80% net, with a breakdown when you create the retreat.</p>
+                <p className="text-[17px] text-white/80 leading-[1.7] mb-8">Full professional dashboard with no subscription. Your first retreat is free (0% commission), the second at 10%, then 20% standard. Breakdown shown when you create the retreat.</p>
                 <div className="grid grid-cols-2 gap-4 mb-8">
-                  {['20% / 80% transparent', 'Full dashboard', 'Attendee CRM', 'QR Check-in', 'Integrated messaging', 'Analytics'].map((f) => (
+                  {['1st retreat free (0%)', 'Full dashboard', 'Attendee CRM', 'QR Check-in', 'Integrated messaging', 'Analytics'].map((f) => (
                     <div key={f} className="flex items-center gap-2.5 text-sm font-medium"><div className="w-6 h-6 bg-white/15 rounded-full flex items-center justify-center shrink-0"><IconCheck /></div>{f}</div>
                   ))}
                 </div>

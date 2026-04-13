@@ -204,8 +204,8 @@ async function main() {
   console.log('   ✓ Categorías de blog listas');
 
   // 2. Obtener author_id (admin o primer perfil)
-  const { data: admins } = await supabase.from('profiles').select('id').eq('role', 'admin').limit(1);
-  let authorId = admins?.[0]?.id;
+  const { data: adminRoles } = await supabase.from('user_roles').select('user_id').eq('role', 'admin').limit(1);
+  let authorId = adminRoles?.[0]?.user_id;
   if (!authorId) {
     const { data: anyProfile } = await supabase.from('profiles').select('id').limit(1);
     authorId = anyProfile?.[0]?.id;
