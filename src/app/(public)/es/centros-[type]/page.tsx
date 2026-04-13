@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
+import { notFound } from 'next/navigation';
 import { MapPin, Star } from 'lucide-react';
 import CentrosSearch from '@/components/home/CentrosSearch';
 import { getActiveCenters, getCategoryBySlug, getProvincesForCenterType } from '@/lib/data';
@@ -23,6 +24,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ type: string }> }): Promise<Metadata> {
   const { type: urlType } = await params;
+  if (!(VALID_TYPES_ES as readonly string[]).includes(urlType)) return {};
   const dbType = CENTER_TYPE_FROM_URL_ES[urlType] || urlType;
   const label = getCenterTypeLabel(dbType, 'es');
   const enType = dbType;
@@ -38,6 +40,7 @@ export async function generateMetadata({ params }: { params: Promise<{ type: str
 
 export default async function CentrosPorTipoPage({ params }: { params: Promise<{ type: string }> }) {
   const { type: urlType } = await params;
+  if (!(VALID_TYPES_ES as readonly string[]).includes(urlType)) notFound();
   const dbType = CENTER_TYPE_FROM_URL_ES[urlType] || urlType;
   const label = getCenterTypeLabel(dbType, 'es');
 

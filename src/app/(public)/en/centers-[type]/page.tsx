@@ -19,6 +19,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ type: string }> }): Promise<Metadata> {
   const { type } = await params;
+  if (!VALID_TYPES.includes(type as (typeof VALID_TYPES)[number])) return {};
   const label = getCenterTypeLabel(type, 'en');
   const esSlug = TYPE_ES_SLUG[type] || type;
   return generatePageMetadata({

@@ -20,6 +20,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ type: string; province: string }> }): Promise<Metadata> {
   const { type, province } = await params;
+  if (!VALID_CENTER_TYPES.has(type)) return {};
   const label = getCenterTypeLabel(type, 'en');
   const { provinceName } = await getCentersByProvince(province);
   const name = provinceName || province;
@@ -44,17 +45,7 @@ export default async function CentersTypeProvincePage({ params }: { params: Prom
   const catSlug = type === 'meditation' ? 'meditacion' : type;
   const cat = await getCategoryBySlug(catSlug);
 
-  if (!provinceName) {
-    return (
-      <div className="container-wide py-12">
-        <Link href={`/en/centers-${type}`} className="inline-flex items-center gap-1.5 text-sm text-[#7a6b5d] hover:text-terracotta-600 mb-6">
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg>
-          {label} Centers
-        </Link>
-        <p className="font-serif text-xl text-foreground">Province not found</p>
-      </div>
-    );
-  }
+  if (!provinceName) notFound();
 
   return (
     <>

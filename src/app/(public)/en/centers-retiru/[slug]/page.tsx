@@ -2,6 +2,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
+import { notFound } from 'next/navigation';
 import { MapPin, Star } from 'lucide-react';
 import { getCenterProvinces, getCentersByProvince } from '@/lib/data';
 import { getCenterTypeLabel, stripMarkdownForPreview, isGenericDescription } from '@/lib/utils';
@@ -32,17 +33,7 @@ export default async function CentersByProvincePageEN({ params }: { params: Prom
   const { slug } = await params;
   const { centers, provinceName } = await getCentersByProvince(slug);
 
-  if (!provinceName) {
-    return (
-      <div className="container-wide py-12">
-        <Link href="/en/centers-retiru" className="inline-flex items-center gap-1.5 text-sm text-[#7a6b5d] hover:text-terracotta-600 mb-6">
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg>
-          Centers directory
-        </Link>
-        <p className="font-serif text-xl text-foreground">Province not found</p>
-      </div>
-    );
-  }
+  if (!provinceName) notFound();
 
   return (
     <div className="container-wide py-10">

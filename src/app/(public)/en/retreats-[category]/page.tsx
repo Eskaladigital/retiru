@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
+import { notFound } from 'next/navigation';
 import { MapPin, Star, CalendarDays, Users } from 'lucide-react';
 import EventosSearch from '@/components/home/EventosSearch';
 import {
@@ -39,17 +40,7 @@ export default async function RetreatsByCategoryPage({ params }: { params: Promi
   const dbSlug = CATEGORY_SLUG_FROM_EN[enSlug] || enSlug;
   const cat = await getCategoryBySlug(dbSlug);
 
-  if (!cat) {
-    return (
-      <div className="container-wide py-12">
-        <Link href="/en/retreats-retiru" className="inline-flex items-center gap-1.5 text-sm text-[#7a6b5d] hover:text-terracotta-600 mb-6">
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg>
-          All retreats
-        </Link>
-        <p className="font-serif text-xl text-foreground">Category not found</p>
-      </div>
-    );
-  }
+  if (!cat) notFound();
 
   const [{ retreats, total }, destinations] = await Promise.all([
     getPublishedRetreats({ categorySlug: dbSlug, limit: 50 }),

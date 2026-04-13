@@ -2,6 +2,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
+import { notFound } from 'next/navigation';
 import { MapPin, Star, CalendarDays, Users } from 'lucide-react';
 import { getDestinationsWithRetreats, getDestinationBySlug, getPublishedRetreats } from '@/lib/data';
 import { getOrganizerReviewStats, organizerHasRatingToShow, CATEGORY_SLUG_EN } from '@/lib/utils';
@@ -32,17 +33,7 @@ export default async function RetreatsByDestinationPageEN({ params }: { params: 
   const { slug } = await params;
   const dest = await getDestinationBySlug(slug);
 
-  if (!dest) {
-    return (
-      <div className="container-wide py-12">
-        <Link href="/en/retreats-retiru" className="inline-flex items-center gap-1.5 text-sm text-[#7a6b5d] hover:text-terracotta-600 mb-6">
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg>
-          All retreats
-        </Link>
-        <p className="font-serif text-xl text-foreground">Destination not found</p>
-      </div>
-    );
-  }
+  if (!dest) notFound();
 
   const { retreats, total } = await getPublishedRetreats({ destinationSlug: slug, limit: 50 });
   const destName = dest.name_en || dest.name_es;

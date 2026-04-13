@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
+import { notFound } from 'next/navigation';
 import { MapPin, Star } from 'lucide-react';
 import CentrosSearch from '@/components/home/CentrosSearch';
 import { getCenterTypeProvincePairs, getCentersByProvince, getCategoryBySlug } from '@/lib/data';
@@ -8,6 +9,8 @@ import { getCenterTypeLabel, CENTER_TYPE_FROM_URL_ES, CENTER_TYPE_URL_ES, stripM
 import { generatePageMetadata, jsonLdItemList, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
 
 export const revalidate = 3600;
+
+const VALID_TYPES_ES = ['yoga', 'meditacion', 'ayurveda'] as const;
 
 export async function generateStaticParams() {
   const pairs = await getCenterTypeProvincePairs();
@@ -19,6 +22,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ type: string; province: string }> }): Promise<Metadata> {
   const { type: urlType, province } = await params;
+  if (!(VALID_TYPES_ES as readonly string[]).includes(urlType)) return {};
   const dbType = CENTER_TYPE_FROM_URL_ES[urlType] || urlType;
   const label = getCenterTypeLabel(dbType, 'es');
   const { provinceName } = await getCentersByProvince(province);
@@ -35,6 +39,7 @@ export async function generateMetadata({ params }: { params: Promise<{ type: str
 
 export default async function CentrosTipoProvinciaPage({ params }: { params: Promise<{ type: string; province: string }> }) {
   const { type: urlType, province } = await params;
+  if (!(VALID_TYPES_ES as readonly string[]).includes(urlType)) notFound();
   const dbType = CENTER_TYPE_FROM_URL_ES[urlType] || urlType;
   const label = getCenterTypeLabel(dbType, 'es');
 
@@ -43,17 +48,7 @@ export default async function CentrosTipoProvinciaPage({ params }: { params: Pro
   const catSlug = urlType === 'meditacion' ? 'meditacion' : urlType;
   const cat = await getCategoryBySlug(catSlug);
 
-  if (!provinceName) {
-    return (
-      <div className="container-wide py-12">
-        <Link href={`/es/centros-${urlType}`} className="inline-flex items-center gap-1.5 text-sm text-[#7a6b5d] hover:text-terracotta-600 mb-6">
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg>
-          Centros de {label}
-        </Link>
-        <p className="font-serif text-xl text-foreground">Provincia no encontrada</p>
-      </div>
-    );
-  }
+  if (!provinceName) notFound();
 
   return (
     <>
