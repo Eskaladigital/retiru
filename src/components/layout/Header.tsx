@@ -16,7 +16,7 @@ import LocaleSwitchLink from '@/components/layout/LocaleSwitchLink';
 
 interface HeaderProps {
   locale: Locale;
-  user?: { name: string; roles: string[] } | null;
+  user?: { name: string; roles: string[]; hasContract?: boolean } | null;
 }
 
 export default function Header({ locale, user }: HeaderProps) {
@@ -148,8 +148,8 @@ export default function Header({ locale, user }: HeaderProps) {
                   <Link href={`${prefix}/mis-centros`} className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-sand-50" onClick={() => setUserMenuOpen(false)}>
                     <span className="text-base w-5">🏢</span> {locale === 'es' ? 'Mis centros' : 'My centers'}
                   </Link>
-                  <Link href={`${prefix}/mis-eventos`} className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-sand-50" onClick={() => setUserMenuOpen(false)}>
-                    <span className="text-base w-5">📅</span> {locale === 'es' ? 'Mis eventos' : 'My events'}
+                  <Link href={`${prefix}/panel/eventos`} className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-sand-50" onClick={() => setUserMenuOpen(false)}>
+                    <span className="text-base w-5">📅</span> {user.hasContract ? (locale === 'es' ? 'Panel organizador' : 'Organizer panel') : (locale === 'es' ? 'Crear evento' : 'Create event')}
                   </Link>
                   <hr className="my-1 border-sand-100" />
                   {user.roles?.includes('admin') && (
@@ -278,8 +278,8 @@ export default function Header({ locale, user }: HeaderProps) {
                   <Link href={`${prefix}/mis-centros`} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]" onClick={closeMenu}>
                     <span className="text-base">🏢</span> {locale === 'es' ? 'Mis centros' : 'My centers'}
                   </Link>
-                  <Link href={`${prefix}/mis-eventos`} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]" onClick={closeMenu}>
-                    <span className="text-base">📅</span> {locale === 'es' ? 'Mis eventos' : 'My events'}
+                  <Link href={`${prefix}/panel/eventos`} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]" onClick={closeMenu}>
+                    <span className="text-base">📅</span> {user.hasContract ? (locale === 'es' ? 'Panel organizador' : 'Organizer panel') : (locale === 'es' ? 'Crear evento' : 'Create event')}
                   </Link>
                   <hr className="my-1 border-sand-100" />
                   {user.roles?.includes('admin') && (

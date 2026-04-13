@@ -49,16 +49,18 @@ export async function createServerSupabase() {
 }
 
 /**
- * Obtiene el usuario actual para el Header (name, roles[]).
+ * Obtiene el usuario actual para el Header (name, roles[], hasContract).
  * Retorna null si no hay sesión.
  */
-export async function getCurrentUserForHeader(): Promise<{ name: string; roles: string[] } | null> {
+export async function getCurrentUserForHeader(): Promise<{ name: string; roles: string[]; hasContract: boolean } | null> {
   try {
     const supabase = await createServerSupabase();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
-    const [{ data: profile }, { data: userRoles }] = await Promise.all([
+    const admin = createAdminSupabase();
+
+    const [{ data: profile }, { data: userRoles }, { data: orgProfile }] = await Promise.all([
       supabase
         .from('profiles')
         .select('full_name')
@@ -68,15 +70,23 @@ export async function getCurrentUserForHeader(): Promise<{ name: string; roles: 
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id),
+      admin
+        .from('organizer_profiles')
+        .select('contract_accepted_at')
+        .eq('user_id', user.id)
+        .single(),
     ]);
 
     const roles = userRoles && userRoles.length > 0
       ? userRoles.map((r: { role: string }) => r.role)
       : ['attendee'];
 
+    const hasContract = !!orgProfile?.contract_accepted_at;
+
     return {
       name: profile?.full_name || user.email?.split('@')[0] || 'Usuario',
       roles,
+      hasContract,
     };
   } catch {
     return null;

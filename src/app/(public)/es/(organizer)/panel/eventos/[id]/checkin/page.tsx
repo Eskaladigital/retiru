@@ -1,40 +1,83 @@
-// /es/panel/eventos/[id]/checkin — Check-in con QR
+import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
-const ATTENDEES = [
-  { id: '1', name: 'María García', checkedIn: true, time: '09:15' },
-  { id: '2', name: 'Carlos López', checkedIn: true, time: '09:22' },
-  { id: '3', name: 'Anna Schmidt', checkedIn: false, time: null },
-];
-export default function CheckinPage({ params }: { params: { id: string } }) {
-  const checkedCount = ATTENDEES.filter(a => a.checkedIn).length;
+import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
+import { CheckinClient } from './CheckinClient';
+
+type Props = { params: Promise<{ id: string }> };
+
+export default async function CheckinPage({ params }: Props) {
+  const { id } = await params;
+
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect(`/es/login?redirect=/es/panel/eventos/${id}/checkin`);
+
+  const admin = createAdminSupabase();
+
+  const { data: orgProfile } = await admin
+    .from('organizer_profiles')
+    .select('id')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!orgProfile) notFound();
+
+  const { data: retreat } = await admin
+    .from('retreats')
+    .select('id, title_es, organizer_id')
+    .eq('id', id)
+    .single();
+
+  if (!retreat || retreat.organizer_id !== orgProfile.id) notFound();
+
+  const { data: bookings } = await admin
+    .from('bookings')
+    .select(`
+      id,
+      checked_in_at,
+      profiles!attendee_id(full_name, avatar_url)
+    `)
+    .eq('retreat_id', id)
+    .in('status', ['confirmed', 'completed'])
+    .order('checked_in_at', { ascending: false, nullsFirst: false });
+
+  const attendees = (bookings || []).map((b: any) => ({
+    id: b.id,
+    name: b.profiles?.full_name || 'Asistente',
+    avatar: b.profiles?.avatar_url,
+    checkedIn: !!b.checked_in_at,
+    time: b.checked_in_at
+      ? new Date(b.checked_in_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })
+      : null,
+  }));
+
+  const checkedCount = attendees.filter(a => a.checkedIn).length;
+
   return (
     <div>
-      <Link href={`/es/panel/eventos/${params.id}`} className="inline-flex items-center gap-1.5 text-sm text-terracotta-600 font-medium mb-6">← Volver al retiro</Link>
-      <h1 className="font-serif text-2xl text-foreground mb-2">Check-in</h1>
-      <p className="text-sm text-[#7a6b5d] mb-6">{checkedCount} de {ATTENDEES.length} asistentes han hecho check-in</p>
+      <Link href={`/es/panel/eventos/${id}`} className="inline-flex items-center gap-1.5 text-sm text-terracotta-600 font-medium mb-6">
+        ← Volver al retiro
+      </Link>
+      <h1 className="font-serif text-2xl text-foreground mb-2">Check-in: {retreat.title_es}</h1>
+      <p className="text-sm text-[#7a6b5d] mb-6">
+        {checkedCount} de {attendees.length} asistentes han hecho check-in
+      </p>
 
-      {/* Progress */}
-      <div className="h-3 bg-sand-200 rounded-full overflow-hidden mb-8"><div className="h-full bg-sage-500 rounded-full" style={{ width: `${(checkedCount / ATTENDEES.length) * 100}%` }} /></div>
+      <div className="h-3 bg-sand-200 rounded-full overflow-hidden mb-8">
+        <div
+          className="h-full bg-sage-500 rounded-full transition-all"
+          style={{ width: attendees.length > 0 ? `${(checkedCount / attendees.length) * 100}%` : '0%' }}
+        />
+      </div>
 
       <div className="bg-white border border-sand-200 rounded-2xl p-6 mb-6 text-center">
         <p className="text-sm text-[#7a6b5d] mb-3">Escanea el QR del asistente o márcalo manualmente</p>
-        <button className="bg-terracotta-600 text-white font-semibold px-6 py-3 rounded-xl hover:bg-terracotta-700 transition-colors text-sm">📷 Escanear QR</button>
+        <button className="bg-terracotta-600 text-white font-semibold px-6 py-3 rounded-xl hover:bg-terracotta-700 transition-colors text-sm">
+          📷 Escanear QR
+        </button>
       </div>
 
-      <div className="space-y-2">
-        {ATTENDEES.map((a) => (
-          <div key={a.id} className="flex items-center justify-between bg-white border border-sand-200 rounded-xl px-5 py-3">
-            <div className="flex items-center gap-3">
-              <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${a.checkedIn ? 'bg-sage-100 text-sage-700' : 'bg-sand-200 text-[#a09383]'}`}>{a.checkedIn ? '✓' : '—'}</span>
-              <span className="text-sm font-medium">{a.name}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              {a.time && <span className="text-xs text-[#a09383]">{a.time}</span>}
-              {!a.checkedIn && <button className="text-xs font-semibold text-terracotta-600 hover:underline">Marcar</button>}
-            </div>
-          </div>
-        ))}
-      </div>
+      <CheckinClient attendees={attendees} retreatId={id} />
     </div>
   );
 }

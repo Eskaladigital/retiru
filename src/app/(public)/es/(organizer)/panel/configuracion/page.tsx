@@ -1,6 +1,35 @@
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
+import { ConfigClient } from './ConfigClient';
 
-export default function ConfiguracionPage() {
+export default async function ConfiguracionPage() {
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/es/login?redirect=/es/panel/configuracion');
+
+  const admin = createAdminSupabase();
+
+  const { data: orgProfile } = await admin
+    .from('organizer_profiles')
+    .select('id, business_name, description_es, location, website, instagram, phone, languages, logo_url, tax_id')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!orgProfile) redirect('/es/login');
+
+  const profile = {
+    businessName: orgProfile.business_name || '',
+    bio: orgProfile.description_es || '',
+    location: orgProfile.location || '',
+    website: orgProfile.website || '',
+    instagram: orgProfile.instagram || '',
+    phone: orgProfile.phone || '',
+    languages: orgProfile.languages || ['es'],
+    logoUrl: orgProfile.logo_url,
+    taxId: orgProfile.tax_id,
+  };
+
   return (
     <div className="max-w-2xl">
       <div className="mb-8">
@@ -8,52 +37,12 @@ export default function ConfiguracionPage() {
         <p className="text-sm text-[#7a6b5d] mt-1">Gestiona tu perfil de organizador y preferencias</p>
       </div>
 
-      {/* Perfil público */}
       <section className="bg-white border border-sand-200 rounded-2xl p-6 mb-6">
         <h2 className="font-serif text-xl mb-4">Perfil público</h2>
         <p className="text-sm text-[#7a6b5d] mb-5">Esta información será visible para los asistentes.</p>
-
-        <form className="space-y-5">
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">Nombre de la organización *</label>
-            <input type="text" defaultValue="Ibiza Yoga Retreats" className="w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all" />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">Descripción</label>
-            <textarea
-              rows={4}
-              defaultValue="Organizamos retiros de yoga y meditación en las mejores villas de Ibiza desde 2018."
-              className="w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all resize-none"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Ubicación</label>
-              <input type="text" defaultValue="Ibiza, Baleares" className="w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Idiomas</label>
-              <input type="text" defaultValue="Español, Inglés" className="w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all" />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">Foto de perfil</label>
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-sage-100 rounded-2xl flex items-center justify-center text-xl font-bold text-sage-700">I</div>
-              <button type="button" className="text-sm font-semibold text-terracotta-600 hover:underline">Cambiar foto</button>
-            </div>
-          </div>
-
-          <button type="submit" className="bg-terracotta-600 text-white font-semibold px-8 py-3 rounded-xl hover:bg-terracotta-700 transition-colors">
-            Guardar cambios
-          </button>
-        </form>
+        <ConfigClient profile={profile} />
       </section>
 
-      {/* Notificaciones */}
       <section className="bg-white border border-sand-200 rounded-2xl p-6 mb-6">
         <h2 className="font-serif text-xl mb-4">Notificaciones</h2>
         <p className="text-sm text-[#7a6b5d] mb-5">Elige qué notificaciones quieres recibir por email.</p>
@@ -64,11 +53,11 @@ export default function ConfiguracionPage() {
             { label: 'Cancelación', description: 'Cuando un asistente cancela su reserva', default: true },
             { label: 'Nuevo mensaje', description: 'Cuando recibes un mensaje de un asistente', default: true },
             { label: 'Nueva reseña', description: 'Cuando un asistente deja una reseña', default: false },
-            { label: 'Recordatorios de pago', description: 'Avisos sobre pagos o liquidaciones pendientes (si aplica)', default: true },
+            { label: 'Recordatorios de pago', description: 'Avisos sobre pagos o liquidaciones pendientes', default: true },
             { label: 'Informes mensuales', description: 'Resumen mensual de rendimiento de tus retiros', default: false },
           ].map((notif) => (
-            <label key={notif.label} className="flex items-start gap-3 cursor-pointer">
-              <input type="checkbox" defaultChecked={notif.default} className="mt-0.5 w-4 h-4 rounded border-sand-300 text-terracotta-600 focus:ring-terracotta-500" />
+            <label key={notif.label} className="flex items-start gap-3 cursor-pointer opacity-50 pointer-events-none">
+              <input type="checkbox" defaultChecked={notif.default} className="mt-0.5 w-4 h-4 rounded border-sand-300 text-terracotta-600 focus:ring-terracotta-500" disabled />
               <div>
                 <p className="text-sm font-medium text-foreground">{notif.label}</p>
                 <p className="text-xs text-[#a09383]">{notif.description}</p>
@@ -76,45 +65,33 @@ export default function ConfiguracionPage() {
             </label>
           ))}
         </div>
+        <p className="text-xs text-[#a09383] mt-4">Próximamente: configuración de notificaciones</p>
       </section>
 
-      {/* Datos fiscales */}
-      <section className="bg-white border border-sand-200 rounded-2xl p-6 mb-6">
-        <h2 className="font-serif text-xl mb-4">Datos fiscales</h2>
-        <p className="text-sm text-[#7a6b5d] mb-5">Información fiscal y de facturación asociada a tus retiros y liquidaciones.</p>
+      <section className="bg-white border border-sand-200 rounded-2xl p-6">
+        <h2 className="font-serif text-xl mb-4">Datos fiscales y bancarios</h2>
+        <p className="text-sm text-[#7a6b5d] mb-5">
+          Estos datos se gestionan en la sección de verificación para garantizar la seguridad.
+        </p>
 
-        <form className="space-y-5">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">NIF / CIF</label>
-              <input type="text" placeholder="12345678A" className="w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Razón social</label>
-              <input type="text" placeholder="Tu empresa S.L." className="w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all" />
-            </div>
+        <div className="bg-sand-50 border border-sand-200 rounded-xl p-4 mb-4">
+          <div className="flex items-center gap-3 mb-2">
+            <svg className="w-5 h-5 text-sage-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-sm font-semibold text-foreground">Datos fiscales verificados</p>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">Dirección fiscal</label>
-            <input type="text" placeholder="Calle, número, CP, Ciudad" className="w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">IBAN</label>
-            <input type="text" placeholder="ES00 0000 0000 0000 0000 0000" className="w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all" />
-          </div>
-          <button type="submit" className="bg-terracotta-600 text-white font-semibold px-8 py-3 rounded-xl hover:bg-terracotta-700 transition-colors">
-            Actualizar datos
-          </button>
-        </form>
-      </section>
+          {profile.taxId && (
+            <p className="text-sm text-[#7a6b5d]">NIF/CIF: {profile.taxId}</p>
+          )}
+        </div>
 
-      {/* Danger zone */}
-      <section className="bg-white border border-red-200 rounded-2xl p-6">
-        <h2 className="font-serif text-xl mb-2 text-red-600">Zona peligrosa</h2>
-        <p className="text-sm text-[#7a6b5d] mb-4">Desactivar tu cuenta de organizador hará que todos tus retiros dejen de ser visibles. Las reservas existentes no se verán afectadas.</p>
-        <button className="text-sm text-red-500 font-medium border border-red-200 rounded-xl px-5 py-2.5 hover:bg-red-50 transition-colors">
-          Desactivar cuenta de organizador
-        </button>
+        <Link
+          href="/es/panel/verificacion"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-terracotta-600 hover:underline"
+        >
+          Ver documentación completa →
+        </Link>
       </section>
     </div>
   );

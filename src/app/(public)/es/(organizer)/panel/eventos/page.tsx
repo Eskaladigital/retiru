@@ -1,63 +1,96 @@
-// /es/panel/eventos — Lista de eventos del organizador
-import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
+import { PanelEventosClient } from '@/components/panel/PanelEventosClient';
+import { ContratoOrganizador } from '@/components/panel/ContratoOrganizador';
+import { VerificacionBanner } from '@/components/panel/VerificacionBanner';
 
-const EVENTS = [
-  { id: '1', title: 'Retiro de Yoga y Meditación frente al mar', status: 'published', dates: '15–20 Jun 2026', bookings: 13, maxAttendees: 16, price: 790, img: 'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=300&q=80' },
-  { id: '2', title: 'Retiro de ayurveda en Ibiza', status: 'published', dates: '1–7 Jul 2026', bookings: 8, maxAttendees: 12, price: 1100, img: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=300&q=80' },
-  { id: '3', title: 'Retiro de Meditación Silenciosa', status: 'draft', dates: '15–18 Sep 2026', bookings: 0, maxAttendees: 10, price: 480, img: 'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=300&q=80' },
-];
+export default async function PanelEventosPage() {
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/es/login?redirect=/es/panel/eventos');
 
-const STATUS_MAP: Record<string, { label: string; color: string }> = {
-  published: { label: 'Publicado', color: 'bg-sage-100 text-sage-700' },
-  draft: { label: 'Borrador', color: 'bg-sand-200 text-[#7a6b5d]' },
-  pending_review: { label: 'En revisión', color: 'bg-amber-100 text-amber-700' },
-  cancelled: { label: 'Cancelado', color: 'bg-red-100 text-red-700' },
-};
+  const admin = createAdminSupabase();
 
-export default function PanelEventosPage() {
+  const { data: orgProfile } = await admin
+    .from('organizer_profiles')
+    .select('id, status, contract_accepted_at')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!orgProfile || !orgProfile.contract_accepted_at) {
+    return <ContratoOrganizador />;
+  }
+
+  let verificationProgress = { submitted: 0, approved: 0, total: 5 };
+  if (orgProfile.status !== 'verified') {
+    const { data: steps } = await admin
+      .from('organizer_verification_steps')
+      .select('status')
+      .eq('organizer_id', orgProfile.id);
+
+    if (steps) {
+      verificationProgress = {
+        submitted: steps.filter((s: { status: string }) => s.status === 'submitted' || s.status === 'in_review' || s.status === 'approved').length,
+        approved: steps.filter((s: { status: string }) => s.status === 'approved').length,
+        total: steps.length,
+      };
+    }
+  }
+
+  let retreats: any[] = [];
+  if (orgProfile) {
+    const { data, error: retreatsErr } = await admin
+      .from('retreats')
+      .select(`
+        id, slug, title_es, status, start_date, end_date,
+        max_attendees, min_attendees, confirmed_bookings, total_price,
+        retreat_images(url, is_cover)
+      `)
+      .eq('organizer_id', orgProfile.id)
+      .order('start_date', { ascending: false });
+    if (retreatsErr) {
+      console.error('[panel/eventos] Error cargando retiros:', retreatsErr.message);
+    }
+    retreats = data || [];
+  }
+
+  const retreatIds = retreats.map((r: any) => r.id);
+  const reservedMap: Record<string, number> = {};
+  if (retreatIds.length > 0) {
+    const { data: reservedRows } = await admin
+      .from('bookings')
+      .select('retreat_id')
+      .in('retreat_id', retreatIds)
+      .eq('status', 'reserved_no_payment');
+    for (const row of reservedRows || []) {
+      reservedMap[row.retreat_id] = (reservedMap[row.retreat_id] || 0) + 1;
+    }
+  }
+
+  const list = retreats.map((r: any) => ({
+    id: r.id,
+    slug: r.slug,
+    title_es: r.title_es,
+    status: r.status,
+    start_date: r.start_date,
+    end_date: r.end_date,
+    max_attendees: r.max_attendees,
+    min_attendees: r.min_attendees ?? 1,
+    confirmed_bookings: r.confirmed_bookings || 0,
+    reserved_bookings: reservedMap[r.id] || 0,
+    total_price: r.total_price,
+    cover: r.retreat_images?.find((i: any) => i.is_cover)?.url || r.retreat_images?.[0]?.url || null,
+  }));
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="font-serif text-3xl text-foreground">Mis retiros</h1>
-          <p className="text-sm text-[#7a6b5d] mt-1">{EVENTS.length} retiros</p>
-        </div>
-        <Link href="/es/panel/eventos/nuevo" className="inline-flex items-center gap-2 bg-terracotta-600 text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-terracotta-700 transition-colors text-sm">
-          ➕ Nuevo retiro
-        </Link>
-      </div>
-
-      <div className="space-y-3">
-        {EVENTS.map((e) => {
-          const s = STATUS_MAP[e.status] || STATUS_MAP.draft;
-          const occupancy = Math.round((e.bookings / e.maxAttendees) * 100);
-          return (
-            <div key={e.id} className="flex flex-col md:flex-row gap-4 bg-white border border-sand-200 rounded-2xl p-4 hover:shadow-soft transition-all">
-              <div className="w-full md:w-32 h-24 rounded-xl overflow-hidden shrink-0">
-                <img src={e.img} alt={e.title} className="w-full h-full object-cover" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2 mb-1">
-                  <h3 className="font-serif text-base leading-tight">{e.title}</h3>
-                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${s.color}`}>{s.label}</span>
-                </div>
-                <p className="text-sm text-[#7a6b5d] mb-2">📅 {e.dates} · {e.price}€/persona</p>
-                <div className="flex items-center gap-4">
-                  <div className="flex-1 max-w-[200px]">
-                    <div className="flex justify-between text-xs mb-1"><span className="text-[#a09383]">Ocupación</span><span className="font-semibold">{e.bookings}/{e.maxAttendees}</span></div>
-                    <div className="h-2 bg-sand-200 rounded-full overflow-hidden"><div className="h-full bg-terracotta-500 rounded-full transition-all" style={{ width: `${occupancy}%` }} /></div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Link href={`/es/panel/eventos/${e.id}`} className="text-xs font-medium text-terracotta-600 hover:underline">Editar</Link>
-                    <Link href={`/es/panel/eventos/${e.id}/reservas`} className="text-xs font-medium text-terracotta-600 hover:underline">Reservas</Link>
-                    <Link href={`/es/panel/eventos/${e.id}/checkin`} className="text-xs font-medium text-terracotta-600 hover:underline">Check-in</Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      {orgProfile.status !== 'verified' && (
+        <VerificacionBanner
+          organizerStatus={orgProfile.status}
+          progress={verificationProgress}
+        />
+      )}
+      <PanelEventosClient retreats={list} baseHref="/es/panel/eventos" />
     </div>
   );
 }
