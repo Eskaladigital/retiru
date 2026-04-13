@@ -223,7 +223,7 @@ function normalizeInlineMarkdown(raw: string): string {
   return t;
 }
 
-function markdownToHtml(text: string): string {
+export function markdownToHtml(text: string): string {
   if (!text?.trim()) return '';
 
   const lines = normalizeInlineMarkdown(text).split('\n');

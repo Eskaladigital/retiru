@@ -12,6 +12,15 @@ import { Upload, X, Sparkles } from 'lucide-react';
 import { OrganizerPriceBreakdown } from '@/components/organizer/OrganizerPriceBreakdown';
 import { shrinkHeavyHtmlForRetreatPayload, uploadRetreatGalleryImageFromBrowser } from '@/lib/supabase/client';
 import { RetreatDescriptionBody } from '@/components/ui/retreat-description-body';
+import { contentLooksLikeHtml } from '@/lib/sanitize-rich-html';
+import { markdownToHtml, plainBlogBodyToMarkdown } from '@/components/ui/markdown-content';
+
+/** Si el contenido es markdown, lo convierte a HTML para TinyMCE. Si ya es HTML, lo deja. */
+function ensureHtmlForEditor(text: string): string {
+  if (!text?.trim()) return '';
+  if (contentLooksLikeHtml(text)) return text;
+  return markdownToHtml(plainBlogBodyToMarkdown(text));
+}
 
 interface Option { id: string; name: string; slug: string }
 
@@ -195,8 +204,8 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
     title_en: retreat.title_en || '',
     summary_es: retreat.summary_es || '',
     summary_en: retreat.summary_en || '',
-    description_es: retreat.description_es || '',
-    description_en: retreat.description_en || '',
+    description_es: ensureHtmlForEditor(retreat.description_es || ''),
+    description_en: ensureHtmlForEditor(retreat.description_en || ''),
     start_date: retreat.start_date || '',
     end_date: retreat.end_date || '',
     total_price: retreat.total_price?.toString() || '',
