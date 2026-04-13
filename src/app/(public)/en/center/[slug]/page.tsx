@@ -10,6 +10,8 @@ import { generatePageMetadata, jsonLdLocalBusiness, jsonLdBreadcrumb, jsonLdScri
 import { getCenterBySlug, getCenterSlugs } from '@/lib/data';
 import { getCenterTypeLabel, facebookProfileHref } from '@/lib/utils';
 
+export const revalidate = 3600;
+
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateStaticParams() {

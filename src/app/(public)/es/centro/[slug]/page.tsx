@@ -10,6 +10,8 @@ import { CenterMap } from '@/components/ui/center-map';
 import { ClaimCenterButton } from '@/components/ui/claim-center-button';
 import { EmailLink } from '@/components/ui/email-link';
 
+export const revalidate = 3600;
+
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateStaticParams() {

@@ -7,6 +7,8 @@ import { getDestinationBySlug, getDestinationSlugs, getPublishedRetreats } from 
 import { generatePageMetadata } from '@/lib/seo';
 import { ImageWithFallback } from '@/components/ui/image-with-fallback';
 
+export const revalidate = 3600;
+
 export async function generateStaticParams() {
   const slugs = await getDestinationSlugs();
   return slugs.map((slug) => ({ slug }));

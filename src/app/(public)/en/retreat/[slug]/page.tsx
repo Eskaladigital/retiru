@@ -14,6 +14,8 @@ import ReserveButton from '@/components/booking/ReserveButton';
 import { RetreatDescriptionBody, LinkifyText } from '@/components/ui/retreat-description-body';
 import { CATEGORY_SLUG_EN } from '@/lib/utils';
 
+export const revalidate = 3600;
+
 const dateFmt = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1200&q=80';
 

@@ -7,6 +7,8 @@ import { getOrganizerBySlug, getOrganizerSlugs } from '@/lib/data';
 import { generatePageMetadata } from '@/lib/seo';
 import { createServerSupabase } from '@/lib/supabase/server';
 
+export const revalidate = 3600;
+
 export async function generateStaticParams() {
   const slugs = await getOrganizerSlugs();
   return slugs.map((slug) => ({ slug }));

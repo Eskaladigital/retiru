@@ -7,6 +7,8 @@ import { getShopProductSlugs } from '@/lib/data';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { RetreatDescriptionBody } from '@/components/ui/retreat-description-body';
 
+export const revalidate = 3600;
+
 export async function generateStaticParams() {
   const slugs = await getShopProductSlugs();
   return slugs.map((slug) => ({ slug }));

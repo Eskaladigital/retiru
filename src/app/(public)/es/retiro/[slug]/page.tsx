@@ -13,6 +13,8 @@ import AskOrganizerButton from '@/components/messaging/AskOrganizerButton';
 import ReserveButton from '@/components/booking/ReserveButton';
 import { RetreatDescriptionBody, LinkifyText } from '@/components/ui/retreat-description-body';
 
+export const revalidate = 3600;
+
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 const dateFmt = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
