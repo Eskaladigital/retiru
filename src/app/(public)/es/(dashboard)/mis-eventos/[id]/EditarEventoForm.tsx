@@ -11,7 +11,6 @@ const TinyRetreatDescriptionEditor = dynamic(
 import { Upload, X, Sparkles } from 'lucide-react';
 import { OrganizerPriceBreakdown } from '@/components/organizer/OrganizerPriceBreakdown';
 import { shrinkHeavyHtmlForRetreatPayload, uploadRetreatGalleryImageFromBrowser } from '@/lib/supabase/client';
-import { RetreatDescriptionBody } from '@/components/ui/retreat-description-body';
 import { contentLooksLikeHtml } from '@/lib/sanitize-rich-html';
 import { markdownToHtml, plainBlogBodyToMarkdown } from '@/components/ui/markdown-content';
 
@@ -426,17 +425,6 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
             El canal de contacto y reserva es <strong>siempre a través de Retiru</strong>. 
             Contenido que incumpla estas reglas será rechazado automáticamente.
           </p>
-        )}
-        
-        {form.description_es.trim() && (
-          <details className="mt-4 border border-sand-200 rounded-xl overflow-hidden">
-            <summary className="px-4 py-2.5 bg-sand-50 font-medium text-sm text-foreground cursor-pointer hover:bg-sand-100 transition-colors">
-              👁️ Vista previa (como se verá en la ficha pública)
-            </summary>
-            <div className="p-5 bg-white">
-              <RetreatDescriptionBody content={form.description_es} />
-            </div>
-          </details>
         )}
       </div>
 
