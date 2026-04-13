@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { MapPin, Star, CalendarDays, Users } from 'lucide-react';
 import { getDestinationsWithRetreats, getDestinationBySlug, getPublishedRetreats } from '@/lib/data';
 import { getOrganizerReviewStats, organizerHasRatingToShow } from '@/lib/utils';
+import { generatePageMetadata, jsonLdItemList, jsonLdScript } from '@/lib/seo';
 
 export const revalidate = 3600;
 
@@ -16,11 +17,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const dest = await getDestinationBySlug(slug);
   const name = dest?.name_en || dest?.name_es || slug;
-  return {
-    title: `Retreats in ${name} | Retiru`,
+  return generatePageMetadata({
+    title: `Retreats in ${name} — Yoga, meditation & ayurveda | Retiru`,
     description: `Discover yoga, meditation and ayurveda retreats and events in ${name}. Book with full transparency.`,
-    alternates: { languages: { es: `/es/retiros-retiru/${slug}`, en: `/en/retreats-retiru/${slug}` } },
-  };
+    locale: 'en',
+    path: `/en/retreats-retiru/${slug}`,
+    altPath: `/es/retiros-retiru/${slug}`,
+    keywords: ['retreats ' + name, 'yoga ' + name, 'meditation ' + name, 'ayurveda ' + name],
+  });
 }
 
 export default async function RetreatsByDestinationPageEN({ params }: { params: Promise<{ slug: string }> }) {
@@ -73,7 +77,7 @@ export default async function RetreatsByDestinationPageEN({ params }: { params: 
               >
                 <div className="relative aspect-[16/10] overflow-hidden bg-sand-100">
                   {coverImg ? (
-                    <img src={coverImg} alt={r.title_en || r.title_es} className="w-full h-full object-cover transition-transform duration-[600ms] group-hover:scale-105" />
+                    <img src={coverImg} alt={r.title_en || r.title_es} loading="lazy" className="w-full h-full object-cover transition-transform duration-[600ms] group-hover:scale-105" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-4xl text-sand-300">🧘</div>
                   )}
@@ -129,6 +133,20 @@ export default async function RetreatsByDestinationPageEN({ params }: { params: 
             );
           })}
         </div>
+      )}
+
+      {retreats.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: jsonLdScript(jsonLdItemList(retreats.map((r, i) => ({
+              name: r.title_en || r.title_es,
+              url: `/en/retreat/${r.slug}`,
+              image: r.images?.find((img: any) => img.is_cover)?.url || r.images?.[0]?.url,
+              position: i + 1,
+            })))),
+          }}
+        />
       )}
     </div>
   );

@@ -5,8 +5,10 @@ import { notFound, redirect } from 'next/navigation';
 import { getBlogPostSlugs } from '@/lib/data';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { RichContentBody } from '@/components/ui/retreat-description-body';
+import { jsonLdArticle, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
+import { getSiteUrl } from '@/lib/site-url';
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.retiru.com';
+const BASE_URL = getSiteUrl();
 
 export const revalidate = 60;
 export const dynamicParams = true;
@@ -204,6 +206,33 @@ export default async function BlogPostEN({ params }: { params: Promise<{ slug: s
           <ArrowLeft size={16} /> Back to blog
         </Link>
       </div>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLdScript(jsonLdArticle({
+            headline: articleTitle,
+            description: article.excerpt_en || article.excerpt_es || '',
+            datePublished: article.published_at || '',
+            dateModified: article.updated_at,
+            author: 'Retiru Team',
+            image: article.cover_image_url,
+            url: `/en/blog/${article.slug_en || article.slug}`,
+            locale: 'en',
+          })),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLdScript(jsonLdBreadcrumb([
+            { name: 'Retiru', url: '/en' },
+            { name: 'Blog', url: '/en/blog' },
+            { name: categoryName, url: '/en/blog' },
+            { name: articleTitle, url: `/en/blog/${article.slug_en || article.slug}` },
+          ])),
+        }}
+      />
     </div>
   );
 }

@@ -2,7 +2,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { generatePageMetadata } from '@/lib/seo';
+import { generatePageMetadata, jsonLdProduct, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
 import { getShopProductSlugs } from '@/lib/data';
 import { createServerSupabase } from '@/lib/supabase/server';
 
@@ -66,7 +66,7 @@ export default async function ProductDetailEN({ params }: { params: Promise<{ sl
                 <div className="grid grid-cols-3 gap-3">
                   {images.map((img, i) => (
                     <div key={i} className="aspect-square rounded-xl overflow-hidden bg-sand-50 cursor-pointer hover:opacity-80 transition-opacity">
-                      <img src={img} alt="" className="w-full h-full object-cover" />
+                      <img src={img} alt={`${p.name_en} — image ${i + 1}`} loading="lazy" className="w-full h-full object-cover" />
                     </div>
                   ))}
                 </div>
@@ -119,6 +119,32 @@ export default async function ProductDetailEN({ params }: { params: Promise<{ sl
           )}
         </div>
       </div>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLdScript(jsonLdProduct({
+            name: p.name_en,
+            description: p.description_en?.slice(0, 300) || '',
+            image: images[0] || '',
+            price: p.price,
+            comparePrice: p.compare_price,
+            url: `/en/shop/${slug}`,
+            sku: p.sku,
+            availability: p.stock_count > 0 ? 'InStock' : 'OutOfStock',
+          })),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLdScript(jsonLdBreadcrumb([
+            { name: 'Retiru', url: '/en' },
+            { name: 'Shop', url: '/en/shop' },
+            { name: p.name_en, url: `/en/shop/${slug}` },
+          ])),
+        }}
+      />
     </div>
   );
 }

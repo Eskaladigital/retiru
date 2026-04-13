@@ -6,7 +6,7 @@ import { MarkdownContent } from '@/components/ui/markdown-content';
 import { CenterMap } from '@/components/ui/center-map';
 import { ClaimCenterButton } from '@/components/ui/claim-center-button';
 import { EmailLink } from '@/components/ui/email-link';
-import { generatePageMetadata } from '@/lib/seo';
+import { generatePageMetadata, jsonLdLocalBusiness, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
 import { getCenterBySlug, getCenterSlugs } from '@/lib/data';
 import { getCenterTypeLabel, facebookProfileHref } from '@/lib/utils';
 
@@ -67,7 +67,7 @@ export default async function CenterDetailEN({ params }: Props) {
             <div className="flex gap-3 overflow-x-auto pb-1">
               {galleryImages.slice(0, 4).map((img: string, i: number) => (
                 <div key={i} className="w-32 h-24 rounded-xl overflow-hidden shrink-0">
-                  <img src={img} alt="" className="w-full h-full object-cover" />
+                  <img src={img} alt={`${C.name} — photo ${i + 2}`} loading="lazy" className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>
@@ -217,6 +217,34 @@ export default async function CenterDetailEN({ params }: Props) {
         centerSlug={slug}
         claimedBy={C.claimed_by}
         locale="en"
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLdScript(jsonLdLocalBusiness({
+            name: C.name,
+            description: (C.description_en || C.description_es)?.slice(0, 300) || `${C.name}: wellness center in ${C.city || ''}, ${C.province || ''}.`,
+            address: C.address || '',
+            city: C.city || '',
+            province: C.province || '',
+            phone: C.phone,
+            url: `/en/center/${slug}`,
+            image: mainImage || '',
+            rating: C.avg_rating ?? undefined,
+            reviewCount: C.review_count ?? undefined,
+          })),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLdScript(jsonLdBreadcrumb([
+            { name: 'Retiru', url: '/en' },
+            { name: 'Centers', url: '/en/centers-retiru' },
+            { name: C.name, url: `/en/center/${slug}` },
+          ])),
+        }}
       />
     </div>
   );

@@ -5,6 +5,7 @@ import { MapPin, Star, CalendarDays, Users } from 'lucide-react';
 import EventosSearch from '@/components/home/EventosSearch';
 import { getDestinationsWithRetreats, getDestinationBySlug, getPublishedRetreats } from '@/lib/data';
 import { getOrganizerReviewStats, organizerHasRatingToShow } from '@/lib/utils';
+import { generatePageMetadata, jsonLdItemList, jsonLdScript } from '@/lib/seo';
 
 export const revalidate = 3600;
 
@@ -17,11 +18,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const dest = await getDestinationBySlug(slug);
   const name = dest?.name_es || slug;
-  return {
-    title: `Retiros en ${name} | Retiru`,
+  return generatePageMetadata({
+    title: `Retiros en ${name} — Yoga, meditación y ayurveda | Retiru`,
     description: `Descubre retiros y eventos de yoga, meditación y ayurveda en ${name}. Reserva tu plaza con transparencia total.`,
-    alternates: { languages: { es: `/es/retiros-retiru/${slug}`, en: `/en/retreats-retiru/${slug}` } },
-  };
+    locale: 'es',
+    path: `/es/retiros-retiru/${slug}`,
+    altPath: `/en/retreats-retiru/${slug}`,
+    keywords: ['retiros ' + name, 'yoga ' + name, 'meditación ' + name, 'ayurveda ' + name],
+  });
 }
 
 export default async function RetirosPorDestinoPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -48,7 +52,7 @@ export default async function RetirosPorDestinoPage({ params }: { params: Promis
         <div className="absolute inset-0 z-0">
           {dest.cover_image_url ? (
             <>
-              <img src={dest.cover_image_url} alt="" className="w-full h-full object-cover" />
+              <img src={dest.cover_image_url} alt={`Retiros en ${dest.name_es}`} className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-r from-[rgba(254,253,251,0.95)] via-[rgba(254,253,251,0.85)] to-[rgba(254,253,251,0.2)] max-md:bg-gradient-to-b max-md:from-[rgba(254,253,251,0.93)] max-md:to-[rgba(254,253,251,0.4)]" />
             </>
           ) : (
@@ -97,7 +101,7 @@ export default async function RetirosPorDestinoPage({ params }: { params: Promis
                 >
                   <div className="relative aspect-[16/10] overflow-hidden bg-sand-100">
                     {coverImg ? (
-                      <img src={coverImg} alt={r.title_es} className="w-full h-full object-cover transition-transform duration-[600ms] group-hover:scale-105" />
+                      <img src={coverImg} alt={r.title_es} loading="lazy" className="w-full h-full object-cover transition-transform duration-[600ms] group-hover:scale-105" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-4xl text-sand-300">🧘</div>
                     )}
@@ -153,6 +157,20 @@ export default async function RetirosPorDestinoPage({ params }: { params: Promis
               );
             })}
           </div>
+        )}
+
+        {retreats.length > 0 && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: jsonLdScript(jsonLdItemList(retreats.map((r, i) => ({
+                name: r.title_es,
+                url: `/es/retiro/${r.slug}`,
+                image: r.images?.find((img: any) => img.is_cover)?.url || r.images?.[0]?.url,
+                position: i + 1,
+              })))),
+            }}
+          />
         )}
       </div>
     </>

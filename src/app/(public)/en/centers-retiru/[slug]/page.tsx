@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { MapPin, Star } from 'lucide-react';
 import { getCenterProvinces, getCentersByProvince } from '@/lib/data';
 import { getCenterTypeLabel } from '@/lib/utils';
+import { generatePageMetadata, jsonLdItemList, jsonLdScript } from '@/lib/seo';
 
 export const revalidate = 3600;
 
@@ -16,11 +17,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const { provinceName } = await getCentersByProvince(slug);
   const name = provinceName || slug;
-  return {
+  return generatePageMetadata({
     title: `Yoga, meditation & ayurveda centers in ${name} | Retiru`,
     description: `Find yoga, meditation and ayurveda centers in ${name}. Verified directory with real reviews.`,
-    alternates: { languages: { es: `/es/centros-retiru/${slug}`, en: `/en/centers-retiru/${slug}` } },
-  };
+    locale: 'en',
+    path: `/en/centers-retiru/${slug}`,
+    altPath: `/es/centros-retiru/${slug}`,
+    keywords: ['yoga centers ' + name, 'meditation ' + name, 'ayurveda ' + name],
+  });
 }
 
 export default async function CentersByProvincePageEN({ params }: { params: Promise<{ slug: string }> }) {
@@ -66,7 +70,7 @@ export default async function CentersByProvincePageEN({ params }: { params: Prom
               >
                 <div className="w-full md:w-52 h-40 rounded-xl overflow-hidden shrink-0 relative bg-sand-100">
                   {img ? (
-                    <img src={img} alt={c.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img src={img} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-3xl text-sand-300">🏢</div>
                   )}
@@ -108,6 +112,20 @@ export default async function CentersByProvincePageEN({ params }: { params: Prom
             );
           })}
         </div>
+      )}
+
+      {centers.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: jsonLdScript(jsonLdItemList(centers.map((c, i) => ({
+              name: c.name,
+              url: `/en/center/${c.slug}`,
+              image: c.cover_url || (Array.isArray(c.images) && c.images[0]) || undefined,
+              position: i + 1,
+            })))),
+          }}
+        />
       )}
     </div>
   );

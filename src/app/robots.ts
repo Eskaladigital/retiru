@@ -12,6 +12,9 @@ export default function robots(): MetadataRoute.Robots {
         allow: '/',
         disallow: [
           '/es/mis-reservas',
+          '/es/mis-centros',
+          '/es/mis-eventos',
+          '/es/mis-eventos/',
           '/es/mensajes',
           '/es/perfil',
           '/es/facturas',
@@ -19,6 +22,8 @@ export default function robots(): MetadataRoute.Robots {
           '/es/panel/',
           '/es/admin',
           '/es/admin/',
+          '/es/reclamar/',
+          '/en/claim/',
           '/administrator',
           '/administrator/',
           '/es/login',

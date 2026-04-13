@@ -181,6 +181,7 @@ export const categoriesEN: Metadata = generatePageMetadata({
   locale: 'en',
   path: '/en/retreats-retiru',
   altPath: '/es/retiros-retiru',
+  keywords: ['yoga retreats', 'meditation retreats', 'ayurveda retreats', 'yoga events spain'],
 });
 
 export const destinationsEN: Metadata = generatePageMetadata({
@@ -189,6 +190,7 @@ export const destinationsEN: Metadata = generatePageMetadata({
   locale: 'en',
   path: '/en/destinations',
   altPath: '/es/destinos',
+  keywords: ['retreat destinations', 'retreats ibiza', 'retreats mallorca', 'retreats costa brava', 'retreats spain'],
 });
 
 export const centersEN: Metadata = generatePageMetadata({
@@ -197,6 +199,7 @@ export const centersEN: Metadata = generatePageMetadata({
   locale: 'en',
   path: '/en/centers-retiru',
   altPath: '/es/centros-retiru',
+  keywords: ['yoga centers spain', 'meditation centers', 'ayurveda spain', 'yoga directory'],
 });
 
 export const shopEN: Metadata = generatePageMetadata({
@@ -205,6 +208,7 @@ export const shopEN: Metadata = generatePageMetadata({
   locale: 'en',
   path: '/en/shop',
   altPath: '/es/tienda',
+  keywords: ['yoga shop', 'yoga mat', 'meditation accessories', 'ayurveda products', 'retiru shop'],
 });
 
 export const forOrganizersEN: Metadata = generatePageMetadata({
@@ -245,6 +249,7 @@ export const blogEN: Metadata = generatePageMetadata({
   locale: 'en',
   path: '/en/blog',
   altPath: '/es/blog',
+  keywords: ['yoga blog', 'meditation blog', 'ayurveda blog', 'retreat articles'],
 });
 
 export const loginEN: Metadata = generatePageMetadata({

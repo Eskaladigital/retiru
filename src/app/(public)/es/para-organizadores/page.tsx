@@ -11,6 +11,7 @@ import {
   Megaphone, BadgeCheck, Sparkles,
 } from 'lucide-react';
 import { forOrganizersES } from '@/lib/seo/page-metadata';
+import { jsonLdFAQ, jsonLdScript } from '@/lib/seo';
 export const metadata: Metadata = forOrganizersES;
 
 const CENTER_BENEFITS = [
@@ -234,6 +235,13 @@ export default function ParaOrganizadoresPage() {
           </div>
         </div>
       </section>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLdScript(jsonLdFAQ(FAQS.map(({ q, a }) => ({ question: q, answer: a })))),
+        }}
+      />
 
       {/* ═══ Final CTA ═══ */}
       <section className="section bg-gradient-to-br from-terracotta-600 to-terracotta-700 text-white text-center">

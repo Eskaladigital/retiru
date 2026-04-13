@@ -61,7 +61,7 @@ export function RetiroDetailContent({ retreat, isPreview }: Props) {
                 </div>
                 {sortedImages.slice(1, 5).map((img, i) => (
                   <div key={img.id ?? i} className="hidden md:block relative">
-                    <img src={img.url} alt={img.alt_text ?? ''} className="h-full w-full object-cover" />
+                    <img src={img.url} alt={img.alt_text || `${r.title_es} — foto ${i + 2}`} className="h-full w-full object-cover" />
                   </div>
                 ))}
               </div>

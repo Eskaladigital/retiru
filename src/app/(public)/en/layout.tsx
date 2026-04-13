@@ -23,6 +23,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   applicationName: 'Retiru',
   authors: [{ name: 'Retiru', url: SITE_URL }],
+  generator: 'Next.js',
+  referrer: 'origin-when-cross-origin' as const,
   keywords: ['retreats spain', 'yoga retreat', 'meditation retreat', 'ayurveda spain', 'yoga centers spain', 'meditation spain', 'ayurveda retreat'],
   openGraph: {
     type: 'website',

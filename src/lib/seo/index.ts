@@ -61,7 +61,7 @@ export function generatePageMetadata({
       description,
       url,
       siteName: SITE_NAME,
-      type: ogType === 'product' ? 'website' : ogType,
+      type: ogType,
       locale: locale === 'es' ? 'es_ES' : 'en_US',
       alternateLocale: locale === 'es' ? 'en_US' : 'es_ES',
       images: [
@@ -292,6 +292,21 @@ export function jsonLdLocalBusiness({
   return ld;
 }
 
+export function jsonLdItemList(items: { name: string; url: string; image?: string; position?: number }[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    numberOfItems: items.length,
+    itemListElement: items.map((item, i) => ({
+      '@type': 'ListItem',
+      position: item.position ?? i + 1,
+      name: item.name,
+      url: `${SITE_URL}${item.url}`,
+      ...(item.image && { image: item.image }),
+    })),
+  };
+}
+
 export function jsonLdBreadcrumb(items: { name: string; url: string }[]) {
   return {
     '@context': 'https://schema.org',
@@ -302,6 +317,44 @@ export function jsonLdBreadcrumb(items: { name: string; url: string }[]) {
       name: item.name,
       item: `${SITE_URL}${item.url}`,
     })),
+  };
+}
+
+export function jsonLdArticle({
+  headline,
+  description,
+  datePublished,
+  dateModified,
+  author = 'Equipo Retiru',
+  image,
+  url,
+  locale = 'es',
+}: {
+  headline: string;
+  description: string;
+  datePublished: string;
+  dateModified?: string | null;
+  author?: string;
+  image?: string | null;
+  url: string;
+  locale?: Locale;
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline,
+    description,
+    datePublished,
+    ...(dateModified && { dateModified }),
+    author: { '@type': 'Person', name: author },
+    publisher: {
+      '@type': 'Organization',
+      name: SITE_NAME,
+      logo: { '@type': 'ImageObject', url: `${SITE_URL}/logo.png` },
+    },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE_URL}${url}` },
+    inLanguage: locale === 'es' ? 'es' : 'en',
+    ...(image && { image }),
   };
 }
 

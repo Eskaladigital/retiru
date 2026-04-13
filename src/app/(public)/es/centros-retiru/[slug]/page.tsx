@@ -5,6 +5,7 @@ import { MapPin, Star } from 'lucide-react';
 import CentrosSearch from '@/components/home/CentrosSearch';
 import { getCenterProvinces, getCentersByProvince } from '@/lib/data';
 import { getCenterTypeLabel } from '@/lib/utils';
+import { generatePageMetadata, jsonLdItemList, jsonLdScript } from '@/lib/seo';
 
 export const revalidate = 3600;
 
@@ -17,11 +18,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const { provinceName } = await getCentersByProvince(slug);
   const name = provinceName || slug;
-  return {
+  return generatePageMetadata({
     title: `Centros de yoga, meditación y ayurveda en ${name} | Retiru`,
     description: `Encuentra centros de yoga, meditación y ayurveda en ${name}. Directorio verificado con reseñas reales.`,
-    alternates: { languages: { es: `/es/centros-retiru/${slug}`, en: `/en/centers-retiru/${slug}` } },
-  };
+    locale: 'es',
+    path: `/es/centros-retiru/${slug}`,
+    altPath: `/en/centers-retiru/${slug}`,
+    keywords: ['centros yoga ' + name, 'meditación ' + name, 'ayurveda ' + name],
+  });
 }
 
 export default async function CentrosPorProvinciaPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -84,7 +88,7 @@ export default async function CentrosPorProvinciaPage({ params }: { params: Prom
                 >
                   <div className="w-full md:w-52 h-40 rounded-xl overflow-hidden shrink-0 relative bg-sand-100">
                     {img ? (
-                      <img src={img} alt={c.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <img src={img} alt={c.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-3xl text-sand-300">🏢</div>
                     )}
@@ -126,6 +130,20 @@ export default async function CentrosPorProvinciaPage({ params }: { params: Prom
               );
             })}
           </div>
+        )}
+
+        {centers.length > 0 && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: jsonLdScript(jsonLdItemList(centers.map((c, i) => ({
+                name: c.name,
+                url: `/es/centro/${c.slug}`,
+                image: c.cover_url || (Array.isArray(c.images) && c.images[0]) || undefined,
+                position: i + 1,
+              })))),
+            }}
+          />
         )}
       </div>
     </>

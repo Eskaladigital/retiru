@@ -5,6 +5,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { forOrganizersEN } from '@/lib/seo/page-metadata';
+import { jsonLdFAQ, jsonLdScript } from '@/lib/seo';
 export const metadata: Metadata = forOrganizersEN;
 
 const CENTER_BENEFITS = [
@@ -212,6 +213,13 @@ export default function ForOrganizersPageEN() {
           </div>
         </div>
       </section>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLdScript(jsonLdFAQ(FAQS.map(({ q, a }) => ({ question: q, answer: a })))),
+        }}
+      />
 
       {/* ═══ Final CTA ═══ */}
       <section className="py-20 bg-gradient-to-br from-terracotta-600 to-terracotta-700 text-white text-center">

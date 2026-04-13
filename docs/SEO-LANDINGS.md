@@ -83,13 +83,15 @@ Las listas filtran por BD pero **no tienen contenido editorial único**. Para SE
 
 | Landing | Schema recomendado | Estado |
 |---------|---------------------|--------|
-| retiros-retiru/[slug] | `ItemList` (lista de retiros) + `CollectionPage` | Pendiente |
-| centros-retiru/[slug] | `ItemList` (lista de centros) + `CollectionPage` | Pendiente |
-| destinos/[slug] | `ItemList` + `Place` (si el destino es un lugar) | Pendiente |
+| retiros-retiru/[slug] | `ItemList` (lista de retiros) | ✅ Implementado |
+| centros-retiru/[slug] | `ItemList` (lista de centros) | ✅ Implementado |
+| destinos/[slug] | `ItemList` + `Place` (si el destino es un lugar) | Pendiente (Place) |
 | retiro/[slug] | `Event` + `BreadcrumbList` | ✅ Implementado |
-| centro/[slug] | `LocalBusiness` / `HealthAndBeautyBusiness` | Pendiente |
-| tienda/[slug] | `Product` | Pendiente |
-| blog/[slug] | `Article` | Pendiente |
+| centro/[slug] | `LocalBusiness` + `BreadcrumbList` | ✅ Implementado |
+| tienda/[slug] | `Product` + `BreadcrumbList` | ✅ Implementado |
+| blog/[slug] | `BlogPosting` + `BreadcrumbList` | ✅ Implementado |
+| para-organizadores | `FAQPage` | ✅ Implementado |
+| for-organizers | `FAQPage` | ✅ Implementado |
 
 ### C. Rich snippets
 
