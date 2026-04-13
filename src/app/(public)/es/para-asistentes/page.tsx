@@ -105,31 +105,40 @@ export default function ParaAsistentesPage() {
   return (
     <div>
       {/* ═══ Hero ═══ */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-terracotta-700 via-terracotta-800 to-terracotta-950 text-white">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(255,255,255,0.08),transparent_60%)]" />
-        <div className="container-narrow relative py-20 md:py-32 text-center">
-          <span className="inline-block text-sm bg-white/10 text-terracotta-200 px-4 py-1.5 rounded-full mb-6">
-            Para ti, que buscas una experiencia transformadora
-          </span>
-          <h1 className="font-serif text-4xl font-bold md:text-6xl md:leading-[1.1]">
-            Reserva tu retiro<br />
-            <span className="text-amber-300">con total garantía</span>
-          </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-terracotta-200 leading-relaxed">
-            En Retiru no encontrarás cualquier retiro: <strong className="font-semibold text-white">verificamos a cada organizador</strong>,
-            <strong className="font-semibold text-white"> protegemos tu pago</strong> y te acompañamos en todo el proceso.
-            La tranquilidad de saber que tu experiencia está en buenas manos.
-          </p>
-          <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <Link
-              href="/es/retiros-retiru"
-              className="btn-primary bg-white text-terracotta-700 hover:bg-sand-100 px-8 py-4 text-base font-semibold"
-            >
-              Explorar retiros
-            </Link>
-            <a href="#garantias" className="btn-primary bg-white/10 hover:bg-white/20 border border-white/20 px-8 py-4 text-base text-white">
-              Ver garantías
-            </a>
+      <section className="relative min-h-[70vh] flex items-center pt-[72px] overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <img
+            src="/hero-para-asistentes.png"
+            alt="Persona meditando en retiro de yoga"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[rgba(254,253,251,0.95)] via-[rgba(254,253,251,0.85)] md:via-[rgba(254,253,251,0.85)] to-[rgba(254,253,251,0.2)] max-md:bg-gradient-to-b max-md:from-[rgba(254,253,251,0.93)] max-md:via-[rgba(254,253,251,0.8)] max-md:to-[rgba(254,253,251,0.4)]" />
+        </div>
+        <div className="container-wide relative z-10 py-12 md:py-16">
+          <div className="max-w-[620px]">
+            <div className="inline-flex items-center gap-2 bg-terracotta-50 border border-terracotta-200 text-terracotta-700 text-[13px] font-semibold px-4 py-1.5 rounded-full mb-6">
+              <span className="w-1.5 h-1.5 bg-terracotta-400 rounded-full" />
+              Para ti, que buscas una experiencia transformadora
+            </div>
+            <h1 className="font-serif text-[clamp(36px,6vw,56px)] leading-[1.2] tracking-[-0.01em] text-foreground mb-5">
+              Reserva tu retiro<br />
+              <span className="text-terracotta-600">con total garantía</span>
+            </h1>
+            <p className="text-lg text-[#7a6b5d] leading-[1.7] mb-9 max-w-[540px]">
+              En Retiru no encontrarás cualquier retiro: <strong className="font-semibold text-foreground">verificamos a cada organizador</strong>,
+              <strong className="font-semibold text-foreground"> protegemos tu pago</strong> y te acompañamos en todo el proceso.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link
+                href="/es/retiros-retiru"
+                className="btn-primary bg-terracotta-600 hover:bg-terracotta-700 px-8 py-4 text-base font-semibold"
+              >
+                Explorar retiros
+              </Link>
+              <a href="#garantias" className="btn-primary bg-white hover:bg-sand-50 border border-sand-300 px-8 py-4 text-base text-foreground">
+                Ver garantías
+              </a>
+            </div>
           </div>
         </div>
       </section>

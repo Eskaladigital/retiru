@@ -5,6 +5,14 @@ import { CheckinClient } from './CheckinClient';
 
 type Props = { params: Promise<{ id: string }> };
 
+type CheckinAttendee = {
+  id: string;
+  name: string;
+  avatar: string | null | undefined;
+  checkedIn: boolean;
+  time: string | null;
+};
+
 export default async function CheckinPage({ params }: Props) {
   const { id } = await params;
 
@@ -41,15 +49,21 @@ export default async function CheckinPage({ params }: Props) {
     .in('status', ['confirmed', 'completed'])
     .order('checked_in_at', { ascending: false, nullsFirst: false });
 
-  const attendees = (bookings || []).map((b: any) => ({
-    id: b.id,
-    name: b.profiles?.full_name || 'Asistente',
-    avatar: b.profiles?.avatar_url,
-    checkedIn: !!b.checked_in_at,
-    time: b.checked_in_at
-      ? new Date(b.checked_in_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })
-      : null,
-  }));
+  const attendees: CheckinAttendee[] = (bookings ?? []).map(
+    (b: {
+      id: string;
+      checked_in_at: string | null;
+      profiles: { full_name: string | null; avatar_url: string | null } | null;
+    }) => ({
+      id: b.id,
+      name: b.profiles?.full_name || 'Asistente',
+      avatar: b.profiles?.avatar_url,
+      checkedIn: !!b.checked_in_at,
+      time: b.checked_in_at
+        ? new Date(b.checked_in_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })
+        : null,
+    }),
+  );
 
   const checkedCount = attendees.filter(a => a.checkedIn).length;
 

@@ -72,12 +72,23 @@ export async function GET() {
       .order('created_at', { ascending: false })
       .limit(10);
 
-    const retreatsWithCounts = (topRetreats || []).map((r: any) => ({
-      id: r.id,
-      title: r.title_es,
-      slug: r.slug,
-      bookings: r.bookings?.length || 0,
-    })).sort((a, b) => b.bookings - a.bookings).slice(0, 5);
+    type RetreatBookingCount = { id: string; title: string; slug: string; bookings: number };
+    const mappedTopRetreats: RetreatBookingCount[] = (topRetreats ?? []).map(
+      (r: {
+        id: string;
+        title_es: string | null;
+        slug: string | null;
+        bookings: unknown[] | null;
+      }) => ({
+        id: r.id,
+        title: r.title_es ?? '',
+        slug: r.slug ?? '',
+        bookings: Array.isArray(r.bookings) ? r.bookings.length : 0,
+      }),
+    );
+    const retreatsWithCounts = [...mappedTopRetreats]
+      .sort((a, b) => b.bookings - a.bookings)
+      .slice(0, 5);
 
     return NextResponse.json({
       kpis: {

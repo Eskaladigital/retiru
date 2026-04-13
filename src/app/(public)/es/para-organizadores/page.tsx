@@ -49,29 +49,40 @@ export default function ParaOrganizadoresPage() {
   return (
     <div>
       {/* ═══ Hero ═══ */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-sage-800 via-sage-900 to-sage-950 text-white">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(200,90,48,0.15),transparent_70%)]" />
-        <div className="container-narrow relative py-20 md:py-32 text-center">
-          <span className="inline-block text-sm bg-white/10 text-sage-200 px-4 py-1.5 rounded-full mb-6">
-            Para centros y organizadores
-          </span>
-          <h1 className="font-serif text-4xl font-bold md:text-6xl md:leading-[1.1]">
-            Haz crecer tu proyecto<br />
-            <span className="text-terracotta-400">con Retiru</span>
-          </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-sage-300 leading-relaxed">
-            Si tienes un centro de yoga, meditación o ayurveda, o si organizas retiros y eventos de ese tipo,
-            Retiru es tu plataforma. <strong className="font-semibold text-white">Sin suscripción</strong> para publicar.
-            Tu <strong className="font-semibold text-white">primer retiro sin comisión</strong> (0&nbsp;%), el segundo al <strong className="font-semibold text-white">10&nbsp;%</strong> y a partir del tercero
-            la comisión estándar del <strong className="font-semibold text-white">20&nbsp;%</strong> incluida en el PVP. Sin recargos ocultos para quien reserva.
-          </p>
-          <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <a href="#centros" className="btn-primary bg-terracotta-600 hover:bg-terracotta-700 px-8 py-4 text-base">
-              Soy un centro
-            </a>
-            <a href="#organizadores" className="btn-primary bg-white/10 hover:bg-white/20 border border-white/20 px-8 py-4 text-base text-white">
-              Organizo retiros o eventos
-            </a>
+      <section className="relative min-h-[70vh] flex items-center pt-[72px] overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <img
+            src="/hero-para-organizadores.png"
+            alt="Organizador gestionando retiro de yoga"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[rgba(254,253,251,0.95)] via-[rgba(254,253,251,0.85)] md:via-[rgba(254,253,251,0.85)] to-[rgba(254,253,251,0.2)] max-md:bg-gradient-to-b max-md:from-[rgba(254,253,251,0.93)] max-md:via-[rgba(254,253,251,0.8)] max-md:to-[rgba(254,253,251,0.4)]" />
+        </div>
+        <div className="container-wide relative z-10 py-12 md:py-16">
+          <div className="max-w-[620px]">
+            <div className="inline-flex items-center gap-2 bg-sage-50 border border-sage-200 text-sage-700 text-[13px] font-semibold px-4 py-1.5 rounded-full mb-6">
+              <span className="w-1.5 h-1.5 bg-sage-400 rounded-full" />
+              Para centros y organizadores
+            </div>
+            <h1 className="font-serif text-[clamp(36px,6vw,56px)] leading-[1.2] tracking-[-0.01em] text-foreground mb-5">
+              Haz crecer tu proyecto<br />
+              <span className="text-sage-700">con Retiru</span>
+            </h1>
+            <p className="text-lg text-[#7a6b5d] leading-[1.7] mb-9 max-w-[560px]">
+              Si tienes un centro de yoga, meditación o ayurveda, o si organizas retiros y eventos de ese tipo,
+              Retiru es tu plataforma. <strong className="font-semibold text-foreground">Sin suscripción</strong> para publicar.
+              Tu <strong className="font-semibold text-foreground">primer retiro sin comisión</strong> (0&nbsp;%),
+              el segundo al <strong className="font-semibold text-foreground">10&nbsp;%</strong> y a partir del tercero
+              la comisión estándar del <strong className="font-semibold text-foreground">20&nbsp;%</strong> incluida en el PVP.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <a href="#centros" className="btn-primary bg-sage-700 hover:bg-sage-800 px-8 py-4 text-base text-white">
+                Soy un centro
+              </a>
+              <a href="#organizadores" className="btn-primary bg-white hover:bg-sand-50 border border-sand-300 px-8 py-4 text-base text-foreground">
+                Organizo retiros o eventos
+              </a>
+            </div>
           </div>
         </div>
       </section>

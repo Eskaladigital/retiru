@@ -65,10 +65,13 @@ export default async function AnaliticasPage() {
     .order('confirmed_bookings', { ascending: false })
     .limit(5);
 
-  const topRetreatsData = (topRetreats || []).map((r: any) => ({
-    name: r.title_es,
-    bookings: r.confirmed_bookings || 0,
-  }));
+  type TopRetreatStat = { name: string; bookings: number };
+  const topRetreatsData: TopRetreatStat[] = (topRetreats ?? []).map(
+    (r: { title_es: string | null; confirmed_bookings: number | null }) => ({
+      name: r.title_es ?? '',
+      bookings: r.confirmed_bookings ?? 0,
+    }),
+  );
 
   return (
     <div>
