@@ -8,7 +8,7 @@ import { ClaimCenterButton } from '@/components/ui/claim-center-button';
 import { EmailLink } from '@/components/ui/email-link';
 import { generatePageMetadata } from '@/lib/seo';
 import { getCenterBySlug, getCenterSlugs } from '@/lib/data';
-import { getCenterTypeLabel } from '@/lib/utils';
+import { getCenterTypeLabel, facebookProfileHref } from '@/lib/utils';
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -156,6 +156,9 @@ export default async function CenterDetailEN({ params }: Props) {
               )}
               {C.instagram && (
                 <div className="text-sm"><span className="text-[#a09383] block text-xs uppercase tracking-wider font-semibold mb-0.5">Instagram</span><a href={`https://instagram.com/${C.instagram.replace('@', '')}`} target="_blank" rel="noopener" className="text-foreground hover:text-terracotta-600 transition-colors">{C.instagram}</a></div>
+              )}
+              {facebookProfileHref(C.facebook) && (
+                <div className="text-sm"><span className="text-[#a09383] block text-xs uppercase tracking-wider font-semibold mb-0.5">Facebook</span><a href={facebookProfileHref(C.facebook)!} target="_blank" rel="noopener" className="text-foreground hover:text-terracotta-600 transition-colors break-all">View page</a></div>
               )}
             </div>
 

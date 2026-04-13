@@ -48,7 +48,7 @@ export async function PATCH(
     const ALLOWED_FIELDS = [
       'name', 'description_es', 'description_en', 'type',
       'cover_url', 'images', 'logo_url',
-      'website', 'email', 'phone', 'instagram',
+      'website', 'email', 'phone', 'instagram', 'facebook',
       'address', 'city', 'province', 'postal_code',
       'services_es', 'services_en',
       'schedule_summary_es', 'schedule_summary_en',

@@ -273,6 +273,8 @@ ALTER TABLE organizer_profiles ADD COLUMN phone text;
 
 **`center_type` (enum en `centers.type`):** tras la migración `014_center_type_three_disciplines.sql` solo existen `yoga`, `meditation`, `ayurveda`. Reclasificación masiva: `npm run centers:reclassify-three:update` (antes de aplicar 014 en producción, con el enum antiguo aún presente).
 
+**`facebook` (text, nullable):** migración `026_centers_facebook.sql` — URL de la página pública del centro en Facebook (complementa `instagram`). Auditoría local de columnas vacías: `npm run centers:socials-report` (opciones `--list`, `--list-all`). Rellenado desde el HTML de `website` (sin Google): `npm run centers:scrape-socials` / `npm run centers:scrape-socials:update`.
+
 ---
 
 ### 2.3 Product — MEDIA

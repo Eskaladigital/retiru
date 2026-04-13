@@ -115,6 +115,11 @@ npm run blog:backfill-covers-ai                       # Portadas blog con el mis
 npm run centers:emails        # Sincronizar emails desde CSV
 npm run centers:emails-csv    # Solo desde directorio.csv
 
+# Centros — redes (solo HTML de `website`, sin Google)
+npm run centers:socials-report              # Resumen de columnas instagram/facebook vacías
+npm run centers:scrape-socials              # Dry-run: detecta enlaces IG/FB en la web del centro
+npm run centers:scrape-socials:update       # Igual y escribe en BD solo donde faltaban (ver flags --limit, --slug, --delay, --force)
+
 # Centros — claims
 npm run centers:claim-tokens                              # Generar tokens de reclamación
 

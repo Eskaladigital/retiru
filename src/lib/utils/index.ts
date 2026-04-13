@@ -226,3 +226,13 @@ export function organizerHasRatingToShow(r: Pick<Retreat, 'organizer'>): boolean
   const { avg_rating, review_count } = getOrganizerReviewStats(r);
   return review_count > 0 || avg_rating > 0;
 }
+
+/** Valor en BD (URL o slug de página) → enlace absoluto para Facebook */
+export function facebookProfileHref(raw: string | null | undefined): string | null {
+  const t = (raw || '').trim();
+  if (!t) return null;
+  if (/^https?:\/\//i.test(t)) return t;
+  const u = t.replace(/^\/+/, '');
+  if (/^(www\.|m\.)?facebook\.com/i.test(u) || /^fb\.com/i.test(u)) return `https://${u}`;
+  return `https://www.facebook.com/${u}`;
+}

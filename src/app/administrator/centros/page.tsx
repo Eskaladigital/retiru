@@ -7,7 +7,7 @@ import { AddCenterButton } from './AddCenterButton';
 export const dynamic = 'force-dynamic';
 
 const CENTERS_ADMIN_SELECT_BASE =
-  'id, name, slug, city, province, plan, status, type, price_monthly, description_es, cover_url, email';
+  'id, name, slug, city, province, plan, status, type, price_monthly, description_es, cover_url, email, instagram, facebook';
 
 function isMissingSubmittedByColumn(error: { code?: string; message?: string } | null): boolean {
   if (!error) return false;

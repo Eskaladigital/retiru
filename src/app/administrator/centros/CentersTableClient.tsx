@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Download, FileSpreadsheet, Search, ChevronUp, ChevronDown, ChevronsUpDown, X, Pencil, ExternalLink, Trash2, EyeOff, Eye } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { CENTER_FILTER_OPTIONS_ES, getCenterTypeLabel } from '@/lib/utils';
+import { CENTER_FILTER_OPTIONS_ES, getCenterTypeLabel, facebookProfileHref } from '@/lib/utils';
 
 export type CenterRow = {
   id: string;
@@ -21,6 +21,8 @@ export type CenterRow = {
   cover_url?: string | null;
   email?: string | null;
   submitted_by?: string | null;
+  instagram?: string | null;
+  facebook?: string | null;
 };
 
 function exportStatusLabel(status: string): string {
@@ -201,7 +203,7 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
     const words = q ? q.split(/\s+/) : [];
     return list.filter((c) => {
       if (words.length > 0) {
-        const searchable = `${c.name || ''} ${c.slug || ''} ${c.city || ''} ${c.province || ''} ${c.plan || ''} ${c.status || ''} ${c.email || ''}`
+        const searchable = `${c.name || ''} ${c.slug || ''} ${c.city || ''} ${c.province || ''} ${c.plan || ''} ${c.status || ''} ${c.email || ''} ${c.instagram || ''} ${c.facebook || ''}`
           .toLowerCase()
           .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
         const qNorm = words.map(w => w.normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
@@ -341,13 +343,14 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
                 <ThSortable label="Estado" sortKey="status" current={sortKey} dir={sortDir} onSort={handleSort} align="center" />
                 <ThSortable label="MRR" sortKey="mrr" current={sortKey} dir={sortDir} onSort={handleSort} align="right" />
                 <ThSortable label="Desc" sortKey="desc" current={sortKey} dir={sortDir} onSort={handleSort} align="center" />
+                <th className="text-center py-3 px-2 font-semibold text-[#7a6b5d] w-24">RRSS</th>
                 <th className="py-3 px-4 w-36"></th>
               </tr>
             </thead>
             <tbody>
               {pageData.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="py-12 text-center text-[#999]">
+                  <td colSpan={11} className="py-12 text-center text-[#999]">
                     {hasFilters ? 'No hay centros que coincidan con los filtros.' : 'No hay centros en la base de datos.'}
                   </td>
                 </tr>
@@ -394,6 +397,35 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
                         ) : (
                           <span className="text-amber-500 text-xs">✗</span>
                         )}
+                      </td>
+                      <td className="py-3 px-2 text-center">
+                        <div className="flex items-center justify-center gap-1 flex-wrap">
+                          {c.instagram?.trim() ? (
+                            <a
+                              href={`https://instagram.com/${c.instagram.replace(/^@/, '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title={`Instagram: ${c.instagram}`}
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#f09433] via-[#dc2743] to-[#bc1888] text-[10px] font-bold text-white hover:opacity-90"
+                            >
+                              IG
+                            </a>
+                          ) : null}
+                          {facebookProfileHref(c.facebook ?? null) ? (
+                            <a
+                              href={facebookProfileHref(c.facebook)!}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Facebook"
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#1877F2] text-[11px] font-bold text-white hover:bg-[#166FE5]"
+                            >
+                              f
+                            </a>
+                          ) : null}
+                          {!c.instagram?.trim() && !facebookProfileHref(c.facebook ?? null) ? (
+                            <span className="text-[11px] text-[#ddd]">—</span>
+                          ) : null}
+                        </div>
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center justify-end gap-1">

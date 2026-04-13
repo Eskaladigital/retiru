@@ -237,7 +237,7 @@ export async function getRetreatBySlugForAdmin(slug: string): Promise<Retreat | 
 
 const CENTER_SELECT = `
   id, name, slug, description_es, description_en, type, categories,
-  logo_url, cover_url, images, website, email, phone, instagram,
+  logo_url, cover_url, images, website, email, phone, instagram, facebook,
   address, city, province, postal_code, latitude, longitude,
   services_es, services_en, schedule_summary_es, schedule_summary_en,
   price_range_es, price_range_en, avg_rating, review_count, status, claimed_by,

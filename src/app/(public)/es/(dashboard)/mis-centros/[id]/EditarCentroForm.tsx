@@ -31,6 +31,7 @@ export function EditarCentroForm({ center }: Props) {
     email: center.email || '',
     phone: center.phone || '',
     instagram: center.instagram || '',
+    facebook: center.facebook || '',
     address: center.address || '',
     city: center.city || '',
     province: center.province || '',
@@ -100,6 +101,8 @@ export function EditarCentroForm({ center }: Props) {
         quality_ia: form.quality_ia || null,
         search_terms: form.search_terms || null,
         price_level: form.price_level || null,
+        instagram: form.instagram.trim() || null,
+        facebook: form.facebook.trim() || null,
       };
 
       if (!payload.cover_url) delete payload.cover_url;
@@ -213,6 +216,10 @@ export function EditarCentroForm({ center }: Props) {
             <div>
               <label className={labelCls}>Instagram</label>
               <input type="text" value={form.instagram} onChange={(e) => set('instagram', e.target.value)} className={inputCls} placeholder="@tucuenta" />
+            </div>
+            <div className="md:col-span-2">
+              <label className={labelCls}>Facebook</label>
+              <input type="text" value={form.facebook} onChange={(e) => set('facebook', e.target.value)} className={inputCls} placeholder="https://www.facebook.com/tupagina" />
             </div>
           </div>
         </div>

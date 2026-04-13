@@ -457,6 +457,7 @@ export interface Center {
   email: string | null;
   phone: string | null;
   instagram: string | null;
+  facebook: string | null;
   address: string;
   city: string;
   province: string;

@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { generatePageMetadata } from '@/lib/seo';
-import { getCenterTypeLabel } from '@/lib/utils';
+import { getCenterTypeLabel, facebookProfileHref } from '@/lib/utils';
 import { getCenterBySlug, getCenterSlugs } from '@/lib/data';
 import { MarkdownContent } from '@/components/ui/markdown-content';
 import { CenterMap } from '@/components/ui/center-map';
@@ -145,6 +145,9 @@ export default async function CentroDetailPage({ params }: Props) {
               )}
               {C.instagram && (
                 <div className="text-sm"><span className="text-[#a09383] block text-xs uppercase tracking-wider font-semibold mb-0.5">Instagram</span><a href={`https://instagram.com/${C.instagram.replace('@', '')}`} target="_blank" rel="noopener" className="text-foreground hover:text-terracotta-600 transition-colors">{C.instagram}</a></div>
+              )}
+              {facebookProfileHref(C.facebook) && (
+                <div className="text-sm"><span className="text-[#a09383] block text-xs uppercase tracking-wider font-semibold mb-0.5">Facebook</span><a href={facebookProfileHref(C.facebook)!} target="_blank" rel="noopener" className="text-foreground hover:text-terracotta-600 transition-colors break-all">Ver página</a></div>
               )}
             </div>
 
