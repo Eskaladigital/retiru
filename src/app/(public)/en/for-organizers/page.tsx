@@ -9,21 +9,21 @@ import { jsonLdFAQ, jsonLdScript } from '@/lib/seo';
 export const metadata: Metadata = forOrganizersEN;
 
 const CENTER_BENEFITS = [
-  { icon: '📍', title: 'Directory listing', desc: 'Detailed profile with hours, services, photos, reviews and map location.' },
-  { icon: '🌐', title: 'SEO visibility', desc: 'Your center appears in Google searches. Bilingual ES/EN optimized profile.' },
-  { icon: '⭐', title: 'Verified reviews', desc: 'Users can rate your center. Good reviews boost your visibility.' },
-  { icon: '✅', title: 'Verified center badge', desc: 'A verification badge builds trust with potential clients.' },
-  { icon: '📞', title: 'Direct contact', desc: 'Interested people contact you directly: phone, email, website and social media.' },
-  { icon: '📅', title: 'Publish events', desc: 'Besides the directory, publish retreats and events from your center profile.' },
+  { icon: '📍', title: 'Directory listing', desc: 'Detailed profile with hours, services, photos, reviews and map location.', image: '/images/centro-directorio-mapa.png' },
+  { icon: '🌐', title: 'SEO visibility', desc: 'Your center appears in Google searches. Bilingual ES/EN optimized profile.', image: '/images/centro-visibilidad-seo.png' },
+  { icon: '⭐', title: 'Verified reviews', desc: 'Users can rate your center. Good reviews boost your visibility.', image: '/images/centro-resenas-valoraciones.png' },
+  { icon: '✅', title: 'Verified center badge', desc: 'A verification badge builds trust with potential clients.', image: '/images/centro-sello-verificado.png' },
+  { icon: '📞', title: 'Direct contact', desc: 'Interested people contact you directly: phone, email, website and social media.', image: '/images/centro-contacto-canales.png' },
+  { icon: '📅', title: 'Publish events', desc: 'Besides the directory, publish retreats and events from your center profile.', image: '/images/centro-publicar-retiros.png' },
 ];
 
 const ORGANIZER_FEATURES = [
-  { icon: '📝', title: 'Creation Wizard', desc: 'Publish your retreat step by step with real-time preview.' },
-  { icon: '👥', title: 'Attendee CRM', desc: 'Data, forms, internal notes and segmentation of your attendees.' },
-  { icon: '💬', title: 'Integrated Messaging', desc: '1-on-1 chat and mass messages with predefined templates.' },
-  { icon: '📱', title: 'QR Check-in', desc: 'Attendance list and QR codes per booking for the day of the retreat.' },
-  { icon: '📈', title: 'Analytics', desc: 'Views, conversions, bookings and cancellations for each retreat.' },
-  { icon: '⭐', title: 'Review Management', desc: 'See and respond publicly to your attendees\' reviews.' },
+  { icon: '📝', title: 'Creation Wizard', desc: 'Publish your retreat step by step with real-time preview.', image: '/images/dashboard-wizard-creacion.png' },
+  { icon: '👥', title: 'Attendee CRM', desc: 'Data, forms, internal notes and segmentation of your attendees.', image: '/images/dashboard-crm-asistentes.png' },
+  { icon: '💬', title: 'Integrated Messaging', desc: '1-on-1 chat and mass messages with predefined templates.', image: '/images/dashboard-mensajeria.png' },
+  { icon: '📱', title: 'QR Check-in', desc: 'Attendance list and QR codes per booking for the day of the retreat.', image: '/images/dashboard-checkin-qr.png' },
+  { icon: '📈', title: 'Analytics', desc: 'Views, conversions, bookings and cancellations for each retreat.', image: '/images/dashboard-analiticas.png' },
+  { icon: '⭐', title: 'Review Management', desc: 'See and respond publicly to your attendees\' reviews.', image: '/images/dashboard-resenas.png' },
 ];
 
 const FAQS = [
@@ -98,10 +98,15 @@ export default function ForOrganizersPageEN() {
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
             {CENTER_BENEFITS.map((b) => (
-              <div key={b.title} className="rounded-2xl border border-sand-200 bg-white p-6 hover:shadow-soft transition-shadow">
-                <span className="text-2xl mb-3 block">{b.icon}</span>
-                <h3 className="mb-2 font-semibold">{b.title}</h3>
-                <p className="text-sm text-[#7a6b5d] leading-relaxed">{b.desc}</p>
+              <div key={b.title} className="flex flex-col overflow-hidden rounded-2xl border border-sand-200 bg-white transition-shadow hover:shadow-soft">
+                <div className="relative aspect-[16/10] shrink-0 bg-sand-100">
+                  <img src={b.image} alt={`Visual example: ${b.title}`} className="absolute inset-0 h-full w-full object-cover" />
+                </div>
+                <div className="flex flex-1 flex-col p-6">
+                  <span className="mb-3 block text-2xl">{b.icon}</span>
+                  <h3 className="mb-2 font-semibold">{b.title}</h3>
+                  <p className="text-sm leading-relaxed text-[#7a6b5d]">{b.desc}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -202,10 +207,15 @@ export default function ForOrganizersPageEN() {
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
             {ORGANIZER_FEATURES.map((f) => (
-              <div key={f.title} className="rounded-2xl border border-sand-200 bg-white p-6 hover:shadow-soft transition-shadow">
-                <span className="text-2xl mb-3 block">{f.icon}</span>
-                <h3 className="mb-2 font-semibold">{f.title}</h3>
-                <p className="text-sm text-[#7a6b5d] leading-relaxed">{f.desc}</p>
+              <div key={f.title} className="flex flex-col overflow-hidden rounded-2xl border border-sand-200 bg-white transition-shadow hover:shadow-soft">
+                <div className="relative aspect-[16/10] shrink-0 bg-sand-100">
+                  <img src={f.image} alt={`Visual example: ${f.title}`} className="absolute inset-0 h-full w-full object-cover" />
+                </div>
+                <div className="flex flex-1 flex-col p-6">
+                  <span className="mb-3 block text-2xl">{f.icon}</span>
+                  <h3 className="mb-2 font-semibold">{f.title}</h3>
+                  <p className="text-sm leading-relaxed text-[#7a6b5d]">{f.desc}</p>
+                </div>
               </div>
             ))}
           </div>

@@ -15,21 +15,21 @@ import { jsonLdFAQ, jsonLdScript } from '@/lib/seo';
 export const metadata: Metadata = forOrganizersES;
 
 const CENTER_BENEFITS = [
-  { icon: MapPin, title: 'Presencia en el directorio', desc: 'Ficha detallada con horarios, servicios, fotos, reseñas y ubicación en mapa.' },
-  { icon: Globe, title: 'Visibilidad SEO', desc: 'Tu centro aparece en búsquedas de Google. Ficha bilingüe ES/EN optimizada.' },
-  { icon: Star, title: 'Reseñas verificadas', desc: 'Los usuarios pueden valorar tu centro. Las buenas reseñas te dan más visibilidad.' },
-  { icon: BadgeCheck, title: 'Sello de centro verificado', desc: 'Un badge de verificación transmite confianza a potenciales clientes.' },
-  { icon: Phone, title: 'Contacto directo', desc: 'Los interesados te contactan sin intermediarios: teléfono, email, web y redes.' },
-  { icon: CalendarPlus, title: 'Publica retiros', desc: 'Además del directorio, publica retiros o eventos desde tu perfil de centro.' },
+  { icon: MapPin, title: 'Presencia en el directorio', desc: 'Ficha detallada con horarios, servicios, fotos, reseñas y ubicación en mapa.', image: '/images/centro-directorio-mapa.png' },
+  { icon: Globe, title: 'Visibilidad SEO', desc: 'Tu centro aparece en búsquedas de Google. Ficha bilingüe ES/EN optimizada.', image: '/images/centro-visibilidad-seo.png' },
+  { icon: Star, title: 'Reseñas verificadas', desc: 'Los usuarios pueden valorar tu centro. Las buenas reseñas te dan más visibilidad.', image: '/images/centro-resenas-valoraciones.png' },
+  { icon: BadgeCheck, title: 'Sello de centro verificado', desc: 'Un badge de verificación transmite confianza a potenciales clientes.', image: '/images/centro-sello-verificado.png' },
+  { icon: Phone, title: 'Contacto directo', desc: 'Los interesados te contactan sin intermediarios: teléfono, email, web y redes.', image: '/images/centro-contacto-canales.png' },
+  { icon: CalendarPlus, title: 'Publica retiros', desc: 'Además del directorio, publica retiros o eventos desde tu perfil de centro.', image: '/images/centro-publicar-retiros.png' },
 ];
 
 const ORGANIZER_FEATURES = [
-  { icon: FileText, title: 'Wizard de creación', desc: 'Publica tu retiro paso a paso con previsualización en tiempo real.' },
-  { icon: Users, title: 'CRM de asistentes', desc: 'Datos, formularios, notas internas y segmentación de tus asistentes.' },
-  { icon: MessageSquare, title: 'Mensajería integrada', desc: 'Chat 1a1 y mensajes masivos con plantillas predefinidas.' },
-  { icon: QrCode, title: 'Check-in con QR', desc: 'Lista de asistencia y códigos QR por reserva para el día del retiro.' },
-  { icon: BarChart3, title: 'Analíticas', desc: 'Vistas, conversiones, reservas y cancelaciones de cada retiro.' },
-  { icon: Star, title: 'Gestión de reseñas', desc: 'Ve y responde públicamente a las reseñas de tus asistentes.' },
+  { icon: FileText, title: 'Wizard de creación', desc: 'Publica tu retiro paso a paso con previsualización en tiempo real.', image: '/images/dashboard-wizard-creacion.png' },
+  { icon: Users, title: 'CRM de asistentes', desc: 'Datos, formularios, notas internas y segmentación de tus asistentes.', image: '/images/dashboard-crm-asistentes.png' },
+  { icon: MessageSquare, title: 'Mensajería integrada', desc: 'Chat 1a1 y mensajes masivos con plantillas predefinidas.', image: '/images/dashboard-mensajeria.png' },
+  { icon: QrCode, title: 'Check-in con QR', desc: 'Lista de asistencia y códigos QR por reserva para el día del retiro.', image: '/images/dashboard-checkin-qr.png' },
+  { icon: BarChart3, title: 'Analíticas', desc: 'Vistas, conversiones, reservas y cancelaciones de cada retiro.', image: '/images/dashboard-analiticas.png' },
+  { icon: Star, title: 'Gestión de reseñas', desc: 'Ve y responde públicamente a las reseñas de tus asistentes.', image: '/images/dashboard-resenas.png' },
 ];
 
 const FAQS = [
@@ -103,13 +103,18 @@ export default function ParaOrganizadoresPage() {
           </p>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
-            {CENTER_BENEFITS.map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="rounded-2xl border border-sand-200 bg-white p-6 transition-shadow hover:shadow-soft">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-sage-100">
-                  <Icon size={24} className="text-sage-700" />
+            {CENTER_BENEFITS.map(({ icon: Icon, title, desc, image }) => (
+              <div key={title} className="flex flex-col overflow-hidden rounded-2xl border border-sand-200 bg-white transition-shadow hover:shadow-soft">
+                <div className="relative aspect-[16/10] shrink-0 bg-sand-100">
+                  <img src={image} alt={`Ejemplo visual: ${title}`} className="absolute inset-0 h-full w-full object-cover" />
                 </div>
-                <h3 className="mb-2 font-semibold text-foreground">{title}</h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">{desc}</p>
+                <div className="flex flex-1 flex-col p-6">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-sage-100">
+                    <Icon size={24} className="text-sage-700" />
+                  </div>
+                  <h3 className="mb-2 font-semibold text-foreground">{title}</h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{desc}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -219,13 +224,18 @@ export default function ParaOrganizadoresPage() {
 
           {/* Features grid */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
-            {ORGANIZER_FEATURES.map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="rounded-2xl border border-sand-200 bg-white p-6 transition-shadow hover:shadow-soft">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-terracotta-100">
-                  <Icon size={24} className="text-terracotta-700" />
+            {ORGANIZER_FEATURES.map(({ icon: Icon, title, desc, image }) => (
+              <div key={title} className="flex flex-col overflow-hidden rounded-2xl border border-sand-200 bg-white transition-shadow hover:shadow-soft">
+                <div className="relative aspect-[16/10] shrink-0 bg-sand-100">
+                  <img src={image} alt={`Ejemplo visual: ${title}`} className="absolute inset-0 h-full w-full object-cover" />
                 </div>
-                <h3 className="mb-2 font-semibold text-foreground">{title}</h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">{desc}</p>
+                <div className="flex flex-1 flex-col p-6">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-terracotta-100">
+                    <Icon size={24} className="text-terracotta-700" />
+                  </div>
+                  <h3 className="mb-2 font-semibold text-foreground">{title}</h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{desc}</p>
+                </div>
               </div>
             ))}
           </div>
