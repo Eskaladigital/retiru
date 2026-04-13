@@ -106,6 +106,8 @@ interface Props {
   apiPath?: string;
   /** Ocultar acciones de cancelar/eliminar (ej. en admin) */
   hideActions?: boolean;
+  /** Vista de administrador (cambia mensajes de ayuda) */
+  isAdmin?: boolean;
 }
 
 const inputCls = 'w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all';
@@ -119,7 +121,7 @@ function sortRetreatImages(rows: ImgRow[] | undefined) {
 
 type LocalImage = { file?: File; url: string; preview: string; is_cover: boolean };
 
-export function EditarEventoForm({ retreat, categories, destinations, apiPath, hideActions }: Props) {
+export function EditarEventoForm({ retreat, categories, destinations, apiPath, hideActions, isAdmin }: Props) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [saving, setSaving] = useState(false);
@@ -409,9 +411,20 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
           onChange={(html) => set('description_es', html)}
         />
         <p className="text-xs text-[#a09383] mt-1.5 leading-relaxed">
-          Editor visual (TinyMCE). Clave opcional:{' '}
-          <code className="text-[11px] bg-sand-100 px-1 rounded">NEXT_PUBLIC_TINYMCE_API_KEY</code> en <code className="text-[11px] bg-sand-100 px-1 rounded">.env.local</code>
-          . No incluyas teléfonos ni emails en la descripción.
+          {isAdmin ? (
+            <>
+              Editor visual (TinyMCE). Clave opcional:{' '}
+              <code className="text-[11px] bg-sand-100 px-1 rounded">NEXT_PUBLIC_TINYMCE_API_KEY</code> en{' '}
+              <code className="text-[11px] bg-sand-100 px-1 rounded">.env.local</code>.
+            </>
+          ) : (
+            <>
+              <strong className="text-red-700">⚠️ Reglas importantes:</strong> NO incluyas <strong>teléfonos, emails, WhatsApp ni redes sociales personales</strong> para que los usuarios te contacten directamente. 
+              Tampoco incluyas <strong>precios diferentes</strong> al que anuncias en la ficha ni <strong>enlaces a sistemas de reserva externos</strong>. 
+              El canal de contacto y reserva es <strong>siempre a través de Retiru</strong>. 
+              Contenido que incumpla estas reglas será rechazado automáticamente.
+            </>
+          )}
         </p>
         
         {form.description_es.trim() && (

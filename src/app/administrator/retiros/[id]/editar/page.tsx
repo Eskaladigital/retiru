@@ -66,6 +66,7 @@ export default async function AdminEditarRetiroPage({ params }: Props) {
         categories={(categories || []).map((c: any) => ({ id: c.id, name: c.name_es, slug: c.slug }))}
         destinations={(destinations || []).map((d: any) => ({ id: d.id, name: d.name_es, slug: d.slug }))}
         apiPath={`/api/admin/retreats/${retreat.id}`}
+        isAdmin={true}
       />
     </div>
   );
