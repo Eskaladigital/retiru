@@ -73,7 +73,8 @@ Documentación de la arquitectura de rutas y landings.
 El enlace **English / Español** no apunta solo a la home: calcula la ruta equivalente (`src/lib/locale-path.ts`), p. ej. `/es/blog` → `/en/blog`, `/es/centro/foo` → `/en/center/foo`.
 
 - **Artículos del blog** con `slug` distinto de `slug_en`: se consulta `GET /api/blog/alternate-path?path=…` para enlazar a la URL canónica del otro idioma.
-- **Área de cuenta** (`/es/perfil`, `/es/mis-*`, `/es/mensajes`, `/es/panel`…): al pasar a inglés se redirige a **`/en`** (esas rutas solo existen en español).
+- **Área de cuenta** (`/es/perfil`, `/es/mis-*`, `/es/mensajes`, `/es/facturas`…): al pasar a inglés se redirige a **`/en`** (esas rutas solo existen en español).
+- **Panel organizador** (`/es/panel/...` ↔ `/en/panel/...`): mismas rutas en ambos idiomas (dashboard, eventos, asistentes, mensajes, etc.). El selector ES/EN enlaza a la ruta equivalente.
 - El enlace usa **`<a href>`** (navegación completa) para que el documento se regenere con el `<html lang>` correcto y sin estado cliente obsoleto. Además, `PublicShell` sincroniza `document.documentElement.lang` en cambios de ruta por `next/link`.
 
 ---
