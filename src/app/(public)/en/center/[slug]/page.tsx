@@ -79,7 +79,7 @@ export default async function CenterDetailEN({ params }: Props) {
         {C.type && (
           <>
             <span>›</span>
-            <Link href={`/en/centers-${C.type}`} className="hover:text-terracotta-600">{getCenterTypeLabel(C.type, 'en')} Centers</Link>
+            <Link href={`/en/centers/${C.type}`} className="hover:text-terracotta-600">{getCenterTypeLabel(C.type, 'en')} Centers</Link>
           </>
         )}
         <span>›</span>
@@ -93,7 +93,7 @@ export default async function CenterDetailEN({ params }: Props) {
             <h1 className="font-serif text-[clamp(24px,3vw,36px)] text-foreground">{C.name}</h1>
           </div>
           <div className="flex flex-wrap items-center gap-3 text-sm text-[#7a6b5d] mb-6">
-            {C.type && <Link href={`/en/centers-${C.type}`} className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-sage-100 text-sage-700 hover:bg-sage-200 transition-colors">{getCenterTypeLabel(C.type, 'en')}</Link>}
+            {C.type && <Link href={`/en/centers/${C.type}`} className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-sage-100 text-sage-700 hover:bg-sage-200 transition-colors">{getCenterTypeLabel(C.type, 'en')}</Link>}
             {(C.city || C.province) && <span>📍 {C.city}{C.province ? `, ${C.province}` : ''}</span>}
             {C.avg_rating != null && (
               <span className="flex items-center gap-1">
@@ -253,7 +253,7 @@ export default async function CenterDetailEN({ params }: Props) {
           __html: jsonLdScript(jsonLdBreadcrumb([
             { name: 'Retiru', url: '/en' },
             { name: 'Centers', url: '/en/centers-retiru' },
-            ...(C.type ? [{ name: `${getCenterTypeLabel(C.type, 'en')} Centers`, url: `/en/centers-${C.type}` }] : []),
+            ...(C.type ? [{ name: `${getCenterTypeLabel(C.type, 'en')} Centers`, url: `/en/centers/${C.type}` }] : []),
             { name: C.name, url: `/en/center/${slug}` },
           ])),
         }}

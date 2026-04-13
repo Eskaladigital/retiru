@@ -201,7 +201,7 @@ export default async function RetreatsByCategoryPage({ params }: { params: Promi
                 Find verified {(cat.name_en || cat.name_es).toLowerCase()} centers near you in our directory.
               </p>
               <Link
-                href={`/en/centers-${centerTypeEn}`}
+                href={`/en/centers/${centerTypeEn}`}
                 className="inline-flex items-center gap-1.5 text-sm font-semibold text-terracotta-600 hover:text-terracotta-700 transition-colors"
               >
                 Browse {(cat.name_en || cat.name_es).toLowerCase()} centers →

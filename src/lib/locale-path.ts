@@ -10,6 +10,8 @@ export function mapPathRestEsToEn(rest: string): string {
   return p
     .replace(/^\/buscar(\/|$)/, '/search$1')
     .replace(/^\/centros-retiru(\/|$)/, '/centers-retiru$1')
+    .replace(/^\/centros\/meditacion(\/|$)/, '/centers/meditation$1')
+    .replace(/^\/centros\/(yoga|ayurveda)(\/|$)/, '/centers/$1$2')
     .replace(/^\/tienda(\/|$)/, '/shop$1')
     .replace(/^\/retiros-retiru(\/|$)/, '/retreats-retiru$1')
     .replace(/^\/destinos(\/|$)/, '/destinations$1')
@@ -30,6 +32,8 @@ export function mapPathRestEnToEs(rest: string): string {
   return p
     .replace(/^\/search(\/|$)/, '/buscar$1')
     .replace(/^\/centers-retiru(\/|$)/, '/centros-retiru$1')
+    .replace(/^\/centers\/meditation(\/|$)/, '/centros/meditacion$1')
+    .replace(/^\/centers\/(yoga|ayurveda)(\/|$)/, '/centros/$1$2')
     .replace(/^\/shop(\/|$)/, '/tienda$1')
     .replace(/^\/retreats-retiru(\/|$)/, '/retiros-retiru$1')
     .replace(/^\/destinations(\/|$)/, '/destinos$1')

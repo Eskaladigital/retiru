@@ -69,7 +69,7 @@ export default async function CentrosPorProvinciaPage({ params }: { params: Prom
             <div className="flex flex-wrap gap-2 mb-8">
               <span className="text-xs text-muted-foreground self-center mr-1">Filtrar por tipo:</span>
               {types.map(([type, label]) => (
-                <Link key={type} href={`/es/centros-${CENTER_TYPE_URL_ES[type] || type}/${slug}`} className="text-xs font-medium px-3 py-1.5 rounded-full bg-sage-50 text-sage-700 border border-sage-200 hover:bg-sage-100 transition-colors">Centros de {label}</Link>
+                <Link key={type} href={`/es/centros/${CENTER_TYPE_URL_ES[type] || type}/${slug}`} className="text-xs font-medium px-3 py-1.5 rounded-full bg-sage-50 text-sage-700 border border-sage-200 hover:bg-sage-100 transition-colors">Centros de {label}</Link>
               ))}
             </div>
           ) : null;

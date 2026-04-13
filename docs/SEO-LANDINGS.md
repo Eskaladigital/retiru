@@ -28,7 +28,7 @@ Resumen rápido; el detalle de schemas implementados está en **§4.B** (p. ej. 
 | retiros-retiru/[slug] | ✅ | ✅ ItemList (lista) + FAQ si hay contenido BD | Según hero |
 | centros-retiru/[slug] | ✅ | ✅ ItemList + FAQ si aplica | Según hero |
 | retiros-[category] / + destino | ✅ intros/meta BD | ✅ ItemList / FAQ combinados | Por defecto |
-| centros-[type] / + provincia | ✅ | ✅ ItemList | Por defecto |
+| centros/[tipo] / + provincia | ✅ | ✅ ItemList | Por defecto |
 | destinos/[slug] | ✅ | ItemList / Place (según implementación) | — |
 | retiro/[slug] | ✅ | ✅ Event + BreadcrumbList | Dinámica |
 | centro/[slug] | ✅ | ✅ LocalBusiness + BreadcrumbList | Dinámica |
@@ -171,8 +171,8 @@ El sitemap se genera en build time con ISR (`revalidate = 3600`). Genera URLs **
 | Productos | `products` (`status=active`) en **sitemap**; fichas `/es/tienda/*` leen **`shop_products`** | `/es/tienda/[slug]` | `/en/shop/[slug]` | Entradas sitemap si hay filas en `products`; alinear con `shop_products` si en tu proyecto solo usas una tabla |
 | Retiros por categoría | `getCategoriesWithRetreats()` | `/es/retiros-[cat]` | `/en/retreats-[cat]` | Solo categorías con retiros |
 | Retiros cat+destino | `getCategoryDestinationPairs()` | `/es/retiros-[cat]/[dest]` | `/en/retreats-[cat]/[dest]` | Solo pares con retiros |
-| Centros por tipo | Fijo (3 tipos) | `/es/centros-[type]` | `/en/centers-[type]` | Siempre |
-| Centros tipo+provincia | `getCenterTypeProvincePairs()` | `/es/centros-[type]/[prov]` | `/en/centers-[type]/[prov]` | Solo pares con centros |
+| Centros por tipo | Fijo (3 tipos) | `/es/centros/[tipo]` | `/en/centers/[type]` | Siempre |
+| Centros tipo+provincia | `getCenterTypeProvincePairs()` | `/es/centros/[tipo]/[prov]` | `/en/centers/[type]/[prov]` | Solo pares con centros |
 
 Todas las entradas incluyen `alternates` con hreflang ES/EN.
 
@@ -191,8 +191,8 @@ Así no se generan páginas vacías ("thin content") en el deploy.
 - **Listas por destino/provincia**: ✅ Contenido editorial (intro, FAQ) generado por IA en BD, schema ItemList.
 - **Landings por categoría**: ✅ `/es/retiros-yoga`, `/es/retiros-meditacion`, etc. con intro, FAQ, destinos, JSON-LD.
 - **Landings categoría+destino**: ✅ `/es/retiros-yoga/ibiza` con contenido combinado, FAQ, JSON-LD.
-- **Landings centros por tipo**: ✅ `/es/centros-yoga`, `/es/centros-meditacion`, `/es/centros-ayurveda` con provincias, JSON-LD.
-- **Landings tipo+provincia**: ✅ `/es/centros-yoga/madrid` con listado filtrado, JSON-LD.
+- **Landings centros por tipo**: ✅ `/es/centros/yoga`, `/es/centros/meditacion`, `/es/centros/ayurveda` con provincias, JSON-LD. (Redirección 308 desde `/es/centros-*` antiguas.)
+- **Landings tipo+provincia**: ✅ `/es/centros/yoga/madrid` con listado filtrado, JSON-LD.
 - **Fichas**: ✅ JSON-LD Event, LocalBusiness, Product, BlogPosting, BreadcrumbList.
 - **Sitemap**: ✅ Completo y bilingüe, con todas las landings programáticas incluidas.
 - **Internal linking**: ✅ Home enlaza a categorías, categorías enlazan a destinos, breadcrumbs en todas las landings.

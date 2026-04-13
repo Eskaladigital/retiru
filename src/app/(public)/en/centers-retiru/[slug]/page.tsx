@@ -52,7 +52,7 @@ export default async function CentersByProvincePageEN({ params }: { params: Prom
           <div className="flex flex-wrap gap-2 mb-8">
             <span className="text-xs text-muted-foreground self-center mr-1">Filter by type:</span>
             {types.map(([type, label]) => (
-              <Link key={type} href={`/en/centers-${type}/${slug}`} className="text-xs font-medium px-3 py-1.5 rounded-full bg-sage-50 text-sage-700 border border-sage-200 hover:bg-sage-100 transition-colors">{label} Centers</Link>
+              <Link key={type} href={`/en/centers/${type}/${slug}`} className="text-xs font-medium px-3 py-1.5 rounded-full bg-sage-50 text-sage-700 border border-sage-200 hover:bg-sage-100 transition-colors">{label} Centers</Link>
             ))}
           </div>
         ) : null;

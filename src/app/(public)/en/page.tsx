@@ -211,9 +211,9 @@ export default async function HomePageEN() {
               <Link href="/en/centers-retiru" className="text-[15px] font-semibold text-terracotta-600 inline-flex items-center gap-1.5 hover:gap-2.5 transition-all whitespace-nowrap">View directory <IconChevron /></Link>
             </div>
             <div className="flex flex-wrap gap-3 mb-8">
-              <Link href="/en/centers-yoga" className="inline-flex items-center gap-2 px-4 py-2.5 bg-sage-50 border border-sage-200 rounded-full text-sm font-medium text-sage-700 hover:bg-sage-100 transition-colors">Yoga Centers</Link>
-              <Link href="/en/centers-meditation" className="inline-flex items-center gap-2 px-4 py-2.5 bg-sage-50 border border-sage-200 rounded-full text-sm font-medium text-sage-700 hover:bg-sage-100 transition-colors">Meditation Centers</Link>
-              <Link href="/en/centers-ayurveda" className="inline-flex items-center gap-2 px-4 py-2.5 bg-sage-50 border border-sage-200 rounded-full text-sm font-medium text-sage-700 hover:bg-sage-100 transition-colors">Ayurveda Centers</Link>
+              <Link href="/en/centers/yoga" className="inline-flex items-center gap-2 px-4 py-2.5 bg-sage-50 border border-sage-200 rounded-full text-sm font-medium text-sage-700 hover:bg-sage-100 transition-colors">Yoga Centers</Link>
+              <Link href="/en/centers/meditation" className="inline-flex items-center gap-2 px-4 py-2.5 bg-sage-50 border border-sage-200 rounded-full text-sm font-medium text-sage-700 hover:bg-sage-100 transition-colors">Meditation Centers</Link>
+              <Link href="/en/centers/ayurveda" className="inline-flex items-center gap-2 px-4 py-2.5 bg-sage-50 border border-sage-200 rounded-full text-sm font-medium text-sage-700 hover:bg-sage-100 transition-colors">Ayurveda Centers</Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {[

@@ -135,14 +135,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 11) Centros por tipo
   const TYPE_ES_MAP: Record<string, string> = { yoga: 'yoga', meditation: 'meditacion', ayurveda: 'ayurveda' };
   for (const [dbType, esSlug] of Object.entries(TYPE_ES_MAP)) {
-    pushBilingual(`/es/centros-${esSlug}`, `/en/centers-${dbType}`, 'weekly', 0.8);
+    pushBilingual(`/es/centros/${esSlug}`, `/en/centers/${dbType}`, 'weekly', 0.8);
   }
 
   // 12) Centros por tipo + provincia
   const typeProvPairs = await getCenterTypeProvincePairs();
   typeProvPairs.forEach((p) => {
     const esSlug = TYPE_ES_MAP[p.type] || p.type;
-    pushBilingual(`/es/centros-${esSlug}/${p.province}`, `/en/centers-${p.type}/${p.province}`, 'weekly', 0.7);
+    pushBilingual(`/es/centros/${esSlug}/${p.province}`, `/en/centers/${p.type}/${p.province}`, 'weekly', 0.7);
   });
 
   return [...staticEntries, ...dynamicEntries];

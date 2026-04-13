@@ -250,9 +250,9 @@ export default async function HomePage() {
               </Link>
             </div>
             <div className="flex flex-wrap gap-3 mb-8">
-              <Link href="/es/centros-yoga" className="inline-flex items-center gap-2 px-4 py-2.5 bg-sage-50 border border-sage-200 rounded-full text-sm font-medium text-sage-700 hover:bg-sage-100 transition-colors">Centros de Yoga</Link>
-              <Link href="/es/centros-meditacion" className="inline-flex items-center gap-2 px-4 py-2.5 bg-sage-50 border border-sage-200 rounded-full text-sm font-medium text-sage-700 hover:bg-sage-100 transition-colors">Centros de Meditación</Link>
-              <Link href="/es/centros-ayurveda" className="inline-flex items-center gap-2 px-4 py-2.5 bg-sage-50 border border-sage-200 rounded-full text-sm font-medium text-sage-700 hover:bg-sage-100 transition-colors">Centros de Ayurveda</Link>
+              <Link href="/es/centros/yoga" className="inline-flex items-center gap-2 px-4 py-2.5 bg-sage-50 border border-sage-200 rounded-full text-sm font-medium text-sage-700 hover:bg-sage-100 transition-colors">Centros de Yoga</Link>
+              <Link href="/es/centros/meditacion" className="inline-flex items-center gap-2 px-4 py-2.5 bg-sage-50 border border-sage-200 rounded-full text-sm font-medium text-sage-700 hover:bg-sage-100 transition-colors">Centros de Meditación</Link>
+              <Link href="/es/centros/ayurveda" className="inline-flex items-center gap-2 px-4 py-2.5 bg-sage-50 border border-sage-200 rounded-full text-sm font-medium text-sage-700 hover:bg-sage-100 transition-colors">Centros de Ayurveda</Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {[

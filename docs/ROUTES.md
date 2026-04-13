@@ -31,8 +31,8 @@ Documentación de la arquitectura de rutas y landings.
 | `/es/condiciones` | `src/app/(public)/es/condiciones/page.tsx` | Condiciones de uso y precios |
 | `/es/retiros-[category]` | `src/app/(public)/es/retiros-[category]/page.tsx` | Landing SEO por categoría de retiro (ej. `/es/retiros-yoga`) |
 | `/es/retiros-[category]/[destination]` | `src/app/(public)/es/retiros-[category]/[destination]/page.tsx` | Categoría + destino |
-| `/es/centros-[type]` | `src/app/(public)/es/centros-[type]/page.tsx` | Centros por tipo (`yoga` / `meditacion` / `ayurveda` en URL ES) |
-| `/es/centros-[type]/[province]` | `src/app/(public)/es/centros-[type]/[province]/page.tsx` | Tipo + provincia |
+| `/es/centros/[tipo]` | `src/app/(public)/es/centros/[tipo]/page.tsx` | Centros por tipo (`yoga` / `meditacion` / `ayurveda` en URL ES) |
+| `/es/centros/[tipo]/[provincia]` | `src/app/(public)/es/centros/[tipo]/[provincia]/page.tsx` | Tipo + provincia |
 
 ---
 
@@ -55,8 +55,8 @@ Documentación de la arquitectura de rutas y landings.
 | `/en/for-organizers` | `src/app/(public)/en/for-organizers/page.tsx` |
 | `/en/retreats-[category]` | `src/app/(public)/en/retreats-[category]/page.tsx` |
 | `/en/retreats-[category]/[destination]` | `src/app/(public)/en/retreats-[category]/[destination]/page.tsx` |
-| `/en/centers-[type]` | `src/app/(public)/en/centers-[type]/page.tsx` |
-| `/en/centers-[type]/[province]` | `src/app/(public)/en/centers-[type]/[province]/page.tsx` |
+| `/en/centers/[type]` | `src/app/(public)/en/centers/[type]/page.tsx` |
+| `/en/centers/[type]/[province]` | `src/app/(public)/en/centers/[type]/[province]/page.tsx` |
 | `/en/shop` | `src/app/(public)/en/shop/page.tsx` — misma lógica que `/es/tienda` (encuesta si no hay productos) |
 | `/en/shop/[slug]` | `src/app/(public)/en/shop/[slug]/page.tsx` |
 | `/en/blog` | `src/app/(public)/en/blog/page.tsx` |
@@ -70,7 +70,7 @@ Documentación de la arquitectura de rutas y landings.
 
 ## Selector de idioma (header / footer)
 
-El enlace **English / Español** no apunta solo a la home: calcula la ruta equivalente (`src/lib/locale-path.ts`), p. ej. `/es/blog` → `/en/blog`, `/es/centro/foo` → `/en/center/foo`.
+El enlace **English / Español** no apunta solo a la home: calcula la ruta equivalente (`src/lib/locale-path.ts`), p. ej. `/es/blog` → `/en/blog`, `/es/centro/foo` → `/en/center/foo`, `/es/centros/yoga` → `/en/centers/yoga`, `/es/centros/meditacion` → `/en/centers/meditation`.
 
 - **Artículos del blog** con `slug` distinto de `slug_en`: se consulta `GET /api/blog/alternate-path?path=…` para enlazar a la URL canónica del otro idioma.
 - **Área de cuenta** (`/es/perfil`, `/es/mis-*`, `/es/mensajes`, `/es/facturas`…): al pasar a inglés se redirige a **`/en`** (esas rutas solo existen en español).
@@ -160,8 +160,8 @@ Slug EN equivalente: yoga, meditation, ayurveda, detox, nature, gastronomy, well
 
 | Ruta ES | Ruta EN | Descripción |
 |---------|---------|-------------|
-| `/es/centros-[type]` | `/en/centers-[type]` | Índice de centros por tipo (yoga, meditacion, ayurveda) |
-| `/es/centros-[type]/[province]` | `/en/centers-[type]/[province]` | Centros de tipo en provincia específica |
+| `/es/centros/[tipo]` | `/en/centers/[type]` | Índice de centros por tipo (yoga, meditacion, ayurveda) |
+| `/es/centros/[tipo]/[provincia]` | `/en/centers/[type]/[province]` | Centros de tipo en provincia específica |
 
 Tipos ES: yoga, meditacion, ayurveda. Tipos EN (= BD): yoga, meditation, ayurveda.
 
@@ -207,7 +207,7 @@ Código de referencia: `getOrganizerReviewStats`, `organizerHasRatingToShow` en 
 | `retiros-retiru/` | Lista, `EventosClient`, `[slug]/` por destino |
 | `retiros-[category]/` | Landing por categoría + `[destination]/` |
 | `centros-retiru/` | Directorio, `[slug]/` por provincia |
-| `centros-[type]/` | Por tipo BD (URL ES `meditacion` ↔ BD `meditation`) + `[province]/` |
+| `centros/[tipo]/` | Por tipo BD (URL ES `meditacion` ↔ BD `meditation`) + `[provincia]/` |
 | `retiro/[slug]/` | Ficha retiro (portada + galería) |
 | `centro/[slug]/` | Ficha centro |
 | `buscar/` | Buscador unificado |
@@ -220,9 +220,12 @@ Código de referencia: `getOrganizerReviewStats`, `organizerHasRatingToShow` en 
 | `legal/` | Términos, privacidad, cookies |
 | `sobre-nosotros/`, `contacto/`, `ayuda/`, `condiciones/` | Estáticas |
 
-### Landings dinámicas (implementadas, no carpetas literales `centros-yoga`)
+### Landings dinámicas (implementadas)
 
-Las URLs amigables (`/es/centros-yoga`, `/es/retiros-meditacion/ibiza`, etc.) las resuelven las carpetas **`centros-[type]`** y **`retiros-[category]`** del App Router (segmentos dinámicos). Ver tablas arriba y `docs/SEO-LANDINGS.md`.
+- **Retiros:** `/es/retiros-yoga`, `/es/retiros-meditacion/ibiza`, etc. → carpeta **`retiros-[category]`** (segmento dinámico; no colisiona con `/es/retiro/[slug]`).
+- **Centros por tipo:** canónicas **`/es/centros/yoga`**, **`/es/centros/meditacion/madrid`**, etc. → carpeta **`centros/[tipo]`**. Las URLs antiguas con guión (`/es/centros-yoga`, …) redirigen **308** a la forma con barra (`next.config.js`).
+
+Ver tablas arriba y `docs/SEO-LANDINGS.md`.
 
 ---
 

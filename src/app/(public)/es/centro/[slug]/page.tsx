@@ -77,7 +77,7 @@ export default async function CentroDetailPage({ params }: Props) {
         {C.type && (
           <>
             <span>›</span>
-            <Link href={`/es/centros-${CENTER_TYPE_URL_ES[C.type] || C.type}`} className="hover:text-terracotta-600">Centros de {getCenterTypeLabel(C.type)}</Link>
+            <Link href={`/es/centros/${CENTER_TYPE_URL_ES[C.type] || C.type}`} className="hover:text-terracotta-600">Centros de {getCenterTypeLabel(C.type)}</Link>
           </>
         )}
         <span>›</span>
@@ -91,7 +91,7 @@ export default async function CentroDetailPage({ params }: Props) {
             <h1 className="font-serif text-[clamp(24px,3vw,36px)] text-foreground">{C.name}</h1>
           </div>
           <div className="flex flex-wrap items-center gap-3 text-sm text-[#7a6b5d] mb-6">
-            {C.type && <Link href={`/es/centros-${CENTER_TYPE_URL_ES[C.type] || C.type}`} className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-sage-100 text-sage-700 hover:bg-sage-200 transition-colors">{getCenterTypeLabel(C.type)}</Link>}
+            {C.type && <Link href={`/es/centros/${CENTER_TYPE_URL_ES[C.type] || C.type}`} className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-sage-100 text-sage-700 hover:bg-sage-200 transition-colors">{getCenterTypeLabel(C.type)}</Link>}
             {(C.city || C.province) && <span>📍 {C.city}{C.province ? `, ${C.province}` : ''}</span>}
             {C.avg_rating != null && (
               <span className="flex items-center gap-1">
@@ -242,7 +242,7 @@ export default async function CentroDetailPage({ params }: Props) {
           __html: jsonLdScript(jsonLdBreadcrumb([
             { name: 'Retiru', url: '/es' },
             { name: 'Centros', url: '/es/centros-retiru' },
-            ...(C.type ? [{ name: `Centros de ${getCenterTypeLabel(C.type)}`, url: `/es/centros-${CENTER_TYPE_URL_ES[C.type] || C.type}` }] : []),
+            ...(C.type ? [{ name: `Centros de ${getCenterTypeLabel(C.type)}`, url: `/es/centros/${CENTER_TYPE_URL_ES[C.type] || C.type}` }] : []),
             { name: C.name, url: `/es/centro/${slug}` },
           ])),
         }}

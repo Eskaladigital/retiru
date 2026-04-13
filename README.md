@@ -317,7 +317,7 @@ La ruta `/es/mis-eventos/verificacion` **redirige** a `/es/panel/verificacion` (
   1. `centros-retiru/[slug]` — Centros en [provincia/ciudad] ✅ Supabase
   2. `retiros-retiru/[slug]` — Retiros en [destino] ✅ Supabase
 - **Retiros por categoría** (segmento dinámico Next: carpeta `retiros-[category]/`): ej. `/es/retiros-yoga`, `/es/retiros-yoga/ibiza` (destino = slug BD). Solo se generan combinaciones con al menos un retiro publicado.
-- **Centros por tipo** (tres valores BD `yoga` / `meditation` / `ayurveda`; en URL ES `meditation` → `meditacion`): ej. `/es/centros-yoga`, `/es/centros-yoga/madrid`. Índice de tipos siempre; **tipo + provincia** solo si hay centros activos en esa pareja.
+- **Centros por tipo** (tres valores BD `yoga` / `meditation` / `ayurveda`; en URL ES `meditation` → `meditacion`): ej. `/es/centros/yoga`, `/es/centros/yoga/madrid`. Índice de tipos siempre; **tipo + provincia** solo si hay centros activos en esa pareja. Las rutas antiguas `/es/centros-*` redirigen **308** a `/es/centros/...`.
 
 Detalle de slugs EN de categorías y del sitemap: [`docs/ROUTES.md`](docs/ROUTES.md), [`docs/SEO-LANDINGS.md`](docs/SEO-LANDINGS.md).
 
@@ -363,8 +363,8 @@ Los totales (~1.956 u otras cifras) son **orientativos** según datos en Supabas
 | `/es/tienda` | `/en/shop` |
 | `/es/retiros-[categoría]` (ej. `/es/retiros-yoga`) | `/en/retreats-[category]` (ej. `/en/retreats-yoga`) |
 | `/es/retiros-[categoría]/[destino]` | `/en/retreats-[category]/[destination]` |
-| `/es/centros-[tipo]` (ej. `/es/centros-meditacion`) | `/en/centers-[type]` (ej. `/en/centers-meditation`) |
-| `/es/centros-[tipo]/[provincia]` | `/en/centers-[type]/[province]` |
+| `/es/centros/[tipo]` (ej. `/es/centros/meditacion`) | `/en/centers/[type]` (ej. `/en/centers/meditation`) |
+| `/es/centros/[tipo]/[provincia]` | `/en/centers/[type]/[province]` |
 
 ---
 

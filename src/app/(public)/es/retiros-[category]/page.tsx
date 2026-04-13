@@ -208,7 +208,7 @@ export default async function RetirosPorCategoriaPage({ params }: { params: Prom
               Encuentra centros de {cat.name_es.toLowerCase()} cerca de ti en nuestro directorio verificado.
             </p>
             <Link
-              href={`/es/centros-${category}`}
+              href={`/es/centros/${category}`}
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-terracotta-600 hover:text-terracotta-700 transition-colors"
             >
               Ver centros de {cat.name_es.toLowerCase()} →
