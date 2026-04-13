@@ -2,13 +2,17 @@
 
 import { Shield, AlertTriangle, Clock } from 'lucide-react';
 import Link from 'next/link';
+import type { Locale } from '@/i18n/config';
+import { organizerPanelPrefix } from '@/lib/locale-path';
 
 interface VerificacionBannerProps {
   organizerStatus: string;
   progress: { submitted: number; approved: number; total: number };
+  locale?: Locale;
 }
 
-export function VerificacionBanner({ organizerStatus, progress }: VerificacionBannerProps) {
+export function VerificacionBanner({ organizerStatus, progress, locale = 'es' }: VerificacionBannerProps) {
+  const panel = organizerPanelPrefix(locale);
   const isRejected = organizerStatus === 'rejected';
   const isSuspended = organizerStatus === 'suspended';
 
@@ -23,7 +27,7 @@ export function VerificacionBanner({ organizerStatus, progress }: VerificacionBa
               Tu perfil de organizador ha sido rechazado. Revisa los motivos en tu documentación y vuelve a enviar los documentos corregidos.
             </p>
             <Link
-              href="/es/panel/verificacion"
+              href={`${panel}/verificacion`}
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-red-700 hover:text-red-800 mt-2"
             >
               Revisar documentación →
@@ -88,7 +92,7 @@ export function VerificacionBanner({ organizerStatus, progress }: VerificacionBa
           </div>
 
           <Link
-            href="/es/panel/verificacion"
+            href={`${panel}/verificacion`}
             className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-800 hover:text-amber-900 mt-3"
           >
             {progress.submitted < progress.total ? 'Subir documentación →' : 'Ver estado de verificación →'}

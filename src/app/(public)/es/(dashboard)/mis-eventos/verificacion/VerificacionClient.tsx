@@ -57,10 +57,12 @@ export function VerificacionClient({
   organizerStatus,
   steps: initialSteps,
   taxData: initialTaxData,
+  helpHref = '/es/ayuda',
 }: {
   organizerStatus: string;
   steps: Step[];
   taxData: TaxData;
+  helpHref?: string;
 }) {
   const [steps, setSteps] = useState(initialSteps);
   const [uploading, setUploading] = useState<string | null>(null);
@@ -300,7 +302,7 @@ export function VerificacionClient({
 
       <div className="mt-8 bg-sand-100 rounded-2xl p-6 text-center">
         <p className="text-sm text-[#7a6b5d] mb-2">¿Tienes dudas sobre el proceso de verificación?</p>
-        <a href="/es/ayuda" className="text-sm font-semibold text-terracotta-600 hover:underline">
+        <a href={helpHref} className="text-sm font-semibold text-terracotta-600 hover:underline">
           Consultar centro de ayuda →
         </a>
       </div>

@@ -20,6 +20,8 @@ export default function robots(): MetadataRoute.Robots {
           '/es/facturas',
           '/es/panel',
           '/es/panel/',
+          '/en/panel',
+          '/en/panel/',
           '/es/admin',
           '/es/admin/',
           '/es/reclamar/',

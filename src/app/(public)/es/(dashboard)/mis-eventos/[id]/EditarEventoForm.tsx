@@ -116,6 +116,8 @@ interface Props {
   hideActions?: boolean;
   /** Vista de administrador (cambia mensajes de ayuda) */
   isAdmin?: boolean;
+  /** Tras eliminar evento, redirigir aquí (p. ej. /es/panel/eventos). Por defecto /es/mis-eventos. */
+  eventsHubPath?: string;
 }
 
 const inputCls = 'w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all';
@@ -129,7 +131,7 @@ function sortRetreatImages(rows: ImgRow[] | undefined) {
 
 type LocalImage = { file?: File; url: string; preview: string; is_cover: boolean };
 
-export function EditarEventoForm({ retreat, categories, destinations, apiPath, hideActions, isAdmin }: Props) {
+export function EditarEventoForm({ retreat, categories, destinations, apiPath, hideActions, isAdmin, eventsHubPath = '/es/mis-eventos' }: Props) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [saving, setSaving] = useState(false);
@@ -198,7 +200,7 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
       const res = await fetch(apiPath || `/api/retreats/${retreat.id}`, { method: 'DELETE' });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
-        router.push('/es/mis-eventos');
+        router.push(eventsHubPath);
       } else {
         setError(data.error || 'Error al eliminar');
       }

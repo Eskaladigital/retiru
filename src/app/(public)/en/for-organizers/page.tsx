@@ -18,12 +18,48 @@ const CENTER_BENEFITS = [
 ];
 
 const ORGANIZER_FEATURES = [
-  { icon: '📝', title: 'Creation Wizard', desc: 'Publish your retreat step by step with real-time preview.', image: '/images/dashboard-wizard-creacion.png' },
-  { icon: '👥', title: 'Attendee CRM', desc: 'Data, forms, internal notes and segmentation of your attendees.', image: '/images/dashboard-crm-asistentes.png' },
-  { icon: '💬', title: 'Integrated Messaging', desc: '1-on-1 chat and mass messages with predefined templates.', image: '/images/dashboard-mensajeria.png' },
-  { icon: '📱', title: 'QR Check-in', desc: 'Attendance list and QR codes per booking for the day of the retreat.', image: '/images/dashboard-checkin-qr.png' },
-  { icon: '📈', title: 'Analytics', desc: 'Views, conversions, bookings and cancellations for each retreat.', image: '/images/dashboard-analiticas.png' },
-  { icon: '⭐', title: 'Review Management', desc: 'See and respond publicly to your attendees\' reviews.', image: '/images/dashboard-resenas.png' },
+  {
+    icon: '📝',
+    title: 'Creation Wizard',
+    desc: 'Publish your retreat step by step with real-time preview.',
+    detail: 'Bring dates, schedule, photos, pricing and conditions into one guided flow that reduces mistakes and lets you review the final listing before submission.',
+    image: '/images/dashboard-wizard-creacion.png',
+  },
+  {
+    icon: '👥',
+    title: 'Attendee CRM',
+    desc: 'Data, forms, internal notes and segmentation of your attendees.',
+    detail: 'Keep in one place who booked, what they answered, what special needs they have and what follow-up each person needs before and after the retreat.',
+    image: '/images/dashboard-crm-asistentes.png',
+  },
+  {
+    icon: '💬',
+    title: 'Integrated Messaging',
+    desc: '1-on-1 chat and mass messages with predefined templates.',
+    detail: 'Send reminders, instructions, logistics updates or individual replies without leaving Retiru, while keeping a clear history of every attendee conversation.',
+    image: '/images/dashboard-mensajeria.png',
+  },
+  {
+    icon: '📱',
+    title: 'QR Check-in',
+    desc: 'Attendance list and QR codes per booking for the day of the retreat.',
+    detail: 'Speed up arrival with a quick view of confirmed bookings, pending attendees and ticket validation, without relying on spreadsheets, paper lists or scattered chats.',
+    image: '/images/dashboard-checkin-qr.png',
+  },
+  {
+    icon: '📈',
+    title: 'Analytics',
+    desc: 'Views, conversions, bookings and cancellations for each retreat.',
+    detail: 'Understand which retreats perform best, where conversion drops and what impact your listings really have so you can make decisions based on data, not guesswork.',
+    image: '/images/dashboard-analiticas.png',
+  },
+  {
+    icon: '⭐',
+    title: 'Review Management',
+    desc: 'See and respond publicly to your attendees\' reviews.',
+    detail: 'Build trust, spot improvement opportunities and strengthen future bookings by replying from the panel with context from each retreat experience.',
+    image: '/images/dashboard-resenas.png',
+  },
 ];
 
 const FAQS = [
@@ -215,6 +251,7 @@ export default function ForOrganizersPageEN() {
                   <span className="mb-3 block text-2xl">{f.icon}</span>
                   <h3 className="mb-2 font-semibold">{f.title}</h3>
                   <p className="text-sm leading-relaxed text-[#7a6b5d]">{f.desc}</p>
+                  <p className="mt-3 text-sm leading-relaxed text-[#7a6b5d]">{f.detail}</p>
                 </div>
               </div>
             ))}

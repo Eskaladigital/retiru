@@ -24,12 +24,48 @@ const CENTER_BENEFITS = [
 ];
 
 const ORGANIZER_FEATURES = [
-  { icon: FileText, title: 'Wizard de creación', desc: 'Publica tu retiro paso a paso con previsualización en tiempo real.', image: '/images/dashboard-wizard-creacion.png' },
-  { icon: Users, title: 'CRM de asistentes', desc: 'Datos, formularios, notas internas y segmentación de tus asistentes.', image: '/images/dashboard-crm-asistentes.png' },
-  { icon: MessageSquare, title: 'Mensajería integrada', desc: 'Chat 1a1 y mensajes masivos con plantillas predefinidas.', image: '/images/dashboard-mensajeria.png' },
-  { icon: QrCode, title: 'Check-in con QR', desc: 'Lista de asistencia y códigos QR por reserva para el día del retiro.', image: '/images/dashboard-checkin-qr.png' },
-  { icon: BarChart3, title: 'Analíticas', desc: 'Vistas, conversiones, reservas y cancelaciones de cada retiro.', image: '/images/dashboard-analiticas.png' },
-  { icon: Star, title: 'Gestión de reseñas', desc: 'Ve y responde públicamente a las reseñas de tus asistentes.', image: '/images/dashboard-resenas.png' },
+  {
+    icon: FileText,
+    title: 'Wizard de creación',
+    desc: 'Publica tu retiro paso a paso con previsualización en tiempo real.',
+    detail: 'Centraliza fechas, programa, fotos, precios y condiciones en un flujo guiado que reduce errores y te deja ver cómo quedará la ficha antes de enviarla a revisión.',
+    image: '/images/dashboard-wizard-creacion.png',
+  },
+  {
+    icon: Users,
+    title: 'CRM de asistentes',
+    desc: 'Datos, formularios, notas internas y segmentación de tus asistentes.',
+    detail: 'Ten en un solo sitio quién reservó, qué preguntas respondió, qué incidencias tiene y qué seguimiento necesita cada persona antes y después del retiro.',
+    image: '/images/dashboard-crm-asistentes.png',
+  },
+  {
+    icon: MessageSquare,
+    title: 'Mensajería integrada',
+    desc: 'Chat 1a1 y mensajes masivos con plantillas predefinidas.',
+    detail: 'Envía recordatorios, instrucciones, cambios logísticos o respuestas individuales sin salir de Retiru y mantén un historial claro de toda la comunicación con tus asistentes.',
+    image: '/images/dashboard-mensajeria.png',
+  },
+  {
+    icon: QrCode,
+    title: 'Check-in con QR',
+    desc: 'Lista de asistencia y códigos QR por reserva para el día del retiro.',
+    detail: 'Agiliza la llegada al evento con una vista rápida de reservas confirmadas, asistentes pendientes y validación de entradas sin depender de hojas sueltas o chats.',
+    image: '/images/dashboard-checkin-qr.png',
+  },
+  {
+    icon: BarChart3,
+    title: 'Analíticas',
+    desc: 'Vistas, conversiones, reservas y cancelaciones de cada retiro.',
+    detail: 'Entiende qué retiros funcionan mejor, dónde se te cae la conversión y qué impacto real tienen tus publicaciones para tomar decisiones con datos y no por intuición.',
+    image: '/images/dashboard-analiticas.png',
+  },
+  {
+    icon: Star,
+    title: 'Gestión de reseñas',
+    desc: 'Ve y responde públicamente a las reseñas de tus asistentes.',
+    detail: 'Construye reputación, detecta puntos de mejora y refuerza la confianza de futuras reservas respondiendo desde el propio panel con contexto de cada experiencia.',
+    image: '/images/dashboard-resenas.png',
+  },
 ];
 
 const FAQS = [
@@ -224,7 +260,7 @@ export default function ParaOrganizadoresPage() {
 
           {/* Features grid */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
-            {ORGANIZER_FEATURES.map(({ icon: Icon, title, desc, image }) => (
+            {ORGANIZER_FEATURES.map(({ icon: Icon, title, desc, detail, image }) => (
               <div key={title} className="flex flex-col overflow-hidden rounded-2xl border border-sand-200 bg-white transition-shadow hover:shadow-soft">
                 <div className="relative aspect-[16/10] shrink-0 bg-sand-100">
                   <img src={image} alt={`Ejemplo visual: ${title}`} className="absolute inset-0 h-full w-full object-cover" />
@@ -235,6 +271,7 @@ export default function ParaOrganizadoresPage() {
                   </div>
                   <h3 className="mb-2 font-semibold text-foreground">{title}</h3>
                   <p className="text-sm leading-relaxed text-muted-foreground">{desc}</p>
+                  <p className="mt-3 text-sm leading-relaxed text-[#7a6b5d]">{detail}</p>
                 </div>
               </div>
             ))}

@@ -17,6 +17,8 @@ interface Option { id: string; name: string; slug: string }
 interface Props {
   categories: Option[];
   destinations: Option[];
+  /** Tras crear/guardar borrador, redirigir al hub de eventos (p. ej. /es/panel/eventos). Por defecto /es/mis-eventos. */
+  eventsHubPath?: string;
 }
 
 interface ScheduleItem { time: string; activity: string }
@@ -126,7 +128,7 @@ const CANCELLATION_PRESETS = {
   },
 };
 
-export function NuevoEventoForm({ categories, destinations }: Props) {
+export function NuevoEventoForm({ categories, destinations, eventsHubPath = '/es/mis-eventos' }: Props) {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -429,7 +431,7 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
     if (!result.ok) {
       setError(result.error);
       if (result.error.includes('sin identificador')) {
-        router.push('/es/mis-eventos');
+        router.push(eventsHubPath);
       }
       return;
     }
@@ -448,7 +450,7 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
       setSaving(false);
       setError(result.error);
       if (result.error.includes('sin identificador')) {
-        router.push('/es/mis-eventos');
+        router.push(eventsHubPath);
       }
       return;
     }
@@ -472,7 +474,7 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
         });
         return;
       }
-      router.push('/es/mis-eventos');
+      router.push(eventsHubPath);
       router.refresh();
     } catch {
       setError('Error de red al enviar. El evento puede haberse guardado como borrador.');
@@ -501,7 +503,7 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
         return;
       }
       setPostCreate(null);
-      router.push('/es/mis-eventos');
+      router.push(eventsHubPath);
       router.refresh();
     } catch {
       setReviewError('Error de conexión');
@@ -514,12 +516,12 @@ export function NuevoEventoForm({ categories, destinations }: Props) {
     if (!postCreate) return;
     const id = postCreate.retreatId;
     setPostCreate(null);
-    router.push(`/es/mis-eventos/${id}`);
+    router.push(`${eventsHubPath}/${id}`);
   }
 
   function handleGoToListFromModal() {
     setPostCreate(null);
-    router.push('/es/mis-eventos');
+    router.push(eventsHubPath);
   }
 
   return (

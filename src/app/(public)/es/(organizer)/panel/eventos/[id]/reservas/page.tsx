@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, usePathname } from 'next/navigation';
+import { organizerEventsBase, organizerLocaleFromPathname } from '@/lib/locale-path';
 import Link from 'next/link';
 import { Download, Check, MessageCircle, ChevronDown } from 'lucide-react';
 import { EmailLink } from '@/components/ui/email-link';
@@ -34,6 +35,8 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 
 export default function ReservasEventoPage() {
   const params = useParams();
+  const pathname = usePathname();
+  const eventsBase = organizerEventsBase(organizerLocaleFromPathname(pathname));
   const retreatId = params.id as string;
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,7 +96,7 @@ export default function ReservasEventoPage() {
 
   return (
     <div>
-      <Link href={`/es/panel/eventos/${retreatId}`} className="inline-flex items-center gap-1.5 text-sm text-terracotta-600 font-medium mb-6">← Volver al retiro</Link>
+      <Link href={`${eventsBase}/${retreatId}`} className="inline-flex items-center gap-1.5 text-sm text-terracotta-600 font-medium mb-6">← Volver al retiro</Link>
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-serif text-2xl text-foreground">Reservas del retiro</h1>
         <a

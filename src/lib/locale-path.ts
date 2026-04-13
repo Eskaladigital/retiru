@@ -59,9 +59,14 @@ export function getAlternateLocalePath(pathname: string, targetLocale: Locale): 
     return pathname || `/${targetLocale}`;
   }
 
-  // Cuenta / panel solo existen bajo /es — al pasar a EN ir a home
+  // Panel organizador: rutas espejo /es/panel ↔ /en/panel
+  if (rest.startsWith('/panel')) {
+    return `/${targetLocale}${rest}`;
+  }
+
+  // Cuenta (excepto panel): muchas rutas solo en ES — al pasar a EN ir a home
   if (current === 'es' && targetLocale === 'en') {
-    if (/^\/(mis-|perfil|mensajes|panel|facturas)/.test(rest)) {
+    if (/^\/(mis-|perfil|mensajes|facturas)/.test(rest)) {
       return '/en';
     }
   }
@@ -78,4 +83,17 @@ export function isBlogArticlePath(pathname: string): boolean {
 
 export function isBlogIndexPath(pathname: string): boolean {
   return /^\/(es|en)\/blog\/?$/.test(pathname);
+}
+
+/** Prefijo /es/panel o /en/panel según pathname actual */
+export function organizerLocaleFromPathname(pathname: string | null | undefined): Locale {
+  return pathname?.startsWith('/en/') ? 'en' : 'es';
+}
+
+export function organizerPanelPrefix(locale: Locale): '/es/panel' | '/en/panel' {
+  return locale === 'en' ? '/en/panel' : '/es/panel';
+}
+
+export function organizerEventsBase(locale: Locale): string {
+  return `${organizerPanelPrefix(locale)}/eventos`;
 }

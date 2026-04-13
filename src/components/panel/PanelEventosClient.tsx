@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Ban, CalendarDays, Trash2 } from 'lucide-react';
+import type { Locale } from '@/i18n/config';
 
 interface Retreat {
   id: string;
@@ -19,17 +20,48 @@ interface Retreat {
   cover: string | null;
 }
 
-const STATUS_MAP: Record<string, { label: string; color: string }> = {
-  published: { label: 'Publicado', color: 'bg-sage-100 text-sage-700' },
-  in_progress: { label: 'En curso', color: 'bg-emerald-100 text-emerald-700' },
-  expired: { label: 'Expirado', color: 'bg-orange-100 text-orange-600' },
-  finished: { label: 'Finalizado', color: 'bg-slate-100 text-slate-600' },
-  draft: { label: 'Borrador', color: 'bg-sand-200 text-[#7a6b5d]' },
-  pending_review: { label: 'En revisión', color: 'bg-amber-100 text-amber-700' },
-  rejected: { label: 'Rechazado', color: 'bg-red-100 text-red-700' },
-  cancelled: { label: 'Cancelado', color: 'bg-gray-100 text-gray-500' },
-  archived: { label: 'Archivado', color: 'bg-blue-50 text-blue-600' },
+const STATUS_LABELS: Record<Locale, Record<string, string>> = {
+  es: {
+    published: 'Publicado',
+    in_progress: 'En curso',
+    expired: 'Expirado',
+    finished: 'Finalizado',
+    draft: 'Borrador',
+    pending_review: 'En revisión',
+    rejected: 'Rechazado',
+    cancelled: 'Cancelado',
+    archived: 'Archivado',
+  },
+  en: {
+    published: 'Published',
+    in_progress: 'In progress',
+    expired: 'Expired',
+    finished: 'Finished',
+    draft: 'Draft',
+    pending_review: 'In review',
+    rejected: 'Rejected',
+    cancelled: 'Cancelled',
+    archived: 'Archived',
+  },
 };
+
+const STATUS_COLOR: Record<string, string> = {
+  published: 'bg-sage-100 text-sage-700',
+  in_progress: 'bg-emerald-100 text-emerald-700',
+  expired: 'bg-orange-100 text-orange-600',
+  finished: 'bg-slate-100 text-slate-600',
+  draft: 'bg-sand-200 text-[#7a6b5d]',
+  pending_review: 'bg-amber-100 text-amber-700',
+  rejected: 'bg-red-100 text-red-700',
+  cancelled: 'bg-gray-100 text-gray-500',
+  archived: 'bg-blue-50 text-blue-600',
+};
+
+function statusBadge(displaySt: string, locale: Locale) {
+  const label = STATUS_LABELS[locale][displaySt] ?? STATUS_LABELS.es[displaySt] ?? displaySt;
+  const color = STATUS_COLOR[displaySt] ?? STATUS_COLOR.draft;
+  return { label, color };
+}
 
 function deriveDisplayStatus(r: Retreat): string {
   if (r.status !== 'published') return r.status;
@@ -41,12 +73,79 @@ function deriveDisplayStatus(r: Retreat): string {
   return 'published';
 }
 
-export function PanelEventosClient({ retreats: initial, baseHref }: { retreats: Retreat[]; baseHref: string }) {
+const UI: Record<Locale, {
+  cancelConfirm: (title: string) => string;
+  deleteConfirm: (title: string) => string;
+  errCancel: string; errDelete: string; errConn: string;
+  heading: string; countOne: string; countMany: string; newBtn: string;
+  noDate: string; perPerson: string; occupancy: string; confShort: string; resShort: string; minShort: string;
+  minOk: string; minNeed: (n: number) => string; edit: string; cancel: string; delete: string; cancelTitle: string; deleteTitle: string;
+  emptyTitle: string; emptyBody: string; emptyCta: string;
+}> = {
+  es: {
+    cancelConfirm: (title) => `¿Cancelar el evento "${title}"? Los asistentes serán notificados.`,
+    deleteConfirm: (title) => `¿Eliminar definitivamente "${title}"? Esta acción no se puede deshacer.`,
+    errCancel: 'Error al cancelar',
+    errDelete: 'Error al eliminar',
+    errConn: 'Error de conexión',
+    heading: 'Mis eventos',
+    countOne: 'evento',
+    countMany: 'eventos',
+    newBtn: '+ Nuevo evento',
+    noDate: 'Sin fecha',
+    perPerson: '€/persona',
+    occupancy: 'Ocupación',
+    confShort: 'conf.',
+    resShort: 'res.',
+    minShort: 'mín.',
+    minOk: 'Mínimo viable alcanzado',
+    minNeed: (n) => `Faltan ${n} para el mínimo`,
+    edit: 'Editar',
+    cancel: 'Cancelar',
+    delete: 'Eliminar',
+    cancelTitle: 'Cancelar evento',
+    deleteTitle: 'Eliminar evento',
+    emptyTitle: 'Aún no has creado ningún evento',
+    emptyBody: 'Crea retiros o eventos de yoga, meditación o ayurveda. Publica tu primer evento y empieza a recibir reservas.',
+    emptyCta: 'Crear mi primer evento',
+  },
+  en: {
+    cancelConfirm: (title) => `Cancel the event "${title}"? Attendees will be notified.`,
+    deleteConfirm: (title) => `Permanently delete "${title}"? This cannot be undone.`,
+    errCancel: 'Could not cancel',
+    errDelete: 'Could not delete',
+    errConn: 'Connection error',
+    heading: 'My retreats',
+    countOne: 'event',
+    countMany: 'events',
+    newBtn: '+ New event',
+    noDate: 'No date',
+    perPerson: '€/person',
+    occupancy: 'Occupancy',
+    confShort: 'conf.',
+    resShort: 'res.',
+    minShort: 'min.',
+    minOk: 'Minimum reached',
+    minNeed: (n) => `${n} more needed for minimum`,
+    edit: 'Edit',
+    cancel: 'Cancel',
+    delete: 'Delete',
+    cancelTitle: 'Cancel event',
+    deleteTitle: 'Delete event',
+    emptyTitle: 'You have not created any events yet',
+    emptyBody: 'Create yoga, meditation or ayurveda retreats. Publish your first event and start receiving bookings.',
+    emptyCta: 'Create my first event',
+  },
+};
+
+export function PanelEventosClient({ retreats: initial, baseHref, locale = 'es' }: { retreats: Retreat[]; baseHref: string; locale?: Locale }) {
   const [retreats, setRetreats] = useState(initial);
   const [acting, setActing] = useState<string | null>(null);
+  const t = UI[locale];
+  const dateLoc = locale === 'en' ? 'en' : 'es';
 
   async function handleCancel(id: string, title: string) {
-    if (!confirm(`¿Cancelar el evento "${title}"? Los asistentes serán notificados.`)) return;
+    if (!confirm(t.cancelConfirm(title))) return;
     setActing(id);
     try {
       const res = await fetch(`/api/retreats/${id}`, {
@@ -58,14 +157,14 @@ export function PanelEventosClient({ retreats: initial, baseHref }: { retreats: 
       if (res.ok) {
         setRetreats(prev => prev.map(r => r.id === id ? { ...r, status: 'cancelled' } : r));
       } else {
-        alert(data.error || 'Error al cancelar');
+        alert(data.error || t.errCancel);
       }
-    } catch { alert('Error de conexión'); }
+    } catch { alert(t.errConn); }
     finally { setActing(null); }
   }
 
   async function handleDelete(id: string, title: string) {
-    if (!confirm(`¿Eliminar definitivamente "${title}"? Esta acción no se puede deshacer.`)) return;
+    if (!confirm(t.deleteConfirm(title))) return;
     setActing(id);
     try {
       const res = await fetch(`/api/retreats/${id}`, { method: 'DELETE' });
@@ -73,9 +172,9 @@ export function PanelEventosClient({ retreats: initial, baseHref }: { retreats: 
       if (res.ok) {
         setRetreats(prev => prev.filter(r => r.id !== id));
       } else {
-        alert(data.error || 'Error al eliminar');
+        alert(data.error || t.errDelete);
       }
-    } catch { alert('Error de conexión'); }
+    } catch { alert(t.errConn); }
     finally { setActing(null); }
   }
 
@@ -83,14 +182,14 @@ export function PanelEventosClient({ retreats: initial, baseHref }: { retreats: 
     <div>
       <div className="flex items-start justify-between gap-4 mb-8">
         <div>
-          <h1 className="font-serif text-3xl text-foreground">Mis eventos</h1>
-          <p className="text-sm text-[#7a6b5d] mt-1">{retreats.length} {retreats.length === 1 ? 'evento' : 'eventos'}</p>
+          <h1 className="font-serif text-3xl text-foreground">{t.heading}</h1>
+          <p className="text-sm text-[#7a6b5d] mt-1">{retreats.length} {retreats.length === 1 ? t.countOne : t.countMany}</p>
         </div>
         <Link
           href={`${baseHref}/nuevo`}
           className="inline-flex items-center gap-2 bg-terracotta-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-terracotta-700 transition-colors shrink-0"
         >
-          + Nuevo evento
+          {t.newBtn}
         </Link>
       </div>
 
@@ -98,14 +197,14 @@ export function PanelEventosClient({ retreats: initial, baseHref }: { retreats: 
         <div className="space-y-3">
           {retreats.map((r) => {
             const displaySt = deriveDisplayStatus(r);
-            const s = STATUS_MAP[displaySt] || STATUS_MAP.draft;
+            const s = statusBadge(displaySt, locale);
             const totalEnrolled = r.confirmed_bookings + r.reserved_bookings;
             const occupancy = r.max_attendees ? Math.round((totalEnrolled / r.max_attendees) * 100) : 0;
             const confirmedPct = r.max_attendees ? Math.round((r.confirmed_bookings / r.max_attendees) * 100) : 0;
             const minOk = (r.min_attendees ?? 1) <= 1 || totalEnrolled >= (r.min_attendees ?? 1);
             const dateStr = r.start_date
-              ? `${new Date(r.start_date).toLocaleDateString('es', { day: 'numeric', month: 'short' })}${r.end_date ? ` – ${new Date(r.end_date).toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}`
-              : 'Sin fecha';
+              ? `${new Date(r.start_date).toLocaleDateString(dateLoc, { day: 'numeric', month: 'short' })}${r.end_date ? ` – ${new Date(r.end_date).toLocaleDateString(dateLoc, { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}`
+              : t.noDate;
             const isDisabled = acting === r.id;
             const canCancel = !['cancelled', 'archived'].includes(r.status);
             const canDelete = r.confirmed_bookings === 0;
@@ -126,15 +225,15 @@ export function PanelEventosClient({ retreats: initial, baseHref }: { retreats: 
                     <h3 className="font-serif text-base leading-tight">{r.title_es}</h3>
                     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${s.color}`}>{s.label}</span>
                   </div>
-                  <p className="text-sm text-[#7a6b5d] mb-2">{dateStr} · {r.total_price}€/persona</p>
+                  <p className="text-sm text-[#7a6b5d] mb-2">{dateStr} · {r.total_price}{t.perPerson}</p>
                   <div className="flex items-center gap-4">
                     <div className="flex-1 max-w-[200px]">
                       <div className="flex justify-between text-xs mb-1">
-                        <span className="text-[#a09383]">Ocupación</span>
+                        <span className="text-[#a09383]">{t.occupancy}</span>
                         <span className="font-semibold">
-                          {r.confirmed_bookings} conf.{r.reserved_bookings > 0 && <> + {r.reserved_bookings} res.</>}/{r.max_attendees || 0}
+                          {r.confirmed_bookings} {t.confShort}{r.reserved_bookings > 0 && <> + {r.reserved_bookings} {t.resShort}</>}/{r.max_attendees || 0}
                           {(r.min_attendees ?? 1) > 1 && (
-                            <span className="font-normal text-[#a09383]"> · mín. {r.min_attendees}</span>
+                            <span className="font-normal text-[#a09383]"> · {t.minShort} {r.min_attendees}</span>
                           )}
                         </span>
                       </div>
@@ -144,23 +243,23 @@ export function PanelEventosClient({ retreats: initial, baseHref }: { retreats: 
                       </div>
                       {(r.min_attendees ?? 1) > 1 && (
                         <p className={`text-[11px] mt-1 ${minOk ? 'text-sage-700' : 'text-amber-700'}`}>
-                          {minOk ? 'Mínimo viable alcanzado' : `Faltan ${(r.min_attendees ?? 1) - totalEnrolled} para el mínimo`}
+                          {minOk ? t.minOk : t.minNeed((r.min_attendees ?? 1) - totalEnrolled)}
                         </p>
                       )}
                     </div>
                     <div className="flex items-center gap-2">
                       <Link href={`${baseHref}/${r.id}`} className="text-xs font-medium text-terracotta-600 hover:underline">
-                        Editar
+                        {t.edit}
                       </Link>
                       {canCancel && (
                         <button
                           onClick={() => handleCancel(r.id, r.title_es)}
                           disabled={isDisabled}
                           className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 hover:text-amber-700 hover:bg-amber-50 px-2 py-1 rounded-lg transition-colors disabled:opacity-50"
-                          title="Cancelar evento"
+                          title={t.cancelTitle}
                         >
                           <Ban size={13} />
-                          Cancelar
+                          {t.cancel}
                         </button>
                       )}
                       {canDelete && (
@@ -168,10 +267,10 @@ export function PanelEventosClient({ retreats: initial, baseHref }: { retreats: 
                           onClick={() => handleDelete(r.id, r.title_es)}
                           disabled={isDisabled}
                           className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded-lg transition-colors disabled:opacity-50"
-                          title="Eliminar evento"
+                          title={t.deleteTitle}
                         >
                           <Trash2 size={13} />
-                          Eliminar
+                          {t.delete}
                         </button>
                       )}
                     </div>
@@ -184,12 +283,12 @@ export function PanelEventosClient({ retreats: initial, baseHref }: { retreats: 
       ) : (
         <div className="text-center py-16">
           <p className="text-4xl mb-4">📅</p>
-          <h3 className="font-serif text-xl mb-2">Aún no has creado ningún evento</h3>
+          <h3 className="font-serif text-xl mb-2">{t.emptyTitle}</h3>
           <p className="text-sm text-[#7a6b5d] mb-6 max-w-md mx-auto">
-            Crea retiros o eventos de yoga, meditación o ayurveda. Publica tu primer evento y empieza a recibir reservas.
+            {t.emptyBody}
           </p>
           <Link href={`${baseHref}/nuevo`} className="inline-flex bg-terracotta-600 text-white font-semibold px-6 py-3 rounded-xl hover:bg-terracotta-700 transition-colors text-sm">
-            Crear mi primer evento
+            {t.emptyCta}
           </Link>
         </div>
       )}

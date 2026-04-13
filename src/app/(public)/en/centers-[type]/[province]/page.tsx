@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { MapPin, Star } from 'lucide-react';
@@ -10,6 +11,7 @@ import { generatePageMetadata, jsonLdItemList, jsonLdBreadcrumb, jsonLdScript } 
 export const revalidate = 3600;
 
 const TYPE_ES_SLUG: Record<string, string> = { yoga: 'yoga', meditation: 'meditacion', ayurveda: 'ayurveda' };
+const VALID_CENTER_TYPES = new Set(['yoga', 'meditation', 'ayurveda']);
 
 export async function generateStaticParams() {
   const pairs = await getCenterTypeProvincePairs();
@@ -34,6 +36,7 @@ export async function generateMetadata({ params }: { params: Promise<{ type: str
 
 export default async function CentersTypeProvincePage({ params }: { params: Promise<{ type: string; province: string }> }) {
   const { type, province } = await params;
+  if (!type || !VALID_CENTER_TYPES.has(type)) notFound();
   const label = getCenterTypeLabel(type, 'en');
 
   const { centers, provinceName } = await getCentersByProvince(province);

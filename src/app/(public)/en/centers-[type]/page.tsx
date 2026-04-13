@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { MapPin, Star } from 'lucide-react';
@@ -32,6 +33,7 @@ export async function generateMetadata({ params }: { params: Promise<{ type: str
 
 export default async function CentersByTypePage({ params }: { params: Promise<{ type: string }> }) {
   const { type } = await params;
+  if (!VALID_TYPES.includes(type as (typeof VALID_TYPES)[number])) notFound();
   const label = getCenterTypeLabel(type, 'en');
   const catSlug = type === 'meditation' ? 'meditacion' : type;
 
