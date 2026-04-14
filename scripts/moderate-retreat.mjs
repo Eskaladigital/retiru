@@ -74,6 +74,10 @@ const MODERATION_PROMPT = `Eres un moderador de contenido para Retiru, una plata
    - Si el texto menciona un precio, debe coincidir con el precio oficial del sistema
    - Si menciona precios diferentes o "descuentos especiales por contacto directo" → FLAG crítico
 
+4. **PARIDAD description_es / description_en:**
+   - Misma ficha en dos idiomas: mismos hechos, mismas cifras de precio (o ninguna en el cuerpo si así está el otro idioma).
+   - Si una lengua añade precio, contacto o información que la otra no tiene → marca issue (high si precio ≠ official_price o invita a saltarse Retiru).
+
 **Tu tarea:**
 Analiza el contenido y devuelve un JSON con:
 - \`issues\`: array de problemas encontrados (type, field, severity, description, suggestedFix)

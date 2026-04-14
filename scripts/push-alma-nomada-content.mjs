@@ -37,6 +37,64 @@ if (!url || !key) {
 
 const RETREAT_SLUG = 'alma-nomada-retiro-de-mujeres-en-marruecos-mayo-y-octubre-mnfr24i1';
 
+/** Solo alinea EN + meta con ES y con `total_price` (no toca description_es ni el resto). */
+const EN_PARITY = process.argv.includes('--en-parity');
+
+const descriptionEnHtmlParity = `<h2>The origin</h2>
+<p>Alma Nómada was born from the meeting of two kindred spirits and an experience that opened a portal of transformation. In a time of deep life transition, Morocco appeared as a mirror for the soul and a land of initiation. The silence of the Sahara, the vast dunes, and the ancestral energy of Marrakech awakened a deeper awareness. What began as an outer journey became an inner awakening.</p>
+<h2>Our purpose</h2>
+<p>To create a sacred, intimate, conscious space where you can quiet outer noise, hear your inner voice, and remember who you truly are.</p>
+<p>This journey weaves together:</p>
+<ul>
+<li>Moroccan culture and tradition</li>
+<li>Nature and stillness in the desert</li>
+<li>Group Kundalini activation at sunset in the desert</li>
+<li>Group sessions of deep energy clearing and prosperity activation after the activation to integrate the energy</li>
+</ul>
+<p>An outer journey that sparks an inner one—a shift from doing to being, and a homecoming within.</p>
+<h2>Who is it for?</h2>
+<p>Women in life transition, open to inner work. <strong>Maximum group size: 6.</strong> <strong>Shared rooms.</strong></p>
+<h2>Practical notes</h2>
+<ul>
+<li>Tips, lunches, entrance fees, and flights are not included</li>
+<li>Clothing: light comfortable daytime layers, a light jacket for evenings, hat or cap, sunscreen, and comfortable shoes for walking on dunes</li>
+<li>Stay hydrated, avoid prolonged sun exposure, follow your guide's instructions in the desert, and protect yourself from temperature swings</li>
+</ul>
+<h2>More than a trip</h2>
+<p>This is not just sightseeing in Morocco—it is a rite of passage, a conscious pause, and a space held with presence and love. If you feel the desert calling, maybe this experience is already calling you.</p>
+<p>For questions or follow-up, contact the organizer from this listing on Retiru (booking or message).</p>`;
+
+if (EN_PARITY) {
+  const supabaseParity = createClient(url, key);
+  const summaryEn =
+    "Women's retreat in Morocco: from Marrakech to the Sahara desert. 7 days / 6 nights, max 6 guests, shared rooms. Sunset Kundalini, sunrise manifestation dance, deep energy-clearing session, and culture with a Spanish-speaking guide. €900.";
+  const metaEs =
+    'Retiro de mujeres en Marruecos: Marrakech, Atlas y Sahara. 7 días / 6 noches, máx. 6 plazas, habitaciones compartidas. Kundalini, limpieza energética y cultura. Desde 900 € en Retiru.';
+  const metaEn =
+    "Women's retreat in Morocco: Marrakech, Atlas & Sahara. 7 days / 6 nights, max 6 guests, shared rooms. Kundalini, energy work & culture. From €900 on Retiru.";
+  const { data: updated, error: upErr } = await supabaseParity
+    .from('retreats')
+    .update({
+      description_en: descriptionEnHtmlParity,
+      summary_en: summaryEn,
+      meta_description_es: metaEs,
+      meta_description_en: metaEn,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('slug', RETREAT_SLUG)
+    .select('id, title_es');
+  if (upErr) {
+    console.error('retreats update (--en-parity):', upErr.message);
+    process.exit(1);
+  }
+  if (!updated?.length) {
+    console.error(`No hay retiro con slug: ${RETREAT_SLUG}`);
+    process.exit(1);
+  }
+  console.log('✓ Paridad EN + meta (900 €) aplicada:', updated[0].title_es, `(${updated[0].id})`);
+  process.exit(0);
+}
+
 const descriptionEs = `## El origen
 
 Alma Nómada nace del encuentro entre dos almas amigas y una experiencia que abrió un portal de transformación. En un momento de profunda transición vital, Marruecos apareció como espejo del alma y territorio de iniciación. El silencio del Sahara, la inmensidad de las dunas y la energía ancestral de Marrakech despertaron una conciencia más profunda. Lo que comenzó como un viaje exterior se transformó en un despertar interior.
@@ -67,11 +125,7 @@ Para mujeres en transición vital, abiertas a trabajo interior. **Grupo máximo 
 
 No es solo un viaje turístico por Marruecos: es un rito de paso, una pausa consciente y un espacio sostenido con presencia y amor. Si sientes el llamado del desierto, quizá esta experiencia ya te está llamando.
 
-**Facilitación:** Mely (Tu despertar con Mely) · **Coordinación en Marruecos:** Vicky – Marruecos Mágico Viaje.
-
-Para dudas o seguimiento, contacta con el organizador desde esta ficha en Retiru (reserva o mensaje).
-
-**Precio experiencia:** 750 € (7 días / 6 noches).`;
+Para dudas o seguimiento, contacta con el organizador desde esta ficha en Retiru (reserva o mensaje).`;
 
 const descriptionEn = `## The origin
 
@@ -101,13 +155,9 @@ Women in life transition, open to inner work. **Maximum group size: 6.** **Share
 
 ## More than a trip
 
-This is not just sightseeing in Morocco—it is a rite of passage, a conscious pause, and a space held with presence and love.
+This is not just sightseeing in Morocco—it is a rite of passage, a conscious pause, and a space held with presence and love. If you feel the desert calling, maybe this experience is already calling you.
 
-**Facilitation:** Mely (Tu despertar con Mely) · **Coordination in Morocco:** Vicky – Marruecos Mágico Viaje.
-
-For questions or follow-up, contact the organizer from this listing on Retiru (booking or message).
-
-**Experience price:** €750 (7 days / 6 nights).`;
+For questions or follow-up, contact the organizer from this listing on Retiru (booking or message).`;
 
 const schedule = [
   {
@@ -309,9 +359,9 @@ const payload = {
   destination_id: destRow.id,
   address: null,
   summary_es:
-    'Retiro de mujeres en Marruecos: de Marrakech al desierto del Sahara. 7 días / 6 noches, grupo máximo 6, habitaciones compartidas. Kundalini al atardecer, danza de la manifestación al amanecer, sesión de limpieza energética y cultura con guía hispanohablante. 750 €.',
+    'Retiro de mujeres en Marruecos: de Marrakech al desierto del Sahara. 7 días / 6 noches, grupo máximo 6, habitaciones compartidas. Kundalini al atardecer, danza de la manifestación al amanecer, sesión de limpieza energética y cultura con guía hispanohablante. 900 €.',
   summary_en:
-    "Women's retreat in Morocco: from Marrakech to the Sahara desert. 7 days / 6 nights, max 6 guests, shared rooms. Sunset Kundalini, sunrise manifestation dance, deep energy-clearing session, and culture with a Spanish-speaking guide. €750.",
+    "Women's retreat in Morocco: from Marrakech to the Sahara desert. 7 days / 6 nights, max 6 guests, shared rooms. Sunset Kundalini, sunrise manifestation dance, deep energy-clearing session, and culture with a Spanish-speaking guide. €900.",
   description_es: descriptionEs,
   description_en: descriptionEn,
   includes_es: [
@@ -357,9 +407,9 @@ const payload = {
     'Travel insurance (optional, personal)',
   ],
   meta_description_es:
-    'Retiro de mujeres en Marruecos: Marrakech, Atlas y Sahara. 7 días / 6 noches, máx. 6 plazas, habitaciones compartidas. Kundalini, limpieza energética y cultura. Desde 750 € en Retiru.',
+    'Retiro de mujeres en Marruecos: Marrakech, Atlas y Sahara. 7 días / 6 noches, máx. 6 plazas, habitaciones compartidas. Kundalini, limpieza energética y cultura. Desde 900 € en Retiru.',
   meta_description_en:
-    "Women's retreat in Morocco: Marrakech, Atlas & Sahara. 7 days / 6 nights, max 6 guests, shared rooms. Kundalini, energy work & culture. From €750 on Retiru.",
+    "Women's retreat in Morocco: Marrakech, Atlas & Sahara. 7 days / 6 nights, max 6 guests, shared rooms. Kundalini, energy work & culture. From €900 on Retiru.",
   schedule,
   updated_at: new Date().toISOString(),
 };

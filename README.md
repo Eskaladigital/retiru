@@ -171,6 +171,7 @@ En esos textos **no** deben figurar **teléfonos móviles ni emails de contacto*
 | Comando | Uso |
 |--------|-----|
 | `npm run retreats:push-alma-nomada` | Actualiza por slug el retiro Alma Nómada según el contenido acordado (PDF 1ª edición): destino Marruecos, textos ES/EN, incluidos, excluidos, `schedule`, meta. |
+| `npm run retreats:fix-alma-en-parity` | Solo alinea `description_en`, `summary_en` y meta ES/EN con el español limpio y el precio oficial (900 €), sin tocar `description_es` ni el programa. Útil si el EN quedó desfasado tras moderar el ES. |
 | `npm run retreats:backfill-covers-ai` | Igual que la API: dossier completo desde Supabase → **GPT-4o** → **GPT Image 1.5** (`1536x1024`, `high`). Migrado desde DALL·E 3 por deprecación; prioridad absoluta al look de **fotografía real**. Opciones: `--dry-run`, `--limit=N`, `--replace-ai-covers`. |
 
 Para otro retiro, añadir un script análogo en `scripts/` o generalizar con un JSON + slug (mismo patrón).
