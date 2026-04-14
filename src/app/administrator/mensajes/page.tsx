@@ -164,7 +164,44 @@ export default function AdminMensajesPage() {
           <p className="text-muted-foreground">No hay conversaciones{search ? ' que coincidan' : ''}</p>
         </div>
       ) : (
-        <div className="border border-sand-200 rounded-2xl overflow-hidden">
+        {/* Mobile cards */}
+        <div className="md:hidden space-y-3">
+          {filtered.map(c => (
+            <div
+              key={c.id}
+              onClick={() => openConversation(c.id)}
+              className={`bg-white border border-sand-200 rounded-2xl p-4 space-y-2 cursor-pointer transition-colors ${selectedConv === c.id ? 'bg-terracotta-50 border-terracotta-200' : 'hover:bg-sand-50'}`}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-sm truncate">{c.user_profile?.full_name ?? '—'}</p>
+                  <p className="text-xs text-[#7a6b5d] truncate">
+                    {c.is_support
+                      ? <span className="inline-flex items-center gap-1 text-xs font-semibold text-sage-700"><LifeBuoy size={12} /> Soporte</span>
+                      : (c.organizer?.business_name ?? '—')
+                    }
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {c.total_unread > 0 && (
+                    <span className="inline-flex items-center justify-center w-6 h-6 bg-terracotta-500 text-white text-[11px] font-bold rounded-full">{c.total_unread}</span>
+                  )}
+                  <Eye size={16} className="text-[#7a6b5d]" />
+                </div>
+              </div>
+              <p className="text-xs text-terracotta-600 truncate">{c.is_support ? 'Soporte' : (c.retreat?.title_es ?? '—')}</p>
+              {c.last_message && (
+                <div className="flex items-center justify-between gap-2 text-xs text-[#a09383]">
+                  <p className="truncate">{c.last_message.content}</p>
+                  <span className="shrink-0 text-[10px]">{timeAgo(c.last_message.created_at)}</span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop table */}
+        <div className="hidden md:block border border-sand-200 rounded-2xl overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-sand-50 border-b border-sand-200">
@@ -178,53 +215,16 @@ export default function AdminMensajesPage() {
             </thead>
             <tbody>
               {filtered.map(c => (
-                <tr
-                  key={c.id}
-                  className={`border-b border-sand-100 hover:bg-sand-50 cursor-pointer transition-colors ${selectedConv === c.id ? 'bg-terracotta-50' : ''}`}
-                  onClick={() => openConversation(c.id)}
-                >
+                <tr key={c.id} className={`border-b border-sand-100 hover:bg-sand-50 cursor-pointer transition-colors ${selectedConv === c.id ? 'bg-terracotta-50' : ''}`} onClick={() => openConversation(c.id)}>
                   <td className="px-4 py-3">
                     <div className="font-medium">{c.user_profile?.full_name ?? '—'}</div>
-                    {c.user_profile?.email ? (
-                      <EmailLink
-                        email={c.user_profile.email}
-                        className="text-xs text-[#a09383] hover:text-terracotta-600 hover:underline break-all"
-                      />
-                    ) : null}
+                    {c.user_profile?.email && <EmailLink email={c.user_profile.email} className="text-xs text-[#a09383] hover:text-terracotta-600 hover:underline break-all" />}
                   </td>
-                  <td className="px-4 py-3">
-                    {c.is_support
-                      ? <span className="inline-flex items-center gap-1 text-xs font-semibold text-sage-700 bg-sage-100 px-2 py-0.5 rounded-full"><LifeBuoy size={12} /> Soporte</span>
-                      : (c.organizer?.business_name ?? '—')
-                    }
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="text-xs text-terracotta-600">{c.is_support ? 'Soporte' : (c.retreat?.title_es ?? '—')}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    {c.last_message ? (
-                      <div>
-                        <p className="truncate max-w-[200px] text-xs">{c.last_message.content}</p>
-                        <span className="text-[10px] text-[#a09383]">{timeAgo(c.last_message.created_at)}</span>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-[#a09383]">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    {c.total_unread > 0 ? (
-                      <span className="inline-flex items-center justify-center w-6 h-6 bg-terracotta-500 text-white text-[11px] font-bold rounded-full">
-                        {c.total_unread}
-                      </span>
-                    ) : (
-                      <span className="text-xs text-[#a09383]">0</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <button className="p-1.5 hover:bg-sand-100 rounded-lg transition-colors" title="Ver conversación">
-                      <Eye size={16} className="text-[#7a6b5d]" />
-                    </button>
-                  </td>
+                  <td className="px-4 py-3">{c.is_support ? <span className="inline-flex items-center gap-1 text-xs font-semibold text-sage-700 bg-sage-100 px-2 py-0.5 rounded-full"><LifeBuoy size={12} /> Soporte</span> : (c.organizer?.business_name ?? '—')}</td>
+                  <td className="px-4 py-3"><span className="text-xs text-terracotta-600">{c.is_support ? 'Soporte' : (c.retreat?.title_es ?? '—')}</span></td>
+                  <td className="px-4 py-3">{c.last_message ? <div><p className="truncate max-w-[200px] text-xs">{c.last_message.content}</p><span className="text-[10px] text-[#a09383]">{timeAgo(c.last_message.created_at)}</span></div> : <span className="text-xs text-[#a09383]">—</span>}</td>
+                  <td className="px-4 py-3 text-center">{c.total_unread > 0 ? <span className="inline-flex items-center justify-center w-6 h-6 bg-terracotta-500 text-white text-[11px] font-bold rounded-full">{c.total_unread}</span> : <span className="text-xs text-[#a09383]">0</span>}</td>
+                  <td className="px-4 py-3"><button className="p-1.5 hover:bg-sand-100 rounded-lg transition-colors" title="Ver conversación"><Eye size={16} className="text-[#7a6b5d]" /></button></td>
                 </tr>
               ))}
             </tbody>
@@ -236,7 +236,7 @@ export default function AdminMensajesPage() {
       {selectedConv && (
         <>
           <div className="fixed inset-0 bg-black/30 z-40" onClick={() => { setSelectedConv(null); setConvDetail(null); }} />
-          <div className="fixed bottom-6 right-6 z-50 w-[420px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-sand-200 flex flex-col" style={{ height: 'min(560px, calc(100vh - 100px))' }}>
+          <div className="fixed inset-4 md:inset-auto md:bottom-6 md:right-6 z-50 md:w-[420px] bg-white rounded-2xl shadow-2xl border border-sand-200 flex flex-col md:max-h-[calc(100vh-100px)]" style={{ height: 'min(560px, calc(100vh - 100px))' }}>
             <div className="px-5 py-4 border-b border-sand-200 flex items-center justify-between shrink-0 rounded-t-2xl bg-sand-50">
               <div>
                 <div className="flex items-center gap-2">

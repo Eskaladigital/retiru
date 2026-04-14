@@ -88,7 +88,7 @@ export default async function AdminCentrosPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <div className="bg-white border border-sand-200 rounded-2xl p-5">
           <p className="text-xs text-[#a09383] uppercase tracking-wider font-semibold">MRR Centros</p>
           <p className="text-2xl font-bold mt-1">{totalMRR}€</p>

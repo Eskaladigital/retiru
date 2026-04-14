@@ -111,8 +111,52 @@ export function ClaimsTableClient({ claims }: { claims: ClaimRow[] }) {
         ))}
       </div>
 
-      {/* Tabla */}
-      <div className="bg-white border border-sand-200 rounded-2xl overflow-hidden">
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-3">
+        {filtered.length === 0 ? (
+          <div className="bg-white border border-sand-200 rounded-2xl px-4 py-10 text-center text-[#a09383] text-sm">No hay claims {filter !== 'all' ? `con estado "${filter}"` : ''}</div>
+        ) : (
+          filtered.map((c) => {
+            const match = emailsMatch(c);
+            return (
+              <div key={c.id} className="bg-white border border-sand-200 rounded-2xl p-4 space-y-2.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <a href={`/es/centro/${c.centers?.slug || ''}`} target="_blank" rel="noopener" className="text-terracotta-600 hover:underline font-medium text-sm">{c.centers?.name || c.center_id}</a>
+                    {c.centers?.city && <p className="text-[11px] text-[#b5a89c]">{c.centers.city}</p>}
+                  </div>
+                  <span className={`text-xs font-semibold px-2 py-1 rounded-full border shrink-0 ${STATUS_BADGE[c.status]}`}>{c.status}</span>
+                </div>
+                <div className="text-xs space-y-1">
+                  <div><span className="text-[#a09383]">Solicitante:</span> <span className="font-medium">{c.profiles?.full_name || 'Sin nombre'}</span></div>
+                  <div><span className="text-[#a09383]">Método:</span> {METHOD_LABEL[c.method] || c.method}</div>
+                  <div><span className="text-[#a09383]">Fecha:</span> {new Date(c.created_at).toLocaleDateString('es')}</div>
+                  {match === true && <div className="text-green-700">✓ Emails coinciden</div>}
+                  {match === false && <div className="text-amber-700">⏳ Revisión manual</div>}
+                </div>
+                <div className="flex flex-wrap gap-1.5 pt-1 border-t border-sand-100">
+                  {c.status === 'pending' && (
+                    <>
+                      <button onClick={() => handleAction(c.id, 'approve')} disabled={acting === c.id} className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">Aprobar</button>
+                      <button onClick={() => handleAction(c.id, 'reject')} disabled={acting === c.id} className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50">Rechazar</button>
+                    </>
+                  )}
+                  {c.status === 'approved' && (
+                    <>
+                      <button onClick={() => handleAction(c.id, 'revert_to_pending')} disabled={acting === c.id} className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 disabled:opacity-50">Desaprobar</button>
+                      <button onClick={() => handleAction(c.id, 'reject')} disabled={acting === c.id} className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50">Rechazar</button>
+                    </>
+                  )}
+                  <button onClick={() => { setDetailId(c.id); setAdminNotes(c.admin_notes || ''); }} className="text-xs font-medium text-terracotta-600 hover:underline px-1">{c.status === 'rejected' ? 'Ver' : 'Detalle'}</button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block bg-white border border-sand-200 rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -128,133 +172,46 @@ export function ClaimsTableClient({ claims }: { claims: ClaimRow[] }) {
             </thead>
             <tbody className="divide-y divide-sand-100">
               {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-[#a09383]">
-                    No hay claims {filter !== 'all' ? `con estado "${filter}"` : ''}
-                  </td>
-                </tr>
+                <tr><td colSpan={7} className="px-4 py-10 text-center text-[#a09383]">No hay claims {filter !== 'all' ? `con estado "${filter}"` : ''}</td></tr>
               ) : (
                 filtered.map((c) => {
                   const match = emailsMatch(c);
                   return (
                     <tr key={c.id} className="hover:bg-sand-50/50 transition-colors">
                       <td className="px-4 py-3">
-                        <a
-                          href={`/es/centro/${c.centers?.slug || ''}`}
-                          target="_blank"
-                          rel="noopener"
-                          className="text-terracotta-600 hover:underline font-medium"
-                        >
-                          {c.centers?.name || c.center_id}
-                        </a>
-                        {c.centers?.email ? (
-                          <EmailLink
-                            email={c.centers.email}
-                            className="block text-xs text-[#a09383] hover:text-terracotta-600 hover:underline break-all"
-                          />
-                        ) : null}
-                        {c.centers?.city && (
-                          <span className="block text-[11px] text-[#b5a89c]">{c.centers.city}</span>
-                        )}
+                        <a href={`/es/centro/${c.centers?.slug || ''}`} target="_blank" rel="noopener" className="text-terracotta-600 hover:underline font-medium">{c.centers?.name || c.center_id}</a>
+                        {c.centers?.email && <EmailLink email={c.centers.email} className="block text-xs text-[#a09383] hover:text-terracotta-600 hover:underline break-all" />}
+                        {c.centers?.city && <span className="block text-[11px] text-[#b5a89c]">{c.centers.city}</span>}
                       </td>
                       <td className="px-4 py-3">
                         <span className="font-medium">{c.profiles?.full_name || 'Sin nombre'}</span>
-                        {c.profiles?.email ? (
-                          <EmailLink
-                            email={c.profiles.email}
-                            className="block text-xs text-[#a09383] hover:text-terracotta-600 hover:underline break-all"
-                          />
-                        ) : null}
+                        {c.profiles?.email && <EmailLink email={c.profiles.email} className="block text-xs text-[#a09383] hover:text-terracotta-600 hover:underline break-all" />}
                       </td>
                       <td className="px-4 py-3">
-                        {match === true && (
-                          <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
-                            <span>✓</span> Emails coinciden
-                          </span>
-                        )}
-                        {match === false && (
-                          <span
-                            className="inline-flex items-center gap-1 text-xs text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200"
-                            title="No hay coincidencia automática de email; el estado del claim sigue siendo el de la columna Estado."
-                          >
-                            <span>⏳</span> Revisión manual (emails distintos)
-                          </span>
-                        )}
-                        {match === null && (
-                          <span className="text-xs text-[#a09383]">—</span>
-                        )}
+                        {match === true && <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">✓ Emails coinciden</span>}
+                        {match === false && <span className="inline-flex items-center gap-1 text-xs text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">⏳ Revisión manual</span>}
+                        {match === null && <span className="text-xs text-[#a09383]">—</span>}
                       </td>
-                      <td className="px-4 py-3">
-                        <span className="text-xs">{METHOD_LABEL[c.method] || c.method}</span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`text-xs font-semibold px-2 py-1 rounded-full border ${STATUS_BADGE[c.status]}`}>
-                          {c.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-xs text-[#7a6b5d] whitespace-nowrap">
-                        {new Date(c.created_at).toLocaleDateString('es')}
-                      </td>
+                      <td className="px-4 py-3"><span className="text-xs">{METHOD_LABEL[c.method] || c.method}</span></td>
+                      <td className="px-4 py-3"><span className={`text-xs font-semibold px-2 py-1 rounded-full border ${STATUS_BADGE[c.status]}`}>{c.status}</span></td>
+                      <td className="px-4 py-3 text-xs text-[#7a6b5d] whitespace-nowrap">{new Date(c.created_at).toLocaleDateString('es')}</td>
                       <td className="px-4 py-3">
                         {c.status === 'pending' ? (
                           <div className="flex gap-1.5">
-                            <button
-                              onClick={() => handleAction(c.id, 'approve')}
-                              disabled={acting === c.id}
-                              className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50"
-                            >
-                              Aprobar
-                            </button>
-                            <button
-                              onClick={() => handleAction(c.id, 'reject')}
-                              disabled={acting === c.id}
-                              className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition-colors disabled:opacity-50"
-                            >
-                              Rechazar
-                            </button>
-                            <button
-                              onClick={() => { setDetailId(c.id); setAdminNotes(c.admin_notes || ''); }}
-                              className="text-xs font-medium text-terracotta-600 hover:underline px-1"
-                            >
-                              Detalle
-                            </button>
+                            <button onClick={() => handleAction(c.id, 'approve')} disabled={acting === c.id} className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">Aprobar</button>
+                            <button onClick={() => handleAction(c.id, 'reject')} disabled={acting === c.id} className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50">Rechazar</button>
+                            <button onClick={() => { setDetailId(c.id); setAdminNotes(c.admin_notes || ''); }} className="text-xs font-medium text-terracotta-600 hover:underline px-1">Detalle</button>
                           </div>
                         ) : c.status === 'approved' ? (
                           <div className="flex gap-1.5">
-                            <button
-                              onClick={() => handleAction(c.id, 'revert_to_pending')}
-                              disabled={acting === c.id}
-                              className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors disabled:opacity-50"
-                            >
-                              Desaprobar
-                            </button>
-                            <button
-                              onClick={() => handleAction(c.id, 'reject')}
-                              disabled={acting === c.id}
-                              className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition-colors disabled:opacity-50"
-                            >
-                              Rechazar
-                            </button>
-                            <button
-                              onClick={() => { setDetailId(c.id); setAdminNotes(c.admin_notes || ''); }}
-                              className="text-xs font-medium text-terracotta-600 hover:underline px-1"
-                            >
-                              Detalle
-                            </button>
+                            <button onClick={() => handleAction(c.id, 'revert_to_pending')} disabled={acting === c.id} className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 disabled:opacity-50">Desaprobar</button>
+                            <button onClick={() => handleAction(c.id, 'reject')} disabled={acting === c.id} className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50">Rechazar</button>
+                            <button onClick={() => { setDetailId(c.id); setAdminNotes(c.admin_notes || ''); }} className="text-xs font-medium text-terracotta-600 hover:underline px-1">Detalle</button>
                           </div>
                         ) : (
                           <div className="flex gap-1.5 items-center">
-                            <span className="text-xs text-[#a09383]">
-                              {c.reviewed_at
-                                ? `Revisado ${new Date(c.reviewed_at).toLocaleDateString('es')}`
-                                : '—'}
-                            </span>
-                            <button
-                              onClick={() => { setDetailId(c.id); setAdminNotes(c.admin_notes || ''); }}
-                              className="text-xs font-medium text-terracotta-600 hover:underline px-1"
-                            >
-                              Ver
-                            </button>
+                            <span className="text-xs text-[#a09383]">{c.reviewed_at ? `Revisado ${new Date(c.reviewed_at).toLocaleDateString('es')}` : '—'}</span>
+                            <button onClick={() => { setDetailId(c.id); setAdminNotes(c.admin_notes || ''); }} className="text-xs font-medium text-terracotta-600 hover:underline px-1">Ver</button>
                           </div>
                         )}
                       </td>

@@ -328,8 +328,55 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
         </span>
       </div>
 
-      {/* Tabla */}
-      <div className="bg-white border border-sand-200 rounded-2xl overflow-hidden">
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-3">
+        {pageData.length === 0 ? (
+          <div className="bg-white border border-sand-200 rounded-2xl px-4 py-12 text-center text-[#999] text-sm">
+            {hasFilters ? 'No hay centros que coincidan con los filtros.' : 'No hay centros en la base de datos.'}
+          </div>
+        ) : (
+          pageData.map((c) => {
+            const imgSrc = getMainImage(c);
+            return (
+              <div key={c.id} className="bg-white border border-sand-200 rounded-2xl p-4 space-y-2.5">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-lg overflow-hidden bg-sand-100 shrink-0">
+                    {imgSrc ? <img src={imgSrc} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[9px] text-[#bbb]">—</div>}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm truncate">{c.name}</p>
+                    <p className="text-xs text-[#7a6b5d]">{c.city}{c.province ? `, ${c.province}` : ''}</p>
+                  </div>
+                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${c.status === 'active' ? 'bg-sage-100 text-sage-700' : c.status === 'pending_review' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-600'}`}>
+                    {exportStatusLabel(c.status)}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                  <div><span className="text-[#a09383]">Plan:</span> <span className={`font-semibold ${c.plan === 'featured' ? 'text-amber-700' : ''}`}>{c.plan === 'featured' ? 'Destacado' : 'Básico'}</span></div>
+                  <div><span className="text-[#a09383]">MRR:</span> <span className="font-semibold">{getMRR(c)}€</span></div>
+                  {c.type && <div><span className="text-[#a09383]">Tipo:</span> {getCenterTypeLabel(c.type)}</div>}
+                  <div><span className="text-[#a09383]">Desc:</span> {hasDesc(c) ? <span className="text-sage-600">✓</span> : <span className="text-amber-500">✗</span>}</div>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-sand-100">
+                  <Link href={`/administrator/centros/${c.id}`} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-terracotta-600 hover:bg-terracotta-50 transition-colors"><Pencil size={15} /></Link>
+                  {c.status === 'active' ? (
+                    <a href={`/es/centro/${c.slug}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-sage-600 hover:bg-sage-50 transition-colors"><ExternalLink size={15} /></a>
+                  ) : (
+                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-[#ddd] cursor-not-allowed"><ExternalLink size={15} /></span>
+                  )}
+                  <button onClick={() => handleToggleStatus(c)} disabled={toggling === c.id} className={`inline-flex items-center justify-center w-8 h-8 rounded-lg transition-colors disabled:opacity-40 ${c.status === 'active' ? 'text-amber-500 hover:bg-amber-50' : 'text-sage-500 hover:bg-sage-50'}`}>
+                    {c.status === 'active' ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                  <button onClick={() => handleDelete(c)} disabled={deleting === c.id} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-40"><Trash2 size={15} /></button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block bg-white border border-sand-200 rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -361,11 +408,7 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
                     <tr key={c.id} className="border-b border-sand-100 hover:bg-sand-50/50 transition-colors">
                       <td className="py-2 px-4">
                         <div className="w-10 h-10 rounded-lg overflow-hidden bg-sand-100 shrink-0">
-                          {imgSrc ? (
-                            <img src={imgSrc} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-[9px] text-[#bbb]">—</div>
-                          )}
+                          {imgSrc ? <img src={imgSrc} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[9px] text-[#bbb]">—</div>}
                         </div>
                       </td>
                       <td className="py-3 px-4 font-medium max-w-[240px] truncate">{c.name}</td>
@@ -380,23 +423,13 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
                         {c.type ? <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-sage-50 text-sage-700">{getCenterTypeLabel(c.type)}</span> : '—'}
                       </td>
                       <td className="py-3 px-4 text-center">
-                        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-                          c.status === 'active'
-                            ? 'bg-sage-100 text-sage-700'
-                            : c.status === 'pending_review'
-                              ? 'bg-amber-100 text-amber-800'
-                              : 'bg-red-100 text-red-600'
-                        }`}>
+                        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${c.status === 'active' ? 'bg-sage-100 text-sage-700' : c.status === 'pending_review' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-600'}`}>
                           {exportStatusLabel(c.status)}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-right font-semibold">{getMRR(c)}€</td>
                       <td className="py-3 px-4 text-center">
-                        {hasDesc(c) ? (
-                          <span className="text-sage-600 text-xs">✓</span>
-                        ) : (
-                          <span className="text-amber-500 text-xs">✗</span>
-                        )}
+                        {hasDesc(c) ? <span className="text-sage-600 text-xs">✓</span> : <span className="text-amber-500 text-xs">✗</span>}
                       </td>
                       <td className="py-3 px-2 text-center">
                         <div className="flex items-center justify-center gap-1.5">
@@ -498,7 +531,7 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
 
       {/* Paginación */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between px-1">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-1">
           <p className="text-xs text-[#999]">
             Mostrando {safePage * PAGE_SIZE + 1}–{Math.min((safePage + 1) * PAGE_SIZE, sorted.length)} de {sorted.length}
           </p>

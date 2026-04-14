@@ -199,7 +199,7 @@ export function AdminVerificacionClient({
 
         {/* Tax/bank data */}
         {(organizer.tax_id || organizer.iban) && (
-          <div className="mt-4 pt-4 border-t border-sand-200 grid grid-cols-2 gap-4 text-sm">
+          <div className="mt-4 pt-4 border-t border-sand-200 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             {organizer.tax_id && (
               <div>
                 <span className="text-xs text-[#a09383] block">NIF/CIF</span>

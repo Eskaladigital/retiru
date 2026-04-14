@@ -67,7 +67,7 @@ export function TiendaClient({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="font-serif text-3xl text-foreground">Tienda</h1>
           <p className="text-sm text-[#7a6b5d] mt-1">Gestión de productos, categorías y pedidos</p>
@@ -122,7 +122,34 @@ export function TiendaClient({
             <h2 className="font-serif text-lg">Últimos pedidos</h2>
             <span className="text-xs text-[#a09383]">Ver todos (próximamente)</span>
           </div>
-          <table className="w-full text-sm">
+
+          {/* Orders mobile cards */}
+          <div className="md:hidden space-y-3">
+            {recentOrders.length === 0 ? (
+              <p className="py-8 text-center text-[#999] text-sm">No hay pedidos.</p>
+            ) : (
+              recentOrders.map((o) => {
+                const s = S[o.status] || S.pending;
+                const dateStr = o.date ? new Date(o.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : '—';
+                return (
+                  <div key={o.id} className="border border-sand-100 rounded-xl p-3 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-terracotta-600 text-sm">{o.order_number}</span>
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${s.c}`}>{s.l}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-[#7a6b5d]">
+                      <span>{o.customer}</span>
+                      <span className="font-semibold text-foreground">{o.total.toFixed(2)}€</span>
+                    </div>
+                    <div className="text-[11px] text-[#a09383]">{o.items} art. · {dateStr}</div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Orders desktop table */}
+          <table className="hidden md:table w-full text-sm">
             <thead>
               <tr className="border-b border-sand-200">
                 <th className="text-left py-2 font-semibold text-[#7a6b5d]">Pedido</th>
@@ -135,9 +162,7 @@ export function TiendaClient({
             </thead>
             <tbody>
               {recentOrders.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-[#999]">No hay pedidos.</td>
-                </tr>
+                <tr><td colSpan={6} className="py-8 text-center text-[#999]">No hay pedidos.</td></tr>
               ) : (
                 recentOrders.map((o) => {
                   const s = S[o.status] || S.pending;
@@ -145,20 +170,10 @@ export function TiendaClient({
                   return (
                     <tr key={o.id} className="border-b border-sand-100 hover:bg-sand-50/50">
                       <td className="py-2.5 font-medium text-terracotta-600">{o.order_number}</td>
-                      <td className="py-2.5">
-                        {o.customer_email ? (
-                          <EmailLink email={o.customer_email} className="text-foreground hover:text-terracotta-600 hover:underline">
-                            {o.customer}
-                          </EmailLink>
-                        ) : (
-                          o.customer
-                        )}
-                      </td>
+                      <td className="py-2.5">{o.customer_email ? <EmailLink email={o.customer_email} className="text-foreground hover:text-terracotta-600 hover:underline">{o.customer}</EmailLink> : o.customer}</td>
                       <td className="py-2.5 text-center">{o.items}</td>
                       <td className="py-2.5 text-right font-semibold">{o.total.toFixed(2)}€</td>
-                      <td className="py-2.5 text-center">
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${s.c}`}>{s.l}</span>
-                      </td>
+                      <td className="py-2.5 text-center"><span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${s.c}`}>{s.l}</span></td>
                       <td className="py-2.5 text-right text-[#7a6b5d]">{dateStr}</td>
                     </tr>
                   );
@@ -173,7 +188,40 @@ export function TiendaClient({
         <div className="px-6 py-4 border-b border-sand-200 flex items-center justify-between">
           <h2 className="font-serif text-lg">Productos ({products.length})</h2>
         </div>
-        <table className="w-full text-sm">
+
+        {/* Products mobile cards */}
+        <div className="md:hidden p-4 space-y-3">
+          {products.length === 0 ? (
+            <p className="py-12 text-center text-[#999] text-sm">No hay productos.</p>
+          ) : (
+            products.map((p) => {
+              const s = S[p.status] || S.active;
+              return (
+                <div key={p.id} className="border border-sand-100 rounded-xl p-3 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <span className="font-medium text-sm">{p.name}</span>
+                      {p.compare_price && p.compare_price > p.price && (
+                        <span className="ml-1 text-[10px] font-bold text-red-500 bg-red-50 px-1.5 py-0.5 rounded-full">-{Math.round((1 - p.price / p.compare_price) * 100)}%</span>
+                      )}
+                    </div>
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${s.c}`}>{s.l}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                    <div><span className="text-[#a09383]">Precio:</span> <span className="font-semibold">{p.price.toFixed(2)}€</span></div>
+                    <div><span className="text-[#a09383]">Stock:</span> <span className={p.stock === 0 ? 'text-red-500 font-semibold' : p.stock < 10 ? 'text-amber-600' : ''}>{p.stock}</span></div>
+                    <div><span className="text-[#a09383]">Vendidos:</span> {p.sold}</div>
+                    {p.featured && <div>⭐ Destacado</div>}
+                  </div>
+                  <a href={`/es/tienda/${p.slug}`} target="_blank" rel="noopener" className="text-xs font-semibold text-terracotta-600 hover:underline">Ver ficha</a>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Products desktop table */}
+        <table className="hidden md:table w-full text-sm">
           <thead>
             <tr className="border-b border-sand-200 bg-sand-50">
               <th className="text-left py-3 px-4 font-semibold text-[#7a6b5d]">Producto</th>
@@ -188,9 +236,7 @@ export function TiendaClient({
           </thead>
           <tbody>
             {products.length === 0 ? (
-              <tr>
-                <td colSpan={8} className="py-12 text-center text-[#999]">No hay productos.</td>
-              </tr>
+              <tr><td colSpan={8} className="py-12 text-center text-[#999]">No hay productos.</td></tr>
             ) : (
               products.map((p) => {
                 const s = S[p.status] || S.active;
@@ -198,25 +244,15 @@ export function TiendaClient({
                   <tr key={p.id} className="border-b border-sand-100 hover:bg-sand-50/50">
                     <td className="py-3 px-4">
                       <span className="font-medium">{p.name}</span>
-                      {p.compare_price && p.compare_price > p.price && (
-                        <span className="ml-2 text-[10px] font-bold text-red-500 bg-red-50 px-1.5 py-0.5 rounded-full">
-                          -{Math.round((1 - p.price / p.compare_price) * 100)}%
-                        </span>
-                      )}
+                      {p.compare_price && p.compare_price > p.price && <span className="ml-2 text-[10px] font-bold text-red-500 bg-red-50 px-1.5 py-0.5 rounded-full">-{Math.round((1 - p.price / p.compare_price) * 100)}%</span>}
                     </td>
                     <td className="py-3 px-4 text-[#7a6b5d]">{p.category}</td>
                     <td className="py-3 px-4 text-right font-semibold">{p.price.toFixed(2)}€</td>
                     <td className={`py-3 px-4 text-center ${p.stock === 0 ? 'text-red-500 font-semibold' : p.stock < 10 ? 'text-amber-600' : ''}`}>{p.stock}</td>
                     <td className="py-3 px-4 text-center">{p.sold}</td>
-                    <td className="py-3 px-4 text-center">
-                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${s.c}`}>{s.l}</span>
-                    </td>
+                    <td className="py-3 px-4 text-center"><span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${s.c}`}>{s.l}</span></td>
                     <td className="py-3 px-4 text-center">{p.featured ? '⭐' : '—'}</td>
-                    <td className="py-3 px-4 text-right">
-                      <a href={`/es/tienda/${p.slug}`} target="_blank" rel="noopener" className="text-xs font-semibold text-terracotta-600 hover:underline">
-                        Ver ficha
-                      </a>
-                    </td>
+                    <td className="py-3 px-4 text-right"><a href={`/es/tienda/${p.slug}`} target="_blank" rel="noopener" className="text-xs font-semibold text-terracotta-600 hover:underline">Ver ficha</a></td>
                   </tr>
                 );
               })

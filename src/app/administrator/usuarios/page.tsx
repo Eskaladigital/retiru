@@ -75,7 +75,7 @@ export default async function AdminUsuariosPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
         <div className="bg-white border border-sand-200 rounded-2xl p-5">
           <p className="text-xs text-[#a09383] uppercase tracking-wider font-semibold">Total usuarios</p>
           <p className="text-2xl font-bold mt-1">{list.length}</p>

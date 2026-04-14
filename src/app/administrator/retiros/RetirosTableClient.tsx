@@ -191,18 +191,99 @@ export function RetirosTableClient({
         ))}
       </div>
 
-      {/* Tabla */}
-      <div className="bg-white border border-sand-200 rounded-2xl overflow-hidden">
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-3">
+        {filtered.length === 0 ? (
+          <div className="bg-white border border-sand-200 rounded-2xl px-4 py-10 text-center text-[#a09383] text-sm">
+            No hay retiros {filter !== 'all' ? `con estado "${STATUS_BADGE[filter]?.label || filter}"` : ''}
+          </div>
+        ) : (
+          filtered.map((r) => {
+            const badge = STATUS_BADGE[r.displayStatus] || STATUS_BADGE.draft;
+            return (
+              <div key={r.id} id={`retreat-m-${r.id}`} className="bg-white border border-sand-200 rounded-2xl p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-14 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-sand-100 border border-sand-200">
+                    {r.cover_image_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={r.cover_image_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[#a09383]"><ImageOff size={16} /></div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <a
+                      href={r.status === 'published' ? `/es/retiro/${r.slug}` : `/administrator/retiros/preview/${r.slug}`}
+                      className="text-terracotta-600 hover:underline font-medium text-sm line-clamp-2"
+                    >
+                      {r.title_es}
+                    </a>
+                    {r.rejection_reason && (
+                      <span className="block text-xs text-red-500 mt-0.5 truncate" title={r.rejection_reason}>Motivo: {r.rejection_reason}</span>
+                    )}
+                  </div>
+                  <span className={`text-[11px] font-semibold px-2 py-1 rounded-full border whitespace-nowrap shrink-0 ${badge.className}`}>
+                    {badge.label}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                  <div><span className="text-[#a09383]">Precio:</span> <span className="font-medium">{r.total_price}€</span></div>
+                  <div><span className="text-[#a09383]">Reservas:</span> <span className="font-medium">{r.confirmed_bookings}/{r.max_attendees}</span></div>
+                  <div className="col-span-2">
+                    <span className="text-[#a09383]">Fechas:</span>{' '}
+                    <span className="text-[#7a6b5d]">
+                      {new Date(r.start_date).toLocaleDateString('es', { day: 'numeric', month: 'short' })}
+                      {' → '}
+                      {new Date(r.end_date).toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </span>
+                  </div>
+                  {r.organizer_name && (
+                    <div className="col-span-2">
+                      <span className="text-[#a09383]">Org:</span> <span className="font-medium">{r.organizer_name}</span>
+                      {r.organizer_status !== 'verified' && (
+                        <span className="ml-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">No verificado</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap gap-1.5 pt-1 border-t border-sand-100">
+                  {r.status === 'pending_review' && (
+                    <>
+                      {r.organizer_status === 'verified' ? (
+                        <button onClick={() => handleApprove(r.id)} disabled={acting === r.id} className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50">Aprobar</button>
+                      ) : (
+                        <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-gray-200 text-gray-500 cursor-not-allowed">Aprobar (org. no verificado)</span>
+                      )}
+                      <button onClick={() => setRejectId(r.id)} disabled={acting === r.id} className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition-colors disabled:opacity-50">Rechazar</button>
+                    </>
+                  )}
+                  <a href={r.status === 'published' ? `/es/retiro/${r.slug}` : `/administrator/retiros/preview/${r.slug}`} className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-sand-100 text-[#7a6b5d] hover:bg-sand-200 transition-colors">Ver</a>
+                  <a href={`/administrator/retiros/${r.id}/editar`} className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-terracotta-50 text-terracotta-700 hover:bg-terracotta-100 transition-colors">Editar</a>
+                  {!['cancelled', 'archived'].includes(r.status) && (
+                    <button onClick={() => handleAction(r.id, 'cancel')} disabled={acting === r.id} className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors disabled:opacity-50">Cancelar</button>
+                  )}
+                  <button onClick={() => handleAction(r.id, 'delete')} disabled={acting === r.id} className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors disabled:opacity-50">Eliminar</button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block bg-white border border-sand-200 rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-sand-50 text-left text-xs font-semibold text-[#a09383] uppercase tracking-wider">
                 <th className="px-4 py-3">Retiro</th>
-                <th className="px-4 py-3 hidden md:table-cell">Organizador</th>
+                <th className="px-4 py-3">Organizador</th>
                 <th className="px-4 py-3 text-center">Estado</th>
                 <th className="px-4 py-3 text-center">Precio</th>
                 <th className="px-4 py-3 text-center hidden lg:table-cell">Reservas</th>
-                <th className="px-4 py-3 hidden sm:table-cell">Fechas</th>
+                <th className="px-4 py-3">Fechas</th>
                 <th className="px-4 py-3 hidden lg:table-cell">Creado</th>
                 <th className="px-4 py-3">Acciones</th>
               </tr>
@@ -224,15 +305,9 @@ export function RetirosTableClient({
                           <div className="w-14 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-sand-100 border border-sand-200">
                             {r.cover_image_url ? (
                               // eslint-disable-next-line @next/next/no-img-element
-                              <img
-                                src={r.cover_image_url}
-                                alt=""
-                                className="w-full h-full object-cover"
-                              />
+                              <img src={r.cover_image_url} alt="" className="w-full h-full object-cover" />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-[#a09383]">
-                                <ImageOff size={16} />
-                              </div>
+                              <div className="w-full h-full flex items-center justify-center text-[#a09383]"><ImageOff size={16} /></div>
                             )}
                           </div>
                           <div className="min-w-0">
@@ -245,39 +320,28 @@ export function RetirosTableClient({
                               {r.title_es}
                             </a>
                             {r.rejection_reason && (
-                              <span className="block text-xs text-red-500 mt-0.5 truncate max-w-[220px]" title={r.rejection_reason}>
-                                Motivo: {r.rejection_reason}
-                              </span>
+                              <span className="block text-xs text-red-500 mt-0.5 truncate max-w-[220px]" title={r.rejection_reason}>Motivo: {r.rejection_reason}</span>
                             )}
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 hidden md:table-cell">
+                      <td className="px-4 py-3">
                         <span className="font-medium text-xs">{r.organizer_name || '—'}</span>
                         {r.organizer_status !== 'verified' && (
-                          <span className="ml-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">
-                            No verificado
-                          </span>
+                          <span className="ml-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">No verificado</span>
                         )}
                         {r.organizer_email ? (
-                          <EmailLink
-                            email={r.organizer_email}
-                            className="block text-[11px] text-[#a09383] hover:text-terracotta-600 hover:underline truncate max-w-[160px]"
-                          />
+                          <EmailLink email={r.organizer_email} className="block text-[11px] text-[#a09383] hover:text-terracotta-600 hover:underline truncate max-w-[160px]" />
                         ) : null}
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <span className={`text-[11px] font-semibold px-2 py-1 rounded-full border whitespace-nowrap ${badge.className}`}>
-                          {badge.label}
-                        </span>
+                        <span className={`text-[11px] font-semibold px-2 py-1 rounded-full border whitespace-nowrap ${badge.className}`}>{badge.label}</span>
                       </td>
-                      <td className="px-4 py-3 text-center font-medium whitespace-nowrap">
-                        {r.total_price}€
-                      </td>
+                      <td className="px-4 py-3 text-center font-medium whitespace-nowrap">{r.total_price}€</td>
                       <td className="px-4 py-3 text-center hidden lg:table-cell">
                         <span className="text-xs">{r.confirmed_bookings}/{r.max_attendees}</span>
                       </td>
-                      <td className="px-4 py-3 hidden sm:table-cell text-xs text-[#7a6b5d] whitespace-nowrap">
+                      <td className="px-4 py-3 text-xs text-[#7a6b5d] whitespace-nowrap">
                         {new Date(r.start_date).toLocaleDateString('es', { day: 'numeric', month: 'short' })}
                         {' → '}
                         {new Date(r.end_date).toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -290,60 +354,19 @@ export function RetirosTableClient({
                           {r.status === 'pending_review' && (
                             <>
                               {r.organizer_status !== 'verified' ? (
-                                <span
-                                  className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-gray-200 text-gray-500 cursor-not-allowed"
-                                  title="No se puede aprobar: el organizador no está verificado"
-                                >
-                                  Aprobar (org. no verificado)
-                                </span>
+                                <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-gray-200 text-gray-500 cursor-not-allowed" title="No se puede aprobar: el organizador no está verificado">Aprobar (org. no verificado)</span>
                               ) : (
-                                <button
-                                  onClick={() => handleApprove(r.id)}
-                                  disabled={acting === r.id}
-                                  className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50"
-                                >
-                                  Aprobar
-                                </button>
+                                <button onClick={() => handleApprove(r.id)} disabled={acting === r.id} className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50">Aprobar</button>
                               )}
-                              <button
-                                onClick={() => setRejectId(r.id)}
-                                disabled={acting === r.id}
-                                className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition-colors disabled:opacity-50"
-                              >
-                                Rechazar
-                              </button>
+                              <button onClick={() => setRejectId(r.id)} disabled={acting === r.id} className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition-colors disabled:opacity-50">Rechazar</button>
                             </>
                           )}
-                          <a
-                            href={r.status === 'published' ? `/es/retiro/${r.slug}` : `/administrator/retiros/preview/${r.slug}`}
-                            target={r.status === 'published' ? '_blank' : undefined}
-                            rel={r.status === 'published' ? 'noopener' : undefined}
-                            className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-sand-100 text-[#7a6b5d] hover:bg-sand-200 transition-colors"
-                          >
-                            Ver
-                          </a>
-                          <a
-                            href={`/administrator/retiros/${r.id}/editar`}
-                            className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-terracotta-50 text-terracotta-700 hover:bg-terracotta-100 transition-colors"
-                          >
-                            Editar
-                          </a>
+                          <a href={r.status === 'published' ? `/es/retiro/${r.slug}` : `/administrator/retiros/preview/${r.slug}`} target={r.status === 'published' ? '_blank' : undefined} rel={r.status === 'published' ? 'noopener' : undefined} className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-sand-100 text-[#7a6b5d] hover:bg-sand-200 transition-colors">Ver</a>
+                          <a href={`/administrator/retiros/${r.id}/editar`} className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-terracotta-50 text-terracotta-700 hover:bg-terracotta-100 transition-colors">Editar</a>
                           {!['cancelled', 'archived'].includes(r.status) && (
-                            <button
-                              onClick={() => handleAction(r.id, 'cancel')}
-                              disabled={acting === r.id}
-                              className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors disabled:opacity-50"
-                            >
-                              Cancelar
-                            </button>
+                            <button onClick={() => handleAction(r.id, 'cancel')} disabled={acting === r.id} className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors disabled:opacity-50">Cancelar</button>
                           )}
-                          <button
-                            onClick={() => handleAction(r.id, 'delete')}
-                            disabled={acting === r.id}
-                            className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors disabled:opacity-50"
-                          >
-                            Eliminar
-                          </button>
+                          <button onClick={() => handleAction(r.id, 'delete')} disabled={acting === r.id} className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors disabled:opacity-50">Eliminar</button>
                         </div>
                       </td>
                     </tr>

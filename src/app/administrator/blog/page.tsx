@@ -53,7 +53,7 @@ export default async function AdminBlogPage() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <div className="bg-white border border-sand-200 rounded-2xl p-5">
           <p className="text-xs text-[#a09383] uppercase tracking-wider font-semibold">Total artículos</p>
           <p className="text-2xl font-bold mt-1">{list.length}</p>
@@ -68,7 +68,50 @@ export default async function AdminBlogPage() {
         </div>
       </div>
 
-      <div className="bg-white border border-sand-200 rounded-2xl overflow-hidden">
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-3">
+        {list.length === 0 ? (
+          <div className="bg-white border border-sand-200 rounded-2xl px-4 py-12 text-center text-[#7a6b5d] text-sm">
+            No hay artículos. <Link href="/administrator/blog/nuevo" className="text-terracotta-600 hover:underline">Crear el primero</Link>
+          </div>
+        ) : (
+          list.map((a) => (
+            <div key={a.id} className="bg-white border border-sand-200 rounded-2xl p-4 space-y-2.5">
+              <div className="flex items-start gap-3">
+                <div className="w-14 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-sand-100 border border-sand-200">
+                  {a.cover_image_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={a.cover_image_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[#a09383]"><ImageOff size={16} /></div>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-sm line-clamp-2">{a.title_es}</p>
+                  <p className="text-xs text-[#a09383] truncate">{(a.blog_categories as { name_es?: string })?.name_es ?? ''}</p>
+                </div>
+                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${a.is_published ? 'bg-sage-100 text-sage-700' : 'bg-sand-200 text-[#7a6b5d]'}`}>
+                  {a.is_published ? 'Publicado' : 'Borrador'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs text-[#7a6b5d]">
+                <span>{a.view_count ?? 0} vistas</span>
+                <span>{a.published_at ? format(new Date(a.published_at), 'd MMM yyyy', { locale: es }) : '—'}</span>
+              </div>
+              <div className="flex items-center gap-2 pt-1 border-t border-sand-100">
+                {a.is_published && (
+                  <a href={`/es/blog/${a.slug}`} target="_blank" rel="noopener" className="p-1.5 rounded-lg hover:bg-sand-100 text-[#7a6b5d]" title="Ver en web"><Eye size={16} /></a>
+                )}
+                <Link href={`/administrator/blog/${a.id}`} className="p-1.5 rounded-lg hover:bg-sand-100 text-terracotta-600" title="Editar"><Pencil size={16} /></Link>
+                <DeleteArticleButton articleId={a.id} articleTitle={a.title_es} />
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block bg-white border border-sand-200 rounded-2xl overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-sand-200 bg-sand-50">
@@ -82,11 +125,7 @@ export default async function AdminBlogPage() {
           </thead>
           <tbody>
             {list.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="py-12 text-center text-[#7a6b5d]">
-                  No hay artículos. <Link href="/administrator/blog/nuevo" className="text-terracotta-600 hover:underline">Crear el primero</Link>
-                </td>
-              </tr>
+              <tr><td colSpan={6} className="py-12 text-center text-[#7a6b5d]">No hay artículos. <Link href="/administrator/blog/nuevo" className="text-terracotta-600 hover:underline">Crear el primero</Link></td></tr>
             ) : (
               list.map((a) => (
                 <tr key={a.id} className="border-b border-sand-100 hover:bg-sand-50/50">
@@ -95,15 +134,9 @@ export default async function AdminBlogPage() {
                       <div className="w-14 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-sand-100 border border-sand-200">
                         {a.cover_image_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={a.cover_image_url}
-                            alt=""
-                            className="w-full h-full object-cover"
-                          />
+                          <img src={a.cover_image_url} alt="" className="w-full h-full object-cover" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-[#a09383]">
-                            <ImageOff size={16} />
-                          </div>
+                          <div className="w-full h-full flex items-center justify-center text-[#a09383]"><ImageOff size={16} /></div>
                         )}
                       </div>
                       <div className="min-w-0">
@@ -114,34 +147,14 @@ export default async function AdminBlogPage() {
                   </td>
                   <td className="py-3 px-4 text-[#7a6b5d]">{(a.blog_categories as { name_es?: string })?.name_es ?? '—'}</td>
                   <td className="py-3 px-4 text-center">
-                    <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${a.is_published ? 'bg-sage-100 text-sage-700' : 'bg-sand-200 text-[#7a6b5d]'}`}>
-                      {a.is_published ? 'Publicado' : 'Borrador'}
-                    </span>
+                    <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${a.is_published ? 'bg-sage-100 text-sage-700' : 'bg-sand-200 text-[#7a6b5d]'}`}>{a.is_published ? 'Publicado' : 'Borrador'}</span>
                   </td>
                   <td className="py-3 px-4 text-center">{a.view_count ?? 0}</td>
-                  <td className="py-3 px-4 text-[#7a6b5d]">
-                    {a.published_at ? format(new Date(a.published_at), 'd MMM yyyy', { locale: es }) : '—'}
-                  </td>
+                  <td className="py-3 px-4 text-[#7a6b5d]">{a.published_at ? format(new Date(a.published_at), 'd MMM yyyy', { locale: es }) : '—'}</td>
                   <td className="py-3 px-4">
                     <div className="flex items-center justify-end gap-2">
-                      {a.is_published && (
-                        <a
-                          href={`/es/blog/${a.slug}`}
-                          target="_blank"
-                          rel="noopener"
-                          className="p-1.5 rounded-lg hover:bg-sand-100 text-[#7a6b5d]"
-                          title="Ver en web"
-                        >
-                          <Eye size={16} />
-                        </a>
-                      )}
-                      <Link
-                        href={`/administrator/blog/${a.id}`}
-                        className="p-1.5 rounded-lg hover:bg-sand-100 text-terracotta-600"
-                        title="Editar"
-                      >
-                        <Pencil size={16} />
-                      </Link>
+                      {a.is_published && <a href={`/es/blog/${a.slug}`} target="_blank" rel="noopener" className="p-1.5 rounded-lg hover:bg-sand-100 text-[#7a6b5d]" title="Ver en web"><Eye size={16} /></a>}
+                      <Link href={`/administrator/blog/${a.id}`} className="p-1.5 rounded-lg hover:bg-sand-100 text-terracotta-600" title="Editar"><Pencil size={16} /></Link>
                       <DeleteArticleButton articleId={a.id} articleTitle={a.title_es} />
                     </div>
                   </td>
