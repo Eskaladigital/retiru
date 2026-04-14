@@ -164,6 +164,7 @@ export default function AdminMensajesPage() {
           <p className="text-muted-foreground">No hay conversaciones{search ? ' que coincidan' : ''}</p>
         </div>
       ) : (
+        <>
         {/* Mobile cards */}
         <div className="md:hidden space-y-3">
           {filtered.map(c => (
@@ -230,6 +231,7 @@ export default function AdminMensajesPage() {
             </tbody>
           </table>
         </div>
+        </>
       )}
 
       {/* Chat overlay — modal flotante */}
