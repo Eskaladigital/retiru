@@ -8,14 +8,14 @@ import { getCenterProvinces, getCentersByProvince } from '@/lib/data';
 import { getCenterTypeLabel, stripMarkdownForPreview, isGenericDescription } from '@/lib/utils';
 import { generatePageMetadata, jsonLdItemList, jsonLdScript } from '@/lib/seo';
 import { resolveGeoLanding, type GeoNode } from '@/lib/geo-landing';
-import { createServerSupabase } from '@/lib/supabase/server';
+import { createServerSupabase, createStaticSupabase } from '@/lib/supabase/server';
 import type { Center } from '@/types';
 
 export const revalidate = 3600;
 
 export async function generateStaticParams() {
   const provinces = await getCenterProvinces();
-  const supabase = await createServerSupabase();
+  const supabase = createStaticSupabase();
   const { data: geo } = await supabase
     .from('destinations')
     .select('slug')

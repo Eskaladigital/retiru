@@ -12,14 +12,14 @@ import { getCenterProvinces, getCentersByProvince } from '@/lib/data';
 import { getCenterTypeLabel, CENTER_TYPE_URL_ES, stripMarkdownForPreview, isGenericDescription } from '@/lib/utils';
 import { generatePageMetadata, jsonLdItemList, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
 import { resolveGeoLanding, type GeoNode } from '@/lib/geo-landing';
-import { createServerSupabase } from '@/lib/supabase/server';
+import { createServerSupabase, createStaticSupabase } from '@/lib/supabase/server';
 import type { Center } from '@/types';
 
 export const revalidate = 3600;
 
 export async function generateStaticParams() {
   const provinces = await getCenterProvinces();
-  const supabase = await createServerSupabase();
+  const supabase = createStaticSupabase();
   const { data: geo } = await supabase
     .from('destinations')
     .select('slug')
