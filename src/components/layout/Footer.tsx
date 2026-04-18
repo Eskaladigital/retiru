@@ -147,12 +147,38 @@ export default function Footer({ locale }: FooterProps) {
           </div>
         </div>
 
-        {/* Bottom bar */}
+        {/* Social + Bottom bar */}
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 md:flex-row">
           <p className="text-[13px] text-white/50">
             {t.footer.allRights.replace('{year}', String(year))}
           </p>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-5">
+            <div className="flex items-center gap-3">
+              <a
+                href="https://www.facebook.com/retiru.es"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook de Retiru"
+                className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+              >
+                <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M13.5 21v-7.5h2.5l.375-3h-2.875V8.625c0-.866.24-1.458 1.484-1.458h1.588v-2.68A21.5 21.5 0 0 0 14.267 4.5C12 4.5 10.5 5.884 10.5 8.31v2.19H8v3h2.5V21h3Z"/>
+                </svg>
+              </a>
+              <a
+                href="https://www.instagram.com/retiru.es"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram de Retiru"
+                className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+              >
+                <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="3" width="18" height="18" rx="5" ry="5"/>
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                </svg>
+              </a>
+            </div>
             <LocaleSwitchLink
               locale={locale}
               className="text-[13px] text-white/50 hover:text-white transition-colors"

@@ -145,5 +145,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     pushBilingual(`/es/centros/${esSlug}/${p.province}`, `/en/centers/${p.type}/${p.province}`, 'weekly', 0.7);
   });
 
+  // 13) Landings geográficas (país/CCAA/provincia) para retiros y centros
+  const { data: geoNodes } = await supabase
+    .from('destinations')
+    .select('slug, kind, updated_at')
+    .eq('is_active', true)
+    .in('kind', ['country', 'region', 'province']);
+  (geoNodes || []).forEach((g: { slug: string; kind: string; updated_at?: string }) => {
+    // Prioridad: país > región > provincia
+    const prio = g.kind === 'country' ? 0.9 : g.kind === 'region' ? 0.8 : 0.75;
+    pushBilingual(`/es/retiros-en/${g.slug}`, `/en/retreats-in/${g.slug}`, 'weekly', prio, g.updated_at);
+    pushBilingual(`/es/centros-retiru/${g.slug}`, `/en/centers-retiru/${g.slug}`, 'weekly', prio, g.updated_at);
+  });
+
   return [...staticEntries, ...dynamicEntries];
 }

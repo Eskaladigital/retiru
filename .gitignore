@@ -2,6 +2,8 @@ node_modules/
 .next/
 .env.local
 .env
+.env.vercel
+.env.production
 *.log
 .vercel
 supabase/.temp/
@@ -9,3 +11,5 @@ mailing/
 SUPERTESTER/.urls-cache.json
 SUPERTESTER/test-results/
 SUPERTESTER/playwright-report/
+
+.vercel

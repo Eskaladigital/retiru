@@ -28,8 +28,41 @@ export default function ContactPageEN() {
           </div>
         </div>
 
-        <div className="bg-sand-100 rounded-2xl p-6 text-center">
+        <div className="bg-sand-100 rounded-2xl p-6 text-center mb-8">
           <p className="text-sm text-[#7a6b5d]">Looking for answers first? Check our <Link href="/en/help" className="text-terracotta-600 font-semibold hover:underline">Help Center</Link></p>
+        </div>
+
+        <div className="text-center">
+          <h2 className="font-serif text-xl mb-2">Follow us</h2>
+          <p className="text-sm text-[#7a6b5d] mb-4">Featured centers, retreat inspiration and community updates.</p>
+          <div className="flex items-center justify-center gap-3">
+            <a
+              href="https://www.facebook.com/retiru.es"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Retiru on Facebook"
+              className="inline-flex items-center gap-2 bg-white border border-sand-200 text-foreground font-semibold text-sm px-5 py-2.5 rounded-xl hover:shadow-soft hover:border-terracotta-300 transition-all"
+            >
+              <svg className="w-4 h-4 text-[#1877f2]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M13.5 21v-7.5h2.5l.375-3h-2.875V8.625c0-.866.24-1.458 1.484-1.458h1.588v-2.68A21.5 21.5 0 0 0 14.267 4.5C12 4.5 10.5 5.884 10.5 8.31v2.19H8v3h2.5V21h3Z"/>
+              </svg>
+              Facebook
+            </a>
+            <a
+              href="https://www.instagram.com/retiru.es"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Retiru on Instagram"
+              className="inline-flex items-center gap-2 bg-white border border-sand-200 text-foreground font-semibold text-sm px-5 py-2.5 rounded-xl hover:shadow-soft hover:border-terracotta-300 transition-all"
+            >
+              <svg className="w-4 h-4 text-terracotta-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="5" ry="5"/>
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+              </svg>
+              Instagram
+            </a>
+          </div>
         </div>
       </div>
     </div>

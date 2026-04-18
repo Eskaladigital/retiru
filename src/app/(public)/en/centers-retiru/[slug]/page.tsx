@@ -7,18 +7,48 @@ import { MapPin, Star } from 'lucide-react';
 import { getCenterProvinces, getCentersByProvince } from '@/lib/data';
 import { getCenterTypeLabel, stripMarkdownForPreview, isGenericDescription } from '@/lib/utils';
 import { generatePageMetadata, jsonLdItemList, jsonLdScript } from '@/lib/seo';
+import { resolveGeoLanding, type GeoNode } from '@/lib/geo-landing';
+import { createServerSupabase } from '@/lib/supabase/server';
+import type { Center } from '@/types';
 
 export const revalidate = 3600;
 
 export async function generateStaticParams() {
   const provinces = await getCenterProvinces();
-  return provinces.map(({ slug }) => ({ slug }));
+  const supabase = await createServerSupabase();
+  const { data: geo } = await supabase
+    .from('destinations')
+    .select('slug')
+    .eq('is_active', true)
+    .in('kind', ['country', 'region', 'province']);
+  const slugs = new Set<string>([
+    ...provinces.map((p) => p.slug),
+    ...((geo || []).map((g) => g.slug)),
+  ]);
+  return Array.from(slugs).map((slug) => ({ slug }));
+}
+
+async function fetchCentersForGeoEN(node: GeoNode): Promise<Center[]> {
+  const supabase = await createServerSupabase();
+  const select = `id, slug, name, type, description_es, description_en, categories, country, region, province, city, cover_url, logo_url, images, avg_rating, review_count, google_maps_url, google_place_id`;
+  let query = supabase.from('centers').select(select).eq('status', 'active').order('name').limit(2000);
+  if (node.kind === 'country') query = query.eq('country', node.centersCountryText || 'España');
+  else if (node.kind === 'region') query = query.eq('region', node.name_es);
+  else if (node.kind === 'province') query = query.eq('province', node.name_es);
+  const { data } = await query;
+  return (data || []) as Center[];
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const { provinceName } = await getCentersByProvince(slug);
-  const name = provinceName || slug;
+  const geo = await resolveGeoLanding(slug);
+  let name = slug;
+  if (geo) {
+    name = geo.name_en;
+  } else {
+    const { provinceName } = await getCentersByProvince(slug);
+    if (provinceName) name = provinceName;
+  }
   return generatePageMetadata({
     title: `Yoga, meditation & ayurveda centers in ${name} | Retiru`,
     description: `Find yoga, meditation and ayurveda centers in ${name}. Verified directory with real reviews.`,
@@ -29,11 +59,23 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   });
 }
 
-export default async function CentersByProvincePageEN({ params }: { params: Promise<{ slug: string }> }) {
+export default async function CentersByGeoPageEN({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const { centers, provinceName } = await getCentersByProvince(slug);
 
-  if (!provinceName) notFound();
+  let centers: Center[] = [];
+  let placeName: string | null = null;
+  const geo = await resolveGeoLanding(slug);
+  if (geo) {
+    placeName = geo.name_en;
+    centers = await fetchCentersForGeoEN(geo);
+  } else {
+    const res = await getCentersByProvince(slug);
+    centers = res.centers;
+    placeName = res.provinceName;
+  }
+
+  if (!placeName) notFound();
+  const provinceName = placeName;
 
   return (
     <div className="container-wide py-10">

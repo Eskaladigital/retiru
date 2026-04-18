@@ -1,4 +1,7 @@
-// /es/centros-retiru/[slug] — Centros filtrados por provincia (datos reales de Supabase)
+// /es/centros-retiru/[slug] — Centros filtrados por ámbito geográfico
+// Acepta país, comunidad autónoma, provincia (vía `destinations.kind`) y,
+// como fallback, provincia por match textual en centers.province (legacy).
+
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -7,46 +10,108 @@ import { MapPin, Star } from 'lucide-react';
 import CentrosSearch from '@/components/home/CentrosSearch';
 import { getCenterProvinces, getCentersByProvince } from '@/lib/data';
 import { getCenterTypeLabel, CENTER_TYPE_URL_ES, stripMarkdownForPreview, isGenericDescription } from '@/lib/utils';
-import { generatePageMetadata, jsonLdItemList, jsonLdScript } from '@/lib/seo';
+import { generatePageMetadata, jsonLdItemList, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
+import { resolveGeoLanding, type GeoNode } from '@/lib/geo-landing';
+import { createServerSupabase } from '@/lib/supabase/server';
+import type { Center } from '@/types';
 
 export const revalidate = 3600;
 
 export async function generateStaticParams() {
   const provinces = await getCenterProvinces();
-  return provinces.map(({ slug }) => ({ slug }));
+  const supabase = await createServerSupabase();
+  const { data: geo } = await supabase
+    .from('destinations')
+    .select('slug')
+    .eq('is_active', true)
+    .in('kind', ['country', 'region', 'province']);
+  const slugs = new Set<string>([
+    ...provinces.map((p) => p.slug),
+    ...((geo || []).map((g) => g.slug)),
+  ]);
+  return Array.from(slugs).map((slug) => ({ slug }));
+}
+
+async function fetchCentersForGeo(node: GeoNode): Promise<Center[]> {
+  const supabase = await createServerSupabase();
+  const select = `
+    id, slug, name, type, description_es, description_en, categories,
+    country, region, province, city, address, latitude, longitude,
+    cover_url, logo_url, images, avg_rating, review_count,
+    google_maps_url, google_place_id
+  `;
+  let query = supabase.from('centers').select(select).eq('status', 'active').order('name').limit(2000);
+  if (node.kind === 'country') {
+    query = query.eq('country', node.centersCountryText || 'España');
+  } else if (node.kind === 'region') {
+    query = query.eq('region', node.name_es);
+  } else if (node.kind === 'province') {
+    query = query.eq('province', node.name_es);
+  }
+  const { data } = await query;
+  return (data || []) as Center[];
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const { provinceName } = await getCentersByProvince(slug);
-  const name = provinceName || slug;
+  const geo = await resolveGeoLanding(slug);
+  let name = slug;
+  if (geo) {
+    name = geo.name_es;
+  } else {
+    const { provinceName } = await getCentersByProvince(slug);
+    if (provinceName) name = provinceName;
+  }
   return generatePageMetadata({
     title: `Centros de yoga, meditación y ayurveda en ${name} | Retiru`,
     description: `Encuentra centros de yoga, meditación y ayurveda en ${name}. Directorio verificado con reseñas reales.`,
     locale: 'es',
     path: `/es/centros-retiru/${slug}`,
     altPath: `/en/centers-retiru/${slug}`,
-    keywords: ['centros yoga ' + name, 'meditación ' + name, 'ayurveda ' + name],
+    keywords: [`centros yoga ${name}`, `meditación ${name}`, `ayurveda ${name}`],
   });
 }
 
-export default async function CentrosPorProvinciaPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function CentrosPorGeoPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const { centers, provinceName } = await getCentersByProvince(slug);
 
-  if (!provinceName) notFound();
+  let centers: Center[] = [];
+  let placeName: string | null = null;
+  let geo: GeoNode | null = null;
+
+  geo = await resolveGeoLanding(slug);
+  if (geo) {
+    placeName = geo.name_es;
+    centers = await fetchCentersForGeo(geo);
+  } else {
+    const res = await getCentersByProvince(slug);
+    centers = res.centers;
+    placeName = res.provinceName;
+  }
+
+  if (!placeName) notFound();
+
+  const breadcrumb = geo?.breadcrumb || [{ slug, name: placeName, current: true }];
+  const subLabel = geo?.kind === 'country' ? 'comunidad autónoma' : geo?.kind === 'region' ? 'provincia' : null;
 
   return (
     <>
       <section className="relative min-h-[50vh] flex items-center pt-[72px] overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <div className="w-full h-full bg-gradient-to-br from-sage-100 via-cream-100 to-sand-100" />
+          {geo?.cover_image_url ? (
+            <>
+              <Image src={geo.cover_image_url} alt={`Centros en ${placeName}`} fill priority className="object-cover" sizes="100vw" />
+              <div className="absolute inset-0 bg-gradient-to-r from-[rgba(254,253,251,0.95)] via-[rgba(254,253,251,0.85)] to-[rgba(254,253,251,0.2)] max-md:bg-gradient-to-b max-md:from-[rgba(254,253,251,0.93)] max-md:to-[rgba(254,253,251,0.4)]" />
+            </>
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-sage-100 via-cream-100 to-sand-100" />
+          )}
         </div>
         <div className="container-wide relative z-10 py-10">
           <div className="max-w-[620px]">
-            <h1 className="font-serif text-[clamp(32px,5vw,48px)] text-foreground mb-4">Centros en {provinceName}</h1>
+            <h1 className="font-serif text-[clamp(32px,5vw,48px)] text-foreground mb-4">Centros en {placeName}</h1>
             <p className="text-lg text-[#7a6b5d] mb-6">
-              {centers.length} centro{centers.length !== 1 ? 's' : ''} de yoga, meditación y ayurveda en {provinceName}
+              {centers.length} centro{centers.length !== 1 ? 's' : ''} de yoga, meditación y ayurveda en {placeName}
             </p>
             <div className="bg-white border border-sand-300 rounded-2xl p-2 shadow-elevated max-w-2xl">
               <CentrosSearch />
@@ -56,16 +121,55 @@ export default async function CentrosPorProvinciaPage({ params }: { params: Prom
       </section>
 
       <div className="container-wide py-10">
-        <Link href="/es/centros-retiru" className="inline-flex items-center gap-1.5 text-sm text-[#7a6b5d] hover:text-terracotta-600 mb-6">
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg>
-          Todos los centros
-        </Link>
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-1.5 text-sm text-[#7a6b5d] mb-6 flex-wrap">
+          <Link href="/es" className="hover:text-terracotta-600">Inicio</Link>
+          <span>/</span>
+          <Link href="/es/centros-retiru" className="hover:text-terracotta-600">Centros</Link>
+          {breadcrumb.map((b) => (
+            <span key={b.slug} className="flex items-center gap-1.5">
+              <span>/</span>
+              {b.current ? (
+                <span className="text-foreground font-medium">{b.name}</span>
+              ) : (
+                <Link href={`/es/centros-retiru/${b.slug}`} className="hover:text-terracotta-600">{b.name}</Link>
+              )}
+            </span>
+          ))}
+        </nav>
 
+        {/* Intro AI (solo para geo con intro) */}
+        {geo?.intro_es && (
+          <div className="prose prose-sand max-w-3xl mb-8">
+            <div dangerouslySetInnerHTML={{ __html: geo.intro_es.replace(/\n/g, '<br/>') }} />
+          </div>
+        )}
+
+        {/* Hijos navegables */}
+        {geo && geo.children.length > 0 && subLabel && (
+          <section className="mb-8">
+            <p className="text-xs font-semibold uppercase tracking-wider text-[#a09383] mb-2">Explora por {subLabel}</p>
+            <div className="flex flex-wrap gap-2">
+              {geo.children.map((c) => (
+                <Link
+                  key={c.slug}
+                  href={`/es/centros-retiru/${c.slug}`}
+                  className="inline-flex items-center px-3 py-1.5 rounded-full border border-sand-300 text-xs text-foreground hover:bg-sand-100 transition-colors"
+                >
+                  {c.name_es}
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Filtros por tipo (sólo si es provincia con slug que coincide con /es/centros/[tipo]/[prov]) */}
         {(() => {
           const typeMap = new Map<string, string>();
-          centers.forEach(c => { if (c.type && !typeMap.has(c.type)) typeMap.set(c.type, getCenterTypeLabel(c.type)); });
+          centers.forEach((c) => { if (c.type && !typeMap.has(c.type)) typeMap.set(c.type, getCenterTypeLabel(c.type)); });
           const types = Array.from(typeMap.entries());
-          return types.length > 0 ? (
+          const canLinkType = !geo || geo.kind === 'province';
+          return types.length > 0 && canLinkType ? (
             <div className="flex flex-wrap gap-2 mb-8">
               <span className="text-xs text-muted-foreground self-center mr-1">Filtrar por tipo:</span>
               {types.map(([type, label]) => (
@@ -78,13 +182,13 @@ export default async function CentrosPorProvinciaPage({ params }: { params: Prom
         {centers.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-4xl mb-4">🔍</p>
-            <p className="font-serif text-xl text-foreground mb-2">No hay centros en {provinceName}</p>
-            <p className="text-sm text-[#7a6b5d] mb-6">Prueba otra provincia o explora el directorio completo</p>
+            <p className="font-serif text-xl text-foreground mb-2">No hay centros en {placeName}</p>
+            <p className="text-sm text-[#7a6b5d] mb-6">Prueba otra zona o explora el directorio completo</p>
             <Link href="/es/centros-retiru" className="text-sm font-semibold text-terracotta-600 hover:text-terracotta-700">Ver directorio completo</Link>
           </div>
         ) : (
           <div className="space-y-4">
-            {centers.map(c => {
+            {centers.map((c) => {
               const img = c.cover_url || (Array.isArray(c.images) && c.images[0]) || '';
               return (
                 <Link
@@ -108,9 +212,9 @@ export default async function CentrosPorProvinciaPage({ params }: { params: Prom
                             <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-sage-100 text-sage-700">{getCenterTypeLabel(c.type)}</span>
                           )}
                           <span className="text-[13px] text-[#7a6b5d] flex items-center gap-1"><MapPin size={13} /> {c.city}{c.province ? `, ${c.province}` : ''}</span>
-                        {(c.google_maps_url || c.google_place_id) && (
-                          <a href={c.google_maps_url || `https://www.google.com/maps/place/?q=place_id:${c.google_place_id}`} target="_blank" rel="noopener" className="text-[11px] text-terracotta-600 hover:underline flex items-center gap-0.5">Maps</a>
-                        )}
+                          {(c.google_maps_url || c.google_place_id) && (
+                            <a href={c.google_maps_url || `https://www.google.com/maps/place/?q=place_id:${c.google_place_id}`} target="_blank" rel="noopener" className="text-[11px] text-terracotta-600 hover:underline flex items-center gap-0.5">Maps</a>
+                          )}
                         </div>
                       </div>
                       {(c.avg_rating ?? 0) > 0 && (
@@ -155,6 +259,16 @@ export default async function CentrosPorProvinciaPage({ params }: { params: Prom
             }}
           />
         )}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: jsonLdScript(jsonLdBreadcrumb([
+              { name: 'Inicio', url: '/es' },
+              { name: 'Centros', url: '/es/centros-retiru' },
+              ...breadcrumb.map((b) => ({ name: b.name, url: `/es/centros-retiru/${b.slug}` })),
+            ])),
+          }}
+        />
       </div>
     </>
   );
