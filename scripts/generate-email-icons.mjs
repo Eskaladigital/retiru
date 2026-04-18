@@ -15,7 +15,7 @@ const root = join(__dirname, '..');
 const dir = join(root, 'public', 'email');
 
 const icons = ['instagram', 'facebook'];
-const size = 64;
+const size = 96;
 
 for (const name of icons) {
   const svg = readFileSync(join(dir, `${name}.svg`));
