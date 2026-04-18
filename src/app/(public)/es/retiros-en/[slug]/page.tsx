@@ -8,14 +8,16 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { MapPin, Star, CalendarDays, Users } from 'lucide-react';
 import EventosSearch from '@/components/home/EventosSearch';
-import { createServerSupabase } from '@/lib/supabase/server';
+import { createServerSupabase, createStaticSupabase } from '@/lib/supabase/server';
 import { generatePageMetadata, jsonLdItemList, jsonLdBreadcrumb, jsonLdFAQ, jsonLdScript } from '@/lib/seo';
 import { resolveGeoLanding, type GeoNode } from '@/lib/geo-landing';
 
 export const revalidate = 3600;
 
 export async function generateStaticParams() {
-  const supabase = await createServerSupabase();
+  // Nota: usamos createStaticSupabase (sin cookies) porque generateStaticParams
+  // se ejecuta fuera del request scope durante el build.
+  const supabase = createStaticSupabase();
   const { data } = await supabase
     .from('destinations')
     .select('slug')
