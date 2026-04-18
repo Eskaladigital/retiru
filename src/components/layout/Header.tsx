@@ -30,7 +30,7 @@ export default function Header({ locale, user }: HeaderProps) {
 
   async function handleLogout() {
     const supabase = createClient();
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: 'global' });
     setUserMenuOpen(false);
     closeMenu();
     router.refresh();

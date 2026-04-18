@@ -31,6 +31,25 @@ const nextConfig = {
       { source: '/en/centers-ayurveda/:province', destination: '/en/centers/ayurveda/:province', permanent: true },
     ];
   },
+  /**
+   * Cabeceras de seguridad básicas. NO se añade Content-Security-Policy aquí porque Retiru
+   * carga scripts de Stripe, Google Maps, Google Analytics y TinyMCE; una CSP estricta
+   * requiere nonces por request (ver middleware). Se añadirá en un segundo paso.
+   */
+  async headers() {
+    const securityHeaders = [
+      { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+      { key: 'X-Content-Type-Options', value: 'nosniff' },
+      { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+      { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+      { key: 'X-DNS-Prefetch-Control', value: 'on' },
+      { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(self), interest-cohort=()' },
+      { key: 'X-XSS-Protection', value: '0' },
+    ];
+    return [
+      { source: '/:path*', headers: securityHeaders },
+    ];
+  },
 };
 
 module.exports = withNextIntl(nextConfig);

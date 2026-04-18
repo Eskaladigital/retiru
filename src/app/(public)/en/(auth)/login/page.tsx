@@ -24,7 +24,11 @@ function LoginFormEN() {
       const supabase = createClient();
       const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
       if (err) {
-        setError(err.message === 'Invalid login credentials' ? 'Invalid email or password' : err.message);
+        if (/too many|rate/i.test(err.message)) {
+          setError('Too many attempts. Please wait a few minutes and try again.');
+        } else {
+          setError('Invalid email or password');
+        }
         return;
       }
       if (data.user) {
