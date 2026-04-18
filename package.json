@@ -12,6 +12,7 @@
     "db:types": "supabase gen types typescript --local > src/types/database.ts",
     "stripe:listen": "stripe listen --forward-to localhost:3000/api/webhooks/stripe",
     "verify-env": "node scripts/verify-env.mjs",
+    "db:apply-signup-fix": "node scripts/run-sql-migration.mjs supabase/migrations/033_fix_signup_trigger_chain.sql",
     "db:verify-schema": "node scripts/verify-schema-db.mjs",
     "verify-shop-survey-db": "node scripts/verify-shop-survey-db.mjs",
     "import-directorio": "node scripts/import-directorio.mjs",
@@ -92,6 +93,7 @@
     "zod": "^3.23.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.0",
     "@types/google.maps": "^3.58.1",
     "@types/leaflet": "^1.9.21",
     "@types/node": "^22.5.0",
@@ -101,10 +103,10 @@
     "autoprefixer": "^10.4.0",
     "eslint": "^8.57.0",
     "eslint-config-next": "^14.2.0",
+    "pg": "^8.20.0",
     "postcss": "^8.4.0",
     "supabase": "^1.200.0",
     "tailwindcss": "^3.4.0",
-    "typescript": "^5.5.0",
-    "@playwright/test": "^1.49.0"
+    "typescript": "^5.5.0"
   }
 }

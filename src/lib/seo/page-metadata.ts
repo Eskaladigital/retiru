@@ -132,6 +132,24 @@ export const registerES: Metadata = generatePageMetadata({
   noIndex: true,
 });
 
+export const forgotPasswordES: Metadata = generatePageMetadata({
+  title: 'Recuperar contraseña',
+  description: 'Recupera tu contraseña de Retiru. Te enviaremos un enlace a tu email para restablecerla.',
+  locale: 'es',
+  path: '/es/recuperar-password',
+  altPath: '/en/forgot-password',
+  noIndex: true,
+});
+
+export const newPasswordES: Metadata = generatePageMetadata({
+  title: 'Nueva contraseña',
+  description: 'Elige una nueva contraseña para tu cuenta de Retiru.',
+  locale: 'es',
+  path: '/es/nueva-password',
+  altPath: '/en/new-password',
+  noIndex: true,
+});
+
 export const termsES: Metadata = generatePageMetadata({
   title: 'Términos legales',
   description: 'Términos y condiciones legales de uso de la plataforma Retiru.',
@@ -285,6 +303,24 @@ export const registerEN: Metadata = generatePageMetadata({
   locale: 'en',
   path: '/en/register',
   altPath: '/es/registro',
+  noIndex: true,
+});
+
+export const forgotPasswordEN: Metadata = generatePageMetadata({
+  title: 'Forgot password',
+  description: 'Recover your Retiru password. We will send you a reset link by email.',
+  locale: 'en',
+  path: '/en/forgot-password',
+  altPath: '/es/recuperar-password',
+  noIndex: true,
+});
+
+export const newPasswordEN: Metadata = generatePageMetadata({
+  title: 'New password',
+  description: 'Choose a new password for your Retiru account.',
+  locale: 'en',
+  path: '/en/new-password',
+  altPath: '/es/nueva-password',
   noIndex: true,
 });
 

@@ -20,6 +20,8 @@ function RegistroForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendMsg, setResendMsg] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/es';
   const isClaim = searchParams.get('claim') === 'true';
@@ -77,6 +79,27 @@ function RegistroForm() {
     }
   }
 
+  async function handleResendVerification() {
+    setResendMsg(null);
+    setResendLoading(true);
+    try {
+      const supabase = createClient();
+      const { error: resendError } = await supabase.auth.resend({
+        type: 'signup',
+        email: email.trim(),
+        options: {
+          emailRedirectTo: `${window.location.origin}/api/auth/callback?locale=es&redirect=${encodeURIComponent(redirect)}`,
+        },
+      });
+      if (resendError) setResendMsg(resendError.message);
+      else setResendMsg('Te hemos vuelto a enviar el email. Revisa también la carpeta de spam.');
+    } catch {
+      setResendMsg('No se pudo reenviar. Inténtalo de nuevo en unos minutos.');
+    } finally {
+      setResendLoading(false);
+    }
+  }
+
   if (success) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-cream-100 px-4 py-12">
@@ -102,6 +125,17 @@ function RegistroForm() {
             <p className="text-xs text-[#a09383]">
               Si no lo ves, revisa tu carpeta de spam.
             </p>
+            {resendMsg && (
+              <p className="text-sm text-sage-800 mt-4">{resendMsg}</p>
+            )}
+            <button
+              type="button"
+              onClick={handleResendVerification}
+              disabled={resendLoading}
+              className="mt-4 text-sm font-semibold text-terracotta-600 hover:underline disabled:opacity-60"
+            >
+              {resendLoading ? 'Enviando…' : 'Reenviar email de verificación'}
+            </button>
           </div>
           <p className="text-center text-sm text-[#7a6b5d] mt-6">
             <Link href="/es/login" className="text-terracotta-600 font-semibold hover:underline">Ir a iniciar sesión</Link>

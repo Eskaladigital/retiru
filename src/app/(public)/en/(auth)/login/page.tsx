@@ -100,7 +100,7 @@ function LoginFormEN() {
                 <input type="checkbox" className="w-4 h-4 rounded border-sand-300 text-terracotta-600" />
                 <span className="text-[#7a6b5d]">Remember me</span>
               </label>
-              <a href="#" className="text-terracotta-600 font-medium hover:underline">Forgot password?</a>
+              <Link href="/en/forgot-password" className="text-terracotta-600 font-medium hover:underline">Forgot password?</Link>
             </div>
             <button type="submit" disabled={loading} className="w-full bg-terracotta-600 text-white font-semibold py-3.5 rounded-xl hover:bg-terracotta-700 transition-colors shadow-[0_2px_8px_rgba(200,90,48,0.3)] disabled:opacity-60 disabled:cursor-not-allowed">
               {loading ? 'Signing in…' : 'Sign in'}

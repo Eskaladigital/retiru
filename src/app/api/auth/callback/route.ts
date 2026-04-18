@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
   const locale = requestUrl.searchParams.get('locale') || 'es';
+  const type = requestUrl.searchParams.get('type');
   const redirectTo = requestUrl.searchParams.get('redirect') || `/${locale}`;
 
   if (code) {
@@ -51,6 +52,11 @@ export async function GET(request: NextRequest) {
       const url = new URL(loginPath, request.url);
       url.searchParams.set('error', 'auth_failed');
       return NextResponse.redirect(url);
+    }
+
+    if (type === 'recovery') {
+      const newPasswordPath = locale === 'en' ? '/en/new-password' : '/es/nueva-password';
+      return NextResponse.redirect(new URL(newPasswordPath, request.url));
     }
 
     if (data?.user) {

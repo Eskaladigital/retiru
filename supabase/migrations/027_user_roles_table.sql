@@ -103,12 +103,12 @@ CREATE POLICY "mg_select" ON messages FOR SELECT USING (
 -- 11) Trigger: al insertar un profile nuevo, darle rol 'attendee' automáticamente
 CREATE OR REPLACE FUNCTION handle_new_profile_role() RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO user_roles (user_id, role)
+  INSERT INTO public.user_roles (user_id, role)
   VALUES (NEW.id, 'attendee')
   ON CONFLICT (user_id, role) DO NOTHING;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE TRIGGER tr_new_profile_role
   AFTER INSERT ON profiles
