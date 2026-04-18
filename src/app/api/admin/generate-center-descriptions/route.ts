@@ -19,6 +19,7 @@ type CenterRow = {
   slug: string;
   city: string;
   province: string;
+  address?: string | null;
   type?: string;
   services_es?: string[] | null;
   description_es?: string | null;
@@ -27,9 +28,21 @@ type CenterRow = {
 };
 
 async function fetchContext(center: CenterRow, serpKey: string): Promise<{ context: string; logs: string[] }> {
-  const query = `${center.name} ${center.city} ${center.province} España`;
   const parts: string[] = [];
   const logs: string[] = [];
+
+  // Anclaje obligatorio: reduce confusiones cuando la marca tiene varias sedes (misma marca, distinta ciudad/tipo de local).
+  const anchor = [
+    '## Ubicación en Retiru (prioridad sobre snippets de Google)',
+    `- Nombre en ficha: ${center.name}`,
+    center.address ? `- Dirección en ficha: ${center.address}` : '- Dirección en ficha: (no registrada)',
+    `- Ciudad / provincia: ${center.city}, ${center.province}`,
+    '',
+    'REGLA: La descripción debe referirse SOLO a este establecimiento. Si en los resultados de búsqueda aparece otra sede de la misma marca (p. ej. un resort rural y un estudio urbano), NO mezcles instalaciones, reseñas ni datos de la otra ubicación. Prioriza siempre la ciudad y la dirección de esta ficha.',
+  ].join('\n');
+  parts.push(anchor);
+
+  const query = [center.name, center.address, center.city, center.province, 'España'].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
 
   // 1. Google orgánico
   logs.push(`  🔍 Buscando en Google: "${query}"`);
@@ -50,9 +63,9 @@ async function fetchContext(center: CenterRow, serpKey: string): Promise<{ conte
     logs.push(`  ⚠️ Sin resultados de Google`);
   }
 
-  // 2. Google Maps
+  // 2. Google Maps (incluir dirección si existe para desambiguar sedes de la misma marca)
   logs.push(`  📍 Buscando en Google Maps...`);
-  const mapsQuery = encodeURIComponent(`${center.name} ${center.city}`);
+  const mapsQuery = encodeURIComponent([center.name, center.address, center.city].filter(Boolean).join(' '));
   const mapsRes = await fetch(
     `https://serpapi.com/search.json?engine=google_maps&q=${mapsQuery}&api_key=${serpKey}&hl=es&type=search`
   );
@@ -138,7 +151,7 @@ export async function POST(request: Request) {
 
   const { data: centers, error } = await supabase
     .from('centers')
-    .select('id, name, slug, city, province, type, services_es, description_es, schedule_summary_es, price_range_es');
+    .select('id, name, slug, city, province, address, type, services_es, description_es, schedule_summary_es, price_range_es');
 
   if (error) {
     return new Response(
@@ -185,6 +198,7 @@ Estructura sugerida:
 Reglas:
 - Tono: profesional, cercano, premium. Sin exagerar.
 - NO inventes datos (direcciones exactas, precios, nombres de profesores) que no estén en el contexto.
+- Marcas con varias sedes: si el contexto mezcla un resort rural, hotel o masía con un estudio en ciudad (o viceversa), ignora lo que no coincida con la ciudad y dirección del bloque "Ubicación en Retiru". No describas la instalación equivocada.
 - Usa el contexto proporcionado. Si hay poca información, elabora una descripción sólida basada en nombre, ciudad, tipo y servicios.
 - Longitud: entre 800 y 1200 palabras. Párrafos bien estructurados.`;
 
