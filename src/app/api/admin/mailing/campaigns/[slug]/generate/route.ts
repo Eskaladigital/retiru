@@ -17,28 +17,43 @@ export const maxDuration = 300;
 type RouteParams = { params: Promise<{ slug: string }> };
 
 const SYSTEM_PROMPT = `Eres la Inteligencia Artificial editora de mailings de Retiru (plataforma de retiros y bienestar en España).
-Tu tarea: generar el HTML completo de un email de marketing para los centros de la plataforma, basándote en los ejemplos de estilo que se te proporcionen y en el briefing que describe la campaña.
+Tu tarea: generar el HTML COMPLETO de un email de marketing para los centros de la plataforma, basándote en los ejemplos de estilo que se te proporcionen y en el briefing que describe la campaña.
 
-REQUISITOS OBLIGATORIOS DEL HTML:
+REGLA DE ORO: NO resumas, NO entregues una versión "mini". El email debe estar desarrollado, con varias secciones, copywriting trabajado y pensado para que quien lo reciba lo lea con ganas. Si tienes ejemplos de referencia, tu output debe tener extensión y riqueza equivalentes a esos ejemplos (± 20%). Prefiere pasarte que quedarte corto.
+
+ESTRUCTURA MÍNIMA OBLIGATORIA (en este orden):
+1. Preheader oculto (hidden preview text, 80-120 caracteres).
+2. Cabecera con el logo principal.
+3. Hero: titular serif largo + subtítulo empático de 1-2 frases.
+4. Saludo personalizado con {{NOMBRE_CENTRO}} y/o {{LOCATION}}.
+5. Cuerpo principal: 3-5 párrafos de texto desarrollado (mínimo 3-4 frases cada uno). Empática, cercana, en segunda persona del singular.
+6. Al menos UN bloque destacado (caja de color, tipo "Lo que Retiru hace por ti"): una sub-sección con 3-5 ítems en lista o checklist, cada ítem con icono/emoji y 1 frase de desarrollo.
+7. CTA principal: botón grande con href absoluto a https://www.retiru.com/... (el link concreto según el briefing). Acompaña el CTA con 1-2 frases de contexto debajo.
+8. Sección secundaria (p. ej. "Por qué Retiru", "Cómo funciona", "Testimonio", "Qué incluye tu membresía"): otro bloque con 2-3 puntos más.
+9. Cierre cálido firmado por "El equipo de Retiru".
+10. Footer: logo transparente, redes sociales como imágenes, enlace de baja con {{UNSUBSCRIBE_URL}}, dirección postal y copyright.
+
+REQUISITOS TÉCNICOS OBLIGATORIOS DEL HTML:
 1. Email HTML seguro: <!doctype html>, estructura con tablas (no usar flex/grid/css-grid), CSS en línea (inline styles).
 2. Ancho máximo 600px. Responsive: móvil apilado.
 3. Codificación UTF-8. Incluye <meta charset="utf-8">, <meta name="viewport">, <meta name="color-scheme" content="light dark">.
 4. Paleta coherente con los ejemplos proporcionados (tonos tierra / crema / terracota / sage, tipografía tipo serif para titulares).
-5. Preheader (hidden preview text) al principio del body.
-6. Cabecera con el logo: <img src="https://www.retiru.com/Logo_retiru.png" alt="Retiru" width="140" style="display:block;max-width:140px;height:auto;">.
-7. Footer con el logo transparente: <img src="https://www.retiru.com/Logo_retiru_transparente.png" alt="Retiru" width="120" style="display:block;max-width:120px;height:auto;">.
-8. Footer con enlace de baja usando EXACTAMENTE el placeholder {{UNSUBSCRIBE_URL}}: <a href="{{UNSUBSCRIBE_URL}}">Darme de baja</a>.
-9. Iconos de redes como imágenes (no texto): Facebook → https://www.retiru.com/social/facebook.png, Instagram → https://www.retiru.com/social/instagram.png. Deben tener padding/espaciado visible entre sí.
-10. Placeholders dinámicos — usa EXACTAMENTE estos literales cuando necesites datos del centro:
+5. Cabecera con el logo: <img src="https://www.retiru.com/Logo_retiru.png" alt="Retiru" width="140" style="display:block;max-width:140px;height:auto;">.
+6. Footer con el logo transparente: <img src="https://www.retiru.com/Logo_retiru_transparente.png" alt="Retiru" width="120" style="display:block;max-width:120px;height:auto;">.
+7. Footer con enlace de baja usando EXACTAMENTE el placeholder {{UNSUBSCRIBE_URL}}: <a href="{{UNSUBSCRIBE_URL}}">Darme de baja</a>.
+8. Iconos de redes como imágenes (no texto): Facebook → https://www.retiru.com/social/facebook.png, Instagram → https://www.retiru.com/social/instagram.png. Deben tener padding/espaciado visible entre sí.
+9. Placeholders dinámicos — usa EXACTAMENTE estos literales cuando necesites datos del centro:
     · {{NOMBRE_CENTRO}} — nombre del centro destinatario
     · {{LOCATION}} — "Ciudad, Provincia"
-    · {{FIN_MEMBRESIA}} — fecha en formato "DD de mes de AAAA"
+    · {{FIN_MEMBRESIA}} — fecha en formato "DD de mes de AAAA" (solo usar si el briefing lo menciona)
     · {{UNSUBSCRIBE_URL}} — URL de baja
-11. Todos los href de enlaces a www.retiru.com deben ser https absolutos.
-12. NO incluyas explicaciones, comentarios de JSON ni markdown. Devuelve SOLO el HTML.
-13. Longitud objetivo: 450–900 líneas de HTML, similar a los ejemplos.
+10. Todos los href de enlaces a www.retiru.com deben ser https absolutos.
+11. NO incluyas explicaciones, comentarios de JSON ni markdown. Devuelve SOLO el HTML.
+12. Longitud objetivo absoluta: mínimo 400 líneas de HTML si no hay referencias. Con referencias, iguala su extensión (ver instrucción específica en el briefing).
 
-Si los ejemplos incluyen componentes específicos (cajas destacadas, checklist, "regalo", CTA), puedes reusarlos adaptando el contenido al briefing del usuario.`;
+TONO: cercano, empático, profesional. Español de España. Evita anglicismos innecesarios. Habla "de tú a tú" con el centro: son profesionales del bienestar que valoran el trato humano. El copy debe sonar a persona escribiendo, no a plantilla.
+
+Si los ejemplos incluyen componentes específicos (cajas destacadas, checklist, "regalo", CTA, cita, testimonio), REUSA esos componentes adaptando el contenido al briefing: no los omitas para "ahorrar".`;
 
 function sse(event: string, data: unknown): string {
   return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
@@ -108,26 +123,59 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         send('log', { type: 'detail', message: `Briefing: ${prompt.slice(0, 200)}${prompt.length > 200 ? '…' : ''}` });
         if (references.length > 0) {
           send('log', { type: 'detail', message: `Referencias de estilo: ${references.map((r) => r.slug).join(', ')}` });
+          const bytesTot = references.reduce((s, r) => s + r.html_content.length, 0);
+          const avg = Math.round(bytesTot / references.length);
+          send('log', { type: 'detail', message: `Objetivo de longitud: ~${avg.toLocaleString('es-ES')} bytes (media de las referencias). Exigimos como mínimo el 80%.` });
         } else {
-          send('log', { type: 'detail', message: 'Sin referencias de estilo previas (la IA usará su criterio).' });
+          send('log', { type: 'detail', message: 'Sin referencias de estilo previas (la IA usará su criterio). Objetivo: mínimo 400 líneas.' });
         }
 
         // Construimos el prompt del usuario combinando briefing + referencias.
         // Las referencias se pasan como bloques <reference_N> con el HTML dentro.
         const userParts: string[] = [];
-        userParts.push(`## Briefing de la campaña\nAsunto fijado: ${campaign.subject}\n${campaign.description ? `Descripción interna: ${campaign.description}\n` : ''}\nQué debe transmitir el mail:\n${prompt}`);
+        userParts.push(`## Briefing de la campaña\nAsunto fijado: ${campaign.subject}\n${campaign.description ? `Descripción interna (contexto para ti): ${campaign.description}\n` : ''}\nQué debe transmitir el mail:\n${prompt}`);
 
         if (references.length > 0) {
-          userParts.push(`\n## Ejemplos de estilo (${references.length})\nUsa la estética, la retícula y los componentes de estos ejemplos como base. Adapta el contenido al briefing.`);
+          // Calculamos la media de bytes y líneas de las referencias para dar
+          // un objetivo cuantitativo concreto y evitar que el modelo devuelva
+          // un mail "mini" cuando las referencias son largas.
+          const stats = references.map((r) => ({
+            bytes: r.html_content.length,
+            lines: r.html_content.split('\n').length,
+          }));
+          const avgBytes = Math.round(stats.reduce((s, x) => s + x.bytes, 0) / stats.length);
+          const avgLines = Math.round(stats.reduce((s, x) => s + x.lines, 0) / stats.length);
+          const minBytes = Math.round(avgBytes * 0.8);
+          const minLines = Math.round(avgLines * 0.8);
+
+          userParts.push(
+            `\n## Ejemplos de estilo (${references.length})\n` +
+            `Usa la estética, la retícula, los componentes y la EXTENSIÓN de estos ejemplos como base. ` +
+            `Adapta el contenido al briefing pero NO resumas: conserva el número de secciones, bloques, listas y CTAs.\n\n` +
+            `OBJETIVO DE LONGITUD (obligatorio): tu HTML final debe tener al menos ${minBytes.toLocaleString('es-ES')} bytes ` +
+            `y ${minLines} líneas (media de las referencias: ${avgBytes.toLocaleString('es-ES')} bytes / ${avgLines} líneas). ` +
+            `Si te sale más corto, desarrolla más los textos, añade un párrafo de contexto, una cita, un bloque "por qué Retiru", etc. NUNCA entregues una versión resumida.`
+          );
           for (let i = 0; i < references.length; i++) {
             const r = references[i];
-            // Recorte defensivo para mantenernos dentro del contexto del modelo.
             const clipped = r.html_content.slice(0, 40000);
-            userParts.push(`\n<reference_${i + 1} slug="${r.slug}" subject="${r.subject.replace(/"/g, '&quot;')}">\n${clipped}\n</reference_${i + 1}>`);
+            userParts.push(`\n<reference_${i + 1} slug="${r.slug}" subject="${r.subject.replace(/"/g, '&quot;')}" bytes="${r.html_content.length}" lines="${r.html_content.split('\n').length}">\n${clipped}\n</reference_${i + 1}>`);
           }
+        } else {
+          userParts.push(
+            `\n## Sin referencias\nAunque no tienes ejemplos, respeta la estructura mínima obligatoria del system prompt ` +
+            `(preheader, hero, saludo, 3-5 párrafos, bloque destacado con lista, CTA, sección secundaria, cierre, footer). ` +
+            `Objetivo de longitud: al menos 400 líneas de HTML.`
+          );
         }
 
-        userParts.push('\n## Entrega\nDevuelve SOLO el HTML del email, sin comentarios, sin markdown, sin backticks.');
+        userParts.push(
+          '\n## Entrega\n' +
+          'Devuelve SOLO el HTML del email, sin comentarios, sin markdown, sin backticks. ' +
+          'Antes de finalizar, comprueba mentalmente que: (a) tu HTML cumple el objetivo de longitud, ' +
+          '(b) usa todos los placeholders {{...}} necesarios, (c) tiene CTA con href absoluto a www.retiru.com, ' +
+          '(d) cierra todas las etiquetas y el </html>.'
+        );
 
         send('log', { type: 'detail', message: 'Enviando a gpt-4o-mini… (streaming)' });
         const t0 = Date.now();
@@ -216,6 +264,21 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         if (!html.toLowerCase().includes('<html')) missing.push('<html>');
         if (missing.length > 0) {
           send('log', { type: 'warn', message: `Aviso: faltan ${missing.join(', ')} en el HTML generado. Se guarda igualmente, revisa la vista previa.` });
+        }
+
+        // Aviso de longitud si queda corto vs. las referencias (pero lo
+        // guardamos igualmente: tú decides si regenerar o editar a mano).
+        if (references.length > 0) {
+          const avgBytes = Math.round(
+            references.reduce((s, r) => s + r.html_content.length, 0) / references.length,
+          );
+          const minExpected = Math.round(avgBytes * 0.6);
+          if (html.length < minExpected) {
+            send('log', {
+              type: 'warn',
+              message: `El HTML generado (${html.length.toLocaleString('es-ES')} bytes) es notablemente más corto que la media de las referencias (~${avgBytes.toLocaleString('es-ES')} bytes). Puede ser una versión "mini": revisa la vista previa y, si hace falta, regenera con un briefing más extenso.`,
+            });
+          }
         }
 
         // Guardar html + metadatos de generación.
