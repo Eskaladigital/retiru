@@ -65,7 +65,7 @@ export default async function AdminMailsPage() {
         <div>
           <h1 className="font-serif text-3xl text-foreground mb-2">Mails</h1>
           <p className="text-sm text-[#7a6b5d]">
-            CRM de campañas: crea, genera con Nia, previsualiza y lanza envíos masivos sin tocar terminal.
+            CRM de campañas: crea, genera con IA, previsualiza y lanza envíos masivos sin tocar terminal.
           </p>
         </div>
         <Link
@@ -90,7 +90,7 @@ export default async function AdminMailsPage() {
         <div className="bg-white border border-sand-200 rounded-2xl p-10 text-center">
           <p className="font-serif text-xl text-foreground mb-2">No hay campañas todavía</p>
           <p className="text-sm text-[#7a6b5d] mb-6">
-            Crea la primera y Nia te ayudará a generar el HTML partiendo de un diseño previo.
+            Crea la primera y la IA te ayudará a generar el HTML partiendo de un diseño previo.
           </p>
           <Link
             href="/administrator/mails/nueva"

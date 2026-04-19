@@ -16,7 +16,7 @@ export const maxDuration = 300;
 
 type RouteParams = { params: Promise<{ slug: string }> };
 
-const SYSTEM_PROMPT = `Eres Nia, la IA editora de mailings de Retiru (plataforma de retiros y bienestar en España).
+const SYSTEM_PROMPT = `Eres la Inteligencia Artificial editora de mailings de Retiru (plataforma de retiros y bienestar en España).
 Tu tarea: generar el HTML completo de un email de marketing para los centros de la plataforma, basándote en los ejemplos de estilo que se te proporcionen y en el briefing que describe la campaña.
 
 REQUISITOS OBLIGATORIOS DEL HTML:

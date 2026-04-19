@@ -61,7 +61,7 @@ export default function NuevaCampanaPage() {
       </div>
       <h1 className="font-serif text-3xl text-foreground mb-2">Nueva campaña</h1>
       <p className="text-sm text-[#7a6b5d] mb-8">
-        Crea la campaña en borrador. En el siguiente paso Nia generará el HTML basándose en un diseño anterior y tu briefing.
+        Crea la campaña en borrador. En el siguiente paso la IA generará el HTML basándose en un diseño anterior y tu briefing.
       </p>
 
       <form onSubmit={onSubmit} className="bg-white border border-sand-200 rounded-2xl p-6 space-y-5">
@@ -80,7 +80,7 @@ export default function NuevaCampanaPage() {
             maxLength={200}
           />
           <p className="text-xs text-[#a09383] mt-1">
-            Lo que verá el destinatario en la bandeja. Nia lo respetará tal cual.
+            Lo que verá el destinatario en la bandeja. La IA lo respetará tal cual.
           </p>
         </div>
 
@@ -115,7 +115,7 @@ export default function NuevaCampanaPage() {
             maxLength={1000}
           />
           <p className="text-xs text-[#a09383] mt-1">
-            No sale en el mail. Sirve para recordar de qué iba cada campaña y se lo pasamos también a Nia como contexto.
+            No sale en el mail. Sirve para recordar de qué iba cada campaña y se lo pasamos también a la IA como contexto.
           </p>
         </div>
 

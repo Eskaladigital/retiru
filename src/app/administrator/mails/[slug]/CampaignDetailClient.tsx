@@ -4,7 +4,7 @@
 // RETIRU · Admin · Detalle de campaña de mail
 //
 // Cuatro pestañas:
-//   1. Contenido — botón "Generar con Nia" (SSE) + iframe del HTML
+//   1. Contenido — botón "Generar con IA" (SSE) + iframe del HTML
 //   2. Preview   — iframe con datos reales + botón "Enviar test"
 //   3. Audiencia — seleccionar y cargar destinatarios
 //   4. Envío     — Play/Pausa/Reanudar, progreso y destinatarios por status
@@ -199,7 +199,7 @@ function statusBadge(c: CampaignFull): { label: string; classes: string } {
 }
 
 // ───────────────────────────────────────────────────────────────────────────
-// Tab 1 · Contenido (Nia)
+// Tab 1 · Contenido (IA)
 // ───────────────────────────────────────────────────────────────────────────
 
 function TabContenido({
@@ -297,16 +297,16 @@ function TabContenido({
     <div className="grid lg:grid-cols-2 gap-6">
       <div className="space-y-5">
         <div className="bg-white border border-sand-200 rounded-2xl p-5">
-          <h2 className="font-serif text-lg text-foreground mb-1">Generar mail con Nia</h2>
+          <h2 className="font-serif text-lg text-foreground mb-1">Generar mail con IA</h2>
           <p className="text-sm text-[#7a6b5d] mb-4">
-            Describe qué debe transmitir el mail. Nia generará el HTML completo partiendo del diseño de 1–3 campañas que elijas como referencia.
+            Describe qué debe transmitir el mail. La IA generará el HTML completo partiendo del diseño de 1–3 campañas que elijas como referencia.
           </p>
 
-          <label className="block text-sm font-semibold text-foreground mb-1.5" htmlFor="nia-prompt">
-            Briefing para Nia
+          <label className="block text-sm font-semibold text-foreground mb-1.5" htmlFor="ia-prompt">
+            Briefing para la IA
           </label>
           <textarea
-            id="nia-prompt"
+            id="ia-prompt"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="Ej: Recuérdale al centro que tiene 6 meses gratuitos desde su inclusión, que active su ficha cuanto antes, tono cercano y empático…"
@@ -355,7 +355,7 @@ function TabContenido({
             disabled={disabled || running || !prompt.trim()}
             className="mt-5 w-full rounded-full bg-terracotta-600 hover:bg-terracotta-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold px-5 py-3 transition-colors"
           >
-            {running ? 'Generando…' : campaign.has_html ? 'Regenerar con Nia' : 'Generar con Nia'}
+            {running ? 'Generando…' : campaign.has_html ? 'Regenerar con IA' : 'Generar con IA'}
           </button>
           {disabled && (
             <p className="text-xs text-[#a09383] mt-2">
@@ -367,7 +367,7 @@ function TabContenido({
 
       <div className="bg-[#111] text-[#c9e4d1] rounded-2xl p-5 font-mono text-xs overflow-y-auto max-h-[600px] min-h-[400px]">
         {logs.length === 0 ? (
-          <p className="text-[#6b7c72]">La consola de Nia aparecerá aquí cuando generes.</p>
+          <p className="text-[#6b7c72]">La consola de la IA aparecerá aquí cuando generes.</p>
         ) : (
           logs.map((l, i) => (
             <div
@@ -444,7 +444,7 @@ function TabPreview({ campaign }: { campaign: CampaignFull }) {
     return (
       <div className="bg-white border border-sand-200 rounded-2xl p-10 text-center">
         <p className="font-serif text-xl text-foreground mb-2">Aún no hay HTML</p>
-        <p className="text-sm text-[#7a6b5d]">Ve a la pestaña Contenido y pulsa «Generar con Nia».</p>
+        <p className="text-sm text-[#7a6b5d]">Ve a la pestaña Contenido y pulsa «Generar con IA».</p>
       </div>
     );
   }
@@ -820,7 +820,7 @@ function TabEnvio({ campaign, onChange }: { campaign: CampaignFull; onChange: ()
 
         {!canStart && campaign.status === 'draft' && (
           <p className="text-sm text-amber-700 mt-4">
-            Para lanzar necesitas: {hasHtml ? null : <span>generar el HTML con Nia · </span>}
+            Para lanzar necesitas: {hasHtml ? null : <span>generar el HTML con la IA · </span>}
             {hasRecipients ? null : <span>cargar la audiencia en la pestaña Audiencia.</span>}
           </p>
         )}

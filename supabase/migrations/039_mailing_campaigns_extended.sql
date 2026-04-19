@@ -5,7 +5,7 @@
 --     .gitignore y el cron en Vercel no tiene acceso al filesystem del repo),
 --   · pausar/reanudar una campaña desde la UI,
 --   · configurar el tope horario y el tamaño de lote por tick del cron,
---   · registrar lo que se pidió a Nia para reproducir la generación.
+--   · registrar lo que se pidió a la IA para reproducir la generación.
 
 -- ──────────────────────────────────────────────────────────────────────────
 -- 1) Nuevas columnas
