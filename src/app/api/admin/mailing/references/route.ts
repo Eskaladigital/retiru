@@ -1,7 +1,7 @@
 // GET /api/admin/mailing/references
 //
 // Lista las campañas con html_content disponible para ser usadas como
-// referencia de estilo al generar con Nia. Ordenadas por fecha desc.
+// referencia de estilo al generar con la IA. Ordenadas por fecha desc.
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/mailing/auth';
 

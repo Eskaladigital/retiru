@@ -22,7 +22,7 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
   if (!campaign) return NextResponse.json({ error: 'Campaña no encontrada' }, { status: 404 });
 
   if (!campaign.html_content) {
-    return NextResponse.json({ error: 'La campaña no tiene HTML. Genera el mail con Nia antes de lanzarla.' }, { status: 400 });
+    return NextResponse.json({ error: 'La campaña no tiene HTML. Genera el mail con la IA antes de lanzarla.' }, { status: 400 });
   }
   if (!campaign.subject) {
     return NextResponse.json({ error: 'Falta el asunto de la campaña' }, { status: 400 });

@@ -29,7 +29,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   if (!campaign) return NextResponse.json({ error: 'Campaña no encontrada' }, { status: 404 });
   if (!campaign.html_content) {
     return new NextResponse(
-      '<!doctype html><html><body style="font-family:system-ui;padding:2rem;color:#7a6b5d"><p>Esta campaña todavía no tiene HTML. Genera el mail con Nia para verlo aquí.</p></body></html>',
+      '<!doctype html><html><body style="font-family:system-ui;padding:2rem;color:#7a6b5d"><p>Esta campaña todavía no tiene HTML. Genera el mail con la IA para verlo aquí.</p></body></html>',
       { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } },
     );
   }

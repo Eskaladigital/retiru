@@ -104,12 +104,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       const send = (event: string, data: unknown) => controller.enqueue(encoder.encode(sse(event, data)));
 
       try {
-        send('log', { type: 'info', message: 'Iniciando generación con Nia…' });
+        send('log', { type: 'info', message: 'Iniciando generación con la Inteligencia Artificial…' });
         send('log', { type: 'detail', message: `Briefing: ${prompt.slice(0, 200)}${prompt.length > 200 ? '…' : ''}` });
         if (references.length > 0) {
           send('log', { type: 'detail', message: `Referencias de estilo: ${references.map((r) => r.slug).join(', ')}` });
         } else {
-          send('log', { type: 'detail', message: 'Sin referencias de estilo previas (Nia usará su criterio).' });
+          send('log', { type: 'detail', message: 'Sin referencias de estilo previas (la IA usará su criterio).' });
         }
 
         // Construimos el prompt del usuario combinando briefing + referencias.
@@ -129,7 +129,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
         userParts.push('\n## Entrega\nDevuelve SOLO el HTML del email, sin comentarios, sin markdown, sin backticks.');
 
-        send('log', { type: 'detail', message: 'Enviando a gpt-4o-mini…' });
+        send('log', { type: 'detail', message: 'Enviando a gpt-4o-mini… (streaming)' });
+        const t0 = Date.now();
 
         const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
@@ -141,6 +142,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
             model: 'gpt-4o-mini',
             temperature: 0.55,
             max_tokens: 12000,
+            stream: true,
             messages: [
               { role: 'system', content: SYSTEM_PROMPT },
               { role: 'user', content: userParts.join('\n') },
@@ -148,7 +150,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           }),
         });
 
-        if (!openaiRes.ok) {
+        if (!openaiRes.ok || !openaiRes.body) {
           const errData = await openaiRes.json().catch(() => ({}));
           const msg = (errData as { error?: { message?: string } }).error?.message || openaiRes.statusText;
           send('log', { type: 'error', message: `OpenAI devolvió ${openaiRes.status}: ${msg}` });
@@ -157,9 +159,47 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           return;
         }
 
-        const openaiData = await openaiRes.json();
-        let html: string = openaiData.choices?.[0]?.message?.content?.trim() || '';
+        // Consumimos el stream SSE de OpenAI, acumulamos los deltas y mandamos
+        // ticks de progreso al cliente cada ~500 chars para que vea avance.
+        const reader = openaiRes.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let html = '';
+        let lastTick = 0;
 
+        readLoop: while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const events = buffer.split('\n\n');
+          buffer = events.pop() || '';
+          for (const evRaw of events) {
+            const dataLine = evRaw.split('\n').find((l) => l.startsWith('data:'));
+            if (!dataLine) continue;
+            const payload = dataLine.slice(5).trim();
+            if (payload === '[DONE]') break readLoop;
+            try {
+              const parsed = JSON.parse(payload);
+              const delta: string = parsed.choices?.[0]?.delta?.content || '';
+              if (delta) {
+                html += delta;
+                if (html.length - lastTick >= 500) {
+                  const seconds = Math.max(1, Math.round((Date.now() - t0) / 1000));
+                  send('log', { type: 'detail', message: `…${html.length.toLocaleString('es-ES')} caracteres generados (${seconds}s)` });
+                  lastTick = html.length;
+                }
+              }
+              const finishReason: string | null = parsed.choices?.[0]?.finish_reason || null;
+              if (finishReason && finishReason !== 'stop') {
+                send('log', { type: 'warn', message: `OpenAI terminó con finish_reason="${finishReason}" (puede estar truncado).` });
+              }
+            } catch {
+              // Fragmento de JSON partido entre chunks: seguirá en el siguiente.
+            }
+          }
+        }
+
+        html = html.trim();
         if (!html) {
           send('log', { type: 'error', message: 'OpenAI no devolvió contenido.' });
           send('done', { ok: false, error: 'OpenAI no devolvió contenido' });
