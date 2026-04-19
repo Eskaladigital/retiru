@@ -100,6 +100,26 @@ export async function sendOneRecipient(
     return { kind: 'skipped_opt_out', reason: 'opt-out' };
   }
 
+  // Lista global de bajas por email (email_suppressions). Cubre casos donde
+  // el centro no está marcado pero el email sí está bloqueado (alta posterior,
+  // email compartido entre varios centros, etc.).
+  const cleanEmail = (recipient.email || '').trim().toLowerCase();
+  if (cleanEmail) {
+    const { data: suppression } = await sb
+      .from('email_suppressions')
+      .select('email')
+      .ilike('email', cleanEmail)
+      .limit(1)
+      .maybeSingle();
+    if (suppression) {
+      await sb.from('mailing_recipients').update({
+        status: 'skipped_opt_out',
+        failed_reason: 'email en email_suppressions',
+      }).eq('id', recipient.id);
+      return { kind: 'skipped_opt_out', reason: 'suppression' };
+    }
+  }
+
   const unsubscribeUrl = unsubscribeUrlFor(token);
   const html = renderTemplate(campaign.html_content, {
     NOMBRE_CENTRO: recipient.nombre_centro || 'tu centro',

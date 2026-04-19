@@ -201,10 +201,26 @@ async function cmdCreate() {
       claimedIds = new Set((claims || []).map((c) => c.center_id));
     }
 
+    // Lista global de emails dados de baja (RGPD): además de centers.marketing_opt_out_at,
+    // descartamos cualquier email presente en email_suppressions aunque el centro
+    // no esté marcado directamente (p. ej. alta posterior con un email ya bloqueado).
+    const { data: suppressions } = await sb
+      .from('email_suppressions')
+      .select('email');
+    const suppressedSet = new Set(
+      (suppressions || [])
+        .map((s) => (s.email || '').trim().toLowerCase())
+        .filter(Boolean)
+    );
+
     let skippedOptOut = 0;
     let skippedAudience = 0;
     for (const c of centers || []) {
       if (c.marketing_opt_out_at) {
+        skippedOptOut++;
+        continue;
+      }
+      if (suppressedSet.has((c.email || '').trim().toLowerCase())) {
         skippedOptOut++;
         continue;
       }
@@ -373,6 +389,18 @@ async function cmdSend() {
     for (const c of toks || []) tokensByCenter.set(c.id, c);
   }
 
+  // Red de seguridad adicional: email_suppressions. Si alguien hizo unsubscribe
+  // por email entre la creación de la campaña y el envío, descartamos aquí
+  // aunque el centro no se haya actualizado (por ejemplo, alta posterior).
+  const { data: suppressionsQueue } = await sb
+    .from('email_suppressions')
+    .select('email');
+  const suppressedQueueSet = new Set(
+    (suppressionsQueue || [])
+      .map((s) => (s.email || '').trim().toLowerCase())
+      .filter(Boolean)
+  );
+
   // Cliente SMTP.
   const smtpHost = process.env.SMTP_HOST;
   const smtpUser = process.env.SMTP_USER;
@@ -480,6 +508,12 @@ async function cmdSend() {
         status: 'skipped_opt_out', failed_reason: 'opt-out detectado antes de enviar',
       }).eq('id', rec.id);
       console.log(`${tag}  ⏭  opt-out`); skipped++; continue;
+    }
+    if (suppressedQueueSet.has((rec.email || '').trim().toLowerCase())) {
+      await sb.from('mailing_recipients').update({
+        status: 'skipped_opt_out', failed_reason: 'email en email_suppressions',
+      }).eq('id', rec.id);
+      console.log(`${tag}  ⏭  suppression`); skipped++; continue;
     }
 
     const unsubscribeUrl = center?.marketing_opt_out_token

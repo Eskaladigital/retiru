@@ -579,6 +579,7 @@ node scripts/quick-stats.mjs                           # Estadísticas rápidas
 - Cada email incluye un **link mágico** (`/es/reclamar/{{TOKEN}}`) que permite al dueño reclamar su centro con un clic.
 - Objetivo: que visiten su perfil, lo reclamen, validen la información y se registren.
 - **Operativa:** se gestiona desde el CRM `/administrator/mails` (crear campaña, generar HTML con IA, audiencia, lanzar/pausar/reanudar). Backend en migraciones 038 + 039 y cron `/api/cron/mailing-tick` (envío en micro-lotes para respetar el límite de OVH ≈ 200 emails/h). Detalles: `mailing/README.md`.
+- **Bajas (unsubscribe, RGPD):** cada mail incluye un enlace `https://www.retiru.com/api/unsubscribe?t=<token>` que hace one-click (también `List-Unsubscribe-Post` para Gmail/Outlook); el token marca `centers.marketing_opt_out_at`. Además, quien entre a `https://www.retiru.com/api/unsubscribe` **sin token** ve un formulario bilingüe (ES/EN vía `?lang=` o `Accept-Language`) para darse de baja introduciendo su email. Esa baja marca todos los `centers` con ese email como opt-out e inserta el email en la tabla `email_suppressions` (migración 041), de modo que si más adelante se da de alta un centro con ese mismo email el mailing lo descarta igualmente. Tanto el script `scripts/mailing.mjs` como el cron `mailing-tick` y `populateRecipients` consultan `email_suppressions` antes de enviar.
 
 ##### Flujo "Reclama tu centro"
 

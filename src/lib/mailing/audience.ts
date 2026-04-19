@@ -98,9 +98,20 @@ export async function populateRecipients(
       claimedIds = new Set((claims || []).map((c: { center_id: string }) => c.center_id));
     }
 
+    // Bajas globales por email (además del flag marketing_opt_out_at del centro).
+    const { data: suppressions } = await sb
+      .from('email_suppressions')
+      .select('email');
+    const suppressedSet = new Set(
+      (suppressions || [])
+        .map((s: { email: string | null }) => (s.email || '').trim().toLowerCase())
+        .filter(Boolean)
+    );
+
     result.candidates = (centers || []).length;
     for (const c of (centers || []) as CenterRow[]) {
       if (c.marketing_opt_out_at) { result.skippedOptOut++; continue; }
+      if (suppressedSet.has((c.email || '').trim().toLowerCase())) { result.skippedOptOut++; continue; }
       if (audience === 'claimed' && !claimedIds!.has(c.id)) { result.skippedAudience++; continue; }
       if (audience === 'not_claimed' && claimedIds!.has(c.id)) { result.skippedAudience++; continue; }
       if (!c.email) continue;
