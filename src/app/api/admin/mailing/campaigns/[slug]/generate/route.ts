@@ -41,7 +41,10 @@ REQUISITOS TÉCNICOS OBLIGATORIOS DEL HTML:
 5. Cabecera con el logo: <img src="https://www.retiru.com/Logo_retiru.png" alt="Retiru" width="140" style="display:block;max-width:140px;height:auto;">.
 6. Footer con el logo transparente: <img src="https://www.retiru.com/Logo_retiru_transparente.png" alt="Retiru" width="120" style="display:block;max-width:120px;height:auto;">.
 7. Footer con enlace de baja usando EXACTAMENTE el placeholder {{UNSUBSCRIBE_URL}}: <a href="{{UNSUBSCRIBE_URL}}">Darme de baja</a>.
-8. Iconos de redes como imágenes (no texto): Facebook → https://www.retiru.com/social/facebook.png, Instagram → https://www.retiru.com/social/instagram.png. Deben tener padding/espaciado visible entre sí.
+8. Iconos de redes como imágenes (NO texto, NO SVG inline): usa EXACTAMENTE estas URLs absolutas:
+   · Instagram → https://www.retiru.com/email/instagram.png (width="28" height="28")
+   · Facebook  → https://www.retiru.com/email/facebook.png  (width="28" height="28")
+   Estilo de cada <img>: style="display:block;border:0;width:28px;height:28px;" y envueltos en celdas de tabla con padding para separarlos visualmente. NO inventes otras URLs de iconos.
 9. Placeholders dinámicos — usa EXACTAMENTE estos literales cuando necesites datos del centro:
     · {{NOMBRE_CENTRO}} — nombre del centro destinatario
     · {{LOCATION}} — "Ciudad, Provincia"
@@ -257,6 +260,28 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
         // Por si el modelo se escapa con backticks a pesar del SYSTEM_PROMPT.
         html = html.replace(/^```(?:html)?\s*/i, '').replace(/\s*```$/i, '').trim();
+
+        // Normalización defensiva de rutas de iconos sociales: la ruta
+        // correcta en public/ es /email/<red>.png. Si el modelo se inventa
+        // /social/, /icons/, o usa dominios externos (cdn, facebook.com,
+        // instagram.com), lo reescribimos. Evita footers con iconos rotos.
+        const socialFixes: Array<[RegExp, string]> = [
+          [/https?:\/\/www\.retiru\.com\/social\/facebook\.(png|svg|jpg)/gi, 'https://www.retiru.com/email/facebook.png'],
+          [/https?:\/\/www\.retiru\.com\/social\/instagram\.(png|svg|jpg)/gi, 'https://www.retiru.com/email/instagram.png'],
+          [/https?:\/\/www\.retiru\.com\/icons?\/facebook\.(png|svg|jpg)/gi, 'https://www.retiru.com/email/facebook.png'],
+          [/https?:\/\/www\.retiru\.com\/icons?\/instagram\.(png|svg|jpg)/gi, 'https://www.retiru.com/email/instagram.png'],
+          [/https?:\/\/[^"')\s]*facebook[-_]?icon[^"')\s]*/gi, 'https://www.retiru.com/email/facebook.png'],
+          [/https?:\/\/[^"')\s]*instagram[-_]?icon[^"')\s]*/gi, 'https://www.retiru.com/email/instagram.png'],
+        ];
+        let fixesApplied = 0;
+        for (const [rx, replacement] of socialFixes) {
+          const before = html;
+          html = html.replace(rx, replacement);
+          if (html !== before) fixesApplied++;
+        }
+        if (fixesApplied > 0) {
+          send('log', { type: 'detail', message: `Iconos sociales reemplazados por las URLs correctas (/email/...).` });
+        }
 
         // Validaciones mínimas: queremos los placeholders clave.
         const missing: string[] = [];
