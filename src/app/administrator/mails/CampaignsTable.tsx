@@ -20,9 +20,11 @@ export type CampaignRow = {
   failed: number;
   has_html: boolean;
   created_at: string;
+  started_at: string | null;
+  completed_at: string | null;
 };
 
-type SortKey = 'number' | 'subject' | 'status' | 'progress' | 'created_at';
+type SortKey = 'number' | 'subject' | 'status' | 'progress' | 'created_at' | 'sent_at';
 type SortDir = 'asc' | 'desc';
 
 // Orden lógico por estado: las activas arriba, las cerradas abajo.
@@ -56,6 +58,30 @@ function formatDateEs(iso: string | null): string {
   return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
+// Fecha "efectiva" de envío para ordenar y mostrar:
+//   - enviada/archivada → completed_at (cuándo terminó)
+//   - enviando/pausada  → started_at (desde cuándo está en curso)
+//   - borrador          → null
+function sentAtEffective(c: CampaignRow): string | null {
+  if (c.status === 'sent' || c.status === 'archived') {
+    return c.completed_at || c.started_at || null;
+  }
+  if (c.status === 'sending') {
+    return c.started_at || null;
+  }
+  return null;
+}
+
+function sentLabel(c: CampaignRow): { primary: string; hint?: string } {
+  if (c.status === 'draft') return { primary: '—', hint: 'sin lanzar' };
+  const iso = sentAtEffective(c);
+  if (!iso) return { primary: '—' };
+  if (c.status === 'sending') {
+    return { primary: formatDateEs(iso), hint: c.is_paused ? 'pausada' : 'en curso' };
+  }
+  return { primary: formatDateEs(iso) };
+}
+
 function progressPct(c: CampaignRow): number {
   const total = c.total_recipients || c.recipients || 0;
   return total > 0 ? c.sent / total : 0;
@@ -82,6 +108,15 @@ function compare(a: CampaignRow, b: CampaignRow, key: SortKey): number {
       return progressPct(a) - progressPct(b);
     case 'created_at':
       return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    case 'sent_at': {
+      // Sin fecha de envío al final en 'asc' (o al principio en 'desc').
+      const ai = sentAtEffective(a);
+      const bi = sentAtEffective(b);
+      if (!ai && !bi) return 0;
+      if (!ai) return 1;
+      if (!bi) return -1;
+      return new Date(ai).getTime() - new Date(bi).getTime();
+    }
   }
 }
 
@@ -117,6 +152,7 @@ export function CampaignsTable({ campaigns }: { campaigns: CampaignRow[] }) {
               <SortHeader label="Estado" sortKey="status" current={sortKey} dir={sortDir} onClick={onSort} />
               <SortHeader label="Progreso" sortKey="progress" current={sortKey} dir={sortDir} onClick={onSort} />
               <SortHeader label="Creada" sortKey="created_at" current={sortKey} dir={sortDir} onClick={onSort} />
+              <SortHeader label="Enviada" sortKey="sent_at" current={sortKey} dir={sortDir} onClick={onSort} />
               <th className="text-right px-4 py-3 font-semibold text-[#7a6b5d]">Acciones</th>
             </tr>
           </thead>
@@ -169,6 +205,21 @@ export function CampaignsTable({ campaigns }: { campaigns: CampaignRow[] }) {
                   </td>
                   <td className="px-4 py-3 text-xs text-[#7a6b5d] whitespace-nowrap">
                     {formatDateEs(c.created_at)}
+                  </td>
+                  <td className="px-4 py-3 text-xs whitespace-nowrap">
+                    {(() => {
+                      const s = sentLabel(c);
+                      return (
+                        <>
+                          <div className={s.primary === '—' ? 'text-[#a09383]' : 'text-[#7a6b5d]'}>
+                            {s.primary}
+                          </div>
+                          {s.hint && (
+                            <div className="text-[10px] text-[#a09383] italic">{s.hint}</div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </td>
                   <td className="px-4 py-3 text-right whitespace-nowrap">
                     <Link
