@@ -134,23 +134,57 @@ export function CampaignDetailClient({ initial }: { initial: CampaignFull }) {
 function Header({ campaign, onRefresh }: { campaign: CampaignFull; onRefresh: () => void }) {
   const pct = campaign.total_recipients > 0 ? Math.round((campaign.sent / campaign.total_recipients) * 100) : 0;
   const badge = statusBadge(campaign);
+  const editable = campaign.status !== 'archived';
+
+  async function patchField(field: 'subject' | 'description', value: string) {
+    const res = await fetch(`/api/admin/mailing/campaigns/${campaign.slug}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ [field]: value }),
+    });
+    if (!res.ok) {
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      throw new Error(data.error || 'No se pudo guardar');
+    }
+    onRefresh();
+  }
 
   return (
     <div className="bg-white border border-sand-200 rounded-2xl p-5 mb-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="min-w-0">
-          <div className="flex items-center gap-3 mb-1">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-3 mb-2">
             {campaign.number !== null && (
               <span className="text-xs text-[#a09383] font-mono">#{campaign.number}</span>
             )}
             <span className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-semibold ${badge.classes}`}>
               {badge.label}
             </span>
+            {!editable && (
+              <span className="text-xs text-[#a09383] italic">
+                · archivada (no editable)
+              </span>
+            )}
           </div>
-          <h1 className="font-serif text-2xl text-foreground line-clamp-2">{campaign.subject}</h1>
-          {campaign.description && (
-            <p className="text-sm text-[#7a6b5d] mt-1 line-clamp-2">{campaign.description}</p>
-          )}
+          <EditableText
+            value={campaign.subject}
+            onSave={(v) => patchField('subject', v)}
+            editable={editable}
+            placeholder="Asunto del email…"
+            className="font-serif text-2xl text-foreground"
+            ariaLabel="Asunto del email"
+          />
+          <div className="mt-2">
+            <EditableText
+              value={campaign.description || ''}
+              onSave={(v) => patchField('description', v)}
+              editable={editable}
+              multiline
+              placeholder="Añade una descripción interna (para qué es esta campaña, a quién va dirigida, objetivo…). Sirve también de contexto para la IA."
+              className="text-sm text-[#7a6b5d]"
+              ariaLabel="Descripción interna"
+            />
+          </div>
         </div>
         <button
           onClick={onRefresh}
@@ -182,6 +216,169 @@ function Header({ campaign, onRefresh }: { campaign: CampaignFull; onRefresh: ()
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+// Texto que en hover muestra "✎" y al click se transforma en input/textarea con
+// Guardar/Cancelar. Usado para editar subject y description desde el header.
+function EditableText({
+  value,
+  onSave,
+  multiline,
+  placeholder,
+  className,
+  editable = true,
+  ariaLabel,
+}: {
+  value: string;
+  onSave: (v: string) => Promise<void>;
+  multiline?: boolean;
+  placeholder?: string;
+  className?: string;
+  editable?: boolean;
+  ariaLabel?: string;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!editing) setDraft(value);
+  }, [value, editing]);
+
+  async function save() {
+    const trimmed = draft.trim();
+    if (trimmed === (value || '').trim()) {
+      setEditing(false);
+      setError(null);
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      await onSave(trimmed);
+      setEditing(false);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function cancel() {
+    setEditing(false);
+    setDraft(value);
+    setError(null);
+  }
+
+  if (!editable) {
+    return (
+      <span className={`${className} ${value ? '' : 'text-[#a09383] italic'}`}>
+        {value || placeholder || '—'}
+      </span>
+    );
+  }
+
+  if (editing) {
+    if (multiline) {
+      return (
+        <div className="flex flex-col gap-2 w-full">
+          <textarea
+            autoFocus
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') cancel();
+            }}
+            rows={3}
+            placeholder={placeholder}
+            aria-label={ariaLabel}
+            className="w-full rounded-xl border border-sand-200 bg-cream-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-400 min-h-[80px]"
+            maxLength={1000}
+          />
+          {error && <p className="text-xs text-red-600">{error}</p>}
+          <EditActions saving={saving} onSave={save} onCancel={cancel} hint="Esc cancela" />
+        </div>
+      );
+    }
+    return (
+      <div className="flex flex-col gap-2 w-full">
+        <input
+          type="text"
+          autoFocus
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              save();
+            }
+            if (e.key === 'Escape') cancel();
+          }}
+          placeholder={placeholder}
+          aria-label={ariaLabel}
+          className={`w-full rounded-xl border border-sand-200 bg-cream-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sage-400 ${className ?? ''}`}
+          maxLength={200}
+        />
+        {error && <p className="text-xs text-red-600">{error}</p>}
+        <EditActions saving={saving} onSave={save} onCancel={cancel} hint="Enter guarda · Esc cancela" />
+      </div>
+    );
+  }
+
+  const isEmpty = !value || !value.trim();
+  return (
+    <button
+      type="button"
+      onClick={() => setEditing(true)}
+      title="Click para editar"
+      aria-label={ariaLabel ? `${ariaLabel} (click para editar)` : 'Editar'}
+      className={`group block w-full text-left cursor-text rounded-md -mx-1 px-1 py-0.5 hover:bg-cream-100 transition-colors ${className ?? ''}`}
+    >
+      <span className={`inline-flex items-start gap-2 ${isEmpty ? 'text-[#a09383] italic font-normal text-sm' : ''}`}>
+        <span className={multiline ? 'line-clamp-3' : 'line-clamp-2'}>
+          {isEmpty ? placeholder || 'Click para añadir…' : value}
+        </span>
+        <span className="text-xs opacity-0 group-hover:opacity-60 mt-1 shrink-0 not-italic font-normal" aria-hidden>
+          ✎
+        </span>
+      </span>
+    </button>
+  );
+}
+
+function EditActions({
+  saving,
+  onSave,
+  onCancel,
+  hint,
+}: {
+  saving: boolean;
+  onSave: () => void;
+  onCancel: () => void;
+  hint?: string;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        onClick={onSave}
+        disabled={saving}
+        className="rounded-full bg-terracotta-600 hover:bg-terracotta-700 disabled:opacity-50 text-white text-xs font-semibold px-4 py-1.5 transition-colors"
+      >
+        {saving ? 'Guardando…' : 'Guardar'}
+      </button>
+      <button
+        type="button"
+        onClick={onCancel}
+        disabled={saving}
+        className="rounded-full bg-white border border-sand-200 hover:bg-cream-50 text-[#7a6b5d] text-xs font-semibold px-4 py-1.5 transition-colors"
+      >
+        Cancelar
+      </button>
+      {hint && <span className="text-[10px] text-[#a09383] ml-1">{hint}</span>}
     </div>
   );
 }
