@@ -54,8 +54,17 @@ CREATE INDEX IF NOT EXISTS idx_mailing_campaigns_sending_active
 -- ──────────────────────────────────────────────────────────────────────────
 -- 2) Rehacer la vista de stats para exponer todos los campos que usa el panel
 -- ──────────────────────────────────────────────────────────────────────────
+--
+-- OJO: PostgreSQL solo permite CREATE OR REPLACE VIEW si añadimos columnas al
+-- final, sin renombrar ni reordenar. La vista de la 038 tenía
+-- (id, slug, number, template_file, subject, status, …) y aquí queremos
+-- intercalar 'description', 'is_paused', etc. Por eso hay que dropearla y
+-- recrearla. Ningún código persistente depende de su definición exacta: el
+-- panel y el cron la consultan por nombre de columna.
 
-CREATE OR REPLACE VIEW mailing_campaigns_stats AS
+DROP VIEW IF EXISTS mailing_campaigns_stats;
+
+CREATE VIEW mailing_campaigns_stats AS
 SELECT
   c.id,
   c.slug,
