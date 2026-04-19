@@ -23,6 +23,9 @@
  *   node scripts/send-mailing-test.mjs --to=otroemail@dominio.com
  *   node scripts/send-mailing-test.mjs --subject="Asunto custom"
  *   node scripts/send-mailing-test.mjs --nombre="Yoga Sala Madrid" --location="Madrid"
+ *   node scripts/send-mailing-test.mjs --center=yoga-sala-madrid          # datos reales de Supabase
+ *   node scripts/send-mailing-test.mjs --center="Mahashakti"              # búsqueda por nombre
+ *   node scripts/send-mailing-test.mjs --fin-membresia="15 de octubre de 2026"
  *   node scripts/send-mailing-test.mjs --from="Retiru <contacto@retiru.com>"
  *
  * Variables .env.local (SMTP):
@@ -42,6 +45,7 @@ import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import nodemailer from 'nodemailer';
+import { createClient } from '@supabase/supabase-js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
@@ -81,8 +85,69 @@ const subject = flag(
       ? 'Enhorabuena, tu centro ha sido incluido en Retiru'
       : 'Prueba de mailing Retiru',
 );
-const nombreCentro = flag('nombre', 'tu centro');
-const location = flag('location', 'tu zona');
+// Fecha larga en español (p. ej. "18 de octubre de 2026").
+const MESES_ES = [
+  'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+];
+function formatFechaLargaEs(date) {
+  return `${date.getDate()} de ${MESES_ES[date.getMonth()]} de ${date.getFullYear()}`;
+}
+function defaultFinMembresia() {
+  const d = new Date();
+  d.setMonth(d.getMonth() + 6);
+  return formatFechaLargaEs(d);
+}
+
+// ─── Opcional: rellenar con datos reales de un centro de Supabase ──────────
+// --center=<slug o nombre>  → consulta la tabla `centers` y usa name/city/
+// province + created_at para {{NOMBRE_CENTRO}}, {{LOCATION}} y {{FIN_MEMBRESIA}}.
+const centerRef = flag('center', null);
+let centerData = null;
+if (centerRef) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceKey) {
+    console.error('❌  Para usar --center necesito NEXT_PUBLIC_SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY en .env.local');
+    process.exit(1);
+  }
+  const sb = createClient(url, serviceKey);
+  let { data, error } = await sb
+    .from('centers')
+    .select('id, name, slug, city, province, created_at, status')
+    .eq('slug', centerRef)
+    .maybeSingle();
+  if (!data) {
+    const res = await sb
+      .from('centers')
+      .select('id, name, slug, city, province, created_at, status')
+      .ilike('name', `%${centerRef}%`)
+      .eq('status', 'active')
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    data = res.data;
+    error = res.error;
+  }
+  if (error || !data) {
+    console.error(`❌  No encontré ningún centro con referencia "${centerRef}". ${error?.message || ''}`);
+    process.exit(1);
+  }
+  centerData = data;
+}
+
+const nombreCentro = flag('nombre', centerData?.name || 'tu centro');
+const location = flag(
+  'location',
+  centerData ? [centerData.city, centerData.province].filter(Boolean).join(', ') || 'tu zona' : 'tu zona',
+);
+const finMembresiaAuto = (() => {
+  if (!centerData?.created_at) return null;
+  const d = new Date(centerData.created_at);
+  d.setMonth(d.getMonth() + 6);
+  return formatFechaLargaEs(d);
+})();
+const finMembresia = flag('fin-membresia', finMembresiaAuto || defaultFinMembresia());
 
 // ─── Selección de proveedor ────────────────────────────────────────────────
 const providerFlag = flag('provider', null);
@@ -122,7 +187,8 @@ if (!existsSync(htmlPath)) {
 let html = readFileSync(htmlPath, 'utf8');
 html = html
   .replaceAll('{{NOMBRE_CENTRO}}', nombreCentro)
-  .replaceAll('{{LOCATION}}', location);
+  .replaceAll('{{LOCATION}}', location)
+  .replaceAll('{{FIN_MEMBRESIA}}', finMembresia);
 
 // ─── Envío ─────────────────────────────────────────────────────────────────
 if (provider === 'smtp') {
@@ -139,6 +205,13 @@ if (provider === 'smtp') {
   console.log(`   • de:        ${from}`);
   console.log(`   • para:      ${to}`);
   console.log(`   • asunto:    ${subject}`);
+  if (centerData) {
+    console.log(`   • centro:    ${centerData.name} (${centerData.slug})`);
+    console.log(`   • añadido:   ${new Date(centerData.created_at).toISOString().slice(0, 10)}`);
+  }
+  console.log(`   • nombre:    ${nombreCentro}`);
+  console.log(`   • location:  ${location}`);
+  console.log(`   • fin memb.: ${finMembresia}`);
 
   // Algunas redes corporativas (proxies/AV) inyectan su propia CA en la
   // cadena TLS y rompen la verificación contra OVH. Para un script local de

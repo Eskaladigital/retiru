@@ -17,6 +17,7 @@ const NAV = [
   { href: '/administrator/centros', label: 'Centros', icon: '🏢' },
   { href: '/administrator/claims', label: 'Claims', icon: '🔑' },
   { href: '/administrator/mensajes', label: 'Mensajes', icon: '💬' },
+  { href: '/administrator/mails', label: 'Mails', icon: '✉️' },
   { href: '/administrator/blog', label: 'Blog', icon: '✏️' },
   { href: '/administrator/tienda', label: 'Tienda', icon: '🛒' },
   { href: '/administrator/reembolsos', label: 'Reembolsos', icon: '💳' },
