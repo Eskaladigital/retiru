@@ -69,7 +69,7 @@ export default async function RetreatsByCategoryPage({ params }: { params: Promi
               {total} {cat.name_en.toLowerCase()} retreat{total !== 1 ? 's' : ''} available
             </p>
             <div className="bg-white border border-sand-300 rounded-2xl p-2 shadow-elevated max-w-2xl">
-              <EventosSearch />
+              <EventosSearch locale="en" />
             </div>
           </div>
         </div>

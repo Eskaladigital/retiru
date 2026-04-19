@@ -41,9 +41,9 @@ export default async function EventosPage() {
             <p className="text-lg text-[#7a6b5d] leading-[1.7] mb-9 max-w-[480px]">
               Descubre retiros y eventos de yoga, meditación y ayurveda en toda España.
             </p>
-            <div className="bg-white border border-sand-300 rounded-2xl p-2 shadow-elevated">
-              <EventosSearch />
-            </div>
+          </div>
+          <div className="bg-white border border-sand-300 rounded-2xl p-2 shadow-elevated max-w-[620px] md:max-w-none">
+            <EventosSearch />
           </div>
         </div>
       </section>

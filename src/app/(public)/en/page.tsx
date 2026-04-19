@@ -116,18 +116,23 @@ export default async function HomePageEN() {
               <p className="text-lg text-[#7a6b5d] leading-[1.7] mb-9 max-w-[500px] animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)_0.2s_forwards] opacity-0">
                 Find centers near you or book transformative retreats and getaways across Spain. Everything in one place.
               </p>
-              <div className="bg-white border border-sand-300 rounded-2xl p-2 shadow-elevated animate-[scaleIn_0.6s_cubic-bezier(0.16,1,0.3,1)_0.4s_forwards] opacity-0">
-                <form action="/en/search" className="flex flex-col md:flex-row md:items-center gap-2">
-                  <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sand-100 transition-colors"><IconSearch /><input name="q" type="text" placeholder="Yoga, meditation, ayurveda..." className="w-full bg-transparent text-[15px] text-foreground outline-none placeholder:text-[#a09383] font-sans" /></div>
-                  <div className="hidden md:block w-px h-8 bg-sand-200" />
-                  <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sand-100 transition-colors"><svg className="w-5 h-5 text-[#a09383] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg><input name="destination" type="text" placeholder="Where?" className="w-full bg-transparent text-[15px] text-foreground outline-none placeholder:text-[#a09383] font-sans" /></div>
-                  <div className="hidden md:block w-px h-8 bg-sand-200" />
-                  <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sand-100 transition-colors"><IconCal /><input name="dates" type="text" placeholder="When?" className="w-full bg-transparent text-[15px] text-foreground outline-none placeholder:text-[#a09383] font-sans" /></div>
-                  <button type="submit" className="flex items-center justify-center gap-2 bg-terracotta-600 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl shadow-[0_2px_8px_rgba(200,90,48,0.3)] hover:bg-terracotta-700 transition-all whitespace-nowrap">
-                    <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg> Search
-                  </button>
-                </form>
-              </div>
+            </div>
+
+            {/* SEARCH BOX — full container width on desktop */}
+            <div className="bg-white border border-sand-300 rounded-2xl p-2 shadow-elevated animate-[scaleIn_0.6s_cubic-bezier(0.16,1,0.3,1)_0.4s_forwards] opacity-0 max-w-[620px] md:max-w-none">
+              <form action="/en/search" className="flex flex-col md:flex-row md:items-center gap-2">
+                <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sand-100 transition-colors"><IconSearch /><input name="q" type="text" placeholder="Yoga, meditation, ayurveda..." className="w-full bg-transparent text-[15px] text-foreground outline-none placeholder:text-[#a09383] font-sans" /></div>
+                <div className="hidden md:block w-px h-8 bg-sand-200" />
+                <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sand-100 transition-colors"><svg className="w-5 h-5 text-[#a09383] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg><input name="destination" type="text" placeholder="Where?" className="w-full bg-transparent text-[15px] text-foreground outline-none placeholder:text-[#a09383] font-sans" /></div>
+                <div className="hidden md:block w-px h-8 bg-sand-200" />
+                <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sand-100 transition-colors"><IconCal /><input name="dates" type="text" placeholder="When?" className="w-full bg-transparent text-[15px] text-foreground outline-none placeholder:text-[#a09383] font-sans" /></div>
+                <button type="submit" className="flex items-center justify-center gap-2 bg-terracotta-600 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl shadow-[0_2px_8px_rgba(200,90,48,0.3)] hover:bg-terracotta-700 transition-all whitespace-nowrap">
+                  <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg> Search
+                </button>
+              </form>
+            </div>
+
+            <div className="max-w-[620px] md:max-w-[900px]">
               <div className="flex flex-wrap gap-6 mt-8 pt-6 border-t border-sand-200 animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)_0.5s_forwards] opacity-0">
                 <div className="flex items-center gap-2.5 text-sm text-[#7a6b5d]"><div className="w-9 h-9 bg-sage-50 rounded-full flex items-center justify-center shrink-0"><IconShield /></div>Secure payments with Stripe</div>
                 <div className="flex items-center gap-2.5 text-sm text-[#7a6b5d]"><div className="w-9 h-9 bg-sage-50 rounded-full flex items-center justify-center shrink-0"><IconVerified /></div>Verified organizers</div>

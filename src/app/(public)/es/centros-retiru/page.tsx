@@ -35,9 +35,9 @@ export default async function CentrosPage() {
             <p className="text-lg text-[#7a6b5d] leading-[1.7] mb-9 max-w-[480px]">
               Encuentra centros de yoga, meditación y ayurveda en toda España.
             </p>
-            <div className="bg-white border border-sand-300 rounded-2xl p-2 shadow-elevated">
-              <CentrosSearch />
-            </div>
+          </div>
+          <div className="bg-white border border-sand-300 rounded-2xl p-2 shadow-elevated max-w-[620px] md:max-w-none">
+            <CentrosSearch />
           </div>
         </div>
       </section>

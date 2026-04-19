@@ -67,7 +67,7 @@ export default async function CentersByTypePage({ params }: { params: Promise<{ 
               {total} {label.toLowerCase()} center{total !== 1 ? 's' : ''} in our directory
             </p>
             <div className="bg-white border border-sand-300 rounded-2xl p-2 shadow-elevated max-w-2xl">
-              <CentrosSearch />
+              <CentrosSearch locale="en" />
             </div>
           </div>
         </div>

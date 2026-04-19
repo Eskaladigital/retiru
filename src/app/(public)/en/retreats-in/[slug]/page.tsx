@@ -115,7 +115,7 @@ export default async function RetreatsInPage({ params }: { params: Promise<{ slu
               {retreats.length} retreat{retreats.length !== 1 ? 's' : ''} and {centers.length} center{centers.length !== 1 ? 's' : ''} for yoga, meditation and wellness in {node.name_en}
             </p>
             <div className="bg-white border border-sand-300 rounded-2xl p-2 shadow-elevated max-w-2xl">
-              <EventosSearch />
+              <EventosSearch locale="en" />
             </div>
           </div>
         </div>

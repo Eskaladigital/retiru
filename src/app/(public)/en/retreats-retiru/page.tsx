@@ -8,6 +8,7 @@ import { filterPublicRetreatCategories } from '@/lib/utils';
 export const metadata: Metadata = categoriesEN;
 
 import EventsClientEN from './EventsClient';
+import EventosSearch from '@/components/home/EventosSearch';
 
 export default async function CategoriesPageEN() {
   const [{ retreats }, categories, destinations] = await Promise.all([
@@ -18,6 +19,7 @@ export default async function CategoriesPageEN() {
 
   return (
     <>
+      {/* Home-like hero with retreats search */}
       <section className="relative min-h-[70vh] flex items-center pt-[72px] overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img
@@ -39,6 +41,9 @@ export default async function CategoriesPageEN() {
             <p className="text-lg text-[#7a6b5d] leading-[1.7] mb-9 max-w-[480px]">
               Discover yoga, meditation and ayurveda retreats and events across Spain.
             </p>
+          </div>
+          <div className="bg-white border border-sand-300 rounded-2xl p-2 shadow-elevated max-w-[620px] md:max-w-none">
+            <EventosSearch locale="en" />
           </div>
         </div>
       </section>

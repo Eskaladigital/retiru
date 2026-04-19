@@ -63,7 +63,7 @@ export default async function CentersTypeProvincePage({ params }: { params: Prom
               {filtered.length} {label.toLowerCase()} center{filtered.length !== 1 ? 's' : ''} in {provinceName}
             </p>
             <div className="bg-white border border-sand-300 rounded-2xl p-2 shadow-elevated max-w-2xl">
-              <CentrosSearch />
+              <CentrosSearch locale="en" />
             </div>
           </div>
         </div>

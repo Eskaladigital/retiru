@@ -135,12 +135,14 @@ export default async function HomePage() {
               <p className="text-lg text-[#7a6b5d] leading-[1.7] mb-9 max-w-[500px] animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)_0.2s_forwards] opacity-0">
                 Encuentra centros cerca de ti o reserva retiros y escapadas transformadoras en toda España. Todo en un solo lugar.
               </p>
+            </div>
 
-              {/* SEARCH BOX */}
-              <div className="bg-white border border-sand-300 rounded-2xl p-2 shadow-elevated animate-[scaleIn_0.6s_cubic-bezier(0.16,1,0.3,1)_0.4s_forwards] opacity-0">
-                <HeroSearch />
-              </div>
+            {/* SEARCH BOX — full container width on desktop */}
+            <div className="bg-white border border-sand-300 rounded-2xl p-2 shadow-elevated animate-[scaleIn_0.6s_cubic-bezier(0.16,1,0.3,1)_0.4s_forwards] opacity-0 max-w-[620px] md:max-w-none">
+              <HeroSearch />
+            </div>
 
+            <div className="max-w-[620px] md:max-w-[900px]">
               {/* TRUST BAR */}
               <div className="flex flex-wrap gap-6 mt-8 pt-6 border-t border-sand-200 animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)_0.5s_forwards] opacity-0">
                 <div className="flex items-center gap-2.5 text-sm text-[#7a6b5d]">

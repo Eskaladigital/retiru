@@ -6,10 +6,9 @@ import { useRouter } from 'next/navigation';
 import { MapPin, Search, ChevronDown, Check, Building2 } from 'lucide-react';
 import { centerFilterOptionsPublic } from '@/lib/utils';
 
-const CENTER_TYPE_OPTIONS = centerFilterOptionsPublic('es');
+type Locale = 'es' | 'en';
 
-const CITIES = [
-  { slug: '', name: 'Toda España' },
+const CITIES_BASE = [
   { slug: 'madrid', name: 'Madrid' },
   { slug: 'barcelona', name: 'Barcelona' },
   { slug: 'valencia', name: 'Valencia' },
@@ -20,8 +19,37 @@ const CITIES = [
   { slug: 'granada', name: 'Granada' },
 ];
 
-export default function CentrosSearch() {
+const T = {
+  es: {
+    queryPh: 'Nombre del centro, disciplina...',
+    allCities: 'Toda España',
+    city: '¿Ciudad?',
+    type: 'Tipo',
+    submit: 'Buscar',
+    basePath: '/es/centros-retiru',
+    qParam: 'q',
+    typeParam: 'tipo',
+    cityParam: 'ciudad',
+  },
+  en: {
+    queryPh: 'Center name, discipline...',
+    allCities: 'All Spain',
+    city: 'City?',
+    type: 'Type',
+    submit: 'Search',
+    basePath: '/en/centers-retiru',
+    qParam: 'q',
+    typeParam: 'type',
+    cityParam: 'city',
+  },
+} as const;
+
+export default function CentrosSearch({ locale = 'es' }: { locale?: Locale } = {}) {
   const router = useRouter();
+  const t = T[locale];
+  const CENTER_TYPE_OPTIONS = centerFilterOptionsPublic(locale);
+  const CITIES = [{ slug: '', name: t.allCities }, ...CITIES_BASE];
+
   const [queryText, setQueryText] = useState('');
   const [centerType, setCenterType] = useState(CENTER_TYPE_OPTIONS[0]);
   const [typeOpen, setTypeOpen] = useState(false);
@@ -31,15 +59,15 @@ export default function CentrosSearch() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (city.slug && !queryText.trim() && !centerType.slug) {
-      router.push(`/es/centros-retiru/${city.slug}`);
+      router.push(`${t.basePath}/${city.slug}`);
       return;
     }
     const params = new URLSearchParams();
-    if (queryText.trim()) params.set('q', queryText.trim());
-    if (centerType.slug) params.set('tipo', centerType.slug);
-    if (city.slug) params.set('ciudad', city.slug);
+    if (queryText.trim()) params.set(t.qParam, queryText.trim());
+    if (centerType.slug) params.set(t.typeParam, centerType.slug);
+    if (city.slug) params.set(t.cityParam, city.slug);
     const qs = params.toString();
-    router.push(`/es/centros-retiru${qs ? `?${qs}` : ''}`);
+    router.push(`${t.basePath}${qs ? `?${qs}` : ''}`);
   };
 
   return (
@@ -50,7 +78,7 @@ export default function CentrosSearch() {
           type="text"
           value={queryText}
           onChange={(e) => setQueryText(e.target.value)}
-          placeholder="Nombre del centro, disciplina..."
+          placeholder={t.queryPh}
           className="w-full bg-transparent text-[15px] text-foreground outline-none placeholder:text-[#a09383] font-sans"
         />
       </div>
@@ -60,18 +88,18 @@ export default function CentrosSearch() {
           <Popover.Trigger asChild>
             <button type="button" className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sand-100 transition-colors cursor-pointer text-left">
               <Building2 className="w-5 h-5 text-[#a09383] shrink-0" />
-              <span className={`flex-1 text-[15px] font-sans truncate ${centerType.slug ? 'text-foreground' : 'text-[#a09383]'}`}>{centerType.slug ? centerType.label : 'Tipo'}</span>
+              <span className={`flex-1 text-[15px] font-sans truncate ${centerType.slug ? 'text-foreground' : 'text-[#a09383]'}`}>{centerType.slug ? centerType.label : t.type}</span>
               <ChevronDown className={`w-4 h-4 text-[#a09383] shrink-0 transition-transform ${typeOpen ? 'rotate-180' : ''}`} />
             </button>
           </Popover.Trigger>
           <Popover.Portal>
             <Popover.Content className="z-50 rounded-2xl border border-sand-200 bg-white shadow-elevated w-[220px] max-h-[300px] overflow-y-auto" side="bottom" align="start" sideOffset={2}>
               <div className="p-1.5">
-                {CENTER_TYPE_OPTIONS.map((t) => (
-                  <button key={t.slug || '__all__'} type="button" onClick={() => { setCenterType(t); setTypeOpen(false); }} className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[14px] ${centerType.slug === t.slug ? 'bg-sage-50 text-sage-700 font-semibold' : 'text-foreground hover:bg-sand-50'}`}>
-                    {centerType.slug === t.slug && <Check className="w-3.5 h-3.5 text-sage-600 shrink-0" />}
-                    {centerType.slug !== t.slug && <span className="w-3.5 shrink-0" />}
-                    {t.label}
+                {CENTER_TYPE_OPTIONS.map((opt) => (
+                  <button key={opt.slug || '__all__'} type="button" onClick={() => { setCenterType(opt); setTypeOpen(false); }} className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[14px] ${centerType.slug === opt.slug ? 'bg-sage-50 text-sage-700 font-semibold' : 'text-foreground hover:bg-sand-50'}`}>
+                    {centerType.slug === opt.slug && <Check className="w-3.5 h-3.5 text-sage-600 shrink-0" />}
+                    {centerType.slug !== opt.slug && <span className="w-3.5 shrink-0" />}
+                    {opt.label}
                   </button>
                 ))}
               </div>
@@ -85,7 +113,7 @@ export default function CentrosSearch() {
           <Popover.Trigger asChild>
             <button type="button" className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sand-100 transition-colors cursor-pointer text-left">
               <MapPin className="w-5 h-5 text-[#a09383] shrink-0" />
-              <span className={`flex-1 text-[15px] font-sans truncate ${city.slug ? 'text-foreground' : 'text-[#a09383]'}`}>{city.slug ? city.name : '¿Ciudad?'}</span>
+              <span className={`flex-1 text-[15px] font-sans truncate ${city.slug ? 'text-foreground' : 'text-[#a09383]'}`}>{city.slug ? city.name : t.city}</span>
               <ChevronDown className={`w-4 h-4 text-[#a09383] shrink-0 transition-transform ${cityOpen ? 'rotate-180' : ''}`} />
             </button>
           </Popover.Trigger>
@@ -105,7 +133,7 @@ export default function CentrosSearch() {
         </Popover.Root>
       </div>
       <button type="submit" className="flex items-center justify-center gap-2 bg-sage-700 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl shadow-[0_2px_8px_rgba(92,127,96,0.3)] hover:bg-sage-800 transition-all whitespace-nowrap">
-        <Search className="w-[18px] h-[18px]" /> Buscar
+        <Search className="w-[18px] h-[18px]" /> {t.submit}
       </button>
     </form>
   );

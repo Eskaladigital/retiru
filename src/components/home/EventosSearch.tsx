@@ -3,14 +3,15 @@
 import { useState } from 'react';
 import { DayPicker, type DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { es, enUS } from 'date-fns/locale';
 import * as Popover from '@radix-ui/react-popover';
 import { useRouter } from 'next/navigation';
 import { MapPin, Search, ChevronDown, Check, X } from 'lucide-react';
 import { calendarCSS } from './HeroSearch';
 
-const DESTINATIONS = [
-  { slug: '', name: 'Todos los destinos' },
+type Locale = 'es' | 'en';
+
+const DESTINATIONS_BASE = [
   { slug: 'ibiza', name: 'Ibiza' },
   { slug: 'mallorca', name: 'Mallorca' },
   { slug: 'murcia', name: 'Murcia' },
@@ -28,8 +29,39 @@ const DESTINATIONS = [
   { slug: 'navarra', name: 'Navarra' },
 ];
 
-export default function EventosSearch() {
+const T = {
+  es: {
+    allDestinations: 'Todos los destinos',
+    where: '¿Dónde?',
+    queryPh: 'Yoga, meditación, ayurveda...',
+    datesPh: '¿Entre qué fechas?',
+    submit: 'Buscar',
+    basePath: '/es/retiros-retiru',
+    qParam: 'q',
+    destParam: 'destino',
+    fromParam: 'fechaDesde',
+    toParam: 'fechaHasta',
+  },
+  en: {
+    allDestinations: 'All destinations',
+    where: 'Where?',
+    queryPh: 'Yoga, meditation, ayurveda...',
+    datesPh: 'When?',
+    submit: 'Search',
+    basePath: '/en/retreats-retiru',
+    qParam: 'q',
+    destParam: 'destination',
+    fromParam: 'dateFrom',
+    toParam: 'dateTo',
+  },
+} as const;
+
+export default function EventosSearch({ locale = 'es' }: { locale?: Locale } = {}) {
   const router = useRouter();
+  const t = T[locale];
+  const dateLocale = locale === 'en' ? enUS : es;
+  const DESTINATIONS = [{ slug: '', name: t.allDestinations }, ...DESTINATIONS_BASE];
+
   const [queryText, setQueryText] = useState('');
   const [destino, setDestino] = useState(DESTINATIONS[0]);
   const [destOpen, setDestOpen] = useState(false);
@@ -38,23 +70,23 @@ export default function EventosSearch() {
 
   const dateLabel = rangoFechas?.from
     ? rangoFechas.to
-      ? `${format(rangoFechas.from, 'd MMM', { locale: es })} – ${format(rangoFechas.to, 'd MMM', { locale: es })}`
-      : format(rangoFechas.from, 'd MMM yyyy', { locale: es })
+      ? `${format(rangoFechas.from, 'd MMM', { locale: dateLocale })} – ${format(rangoFechas.to, 'd MMM', { locale: dateLocale })}`
+      : format(rangoFechas.from, 'd MMM yyyy', { locale: dateLocale })
     : null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (destino.slug && !queryText.trim() && !rangoFechas?.from) {
-      router.push(`/es/retiros-retiru/${destino.slug}`);
+      router.push(`${t.basePath}/${destino.slug}`);
       return;
     }
     const params = new URLSearchParams();
-    if (queryText.trim()) params.set('q', queryText.trim());
-    if (destino.slug) params.set('destino', destino.slug);
-    if (rangoFechas?.from) params.set('fechaDesde', format(rangoFechas.from, 'yyyy-MM-dd'));
-    if (rangoFechas?.to) params.set('fechaHasta', format(rangoFechas.to, 'yyyy-MM-dd'));
+    if (queryText.trim()) params.set(t.qParam, queryText.trim());
+    if (destino.slug) params.set(t.destParam, destino.slug);
+    if (rangoFechas?.from) params.set(t.fromParam, format(rangoFechas.from, 'yyyy-MM-dd'));
+    if (rangoFechas?.to) params.set(t.toParam, format(rangoFechas.to, 'yyyy-MM-dd'));
     const qs = params.toString();
-    router.push(`/es/retiros-retiru${qs ? `?${qs}` : ''}`);
+    router.push(`${t.basePath}${qs ? `?${qs}` : ''}`);
   };
 
   return (
@@ -65,7 +97,7 @@ export default function EventosSearch() {
           type="text"
           value={queryText}
           onChange={(e) => setQueryText(e.target.value)}
-          placeholder="Yoga, meditación, ayurveda..."
+          placeholder={t.queryPh}
           className="w-full bg-transparent text-[15px] text-foreground outline-none placeholder:text-[#a09383] font-sans"
         />
       </div>
@@ -75,7 +107,7 @@ export default function EventosSearch() {
           <Popover.Trigger asChild>
             <button type="button" className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sand-100 transition-colors cursor-pointer text-left">
               <MapPin className="w-5 h-5 text-[#a09383] shrink-0" />
-              <span className={`flex-1 text-[15px] font-sans truncate ${destino.slug ? 'text-foreground' : 'text-[#a09383]'}`}>{destino.slug ? destino.name : '¿Dónde?'}</span>
+              <span className={`flex-1 text-[15px] font-sans truncate ${destino.slug ? 'text-foreground' : 'text-[#a09383]'}`}>{destino.slug ? destino.name : t.where}</span>
               <ChevronDown className={`w-4 h-4 text-[#a09383] shrink-0 transition-transform ${destOpen ? 'rotate-180' : ''}`} />
             </button>
           </Popover.Trigger>
@@ -100,7 +132,7 @@ export default function EventosSearch() {
           <Popover.Trigger asChild>
             <button type="button" className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sand-100 transition-colors cursor-pointer text-left">
               <svg className="w-5 h-5 text-[#a09383] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
-              <span className={`flex-1 text-[15px] font-sans truncate ${dateLabel ? 'text-foreground' : 'text-[#a09383]'}`}>{dateLabel || '¿Entre qué fechas?'}</span>
+              <span className={`flex-1 text-[15px] font-sans truncate ${dateLabel ? 'text-foreground' : 'text-[#a09383]'}`}>{dateLabel || t.datesPh}</span>
               {dateLabel && <button type="button" onClick={(e) => { e.stopPropagation(); setRangoFechas(undefined); }} className="p-0.5 rounded-full hover:bg-sand-200"><X className="w-3.5 h-3.5 text-[#a09383]" /></button>}
             </button>
           </Popover.Trigger>
@@ -123,7 +155,7 @@ export default function EventosSearch() {
                     setTimeout(() => setDateOpen(false), 2000);
                   }
                 }}
-                locale={es}
+                locale={dateLocale}
                 disabled={{ before: new Date() }}
                 numberOfMonths={2}
               />
@@ -132,7 +164,7 @@ export default function EventosSearch() {
         </Popover.Root>
       </div>
       <button type="submit" className="flex items-center justify-center gap-2 bg-terracotta-600 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl shadow-[0_2px_8px_rgba(200,90,48,0.3)] hover:bg-terracotta-700 transition-all whitespace-nowrap">
-        <Search className="w-[18px] h-[18px]" /> Buscar
+        <Search className="w-[18px] h-[18px]" /> {t.submit}
       </button>
     </form>
   );
