@@ -18,17 +18,20 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
     .maybeSingle();
   if (!campaign) return NextResponse.json({ error: 'Campaña no encontrada' }, { status: 404 });
 
-  // Si estaba draft se reanuda como sending. Si estaba sending+pausada, solo quitamos el flag.
+  // Reanudar = solo quitar el flag is_paused en una campaña que YA está en
+  // 'sending'. Nunca hace draft → sending: ese salto solo ocurre vía el botón
+  // "Lanzar campaña" (endpoint /start), que valida HTML + asunto + audiencia.
+  if (campaign.status !== 'sending') {
+    return NextResponse.json({
+      error: campaign.status === 'draft'
+        ? 'La campaña está en borrador. Usa el botón "Lanzar campaña" para iniciarla.'
+        : `No se puede reanudar una campaña en "${campaign.status}"`,
+    }, { status: 409 });
+  }
   const patch: Record<string, unknown> = {
     is_paused: false,
     last_tick_note: 'Reanudada manualmente desde el panel.',
   };
-  if (campaign.status === 'draft') {
-    patch.status = 'sending';
-    patch.started_at = new Date().toISOString();
-  } else if (campaign.status !== 'sending') {
-    return NextResponse.json({ error: `No se puede reanudar una campaña en "${campaign.status}"` }, { status: 409 });
-  }
 
   const { error } = await guard.ctx.sb.from('mailing_campaigns').update(patch).eq('id', campaign.id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

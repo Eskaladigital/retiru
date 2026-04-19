@@ -399,11 +399,22 @@ async function cmdSend() {
     catch (e) { console.error('❌ SMTP no disponible:', e.message); process.exit(1); }
   }
 
-  // Marcar sending si estaba draft.
+  // El paso a 'sending' SOLO se hace desde el panel /administrator/mails
+  // (botón "Lanzar campaña"). Este script legacy no lo toca: si la campaña
+  // está en draft, se aborta el envío y se pide hacerlo desde la UI. Así nunca
+  // se inicia una campaña sin que el admin pulse explícitamente el botón.
   if (campaign.status === 'draft') {
-    await sb.from('mailing_campaigns').update({
-      status: 'sending', started_at: new Date().toISOString(),
-    }).eq('id', campaign.id);
+    console.error(
+      `❌ La campaña "${slug}" está en estado "draft". Este script ya no ` +
+      `inicia campañas por su cuenta. Ve a /administrator/mails/${slug} y ` +
+      `pulsa "Lanzar campaña" para pasarla a "sending". Luego el cron enviará ` +
+      `solo (o puedes relanzar este script si la quieres ejecutar en local).`
+    );
+    process.exit(1);
+  }
+  if (campaign.status === 'sent' || campaign.status === 'archived') {
+    console.error(`❌ La campaña "${slug}" está en estado "${campaign.status}". No se puede reenviar.`);
+    process.exit(1);
   }
 
   console.log(`📬  ${dryRun ? 'DRY-RUN' : 'Enviando'} campaña "${slug}" · ${queue.length} filas (${targetStatus})`);

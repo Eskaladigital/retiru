@@ -19,7 +19,9 @@
  *   --subject="…"                  asunto visible en inbox
  *   --description="…"              descripción interna (lo que verás en /administrator/mails)
  *   --number=<N>                   número de orden de la campaña
- *   --status=<draft|sending|sent|archived>   estado (por defecto: mantiene el actual o 'draft' si es nueva)
+ *   --status=<draft|sent|archived>           estado (por defecto: mantiene el actual o 'draft' si es nueva).
+ *                                            OJO: 'sending' no se acepta aquí: una campaña solo pasa a
+ *                                            'sending' pulsando "Lanzar campaña" en /administrator/mails.
  *   --audience=<all|claimed|not_claimed>     filtro de audiencia sugerido
  *   --preserve-template-file       no tocar template_file (por defecto usa el nombre del archivo)
  *   --create-if-missing            crea la fila si no existe (sin este flag, falla si no existe)
@@ -62,9 +64,22 @@ const audienceArg = flag('audience');
 const preserveTemplate = hasFlag('preserve-template-file');
 const createIfMissing = hasFlag('create-if-missing');
 
-const VALID_STATUSES = ['draft', 'sending', 'sent', 'archived'];
+// El paso a 'sending' es responsabilidad exclusiva del botón "Lanzar campaña"
+// del panel /administrator/mails. Este script sirve para sembrar/actualizar
+// plantillas en BD, no para iniciar envíos. Por eso se permite crear o marcar
+// una campaña como 'draft', 'sent' (histórico ya enviado) o 'archived'
+// (histórico referencia), pero nunca 'sending'.
+const VALID_STATUSES = ['draft', 'sent', 'archived'];
 if (statusArg && !VALID_STATUSES.includes(statusArg)) {
-  console.error(`❌ --status debe ser uno de: ${VALID_STATUSES.join(', ')}`);
+  if (statusArg === 'sending') {
+    console.error(
+      `❌ --status=sending no está permitido desde este script.\n` +
+      `   Las campañas se lanzan SIEMPRE pulsando "Lanzar campaña" en ` +
+      `/administrator/mails/<slug> (Tab "Envío"), nunca de forma automática.`
+    );
+  } else {
+    console.error(`❌ --status debe ser uno de: ${VALID_STATUSES.join(', ')}`);
+  }
   process.exit(1);
 }
 
@@ -131,7 +146,7 @@ if (!campaign) {
     status,
     audience_filter: audienceArg ? { type: audienceArg } : null,
     number: numberArg ? Number(numberArg) : null,
-    started_at: status === 'sending' || status === 'sent' || status === 'archived' ? now : null,
+    started_at: status === 'sent' || status === 'archived' ? now : null,
     completed_at: status === 'sent' || status === 'archived' ? now : null,
     archived_at: status === 'archived' ? now : null,
   };
@@ -164,7 +179,6 @@ if (audienceArg) patch.audience_filter = { type: audienceArg };
 if (statusArg && statusArg !== campaign.status) {
   patch.status = statusArg;
   const now = new Date().toISOString();
-  if (statusArg === 'sending' && !campaign.started_at) patch.started_at = now;
   if (statusArg === 'sent') patch.completed_at = now;
   if (statusArg === 'archived') {
     patch.archived_at = now;
