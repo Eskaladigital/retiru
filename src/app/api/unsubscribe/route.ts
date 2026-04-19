@@ -234,7 +234,8 @@ async function applyEmailOptOut(emailRaw: string, reason: string | null) {
     .select('id, marketing_opt_out_at')
     .ilike('email', email);
 
-  const ids = (centers || [])
+  type CenterEmailOptRow = { id: string; marketing_opt_out_at: string | null };
+  const ids = ((centers ?? []) as CenterEmailOptRow[])
     .filter((c) => !c.marketing_opt_out_at)
     .map((c) => c.id);
 
