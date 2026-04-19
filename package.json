@@ -38,6 +38,7 @@
     "mailing:sync": "node scripts/mailing-sync-fs.mjs",
     "mailing:sync:dry": "node scripts/mailing-sync-fs.mjs --dry-run",
     "mailing:load-html": "node scripts/mailing-load-html.mjs",
+    "mailing:normalize": "node scripts/mailing-normalize-html.mjs",
     "seo:seed-geo": "node scripts/seed-geo-hierarchy.mjs",
     "seo:seed-geo:dry": "node scripts/seed-geo-hierarchy.mjs --dry-run",
     "centers:claim-tokens": "node scripts/generate-claim-tokens.mjs",
