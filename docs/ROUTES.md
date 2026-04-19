@@ -251,6 +251,7 @@ Ver tablas arriba y `docs/SEO-LANDINGS.md`.
 | `/administrator/mails` | `src/app/administrator/mails/page.tsx` | CRM de campañas de mailing (listado + crear) |
 | `/administrator/mails/nueva` | `src/app/administrator/mails/nueva/page.tsx` | Crear campaña en borrador (subject/slug/descripción) |
 | `/administrator/mails/[slug]` | `src/app/administrator/mails/[slug]/page.tsx` | Detalle: pestañas Contenido (gen. con IA), Preview, Audiencia, Envío |
+| `/administrator/mails/bajas` | `src/app/administrator/mails/bajas/page.tsx` | Panel de bajas de marketing: listado de `email_suppressions`, búsqueda, alta manual y revertir baja |
 | `/administrator/blog` | `src/app/administrator/blog/page.tsx` | Gestión blog |
 | `/administrator/tienda` | `src/app/administrator/tienda/page.tsx` | Productos + resultados encuesta (`docs/SHOP-SURVEY.md`) |
 | `/administrator/reembolsos` | `src/app/administrator/reembolsos/page.tsx` | Reembolsos |
@@ -326,3 +327,4 @@ Protegido por middleware y comprobación de admin. No indexado en buscadores.
 | GET | `/api/admin/mailing/campaigns/[slug]/recipients` | Listado paginado y filtrable por estado |
 | GET | `/api/admin/mailing/references` | Campañas con `has_html=true` para usar como referencia de la IA |
 | GET | `/api/admin/mailing/centers-search` | Buscar centros activos por nombre (selector del panel) |
+| GET / POST / DELETE | `/api/admin/mailing/suppressions` | Admin: listar bajas (`?q=`), añadir manual (`source='admin'`, marca también los centros con ese email) y revertir baja (`?id=`) |

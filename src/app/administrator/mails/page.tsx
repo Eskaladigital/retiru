@@ -23,12 +23,20 @@ export default async function AdminMailsPage() {
             CRM de campañas: crea, genera con IA, previsualiza y lanza envíos masivos sin tocar terminal.
           </p>
         </div>
-        <Link
-          href="/administrator/mails/nueva"
-          className="rounded-full bg-terracotta-600 hover:bg-terracotta-700 text-white text-sm font-semibold px-5 py-2.5 transition-colors"
-        >
-          + Nueva campaña
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            href="/administrator/mails/bajas"
+            className="rounded-full border border-sand-200 bg-white hover:bg-cream-100 text-sm font-semibold text-[#7a6b5d] hover:text-foreground px-5 py-2.5 transition-colors"
+          >
+            Bajas de marketing
+          </Link>
+          <Link
+            href="/administrator/mails/nueva"
+            className="rounded-full bg-terracotta-600 hover:bg-terracotta-700 text-white text-sm font-semibold px-5 py-2.5 transition-colors"
+          >
+            + Nueva campaña
+          </Link>
+        </div>
       </div>
 
       {error && (
