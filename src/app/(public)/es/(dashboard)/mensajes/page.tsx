@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { MessageCircle, LifeBuoy } from 'lucide-react';
+import { getOrganizerFirstName } from '@/lib/utils';
 
 interface ConversationItem {
   id: string;
@@ -91,7 +92,7 @@ export default function MensajesPage() {
         <div className="space-y-2">
           {conversations.map(c => {
             const name = c.my_role === 'user'
-              ? (c.other_participant as any)?.business_name ?? 'Organizador'
+              ? getOrganizerFirstName((c.other_participant as any)?.business_name) || 'Organizador'
               : (c.other_participant as any)?.full_name ?? 'Usuario';
             const initial = name[0]?.toUpperCase() ?? '?';
             const avatar = c.my_role === 'user'

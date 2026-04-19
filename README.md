@@ -382,17 +382,20 @@ Sistema de comunicación dentro de la plataforma entre usuarios y organizadores,
 
 **Soporte (chat con admin):**
 - Cualquier usuario u organizador puede iniciar un chat de soporte desde su página de mensajes (botón "Contactar soporte") o desde el **widget flotante** (burbuja abajo a la derecha, visible en todas las páginas públicas)
+- El widget **no se muestra a administradores** (tienen su propia bandeja en `/administrator/mensajes`, no tiene sentido que se escriban a sí mismos)
+- Al abrirlo por primera vez, el usuario ve el saludo de **Andrea** y **3 respuestas rápidas** (reserva · retiro · pago/reembolso) bilingües; los chips desaparecen en cuanto envía el primer mensaje
 - Un solo chat de soporte por usuario (si ya existe, se reutiliza)
+- **Cerrar conversación (soft-clear):** el usuario puede pulsar el icono de reinicio del header del widget para vaciar su vista. No se borran mensajes: se guarda `user_cleared_at = NOW()` en la conversación y el backend filtra `messages.created_at > user_cleared_at` solo para el propio usuario. Admin y organizadores siguen viendo todo el historial
 - El admin puede ver y responder chats de soporte desde `/administrator/mensajes` (como "Andrea, responsable de atención al cliente")
 - El admin puede iniciar conversaciones con cualquier usuario desde `/administrator/usuarios` o `/administrator/organizadores` (botón "Mensaje")
 - Las conversaciones de soporte se distinguen con `is_support = true` en la tabla `conversations`
 - Las conversaciones normales (usuario ↔ organizador) siguen en modo solo lectura para el admin
 
 **Arquitectura:**
-- Migraciones: `008_conversations_messaging.sql` (mensajería base) + `010_support_conversations.sql` (soporte)
-- API: `POST/GET /api/messages/conversations`, `GET/POST /api/messages/conversations/[id]`, `POST /api/messages/support`, `GET /api/admin/messages`, `POST /api/admin/messages/support`, `DELETE /api/admin/messages/[messageId]`
+- Migraciones: `008_conversations_messaging.sql` (mensajería base) + `010_support_conversations.sql` (soporte) + `040_support_chat_clear.sql` (columna `user_cleared_at` para soft-clear del usuario)
+- API: `POST/GET /api/messages/conversations`, `GET/POST /api/messages/conversations/[id]`, `POST/PATCH /api/messages/support` (`PATCH { action: 'clear' }` hace el soft-clear), `GET /api/admin/messages`, `POST /api/admin/messages/support`, `DELETE /api/admin/messages/[messageId]`
 - UI usuario: `/es/mensajes` (lista + botón soporte) y `/es/mensajes/[id]` (chat con burbujas)
-- UI usuario: widget de chat flotante en todas las páginas públicas (`SupportChatWidget`)
+- UI usuario: widget de chat flotante en todas las páginas públicas (`SupportChatWidget`), oculto para administradores desde `PublicShell` (`!user.roles.includes('admin')`)
 - UI organizador: `/es/panel/mensajes` y `/en/panel/mensajes` (lista + botón soporte; la vista EN reexporta la misma página que ES)
 - UI admin: `/administrator/mensajes` (tabla + chat overlay flotante para soporte)
 - Componentes: `src/components/messaging/AskOrganizerButton.tsx`, `src/components/chat/SupportChatWidget.tsx`

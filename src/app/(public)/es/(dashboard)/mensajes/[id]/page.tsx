@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Send, AlertTriangle, ShieldCheck, LifeBuoy } from 'lucide-react';
+import { getOrganizerFirstName } from '@/lib/utils';
 
 interface MessageItem {
   id: string;
@@ -117,7 +118,7 @@ export default function ConversacionPage() {
   const otherName = isSupport
     ? 'Andrea - Soporte Retiru'
     : myRole === 'user'
-      ? conversation.organizer?.business_name ?? 'Organizador'
+      ? getOrganizerFirstName(conversation.organizer?.business_name) || 'Organizador'
       : conversation.user_profile?.full_name ?? 'Usuario';
 
   // Group messages by date

@@ -15,7 +15,7 @@ export async function GET(req: NextRequest, ctx: Ctx) {
   const { data: conv } = await supabase
     .from('conversations')
     .select(`
-      id, retreat_id, user_id, organizer_id, attendee_unread, organizer_unread, admin_unread, is_support,
+      id, retreat_id, user_id, organizer_id, attendee_unread, organizer_unread, admin_unread, is_support, user_cleared_at,
       retreats!retreat_id(id, title_es, title_en, slug),
       profiles!user_id(id, full_name, avatar_url),
       organizer_profiles!organizer_id(id, business_name, logo_url, user_id)
@@ -36,8 +36,12 @@ export async function GET(req: NextRequest, ctx: Ctx) {
     return NextResponse.json({ error: 'Sin acceso' }, { status: 403 });
   }
 
-  // Obtener mensajes
-  const { data: messages, error } = await supabase
+  // Soft-clear de soporte: si el propietario ha "cerrado" su chat, solo ve mensajes
+  // posteriores a user_cleared_at. Admins/organizadores siguen viendo todo.
+  const userClearedAt = (conv as any).user_cleared_at as string | null;
+  const applyUserClear = isSupport && isUser && !isAdmin && !!userClearedAt;
+
+  let query = supabase
     .from('messages')
     .select(`
       id, conversation_id, sender_id, content, message_type, is_read, created_at,
@@ -45,6 +49,12 @@ export async function GET(req: NextRequest, ctx: Ctx) {
     `)
     .eq('conversation_id', id)
     .order('created_at', { ascending: true });
+
+  if (applyUserClear) {
+    query = query.gt('created_at', userClearedAt as string);
+  }
+
+  const { data: messages, error } = await query;
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

@@ -124,6 +124,24 @@ export function getInitials(name: string): string {
     .slice(0, 2);
 }
 
+/**
+ * Extrae el "nombre de pila" de un nombre completo aplicando la heurística
+ * española: los dos últimos tokens se consideran apellidos cuando hay 3 o
+ * más palabras (p. ej. "María del Carmen Pérez Doña" → "María del Carmen",
+ * "Juan Pérez Doña" → "Juan"). Con 1-2 palabras, devuelve la primera palabra.
+ *
+ * Se usa en los chats con el organizador de un retiro para mostrar el mínimo
+ * de datos del organizador antes del pago. Los datos completos del organizador
+ * solo se facilitan al usuario tras haber pagado la reserva.
+ */
+export function getOrganizerFirstName(name: string | null | undefined): string {
+  const clean = (name ?? '').trim().replace(/\s+/g, ' ');
+  if (!clean) return '';
+  const tokens = clean.split(' ');
+  if (tokens.length >= 3) return tokens.slice(0, -2).join(' ');
+  return tokens[0] ?? clean;
+}
+
 // ─── Tipos de centro (fuente única de verdad para todo el front) ─────────────
 // Usar en CentrosSearch, CentrosClient, badges, filtros, etc.
 

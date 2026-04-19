@@ -26,12 +26,16 @@ export default function PublicShell({ user, children }: PublicShellProps) {
     document.documentElement.lang = pathname?.startsWith('/en') ? 'en' : 'es';
   }, [pathname]);
 
+  // El widget de soporte se oculta a administradores: ellos gestionan el soporte
+  // desde /administrator/mensajes y no tiene sentido que se escriban a sí mismos.
+  const isAdmin = !!user?.roles?.includes('admin');
+
   return (
     <>
       <Header locale={locale} user={user} />
       <main className="min-h-[60vh] pt-16 md:pt-[72px]">{children}</main>
       <Footer locale={locale} />
-      <SupportChatWidget locale={locale} />
+      {!isAdmin && <SupportChatWidget locale={locale} />}
     </>
   );
 }
