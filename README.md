@@ -571,11 +571,11 @@ node scripts/quick-stats.mjs                           # Estadísticas rápidas
 
 #### Fase 1 — Notificación (email de bienvenida + claim)
 
-- Enviar `mailing/retiru-bienvenida-centro.html` a todos los centros con email.
+- Enviar `mailing/enviados/1-2026-04-01-retiru-bienvenida-centro.html` (campaña #1) a todos los centros con email.
 - Mensaje: "Enhorabuena, tu centro ha sido seleccionado para Retiru. Te ofrecemos 6 meses de cortesía para que pruebes el directorio."
 - Cada email incluye un **link mágico** (`/es/reclamar/{{TOKEN}}`) que permite al dueño reclamar su centro con un clic.
 - Objetivo: que visiten su perfil, lo reclamen, validen la información y se registren.
-- **Pendiente:** configurar Resend para envío masivo personalizado.
+- **Operativa:** se gestiona desde el CRM `/administrator/mails` (crear campaña, generar HTML con IA, audiencia, lanzar/pausar/reanudar). Backend en migraciones 038 + 039 y cron `/api/cron/mailing-tick` (envío en micro-lotes para respetar el límite de OVH ≈ 200 emails/h). Detalles: `mailing/README.md`.
 
 ##### Flujo "Reclama tu centro"
 
@@ -605,9 +605,12 @@ El dueño de un centro puede vincularse como propietario verificado mediante:
 
 #### Fase 2 — Activación (email de eventos)
 
-- Enviar `mailing/retiru-crea-tu-evento.html` unos días/semanas después.
+- Enviar `mailing/3-2026-04-28-retiru-crea-tu-evento.html` (campaña #3) unos días/semanas después.
 - Mensaje: "Crea tu primer evento en Retiru. Retiros, talleres, masterclasses..."
 - Objetivo: generar contenido y actividad en la plataforma.
+- Audiencia: solo centros ya reclamados (`audience=claimed` en el CRM).
+
+> Entre #1 y #3 va el recordatorio **#2** (`mailing/2-2026-04-19-retiru-recordatorio-centro.html`) a los centros aún **no reclamados** ~7-10 días tras la inclusión, recordando los 6 meses gratuitos en marcha.
 
 #### Fase 3 — Monetización (mes 6)
 

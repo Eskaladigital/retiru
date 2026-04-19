@@ -8,7 +8,7 @@ Documento de **trabajo**: contrasta páginas y tipos en `src/types/index.ts` con
 
 ## Resumen ejecutivo (abril 2026)
 
-- **Implementado en BD y flujo:** `user_roles` (027), campos SEO en `categories` / `destinations` (028 + 029), comisiones escalonadas por retiro (028_tiered_commissions), `shop_product_interests` + RPC estadísticas (030 + 032), verificación de organizador: `contract_accepted_at`, `organizer_verification_steps` con `file_url`, bucket `organizer-docs`, ampliación de enum de pasos (031a + 031b).
+- **Implementado en BD y flujo:** `user_roles` (027), campos SEO en `categories` / `destinations` (028 + 029), comisiones escalonadas por retiro (028_tiered_commissions), `shop_product_interests` + RPC estadísticas (030 + 032), verificación de organizador: `contract_accepted_at`, `organizer_verification_steps` con `file_url`, bucket `organizer-docs`, ampliación de enum de pasos (031a + 031b), **sistema de mailing CRM** (038 + 039): `mailing_campaigns`, `mailing_recipients`, vista `mailing_campaigns_stats`, columnas de opt-out en `centers` (`marketing_opt_out_at`, `marketing_opt_out_token`, `marketing_opt_out_reason`).
 - **Siguen siendo gaps reales** para partes del roadmap: facturas dedicadas, `product_reviews`, `refunds` como entidad, preferencias de notificación, tags CRM, analytics de páginas, algunos campos opcionales en `organizer_profiles` / `products` (ver secciones siguientes).
 
 | Prioridad | Temas aún abiertos (resumen) |

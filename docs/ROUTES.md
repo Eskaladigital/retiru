@@ -248,6 +248,9 @@ Ver tablas arriba y `docs/SEO-LANDINGS.md`.
 | `/administrator/centros` | `src/app/administrator/centros/page.tsx` | Gestión centros |
 | `/administrator/claims` | `src/app/administrator/claims/page.tsx` | Gestión claims de centros |
 | `/administrator/mensajes` | `src/app/administrator/mensajes/page.tsx` | Moderación + soporte (`?open=convId`) |
+| `/administrator/mails` | `src/app/administrator/mails/page.tsx` | CRM de campañas de mailing (listado + crear) |
+| `/administrator/mails/nueva` | `src/app/administrator/mails/nueva/page.tsx` | Crear campaña en borrador (subject/slug/descripción) |
+| `/administrator/mails/[slug]` | `src/app/administrator/mails/[slug]/page.tsx` | Detalle: pestañas Contenido (gen. con IA), Preview, Audiencia, Envío |
 | `/administrator/blog` | `src/app/administrator/blog/page.tsx` | Gestión blog |
 | `/administrator/tienda` | `src/app/administrator/tienda/page.tsx` | Productos + resultados encuesta (`docs/SHOP-SURVEY.md`) |
 | `/administrator/reembolsos` | `src/app/administrator/reembolsos/page.tsx` | Reembolsos |
@@ -307,3 +310,19 @@ Protegido por middleware y comprobación de admin. No indexado en buscadores.
 | POST | `/api/cron/payment-deadlines` | Cron: procesa plazos de pago de reservas sin pago — gracia +24h y cancelación automática |
 | POST | `/api/cron/event-reminders` | Cron: recordatorios pre-evento (7d y 2d) |
 | POST | `/api/cron/review-requests` | Cron: solicitar reseñas post-evento |
+| GET / POST | `/api/cron/mailing-tick` | Cron (cada minuto): envía un micro-lote (`batch_size_per_tick`) de cada campaña en `sending`, respetando `max_per_hour`; pausa automática si OVH devuelve rate-limit; auth con `CRON_SECRET` |
+| GET / POST | `/api/unsubscribe` | Baja de marketing por token (`?t=<marketing_opt_out_token>`); soporta `List-Unsubscribe-Post: One-Click` |
+| GET / POST | `/api/admin/mailing/campaigns` | Listar campañas (vista `mailing_campaigns_stats`) o crear borrador |
+| GET / PATCH / DELETE | `/api/admin/mailing/campaigns/[slug]` | Detalle/edición/borrado (solo `draft`) |
+| POST | `/api/admin/mailing/campaigns/[slug]/generate` | Generar HTML con OpenAI `gpt-4o-mini` usando referencias previas; SSE de logs |
+| GET | `/api/admin/mailing/campaigns/[slug]/preview` | HTML renderizado con datos reales (para `<iframe>` de preview) |
+| POST | `/api/admin/mailing/campaigns/[slug]/send-test` | Envía un test a un email arbitrario (sin tocar `mailing_recipients`) |
+| POST | `/api/admin/mailing/campaigns/[slug]/populate-recipients` | Volcar destinatarios según `audience_filter` (`all`/`claimed`/`not_claimed`/`test_emails`) |
+| POST | `/api/admin/mailing/campaigns/[slug]/start` | Pasa la campaña a `sending` (valida HTML + `pending` > 0) |
+| POST | `/api/admin/mailing/campaigns/[slug]/pause` | Marca `is_paused=true` |
+| POST | `/api/admin/mailing/campaigns/[slug]/resume` | Marca `is_paused=false` (o `draft → sending`) |
+| POST | `/api/admin/mailing/campaigns/[slug]/retry-failed` | Re-encola los `failed` como `pending` |
+| POST | `/api/admin/mailing/campaigns/[slug]/archive` | Marca `archived` (referencia para la IA) |
+| GET | `/api/admin/mailing/campaigns/[slug]/recipients` | Listado paginado y filtrable por estado |
+| GET | `/api/admin/mailing/references` | Campañas con `has_html=true` para usar como referencia de la IA |
+| GET | `/api/admin/mailing/centers-search` | Buscar centros activos por nombre (selector del panel) |
