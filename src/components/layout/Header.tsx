@@ -171,17 +171,28 @@ export default function Header({ locale, user }: HeaderProps) {
           )}
         </div>
 
-        {/* Mobile hamburger */}
-        <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className={`md:hidden flex items-center justify-center w-10 h-10 rounded-xl transition-colors ${
-            scrolled ? 'hover:bg-sand-100' : 'hover:bg-white/20'
-          }`}
-          aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
-          aria-expanded={mobileOpen}
-        >
-          {mobileOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
+        {/* Mobile controls: language switch + hamburger */}
+        <div className="flex items-center gap-1 md:hidden">
+          <LocaleSwitchLink
+            locale={locale}
+            className={`flex items-center gap-1 h-10 px-2.5 rounded-xl text-sm font-medium transition-colors ${
+              scrolled ? 'hover:bg-sand-100' : 'hover:bg-white/20'
+            }`}
+          >
+            <Globe size={18} />
+            <span>{altLocale.toUpperCase()}</span>
+          </LocaleSwitchLink>
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className={`flex items-center justify-center w-10 h-10 rounded-xl transition-colors ${
+              scrolled ? 'hover:bg-sand-100' : 'hover:bg-white/20'
+            }`}
+            aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
+            aria-expanded={mobileOpen}
+          >
+            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
       </nav>
     </header>
 
@@ -256,14 +267,6 @@ export default function Header({ locale, user }: HeaderProps) {
             <hr className="my-3 border-sand-100" />
 
             <div className="flex flex-col gap-0.5">
-              <LocaleSwitchLink
-                locale={locale}
-                className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]"
-                onNavigate={closeMenu}
-              >
-                <span className="w-9 h-9 rounded-xl bg-sand-100 flex items-center justify-center"><Globe size={17} className="text-sand-500" /></span>
-                {altLocale === 'en' ? 'English' : 'Español'}
-              </LocaleSwitchLink>
               {user ? (
                 <>
                   <Link href={`${prefix}/mis-reservas`} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-sand-50 transition-colors text-[15px]" onClick={closeMenu}>
