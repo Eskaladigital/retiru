@@ -108,9 +108,9 @@ async function processCampaign(
         status: 'sent',
         completed_at: new Date().toISOString(),
         last_tick_at: new Date().toISOString(),
-        last_tick_note: 'Campaña completada (no quedan pending).',
+        last_tick_note: 'Campaña enviada (no quedan pending).',
       }).eq('id', campaign.id);
-      result.note = 'completada';
+      result.note = 'enviada';
       await recomputeCounters(sb, campaign.id);
     } else {
       result.note = 'sin pending ahora mismo';

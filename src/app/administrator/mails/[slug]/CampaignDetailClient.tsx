@@ -390,7 +390,7 @@ function statusBadge(c: CampaignFull): { label: string; classes: string } {
   switch (c.status) {
     case 'draft': return { label: 'Borrador', classes: 'bg-sand-100 text-[#7a6b5d] border-sand-200' };
     case 'sending': return { label: 'Enviando', classes: 'bg-sage-50 text-sage-700 border-sage-200' };
-    case 'sent': return { label: 'Completada', classes: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+    case 'sent': return { label: 'Enviada', classes: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
     case 'archived': return { label: 'Archivada', classes: 'bg-[#f3eee8] text-[#7a6b5d] border-sand-200' };
   }
 }
