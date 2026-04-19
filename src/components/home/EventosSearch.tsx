@@ -7,6 +7,7 @@ import { es } from 'date-fns/locale';
 import * as Popover from '@radix-ui/react-popover';
 import { useRouter } from 'next/navigation';
 import { MapPin, Search, ChevronDown, Check, X } from 'lucide-react';
+import { calendarCSS } from './HeroSearch';
 
 const DESTINATIONS = [
   { slug: '', name: 'Todos los destinos' },
@@ -104,9 +105,28 @@ export default function EventosSearch() {
             </button>
           </Popover.Trigger>
           <Popover.Portal>
-            <Popover.Content className="z-50 rounded-2xl border border-sand-200 bg-white shadow-elevated" side="bottom" align="end" sideOffset={8}>
-              <style>{`.retiru-calendar{--rdp-accent-color:#c85a30;--rdp-accent-background-color:rgba(200,90,48,0.12);font-family:'DM Sans',system-ui,sans-serif;padding:16px 20px;font-size:12px}.retiru-calendar .rdp-range_start .rdp-day_button,.retiru-calendar .rdp-range_end .rdp-day_button{background:#c85a30!important;color:white!important;border-radius:8px!important}.retiru-calendar .rdp-range_middle{background:rgba(200,90,48,0.12)}`}</style>
-              <DayPicker className="retiru-calendar" mode="range" selected={rangoFechas} onSelect={(r) => { setRangoFechas(r); if (r?.from && r?.to && r.from.getTime() !== r.to.getTime()) setTimeout(() => setDateOpen(false), 2000); }} locale={es} disabled={{ before: new Date() }} numberOfMonths={2} />
+            <Popover.Content
+              className="z-50 rounded-2xl border border-sand-200 bg-white shadow-elevated animate-[scaleIn_0.15s_ease-out]"
+              side="bottom"
+              align="end"
+              sideOffset={8}
+              avoidCollisions={false}
+            >
+              <style>{calendarCSS}</style>
+              <DayPicker
+                className="retiru-calendar"
+                mode="range"
+                selected={rangoFechas}
+                onSelect={(r) => {
+                  setRangoFechas(r);
+                  if (r?.from && r?.to && r.from.getTime() !== r.to.getTime()) {
+                    setTimeout(() => setDateOpen(false), 2000);
+                  }
+                }}
+                locale={es}
+                disabled={{ before: new Date() }}
+                numberOfMonths={2}
+              />
             </Popover.Content>
           </Popover.Portal>
         </Popover.Root>

@@ -315,7 +315,7 @@ function DropdownSelect({
 
 /* ─── Calendar CSS ───────────────────────────────────────────── */
 
-const calendarCSS = `
+export const calendarCSS = `
   .retiru-calendar {
     --rdp-accent-color: #c85a30;
     --rdp-accent-background-color: rgba(200, 90, 48, 0.12);
