@@ -53,7 +53,7 @@ export default function NuevaCampanaPage() {
   }
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-2xl pt-2">
       <div className="mb-6">
         <Link href="/administrator/mails" className="text-sm text-sage-700 hover:underline">
           ← Volver al listado

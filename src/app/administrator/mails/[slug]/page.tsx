@@ -33,7 +33,7 @@ export default async function MailCampaignDetail({ params }: PageProps) {
   };
 
   return (
-    <div>
+    <div className="pt-2">
       <div className="mb-6 flex items-center gap-2 text-sm">
         <Link href="/administrator/mails" className="text-sage-700 hover:underline">Mails</Link>
         <span className="text-[#a09383]">/</span>
