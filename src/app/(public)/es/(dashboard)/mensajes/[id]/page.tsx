@@ -161,9 +161,13 @@ export default function ConversacionPage() {
       {isSupport && (
         <div className="shrink-0 mb-3 rounded-xl bg-sage-50 border border-sage-200 px-4 py-3 flex gap-2 items-start">
           <LifeBuoy size={16} className="text-sage-500 shrink-0 mt-0.5" />
-          <p className="text-xs text-sage-700 leading-relaxed">
-            Estás hablando con el equipo de Retiru. Responderemos lo antes posible.
-          </p>
+          <div className="text-xs text-sage-700 leading-relaxed space-y-1">
+            <p>Estás hablando con el equipo de Retiru. Responderemos lo antes posible.</p>
+            <p>
+              Este chat es solo para hablar con el soporte de Retiru. Si quieres contactar con el organizador de un retiro,
+              hazlo desde el botón <strong>«Preguntar al organizador»</strong> en la ficha del evento.
+            </p>
+          </div>
         </div>
       )}
 
