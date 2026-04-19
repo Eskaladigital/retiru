@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Search, SlidersHorizontal, X, MapPin, Star, ChevronDown, CalendarDays, Users, Zap, Flame } from 'lucide-react';
 import type { Retreat, Category, Destination } from '@/types';
-import { getOrganizerReviewStats, organizerHasRatingToShow } from '@/lib/utils';
+import { getOrganizerReviewStats, organizerHasRatingToShow, getSearchTokens, matchesAllTokens } from '@/lib/utils';
 
 interface EventsClientProps {
   retreats: Retreat[];
@@ -65,18 +65,23 @@ export default function EventsClientEN({ retreats, categories, destinations }: E
     if (qParam || destParam || tipoParam) setShowFilters(true);
   }, [searchParams, categories, destinations]);
 
+  const tokens = useMemo(
+    () => getSearchTokens(query, ['retreat', 'retreats', 'escape', 'escapes', 'retiro', 'retiros']),
+    [query],
+  );
+
   const filtered = useMemo(() => {
     let results = retreats.filter((r) => {
-      const q = query.toLowerCase();
       const title = r.title_en || r.title_es;
       const summary = r.summary_en || r.summary_es || '';
       const destName = r.destination?.name_en || r.destination?.name_es || '';
-      const catName = r.categories?.[0]?.name_en || r.categories?.[0]?.name_es || '';
-      const matchesQuery = !q
-        || title.toLowerCase().includes(q)
-        || summary.toLowerCase().includes(q)
-        || destName.toLowerCase().includes(q)
-        || catName.toLowerCase().includes(q);
+      const catNames = (r.categories ?? []).flatMap((c) => [c.name_en, c.name_es]);
+      const matchesQuery = matchesAllTokens(tokens, [
+        title,
+        summary,
+        destName,
+        ...catNames,
+      ]);
       const matchesCategory = selectedCategory === 'All'
         || r.categories?.some((c) => (c.name_en || c.name_es) === selectedCategory);
       const matchesDestination = selectedDestination === 'All'
@@ -93,7 +98,7 @@ export default function EventsClientEN({ retreats, categories, destinations }: E
       default: results.sort((a, b) => getOrganizerReviewStats(b).review_count - getOrganizerReviewStats(a).review_count);
     }
     return results;
-  }, [query, selectedCategory, selectedDestination, minRating, sortBy, retreats]);
+  }, [tokens, selectedCategory, selectedDestination, minRating, sortBy, retreats]);
 
   const hasActiveFilters = selectedCategory !== 'All' || selectedDestination !== 'All' || minRating > 0 || query;
 

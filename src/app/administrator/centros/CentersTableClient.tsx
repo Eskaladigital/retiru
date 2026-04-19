@@ -122,6 +122,8 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [deleting, setDeleting] = useState<string | null>(null);
   const [toggling, setToggling] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const handleDelete = async (c: CenterRow) => {
     if (!window.confirm(`¿Seguro que quieres eliminar "${c.name}"?\n\nEsta acción no se puede deshacer.`)) return;
@@ -186,6 +188,17 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
     }
   };
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
   const [filterProvince, setFilterProvince] = useState('');
   const [filterPlan, setFilterPlan] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
@@ -234,6 +247,50 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages - 1);
   const pageData = sorted.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
+
+  const filteredIds = useMemo(() => sorted.map((c) => c.id), [sorted]);
+  const allFilteredSelected = filteredIds.length > 0 && filteredIds.every((id) => selectedIds.has(id));
+  const someFilteredSelected = filteredIds.some((id) => selectedIds.has(id));
+  const selectedCount = selectedIds.size;
+
+  const toggleSelectAllFiltered = () => {
+    if (allFilteredSelected) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        filteredIds.forEach((id) => next.delete(id));
+        return next;
+      });
+    } else {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        filteredIds.forEach((id) => next.add(id));
+        return next;
+      });
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedCount === 0) return;
+    const confirmMsg = `¿Seguro que quieres eliminar ${selectedCount} centro${selectedCount !== 1 ? 's' : ''}?\n\nEsta acción no se puede deshacer.`;
+    if (!window.confirm(confirmMsg)) return;
+    const secondConfirm = window.prompt(`Escribe "ELIMINAR" para confirmar el borrado de ${selectedCount} centros:`);
+    if (secondConfirm !== 'ELIMINAR') return;
+
+    setBulkDeleting(true);
+    try {
+      const supabase = createClient();
+      const ids = Array.from(selectedIds);
+      const { error } = await supabase.from('centers').delete().in('id', ids);
+      if (error) {
+        alert(`Error al eliminar: ${error.message}`);
+      } else {
+        setSelectedIds(new Set());
+        router.refresh();
+      }
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -324,9 +381,47 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
           </button>
         )}
         <span className="ml-auto text-xs text-[#999]">
-          {sorted.length} resultado{sorted.length !== 1 ? 's' : ''}
+          {hasFilters
+            ? `${sorted.length} resultado${sorted.length !== 1 ? 's' : ''} (de ${list.length})`
+            : `${list.length} resultado${list.length !== 1 ? 's' : ''}`}
         </span>
       </div>
+
+      {/* Barra de acciones en bloque */}
+      {selectedCount > 0 && (
+        <div className="flex flex-wrap items-center gap-3 px-4 py-3 bg-terracotta-50 border border-terracotta-200 rounded-xl">
+          <span className="text-sm font-semibold text-terracotta-700">
+            {selectedCount} centro{selectedCount !== 1 ? 's' : ''} seleccionado{selectedCount !== 1 ? 's' : ''}
+          </span>
+          <div className="flex items-center gap-2 text-xs">
+            <button
+              type="button"
+              onClick={toggleSelectAllFiltered}
+              className="px-2 py-1 rounded text-terracotta-700 hover:bg-terracotta-100 font-medium"
+            >
+              {allFilteredSelected
+                ? `Deseleccionar los ${filteredIds.length} filtrados`
+                : `Seleccionar los ${filteredIds.length} filtrados`}
+            </button>
+            <button
+              type="button"
+              onClick={clearSelection}
+              className="px-2 py-1 rounded text-[#7a6b5d] hover:bg-sand-100 font-medium"
+            >
+              Limpiar selección
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={handleBulkDelete}
+            disabled={bulkDeleting}
+            className="ml-auto inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors disabled:opacity-50"
+          >
+            <Trash2 size={16} />
+            {bulkDeleting ? 'Eliminando...' : `Eliminar ${selectedCount} seleccionado${selectedCount !== 1 ? 's' : ''}`}
+          </button>
+        </div>
+      )}
 
       {/* Mobile cards */}
       <div className="md:hidden space-y-3">
@@ -338,8 +433,15 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
           pageData.map((c) => {
             const imgSrc = getMainImage(c);
             return (
-              <div key={c.id} className="bg-white border border-sand-200 rounded-2xl p-4 space-y-2.5">
+              <div key={c.id} className={`bg-white border rounded-2xl p-4 space-y-2.5 ${selectedIds.has(c.id) ? 'border-terracotta-400 bg-terracotta-50/30' : 'border-sand-200'}`}>
                 <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(c.id)}
+                    onChange={() => toggleSelect(c.id)}
+                    className="mt-3 w-4 h-4 rounded border-sand-300 text-terracotta-600 focus:ring-terracotta-400 cursor-pointer shrink-0"
+                    aria-label={`Seleccionar ${c.name}`}
+                  />
                   <div className="w-10 h-10 rounded-lg overflow-hidden bg-sand-100 shrink-0">
                     {imgSrc ? <img src={imgSrc} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[9px] text-[#bbb]">—</div>}
                   </div>
@@ -381,6 +483,19 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-sand-200 bg-sand-50">
+                <th className="py-3 px-3 w-10">
+                  <input
+                    type="checkbox"
+                    checked={allFilteredSelected}
+                    ref={(el) => {
+                      if (el) el.indeterminate = !allFilteredSelected && someFilteredSelected;
+                    }}
+                    onChange={toggleSelectAllFiltered}
+                    className="w-4 h-4 rounded border-sand-300 text-terracotta-600 focus:ring-terracotta-400 cursor-pointer"
+                    aria-label="Seleccionar todos los filtrados"
+                    title={allFilteredSelected ? 'Deseleccionar todos los filtrados' : `Seleccionar los ${filteredIds.length} filtrados`}
+                  />
+                </th>
                 <th className="text-left py-3 px-4 font-semibold text-[#7a6b5d] w-14">Img</th>
                 <ThSortable label="Centro" sortKey="name" current={sortKey} dir={sortDir} onSort={handleSort} />
                 <ThSortable label="Ciudad" sortKey="city" current={sortKey} dir={sortDir} onSort={handleSort} />
@@ -397,15 +512,25 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
             <tbody>
               {pageData.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="py-12 text-center text-[#999]">
+                  <td colSpan={12} className="py-12 text-center text-[#999]">
                     {hasFilters ? 'No hay centros que coincidan con los filtros.' : 'No hay centros en la base de datos.'}
                   </td>
                 </tr>
               ) : (
                 pageData.map((c) => {
                   const imgSrc = getMainImage(c);
+                  const isSelected = selectedIds.has(c.id);
                   return (
-                    <tr key={c.id} className="border-b border-sand-100 hover:bg-sand-50/50 transition-colors">
+                    <tr key={c.id} className={`border-b border-sand-100 transition-colors ${isSelected ? 'bg-terracotta-50/60 hover:bg-terracotta-50' : 'hover:bg-sand-50/50'}`}>
+                      <td className="py-2 px-3 text-center">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelect(c.id)}
+                          className="w-4 h-4 rounded border-sand-300 text-terracotta-600 focus:ring-terracotta-400 cursor-pointer"
+                          aria-label={`Seleccionar ${c.name}`}
+                        />
+                      </td>
                       <td className="py-2 px-4">
                         <div className="w-10 h-10 rounded-lg overflow-hidden bg-sand-100 shrink-0">
                           {imgSrc ? <img src={imgSrc} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[9px] text-[#bbb]">—</div>}

@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Search, SlidersHorizontal, X, MapPin, Star, ChevronDown, CalendarDays } from 'lucide-react';
-import { isGenericDescription, stripMarkdownForPreview, CENTER_FILTER_OPTIONS_ES, getCenterTypeLabel, VALID_CENTER_TYPE_SLUGS, PUBLIC_DIRECTORY_CENTER_TYPE_SLUGS } from '@/lib/utils';
+import { isGenericDescription, stripMarkdownForPreview, CENTER_FILTER_OPTIONS_ES, getCenterTypeLabel, VALID_CENTER_TYPE_SLUGS, PUBLIC_DIRECTORY_CENTER_TYPE_SLUGS, getSearchTokens, matchesAllTokens } from '@/lib/utils';
 
 const SORT_OPTIONS = [
   { value: 'relevance', label: 'Relevancia' },
@@ -90,11 +90,23 @@ export default function CentrosClient({ centers }: CentrosClientProps) {
     if (qParam || tipoParam || provParam || ciudadParam) setShowFilters(true);
   }, [searchParams, TYPES, PROVINCES, CIUDAD_SLUG_TO_NAME]);
 
+  const tokens = useMemo(
+    () => getSearchTokens(query, ['centro', 'centros']),
+    [query],
+  );
+
   const filtered = useMemo(() => {
     let results = centers.filter(c => {
-      const q = query.toLowerCase();
       const services = Array.isArray(c.services_es) ? c.services_es : [];
-      const matchesQuery = !q || c.name?.toLowerCase().includes(q) || c.description_es?.toLowerCase().includes(q) || c.city?.toLowerCase().includes(q) || services.some((s: string) => s.toLowerCase().includes(q));
+      const matchesQuery = matchesAllTokens(tokens, [
+        c.name,
+        c.description_es,
+        c.city,
+        c.province,
+        c.type,
+        getCenterTypeLabel(c.type, 'es'),
+        ...services,
+      ]);
       const matchesType = selectedType === 'Todos' || c.type === selectedType;
       const matchesProvince = selectedProvince === 'Todas' || c.province === selectedProvince;
       const matchesCity = !selectedCity || c.city === selectedCity;
@@ -109,7 +121,7 @@ export default function CentrosClient({ centers }: CentrosClientProps) {
       default: results.sort((a: any, b: any) => (b.avg_rating || 0) - (a.avg_rating || 0));
     }
     return results;
-  }, [centers, query, selectedType, selectedProvince, selectedCity, minRating, sortBy]);
+  }, [centers, tokens, selectedType, selectedProvince, selectedCity, minRating, sortBy]);
 
   const totalFiltered = filtered.length;
   const pageSize = perPage === 0 ? totalFiltered : perPage;

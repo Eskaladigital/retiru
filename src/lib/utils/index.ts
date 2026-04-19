@@ -87,6 +87,48 @@ export function truncate(text: string, length: number): string {
   return text.slice(0, length).trimEnd() + '…';
 }
 
+/** Normaliza texto para búsqueda: lowercase + quita acentos/diacríticos. */
+export function normalizeForSearch(text: string | null | undefined): string {
+  if (!text) return '';
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+/**
+ * Tokeniza una query de búsqueda en palabras >=2 chars normalizadas (sin acentos)
+ * y descartando stopwords proporcionadas (p.ej. "centros", "retiros").
+ */
+export function getSearchTokens(query: string | null | undefined, stopwords: string[] = []): string[] {
+  const normalized = normalizeForSearch(query);
+  if (!normalized) return [];
+  const stop = new Set([
+    'a', 'o', 'y', 'e', 'de', 'la', 'el', 'los', 'las', 'en', 'con', 'un', 'una',
+    'the', 'of', 'and', 'in', 'on', 'at', 'to', 'for',
+    ...stopwords.map((s) => s.toLowerCase()),
+  ]);
+  return normalized
+    .split(/[\s,;]+/)
+    .map((t) => t.trim())
+    .filter((t) => t.length >= 2 && !stop.has(t));
+}
+
+/**
+ * Comprueba que todos los tokens aparezcan en alguno de los campos (AND estricto).
+ * Los campos se unen en un único haystack normalizado para que cada token pueda
+ * matchear en cualquier columna (name, city, province, tipo, services, etc.).
+ */
+export function matchesAllTokens(
+  tokens: string[],
+  fields: (string | null | undefined)[],
+): boolean {
+  if (tokens.length === 0) return true;
+  const haystack = fields.map(normalizeForSearch).join(' ');
+  if (!haystack) return false;
+  return tokens.every((tok) => haystack.includes(tok));
+}
+
 const GENERIC_DESC_SUFFIX = 'Descripción generada automáticamente. Puedes completarla desde el panel de administración.';
 
 /** Detecta si la descripción es la genérica del import */

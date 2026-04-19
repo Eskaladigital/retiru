@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Search, SlidersHorizontal, X, MapPin, Star, ChevronDown, CalendarDays, Users, Zap, Flame } from 'lucide-react';
 import type { Retreat, Category, Destination } from '@/types';
-import { getOrganizerReviewStats, organizerHasRatingToShow } from '@/lib/utils';
+import { getOrganizerReviewStats, organizerHasRatingToShow, getSearchTokens, matchesAllTokens } from '@/lib/utils';
 
 interface EventosClientProps {
   retreats: Retreat[];
@@ -66,14 +66,20 @@ export default function EventosClient({ retreats, categories, destinations }: Ev
     if (qParam || destParam || tipoParam) setShowFilters(true);
   }, [searchParams, categories, destinations]);
 
+  const tokens = useMemo(
+    () => getSearchTokens(query, ['retiro', 'retiros', 'escapada', 'escapadas']),
+    [query],
+  );
+
   const filtered = useMemo(() => {
     let results = retreats.filter((r) => {
-      const q = query.toLowerCase();
-      const matchesQuery = !q
-        || r.title_es.toLowerCase().includes(q)
-        || (r.summary_es ?? '').toLowerCase().includes(q)
-        || (r.destination?.name_es ?? '').toLowerCase().includes(q)
-        || (r.categories?.[0]?.name_es ?? '').toLowerCase().includes(q);
+      const catNames = (r.categories ?? []).map((c) => c.name_es);
+      const matchesQuery = matchesAllTokens(tokens, [
+        r.title_es,
+        r.summary_es,
+        r.destination?.name_es,
+        ...catNames,
+      ]);
       const matchesCategory = selectedCategory === 'Todos'
         || r.categories?.some((c) => c.name_es === selectedCategory);
       const matchesDestination = selectedDestination === 'Todos'
@@ -91,7 +97,7 @@ export default function EventosClient({ retreats, categories, destinations }: Ev
       default: results.sort((a, b) => getOrganizerReviewStats(b).review_count - getOrganizerReviewStats(a).review_count);
     }
     return results;
-  }, [query, selectedCategory, selectedDestination, minRating, sortBy, retreats]);
+  }, [tokens, selectedCategory, selectedDestination, minRating, sortBy, retreats]);
 
   const hasActiveFilters = selectedCategory !== 'Todos' || selectedDestination !== 'Todos' || minRating > 0 || query;
 
