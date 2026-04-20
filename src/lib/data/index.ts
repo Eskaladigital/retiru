@@ -1099,9 +1099,9 @@ export async function getProvincesForStyle(styleSlug: string, min = 1): Promise<
     .sort((a, b) => b.count - a.count);
 }
 
-/** Devuelve pares (styleSlug, provinceSlug) con al menos `min` centros, para `generateStaticParams`. */
+/** Devuelve pares (styleSlug, provinceSlug) con al menos `min` centros, para `generateStaticParams` / sitemap (build sin cookies). */
 export async function getStyleProvincePairs(min = 5): Promise<{ centerType: string; styleSlug: string; provinceSlug: string; provinceName: string; count: number }[]> {
-  const supabase = await createServerSupabase();
+  const supabase = createStaticSupabase();
   const { data: styles, error: sErr } = await supabase
     .from('styles')
     .select('id, slug, center_type')
