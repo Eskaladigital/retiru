@@ -22,6 +22,9 @@ import { createHash } from 'crypto';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
+import sharp from 'sharp';
+
+const WEBP_QUALITY = 82;
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
@@ -328,10 +331,10 @@ function shouldProcessRow(row, inlineFlag) {
 }
 
 async function uploadBlogImage(buffer, contentType, suffix) {
-  const ext = contentType.includes('png') ? 'png' : 'jpg';
-  const path = `blog/ai-${suffix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}.${ext}`;
-  const { error: upErr } = await admin.storage.from('retreat-images').upload(path, buffer, {
-    contentType,
+  const webpBuf = await sharp(buffer).webp({ quality: WEBP_QUALITY, effort: 5 }).toBuffer();
+  const path = `blog/ai-${suffix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}.webp`;
+  const { error: upErr } = await admin.storage.from('retreat-images').upload(path, webpBuf, {
+    contentType: 'image/webp',
     cacheControl: '31536000',
     upsert: false,
   });

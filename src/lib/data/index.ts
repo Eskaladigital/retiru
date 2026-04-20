@@ -704,6 +704,232 @@ export async function getProvincesForCenterType(type: string): Promise<{ slug: s
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
+/** Contenido SEO (intro, FAQ, meta) para un par tipo×provincia (tabla center_type_province_seo).
+ *  Devuelve null si aún no se ha generado contenido para ese par.
+ *  city_slug/city_name son null para las filas provinciales y rellenos para las de ciudad. */
+export interface CenterTypeProvinceSeo {
+  type: string;
+  province_slug: string;
+  province_name: string;
+  city_slug: string | null;
+  city_name: string | null;
+  intro_es: string | null;
+  intro_en: string | null;
+  meta_title_es: string | null;
+  meta_title_en: string | null;
+  meta_description_es: string | null;
+  meta_description_en: string | null;
+  faq_es: { question: string; answer: string }[];
+  faq_en: { question: string; answer: string }[];
+}
+
+const SEO_SELECT =
+  'type, province_slug, province_name, city_slug, city_name, intro_es, intro_en, meta_title_es, meta_title_en, meta_description_es, meta_description_en, faq_es, faq_en';
+
+function normalizeSeoRow(data: Partial<CenterTypeProvinceSeo> & { faq_es?: unknown; faq_en?: unknown } | null): CenterTypeProvinceSeo | null {
+  if (!data) return null;
+  return {
+    ...data,
+    city_slug: (data.city_slug as string | null) ?? null,
+    city_name: (data.city_name as string | null) ?? null,
+    faq_es: Array.isArray(data.faq_es) ? data.faq_es : [],
+    faq_en: Array.isArray(data.faq_en) ? data.faq_en : [],
+  } as CenterTypeProvinceSeo;
+}
+
+/** Provincial: fila sin ciudad. */
+export async function getCenterTypeProvinceSeo(
+  type: string,
+  provinceSlug: string,
+): Promise<CenterTypeProvinceSeo | null> {
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from('center_type_province_seo')
+    .select(SEO_SELECT)
+    .eq('type', type)
+    .eq('province_slug', provinceSlug)
+    .is('city_slug', null)
+    .maybeSingle();
+  if (error || !data) return null;
+  return normalizeSeoRow(data);
+}
+
+/** Ciudad: fila con city_slug. */
+export async function getCenterTypeProvinceCitySeo(
+  type: string,
+  provinceSlug: string,
+  citySlug: string,
+): Promise<CenterTypeProvinceSeo | null> {
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from('center_type_province_seo')
+    .select(SEO_SELECT)
+    .eq('type', type)
+    .eq('province_slug', provinceSlug)
+    .eq('city_slug', citySlug)
+    .maybeSingle();
+  if (error || !data) return null;
+  return normalizeSeoRow(data);
+}
+
+/** Utilidad de normalización idéntica a la del script IA (NFD + slug-safe). */
+function slugifyCity(s: string): string {
+  return String(s || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+/** Ternas {type, provinceSlug, citySlug, cityName, provinceName, count} con al menos `min` centros activos.
+ *  Usada por generateStaticParams de /es/centros/[tipo]/[provincia]/[ciudad]. */
+export async function getCenterTypeProvinceCityTriples(
+  min = 2,
+): Promise<{ type: string; provinceSlug: string; provinceName: string; citySlug: string; cityName: string; count: number }[]> {
+  const supabase = createStaticSupabase();
+  const { data, error } = await supabase
+    .from('centers')
+    .select('type, province, city')
+    .eq('status', 'active');
+  if (error) throw error;
+
+  const normalize = (s: string) =>
+    s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
+
+  const map = new Map<string, { type: string; provinceSlug: string; provinceName: string; citySlug: string; cityName: string; count: number }>();
+  for (const row of data || []) {
+    if (!row.type || !row.province || !row.city) continue;
+    const provinceSlug = normalize(row.province);
+    const citySlug = slugifyCity(row.city);
+    if (!citySlug) continue;
+    const key = `${row.type}|${provinceSlug}|${citySlug}`;
+    const entry = map.get(key) || { type: row.type, provinceSlug, provinceName: row.province, citySlug, cityName: row.city, count: 0 };
+    entry.count += 1;
+    map.set(key, entry);
+  }
+  return Array.from(map.values()).filter((t) => t.count >= min);
+}
+
+/** Centros activos de un par provincia+ciudad (todos los tipos, luego se filtra en la página). */
+export async function getCentersByProvinceCity(
+  provinceSlug: string,
+  citySlug: string,
+): Promise<{ centers: Center[]; provinceName: string | null; cityName: string | null }> {
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from('centers')
+    .select('*')
+    .eq('status', 'active')
+    .order('name');
+  if (error) throw error;
+
+  const normalize = (s: string) =>
+    s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
+
+  const filtered = (data || []).filter(
+    (c) => c.province && c.city && normalize(c.province) === provinceSlug && slugifyCity(c.city) === citySlug,
+  );
+  const provinceName = filtered.find((c) => c.province)?.province || null;
+  const cityName = filtered.find((c) => c.city)?.city || null;
+  return { centers: filtered as Center[], provinceName, cityName };
+}
+
+/** Próximos retiros publicados en un conjunto de destination_slugs. Devuelve los
+ *  más próximos por fecha de inicio, sin paginación. Usado por el hub provincial. */
+export async function getUpcomingRetreatsForDestinations(
+  destinationSlugs: string[],
+  limit = 4,
+): Promise<Retreat[]> {
+  if (!destinationSlugs.length) return [];
+  const supabase = await createServerSupabase();
+  const { data: destRows } = await supabase
+    .from('destinations')
+    .select('id')
+    .in('slug', destinationSlugs);
+  const destIds = (destRows || []).map((d) => d.id);
+  if (!destIds.length) return [];
+
+  const { data, error } = await supabase
+    .from('retreats')
+    .select(RETREAT_SELECT)
+    .eq('status', 'published')
+    .in('destination_id', destIds)
+    .gte('end_date', new Date().toISOString().slice(0, 10))
+    .order('start_date', { ascending: true })
+    .limit(limit);
+  if (error) return [];
+  return (data || []).map((r: Record<string, unknown>) => {
+    const { organizer_profiles, destinations, retreat_images, ...rest } = r;
+    return {
+      ...rest,
+      organizer: organizer_profiles ?? undefined,
+      destination: destinations ?? undefined,
+      categories: [],
+      images: (retreat_images as Retreat['images']) ?? [],
+    } as unknown as Retreat;
+  });
+}
+
+/** Artículos de blog publicados que mencionan un término (provincia/ciudad) en
+ *  título o cuerpo. Búsqueda ILIKE tolerante a acentos (se asume que los
+ *  contenidos no están con NFD). Limit pequeño; ordena por recency. */
+export async function getBlogArticlesMentioning(
+  term: string,
+  locale: 'es' | 'en' = 'es',
+  limit = 3,
+): Promise<Pick<import('@/types').BlogArticle, 'id' | 'slug' | 'title_es' | 'title_en' | 'excerpt_es' | 'excerpt_en' | 'cover_image_url' | 'published_at'>[]> {
+  if (!term || term.length < 2) return [];
+  const supabase = await createServerSupabase();
+  const needle = `%${term}%`;
+  const titleCol = locale === 'en' ? 'title_en' : 'title_es';
+  const contentCol = locale === 'en' ? 'content_en' : 'content_es';
+  const excerptCol = locale === 'en' ? 'excerpt_en' : 'excerpt_es';
+  const { data } = await supabase
+    .from('blog_articles')
+    .select('id, slug, title_es, title_en, excerpt_es, excerpt_en, cover_image_url, published_at')
+    .eq('is_published', true)
+    .or(`${titleCol}.ilike.${needle},${contentCol}.ilike.${needle},${excerptCol}.ilike.${needle}`)
+    .order('published_at', { ascending: false })
+    .limit(limit);
+  return (data || []) as any[];
+}
+
+/** Otras ciudades (dentro de la misma provincia y tipo) con ≥ `min` centros, para
+ *  enlazado interno / fallback. Excluye la propia ciudad. */
+export async function getCitiesForCenterTypeProvince(
+  type: string,
+  provinceSlug: string,
+  excludeCitySlug: string | null = null,
+  min = 1,
+): Promise<{ slug: string; name: string; count: number }[]> {
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from('centers')
+    .select('province, city')
+    .eq('status', 'active')
+    .eq('type', type);
+  if (error) throw error;
+
+  const normalize = (s: string) =>
+    s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
+
+  const counts = new Map<string, { name: string; count: number }>();
+  for (const row of data || []) {
+    if (!row.province || !row.city) continue;
+    if (normalize(row.province) !== provinceSlug) continue;
+    const slug = slugifyCity(row.city);
+    if (!slug || slug === excludeCitySlug) continue;
+    const entry = counts.get(slug) || { name: row.city, count: 0 };
+    entry.count += 1;
+    counts.set(slug, entry);
+  }
+  return Array.from(counts.entries())
+    .map(([slug, { name, count }]) => ({ slug, name, count }))
+    .filter((c) => c.count >= min)
+    .sort((a, b) => b.count - a.count);
+}
+
 /** Destinos con al menos 1 retiro de la categoría dada */
 export async function getDestinationsForCategory(categorySlug: string): Promise<{ slug: string; name_es: string; name_en: string; count: number }[]> {
   const supabase = await createServerSupabase();
@@ -764,4 +990,176 @@ export async function getProductCategories(): Promise<{ id: string; name_es: str
 
   if (error) throw error;
   return (data || []) as { id: string; name_es: string; name_en: string; slug: string }[];
+}
+
+// ─── Styles / subtipos (Fase 3 #10) ───────────────────────────────────────
+
+export interface Style {
+  id: string;
+  slug: string;
+  name_es: string;
+  name_en: string;
+  center_type: 'yoga' | 'meditation' | 'ayurveda';
+  description_es: string | null;
+  description_en: string | null;
+  sort_order: number;
+}
+
+export async function getStylesForType(centerType: string): Promise<Style[]> {
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from('styles')
+    .select('id, slug, name_es, name_en, center_type, description_es, description_en, sort_order')
+    .eq('center_type', centerType)
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true });
+  if (error) return [];
+  return (data || []) as Style[];
+}
+
+export async function getStyleBySlug(slug: string): Promise<Style | null> {
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from('styles')
+    .select('id, slug, name_es, name_en, center_type, description_es, description_en, sort_order')
+    .eq('slug', slug)
+    .eq('is_active', true)
+    .maybeSingle();
+  if (error || !data) return null;
+  return data as Style;
+}
+
+/** Devuelve las filas (centerId, styleSlug) activas para hacer conteos/provincias. */
+async function fetchAssignmentsForStyle(styleId: string): Promise<{ center_id: string }[]> {
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from('center_styles')
+    .select('center_id')
+    .eq('style_id', styleId);
+  if (error) return [];
+  return (data || []) as { center_id: string }[];
+}
+
+export async function getCentersByStyle(styleSlug: string, opts: { province?: string | null; limit?: number } = {}): Promise<{ centers: Center[]; total: number; style: Style | null }> {
+  const style = await getStyleBySlug(styleSlug);
+  if (!style) return { centers: [], total: 0, style: null };
+
+  const supabase = await createServerSupabase();
+  const { data: assignments, error: aErr } = await supabase
+    .from('center_styles')
+    .select('center_id')
+    .eq('style_id', style.id);
+  if (aErr || !assignments || assignments.length === 0) {
+    return { centers: [], total: 0, style };
+  }
+  const ids = Array.from(new Set(assignments.map((a) => a.center_id)));
+
+  let q = supabase
+    .from('centers')
+    .select('*', { count: 'exact' })
+    .in('id', ids)
+    .eq('status', 'active')
+    .order('avg_rating', { ascending: false, nullsFirst: false })
+    .order('review_count', { ascending: false });
+  if (opts.province) q = q.eq('province', opts.province);
+  if (opts.limit) q = q.limit(opts.limit);
+
+  const { data, error, count } = await q;
+  if (error) return { centers: [], total: 0, style };
+  return { centers: (data || []) as Center[], total: count || 0, style };
+}
+
+/** Provincias con ≥ `min` centros que practican el estilo dado. */
+export async function getProvincesForStyle(styleSlug: string, min = 1): Promise<{ slug: string; name: string; count: number }[]> {
+  const style = await getStyleBySlug(styleSlug);
+  if (!style) return [];
+  const assignments = await fetchAssignmentsForStyle(style.id);
+  if (assignments.length === 0) return [];
+  const ids = Array.from(new Set(assignments.map((a) => a.center_id)));
+
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from('centers')
+    .select('province')
+    .in('id', ids)
+    .eq('status', 'active');
+  if (error || !data) return [];
+
+  const counts = new Map<string, { name: string; count: number }>();
+  for (const row of data) {
+    if (!row.province) continue;
+    const slug = row.province.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
+    const entry = counts.get(slug) || { name: row.province, count: 0 };
+    entry.count += 1;
+    counts.set(slug, entry);
+  }
+  return Array.from(counts.entries())
+    .map(([slug, { name, count }]) => ({ slug, name, count }))
+    .filter((p) => p.count >= min)
+    .sort((a, b) => b.count - a.count);
+}
+
+/** Devuelve pares (styleSlug, provinceSlug) con al menos `min` centros, para `generateStaticParams`. */
+export async function getStyleProvincePairs(min = 5): Promise<{ centerType: string; styleSlug: string; provinceSlug: string; provinceName: string; count: number }[]> {
+  const supabase = await createServerSupabase();
+  const { data: styles, error: sErr } = await supabase
+    .from('styles')
+    .select('id, slug, center_type')
+    .eq('is_active', true);
+  if (sErr || !styles) return [];
+
+  const { data: links, error: lErr } = await supabase
+    .from('center_styles')
+    .select('center_id, style_id');
+  if (lErr || !links) return [];
+
+  const centerIds = Array.from(new Set(links.map((l) => l.center_id)));
+  if (centerIds.length === 0) return [];
+
+  const { data: centers, error: cErr } = await supabase
+    .from('centers')
+    .select('id, province, status')
+    .in('id', centerIds)
+    .eq('status', 'active');
+  if (cErr || !centers) return [];
+  const centerProvince = new Map<string, string>();
+  for (const c of centers) if (c.province) centerProvince.set(c.id, c.province);
+
+  const normalize = (s: string) =>
+    s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
+
+  const styleById = new Map(styles.map((s) => [s.id, s]));
+  const pairs = new Map<string, { centerType: string; styleSlug: string; provinceSlug: string; provinceName: string; count: number }>();
+  for (const l of links) {
+    const style = styleById.get(l.style_id);
+    if (!style) continue;
+    const province = centerProvince.get(l.center_id);
+    if (!province) continue;
+    const provinceSlug = normalize(province);
+    const key = `${style.slug}|${provinceSlug}`;
+    const entry = pairs.get(key) || {
+      centerType: style.center_type,
+      styleSlug: style.slug,
+      provinceSlug,
+      provinceName: province,
+      count: 0,
+    };
+    entry.count += 1;
+    pairs.set(key, entry);
+  }
+  return Array.from(pairs.values()).filter((p) => p.count >= min);
+}
+
+/** Estilos ligados al centro (para renderizar badges en ficha). */
+export async function getStylesForCenter(centerId: string): Promise<Style[]> {
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from('center_styles')
+    .select('style_id, styles:style_id (id, slug, name_es, name_en, center_type, description_es, description_en, sort_order, is_active)')
+    .eq('center_id', centerId);
+  if (error || !data) return [];
+  return (data || [])
+    .map((row: any) => row.styles)
+    .filter((s: any) => s && s.is_active)
+    .sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0)) as Style[];
 }

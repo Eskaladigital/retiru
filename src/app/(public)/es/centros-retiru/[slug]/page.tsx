@@ -5,7 +5,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { MapPin, Star } from 'lucide-react';
 import CentrosSearch from '@/components/home/CentrosSearch';
 import { getCenterProvinces, getCentersByProvince } from '@/lib/data';
@@ -18,18 +18,16 @@ import type { Center } from '@/types';
 export const revalidate = 3600;
 
 export async function generateStaticParams() {
-  const provinces = await getCenterProvinces();
+  // Desde #7 del PLAN_SEO las provincias canónicas viven en /es/provincias/[slug].
+  // Aquí solo pre-generamos país y comunidades autónomas (las provincias
+  // caen por permanentRedirect y no necesitan estáticos propios).
   const supabase = createStaticSupabase();
   const { data: geo } = await supabase
     .from('destinations')
     .select('slug')
     .eq('is_active', true)
-    .in('kind', ['country', 'region', 'province']);
-  const slugs = new Set<string>([
-    ...provinces.map((p) => p.slug),
-    ...((geo || []).map((g) => g.slug)),
-  ]);
-  return Array.from(slugs).map((slug) => ({ slug }));
+    .in('kind', ['country', 'region']);
+  return (geo || []).map((g) => ({ slug: g.slug }));
 }
 
 async function fetchCentersForGeo(node: GeoNode): Promise<Center[]> {
@@ -55,6 +53,9 @@ async function fetchCentersForGeo(node: GeoNode): Promise<Center[]> {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const geo = await resolveGeoLanding(slug);
+  if (geo?.kind === 'province') {
+    permanentRedirect(`/es/provincias/${slug}`);
+  }
   let name = slug;
   if (geo) {
     name = geo.name_es;
@@ -80,11 +81,18 @@ export default async function CentrosPorGeoPage({ params }: { params: Promise<{ 
   let geo: GeoNode | null = null;
 
   geo = await resolveGeoLanding(slug);
+  if (geo?.kind === 'province') {
+    permanentRedirect(`/es/provincias/${slug}`);
+  }
   if (geo) {
     placeName = geo.name_es;
     centers = await fetchCentersForGeo(geo);
   } else {
+    // Fallback provincia por match textual (legacy): también redirigimos al nuevo hub.
     const res = await getCentersByProvince(slug);
+    if (res.provinceName) {
+      permanentRedirect(`/es/provincias/${slug}`);
+    }
     centers = res.centers;
     placeName = res.provinceName;
   }
@@ -168,7 +176,7 @@ export default async function CentrosPorGeoPage({ params }: { params: Promise<{ 
           const typeMap = new Map<string, string>();
           centers.forEach((c) => { if (c.type && !typeMap.has(c.type)) typeMap.set(c.type, getCenterTypeLabel(c.type)); });
           const types = Array.from(typeMap.entries());
-          const canLinkType = !geo || geo.kind === 'province';
+          const canLinkType = !geo;
           return types.length > 0 && canLinkType ? (
             <div className="flex flex-wrap gap-2 mb-8">
               <span className="text-xs text-muted-foreground self-center mr-1">Filtrar por tipo:</span>

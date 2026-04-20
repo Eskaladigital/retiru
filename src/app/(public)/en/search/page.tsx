@@ -6,6 +6,7 @@
 
 import { Suspense, useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Flame, MapPin, Search, Star, Tag, Zap } from 'lucide-react';
 import Image from 'next/image';
 import { getCenterTypeLabel, getOrganizerReviewStats, organizerHasRatingToShow } from '@/lib/utils';
@@ -18,12 +19,26 @@ export default function SearchPage() {
 }
 
 function SearchContent() {
-  const [query, setQuery] = useState('');
+  const searchParams = useSearchParams();
+  const initialQ = searchParams.get('q') || '';
+  const [query, setQuery] = useState(initialQ);
   const [typeFilter, setTypeFilter] = useState('All');
   const [catFilter, setCatFilter] = useState('');
   const [retiros, setRetiros] = useState<any[]>([]);
   const [centros, setCentros] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    const trimmed = query.trim();
+    if (trimmed) url.searchParams.set('q', trimmed);
+    else url.searchParams.delete('q');
+    const next = `${url.pathname}${url.search}`;
+    if (next !== `${window.location.pathname}${window.location.search}`) {
+      window.history.replaceState({}, '', next);
+    }
+  }, [query]);
 
   useEffect(() => {
     async function loadData() {

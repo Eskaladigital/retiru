@@ -4,6 +4,7 @@
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { forOrganizersEN } from '@/lib/seo/page-metadata';
 import { jsonLdFAQ, jsonLdScript } from '@/lib/seo';
 export const metadata: Metadata = forOrganizersEN;
@@ -170,10 +171,17 @@ export default function ForOrganizersPageEN() {
           </p>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
-            {CENTER_BENEFITS.map((b) => (
+            {CENTER_BENEFITS.map((b, idx) => (
               <div key={b.title} className="flex flex-col overflow-hidden rounded-2xl border border-sand-200 bg-white transition-shadow hover:shadow-soft">
                 <div className="relative aspect-[16/10] shrink-0 bg-sand-100">
-                  <img src={b.image} alt={`Visual example: ${b.title}`} className="absolute inset-0 h-full w-full object-cover" />
+                  <Image
+                    src={b.image}
+                    alt={`Visual example: ${b.title}`}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    {...(idx < 3 ? { priority: true } : { loading: 'lazy' as const })}
+                    className="object-cover"
+                  />
                 </div>
                 <div className="flex flex-1 flex-col p-6">
                   <span className="mb-3 block text-2xl">{b.icon}</span>
@@ -294,7 +302,14 @@ export default function ForOrganizersPageEN() {
             {ORGANIZER_FEATURES.map((f) => (
               <div key={f.title} className="flex flex-col overflow-hidden rounded-2xl border border-sand-200 bg-white transition-shadow hover:shadow-soft">
                 <div className="relative aspect-[16/10] shrink-0 bg-sand-100">
-                  <img src={f.image} alt={`Visual example: ${f.title}`} className="absolute inset-0 h-full w-full object-cover" />
+                  <Image
+                    src={f.image}
+                    alt={`Visual example: ${f.title}`}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    loading="lazy"
+                    className="object-cover"
+                  />
                 </div>
                 <div className="flex flex-1 flex-col p-6">
                   <span className="mb-3 block text-2xl">{f.icon}</span>

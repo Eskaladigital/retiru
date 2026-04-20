@@ -129,26 +129,61 @@ export function BlogArticleForm({ categories, article }: BlogArticleFormProps) {
 
   const coverUrl = watch('cover_image_url');
 
+  const convertToWebp = async (file: File): Promise<Blob> => {
+    const bitmap = await createImageBitmap(file);
+    const MAX_W = 1600;
+    const scale = bitmap.width > MAX_W ? MAX_W / bitmap.width : 1;
+    const w = Math.round(bitmap.width * scale);
+    const h = Math.round(bitmap.height * scale);
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas no disponible');
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    bitmap.close?.();
+    const blob: Blob | null = await new Promise((resolve) =>
+      canvas.toBlob((b) => resolve(b), 'image/webp', 0.82)
+    );
+    if (!blob) throw new Error('No se pudo convertir a WebP');
+    return blob;
+  };
+
   const handleImageUpload = async (file: File) => {
     if (!file.type.startsWith('image/')) {
       setError('El archivo seleccionado no es una imagen');
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      setError('La imagen supera 5 MB. Elige una más pequeña.');
+    if (file.size > 20 * 1024 * 1024) {
+      setError('La imagen supera 20 MB. Elige una más pequeña.');
       return;
     }
     setUploading(true);
     setError(null);
     try {
       const supabase = createClient();
-      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-      const path = `blog/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      let uploadBlob: Blob = file;
+      let contentType = file.type;
+      let ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
 
-      const { error: upErr } = await supabase.storage.from('retreat-images').upload(path, file, {
-        cacheControl: '31536000',
-        upsert: false,
-      });
+      if (file.type !== 'image/webp' && file.type !== 'image/gif') {
+        try {
+          uploadBlob = await convertToWebp(file);
+          contentType = 'image/webp';
+          ext = 'webp';
+        } catch {
+          // Fallback: sube el archivo original si la conversión falla (por ejemplo, navegador antiguo)
+        }
+      }
+
+      const path = `blog/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from('retreat-images')
+        .upload(path, uploadBlob, {
+          cacheControl: '31536000',
+          upsert: false,
+          contentType,
+        });
 
       if (upErr) throw new Error(upErr.message);
 

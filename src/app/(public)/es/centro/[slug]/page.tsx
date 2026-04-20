@@ -2,9 +2,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import Image from 'next/image';
+import { MapPin, Star } from 'lucide-react';
 import { generatePageMetadata, jsonLdLocalBusiness, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
 import { getCenterTypeLabel, facebookProfileHref, CENTER_TYPE_URL_ES } from '@/lib/utils';
-import { getCenterBySlug, getCenterSlugs } from '@/lib/data';
+import { getCenterBySlug, getCenterSlugs, getActiveCenters } from '@/lib/data';
 import { RetreatDescriptionBody } from '@/components/ui/retreat-description-body';
 import { CenterMap } from '@/components/ui/center-map';
 import { ClaimCenterButton } from '@/components/ui/claim-center-button';
@@ -51,18 +53,42 @@ export default async function CentroDetailPage({ params }: Props) {
   const mainImage = C.cover_url || images[0] || '';
   const galleryImages = C.cover_url ? images : images.slice(1);
 
+  // Otros centros del mismo tipo en la misma provincia (excluye el actual)
+  const provinceSlug = C.province
+    ? C.province.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-')
+    : null;
+  let relatedCenters: typeof C[] = [];
+  if (C.type && C.province) {
+    const { centers: same } = await getActiveCenters({ type: C.type, province: C.province, limit: 7 });
+    relatedCenters = (same || []).filter((r) => r.id !== C.id).slice(0, 6);
+  }
+
   return (
     <div className="container-wide py-12">
       {mainImage && (
         <div className="mb-4 space-y-3">
-          <div className="w-full aspect-[21/9] rounded-2xl overflow-hidden">
-            <img src={mainImage} alt={C.name} className="w-full h-full object-cover" />
+          <div className="w-full aspect-[21/9] rounded-2xl overflow-hidden relative bg-sand-100">
+            <Image
+              src={mainImage}
+              alt={C.name}
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 1024px"
+              className="object-cover"
+            />
           </div>
           {galleryImages.length > 0 && (
             <div className="flex gap-3 overflow-x-auto pb-1">
               {galleryImages.slice(0, 4).map((img: string, i: number) => (
-                <div key={i} className="w-32 h-24 rounded-xl overflow-hidden shrink-0">
-                  <img src={img} alt={`${C.name} — foto ${i + 2}`} loading="lazy" className="w-full h-full object-cover" />
+                <div key={i} className="w-32 h-24 rounded-xl overflow-hidden shrink-0 relative bg-sand-100">
+                  <Image
+                    src={img}
+                    alt={`${C.name} — foto ${i + 2}`}
+                    fill
+                    sizes="128px"
+                    loading="lazy"
+                    className="object-cover"
+                  />
                 </div>
               ))}
             </div>
@@ -212,6 +238,55 @@ export default async function CentroDetailPage({ params }: Props) {
         </div>
       </div>
 
+      {/* Otros centros del mismo tipo en la misma provincia (enlazado interno programático) */}
+      {relatedCenters.length > 0 && C.type && provinceSlug && (
+        <section className="mt-14">
+          <div className="flex items-end justify-between gap-4 mb-5 flex-wrap">
+            <h2 className="font-serif text-2xl text-foreground">
+              Otros centros de {getCenterTypeLabel(C.type).toLowerCase()} en {C.province}
+            </h2>
+            <Link
+              href={`/es/centros/${CENTER_TYPE_URL_ES[C.type] || C.type}/${provinceSlug}`}
+              className="text-sm font-semibold text-terracotta-600 hover:text-terracotta-700"
+            >
+              Ver todos →
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {relatedCenters.map((r) => {
+              const rImg = r.cover_url || (Array.isArray(r.images) && r.images[0]) || '';
+              return (
+                <Link
+                  key={r.id}
+                  href={`/es/centro/${r.slug}`}
+                  className="group bg-white border border-sand-200 rounded-2xl overflow-hidden hover:shadow-soft hover:border-sand-300 transition-all"
+                >
+                  <div className="relative w-full h-36 bg-sand-100">
+                    {rImg ? (
+                      <Image src={rImg} alt={r.name} fill loading="lazy" className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 33vw" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-3xl text-sand-300">🏢</div>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-serif text-base leading-tight group-hover:text-terracotta-600 transition-colors mb-1.5 line-clamp-2">{r.name}</h3>
+                    <div className="flex items-center justify-between gap-2 text-xs text-[#7a6b5d]">
+                      <span className="flex items-center gap-1 truncate"><MapPin size={12} /> {r.city}</span>
+                      {(r.avg_rating ?? 0) > 0 && (
+                        <span className="flex items-center gap-1 shrink-0">
+                          <Star size={12} className="text-amber-400 fill-amber-400" />
+                          {r.avg_rating}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       <ClaimCenterButton
         centerId={C.id}
         centerSlug={slug}
@@ -228,11 +303,20 @@ export default async function CentroDetailPage({ params }: Props) {
             address: C.address || '',
             city: C.city || '',
             province: C.province || '',
+            postalCode: C.postal_code,
             phone: C.phone,
+            email: C.email,
             url: `/es/centro/${slug}`,
-            image: mainImage || '',
+            images: [mainImage, ...(Array.isArray(C.images) ? C.images : [])].filter((v, i, arr): v is string => !!v && arr.indexOf(v) === i),
             rating: C.avg_rating ?? undefined,
             reviewCount: C.review_count ?? undefined,
+            priceRange: C.price_range_es,
+            centerType: C.type,
+            website: C.website,
+            sameAs: [C.instagram, C.facebook, C.google_maps_url],
+            latitude: C.latitude,
+            longitude: C.longitude,
+            areaServed: C.province,
           })),
         }}
       />

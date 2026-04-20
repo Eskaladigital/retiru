@@ -4,6 +4,7 @@
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { getRetreatBySlug } from '@/lib/data';
 import { createStaticSupabase } from '@/lib/supabase/server';
@@ -142,11 +143,14 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
         <div className="mb-4 space-y-3">
           {hasImages ? (
             <>
-              <div className="rounded-2xl overflow-hidden border border-sand-200">
-                <img
+              <div className="rounded-2xl overflow-hidden border border-sand-200 relative bg-sand-100 aspect-[16/9] md:aspect-[21/9]">
+                <Image
                   src={sortedImages[0].url}
                   alt={sortedImages[0].alt_text ?? r.title_es}
-                  className="w-full object-cover min-h-[220px] max-h-[min(480px,55vh)] md:max-h-[520px]"
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 1024px"
+                  className="object-cover"
                 />
               </div>
               {sortedImages.length > 1 && (
@@ -158,10 +162,13 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
                         key={img.id ?? `${img.url}-${i}`}
                         className="relative rounded-xl overflow-hidden border border-sand-200 aspect-[4/3] bg-background"
                       >
-                        <img
+                        <Image
                           src={img.url}
                           alt={img.alt_text ?? `${r.title_es} — foto ${i + 2}`}
-                          className="w-full h-full object-cover"
+                          fill
+                          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                          loading="lazy"
+                          className="object-cover"
                         />
                       </div>
                     ))}
@@ -275,7 +282,14 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
                 <h2 className="mb-4 font-serif text-2xl font-semibold">Organizador</h2>
                 <div className="flex items-center gap-4">
                   {r.organizer.logo_url ? (
-                    <img src={r.organizer.logo_url} alt={r.organizer.business_name} className="h-16 w-16 rounded-full object-cover" />
+                    <Image
+                      src={r.organizer.logo_url}
+                      alt={r.organizer.business_name}
+                      width={64}
+                      height={64}
+                      loading="lazy"
+                      className="h-16 w-16 rounded-full object-cover"
+                    />
                   ) : (
                     <div className="flex h-16 w-16 items-center justify-center rounded-full bg-sage-100 text-xl font-bold text-sage-700">
                       {r.organizer.business_name[0]}

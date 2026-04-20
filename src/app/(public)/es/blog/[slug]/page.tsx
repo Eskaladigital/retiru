@@ -2,9 +2,11 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Clock, Calendar, ArrowLeft, Share2, ChevronRight } from 'lucide-react';
 import { notFound } from 'next/navigation';
-import { getBlogPostSlugs } from '@/lib/data';
+import { getBlogPostSlugs, getCenterProvinces } from '@/lib/data';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { RichContentBody } from '@/components/ui/retreat-description-body';
+import { contentLooksLikeHtml } from '@/lib/sanitize-rich-html';
+import { autoLinkGeoHtml } from '@/lib/auto-link-geo';
 import { jsonLdArticle, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
 import { getSiteUrl } from '@/lib/site-url';
 
@@ -49,9 +51,18 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title,
       description,
       url: `${BASE_URL}/es/blog/${article.slug}`,
-      images: article.cover_image_url ? [article.cover_image_url] : undefined,
+      images: article.cover_image_url
+        ? [{ url: article.cover_image_url, width: 1536, height: 1024, alt: article.title_es }]
+        : undefined,
       locale: 'es_ES',
       alternateLocale: 'en_US',
+      type: 'article',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: article.cover_image_url ? [article.cover_image_url] : undefined,
     },
   };
 }
@@ -78,6 +89,17 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
     .limit(3);
 
   const categoryName = (article.blog_categories as any)?.name_es ?? 'General';
+
+  // Autolink geográfico: enlaza automáticamente la primera mención de cada
+  // provincia con ≥1 centro hacia su hub /es/provincias/[slug]. Solo si el
+  // cuerpo es HTML (TinyMCE); el sanitizer posterior mantiene nuestros <a>.
+  const rawContent = article.content_es ?? '';
+  let content = rawContent;
+  if (contentLooksLikeHtml(rawContent)) {
+    const provinces = await getCenterProvinces();
+    const entries = provinces.map((p) => ({ name: p.name, href: `/es/provincias/${p.slug}` }));
+    content = autoLinkGeoHtml(rawContent, entries, { max: 4 });
+  }
 
   function formatDate(dateStr: string | null) {
     if (!dateStr) return '';
@@ -136,7 +158,7 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
 
           {/* Article content */}
           <div className="max-w-3xl mx-auto mb-16">
-            <RichContentBody content={article.content_es ?? ''} />
+            <RichContentBody content={content} />
 
             {/* CTA */}
             <div className="mt-12 bg-gradient-to-br from-terracotta-600 to-terracotta-700 rounded-2xl p-8 text-center text-white">

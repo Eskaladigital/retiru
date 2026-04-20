@@ -1,6 +1,7 @@
 // /es/tienda/[slug] — Ficha de producto
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { generatePageMetadata, jsonLdProduct, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
 import { getShopProductSlugs } from '@/lib/data';
@@ -62,14 +63,28 @@ export default async function ProductoDetailPage({ params }: { params: Promise<{
         <div>
           {images.length > 0 && (
             <>
-              <div className="aspect-square rounded-2xl overflow-hidden bg-sand-50 mb-3">
-                <img src={images[0]} alt={p.name_es} className="w-full h-full object-cover" />
+              <div className="aspect-square rounded-2xl overflow-hidden bg-sand-50 mb-3 relative">
+                <Image
+                  src={images[0]}
+                  alt={p.name_es}
+                  fill
+                  priority
+                  sizes="(max-width: 768px) 100vw, 512px"
+                  className="object-cover"
+                />
               </div>
               {images.length > 1 && (
                 <div className="grid grid-cols-3 gap-3">
                   {images.map((img, i) => (
-                    <div key={i} className="aspect-square rounded-xl overflow-hidden bg-sand-50 cursor-pointer hover:opacity-80 transition-opacity">
-                      <img src={img} alt={`${p.name_es} — imagen ${i + 1}`} loading="lazy" className="w-full h-full object-cover" />
+                    <div key={i} className="aspect-square rounded-xl overflow-hidden bg-sand-50 cursor-pointer hover:opacity-80 transition-opacity relative">
+                      <Image
+                        src={img}
+                        alt={`${p.name_es} — imagen ${i + 1}`}
+                        fill
+                        sizes="(max-width: 768px) 33vw, 170px"
+                        loading="lazy"
+                        className="object-cover"
+                      />
                     </div>
                   ))}
                 </div>

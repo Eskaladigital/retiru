@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Search, SlidersHorizontal, X, MapPin, Star, ChevronDown, CalendarDays } from 'lucide-react';
 import { isGenericDescription, stripMarkdownForPreview, CENTER_FILTER_OPTIONS_ES, getCenterTypeLabel, VALID_CENTER_TYPE_SLUGS, PUBLIC_DIRECTORY_CENTER_TYPE_SLUGS, getSearchTokens, matchesAllTokens } from '@/lib/utils';
 
@@ -250,20 +251,28 @@ export default function CentrosClient({ centers }: CentrosClientProps) {
       ) : (
         <>
           <div className="space-y-4">
-            {paginated.map((c: any) => {
+            {paginated.map((c: any, idx: number) => {
             const services: string[] = Array.isArray(c.services_es) ? c.services_es : [];
             const imgSrc = c.cover_url || (Array.isArray(c.images) && c.images[0]) || '';
+            const eager = idx < 3;
             return (
               <Link
                 key={c.slug}
                 href={`/es/centro/${c.slug}`}
                 className="group flex flex-col md:flex-row gap-4 bg-white border border-sand-200 rounded-2xl p-4 hover:shadow-soft hover:border-sand-300 transition-all"
               >
-                <div className="w-full md:w-52 h-40 rounded-xl overflow-hidden shrink-0 relative">
+                <div className="w-full md:w-52 h-40 rounded-xl overflow-hidden shrink-0 relative bg-sand-100">
                   {imgSrc ? (
-                    <img src={imgSrc} alt={c.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <Image
+                      src={imgSrc}
+                      alt={c.name}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 208px"
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      {...(eager ? { priority: true } : { loading: 'lazy' as const })}
+                    />
                   ) : (
-                    <div className="w-full h-full bg-sand-100 flex items-center justify-center text-[#a09383] text-sm">Sin imagen</div>
+                    <div className="w-full h-full flex items-center justify-center text-[#a09383] text-sm">Sin imagen</div>
                   )}
                 </div>
                 <div className="flex-1 min-w-0 py-1">

@@ -4,6 +4,7 @@
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Check, ArrowRight, BarChart3, MessageSquare, QrCode, Users,
   FileText, Star, Shield, Zap, CreditCard, ChevronRight,
@@ -176,10 +177,17 @@ export default function ParaOrganizadoresPage() {
           </p>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
-            {CENTER_BENEFITS.map(({ icon: Icon, title, desc, detail, image }) => (
+            {CENTER_BENEFITS.map(({ icon: Icon, title, desc, detail, image }, idx) => (
               <div key={title} className="flex flex-col overflow-hidden rounded-2xl border border-sand-200 bg-white transition-shadow hover:shadow-soft">
                 <div className="relative aspect-[16/10] shrink-0 bg-sand-100">
-                  <img src={image} alt={`Ejemplo visual: ${title}`} className="absolute inset-0 h-full w-full object-cover" />
+                  <Image
+                    src={image}
+                    alt={`Ejemplo visual: ${title}`}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    {...(idx < 3 ? { priority: true } : { loading: 'lazy' as const })}
+                    className="object-cover"
+                  />
                 </div>
                 <div className="flex flex-1 flex-col p-6">
                   <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-sage-100">
@@ -312,7 +320,14 @@ export default function ParaOrganizadoresPage() {
             {ORGANIZER_FEATURES.map(({ icon: Icon, title, desc, detail, image }) => (
               <div key={title} className="flex flex-col overflow-hidden rounded-2xl border border-sand-200 bg-white transition-shadow hover:shadow-soft">
                 <div className="relative aspect-[16/10] shrink-0 bg-sand-100">
-                  <img src={image} alt={`Ejemplo visual: ${title}`} className="absolute inset-0 h-full w-full object-cover" />
+                  <Image
+                    src={image}
+                    alt={`Ejemplo visual: ${title}`}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    loading="lazy"
+                    className="object-cover"
+                  />
                 </div>
                 <div className="flex flex-1 flex-col p-6">
                   <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-terracotta-100">

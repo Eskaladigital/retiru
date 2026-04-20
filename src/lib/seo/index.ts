@@ -242,53 +242,123 @@ export function jsonLdProduct({
   return ld;
 }
 
+const CENTER_TYPE_SCHEMA: Record<string, { type: string; category?: string; additionalType?: string }> = {
+  yoga: { type: 'YogaStudio' },
+  meditation: {
+    type: 'HealthAndBeautyBusiness',
+    category: 'Meditation Center',
+    additionalType: 'https://www.wikidata.org/wiki/Q10920',
+  },
+  ayurveda: {
+    type: 'HealthAndBeautyBusiness',
+    category: 'Ayurveda Center',
+    additionalType: 'https://www.wikidata.org/wiki/Q131372',
+  },
+};
+
+function pickPriceRangeSymbols(raw?: string | null): string | undefined {
+  if (!raw) return undefined;
+  const trimmed = raw.trim();
+  if (!trimmed) return undefined;
+  if (/^€{1,4}$/.test(trimmed)) return trimmed;
+  if (/^\${1,4}$/.test(trimmed)) return trimmed;
+  return trimmed.length <= 60 ? trimmed : undefined;
+}
+
 export function jsonLdLocalBusiness({
   name,
   description,
   address,
   city,
   province,
+  postalCode,
   phone,
+  email,
   url,
   image,
+  images,
   rating,
   reviewCount,
   priceRange,
-  type = 'HealthAndBeautyBusiness',
+  centerType,
+  type,
+  website,
+  sameAs,
+  latitude,
+  longitude,
+  areaServed,
 }: {
   name: string;
   description: string;
   address: string;
   city: string;
   province: string;
+  postalCode?: string | null;
   phone?: string | null;
+  email?: string | null;
   url: string;
-  image: string;
+  image?: string;
+  images?: string[];
   rating?: number;
   reviewCount?: number;
   priceRange?: string | null;
+  centerType?: string | null;
   type?: string;
+  website?: string | null;
+  sameAs?: (string | null | undefined)[];
+  latitude?: number | null;
+  longitude?: number | null;
+  areaServed?: string | null;
 }) {
+  const schemaMeta = centerType ? CENTER_TYPE_SCHEMA[centerType] : undefined;
+  const resolvedType = type ?? schemaMeta?.type ?? 'HealthAndBeautyBusiness';
+
+  const imageList = (images?.length ? images : image ? [image] : []).filter(Boolean);
+  const canonical = `${SITE_URL}${url}`;
   const ld: Record<string, unknown> = {
     '@context': 'https://schema.org',
-    '@type': type,
+    '@type': resolvedType,
+    '@id': `${canonical}#business`,
     name,
     description,
-    image,
-    url: `${SITE_URL}${url}`,
+    url: canonical,
     address: {
       '@type': 'PostalAddress',
       streetAddress: address,
       addressLocality: city,
       addressRegion: province,
+      postalCode: postalCode || undefined,
       addressCountry: 'ES',
     },
   };
+
+  if (imageList.length > 0) ld.image = imageList;
+  if (schemaMeta?.category) ld.category = schemaMeta.category;
+  if (schemaMeta?.additionalType) ld.additionalType = schemaMeta.additionalType;
   if (phone) ld.telephone = phone;
-  if (priceRange) ld.priceRange = priceRange;
+  if (email) ld.email = email;
+  if (website) ld.hasMap = website;
+  const cleanedPrice = pickPriceRangeSymbols(priceRange);
+  if (cleanedPrice) ld.priceRange = cleanedPrice;
+  if (areaServed) ld.areaServed = areaServed;
+
+  if (typeof latitude === 'number' && typeof longitude === 'number' && Number.isFinite(latitude) && Number.isFinite(longitude)) {
+    ld.geo = {
+      '@type': 'GeoCoordinates',
+      latitude,
+      longitude,
+    };
+  }
+
+  const sameAsClean = [website, ...(sameAs ?? [])]
+    .filter((s): s is string => typeof s === 'string' && /^https?:\/\//i.test(s))
+    .filter((v, i, arr) => arr.indexOf(v) === i);
+  if (sameAsClean.length > 0) ld.sameAs = sameAsClean;
+
   if (rating && reviewCount) {
     ld.aggregateRating = { '@type': 'AggregateRating', ratingValue: rating, reviewCount, bestRating: 5 };
   }
+
   return ld;
 }
 

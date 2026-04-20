@@ -6,8 +6,15 @@ import Image from 'next/image';
 import { MapPin, Star } from 'lucide-react';
 import CentrosSearch from '@/components/home/CentrosSearch';
 import { getActiveCenters, getCategoryBySlug, getProvincesForCenterType } from '@/lib/data';
+import { createServerSupabase } from '@/lib/supabase/server';
 import { getCenterTypeLabel, CATEGORY_SLUG_EN, stripMarkdownForPreview, isGenericDescription } from '@/lib/utils';
-import { generatePageMetadata, jsonLdItemList, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
+import { generatePageMetadata, jsonLdItemList, jsonLdBreadcrumb, jsonLdFAQ, jsonLdScript } from '@/lib/seo';
+import {
+  STYLES_BY_TYPE,
+  HOW_TO_CHOOSE_BY_TYPE,
+  EXTRA_FAQS_BY_TYPE,
+  centerTypeKey,
+} from '@/lib/center-type-editorial';
 
 export const revalidate = 3600;
 
@@ -44,6 +51,30 @@ export default async function CentersByTypePage({ params }: { params: Promise<{ 
     getProvincesForCenterType(type),
     getCategoryBySlug(catSlug),
   ]);
+
+  const topProvinces = [...provinces].sort((a, b) => b.count - a.count).slice(0, 6);
+  const typeKey = centerTypeKey(type);
+  const styles = typeKey ? STYLES_BY_TYPE[typeKey] : [];
+  const tips = typeKey ? HOW_TO_CHOOSE_BY_TYPE[typeKey] : [];
+  const extraFaqs = typeKey ? EXTRA_FAQS_BY_TYPE[typeKey] : [];
+
+  const supabase = await createServerSupabase();
+  const { data: relatedBlog } = await supabase
+    .from('blog_articles')
+    .select('id, slug, slug_en, title_es, title_en, excerpt_es, excerpt_en, cover_image_url, published_at, blog_categories!inner(slug)')
+    .eq('is_published', true)
+    .eq('blog_categories.slug', catSlug)
+    .order('published_at', { ascending: false })
+    .limit(3);
+
+  const catFaqs = Array.isArray(cat?.faq) ? cat.faq.filter((q) => q?.question && q?.answer) : [];
+  const mergedFaqs: { question: string; answer: string }[] = [...catFaqs];
+  for (const extra of extraFaqs) {
+    if (mergedFaqs.length >= 10) break;
+    if (!mergedFaqs.some((f) => f.question.trim().toLowerCase() === extra.question_en.trim().toLowerCase())) {
+      mergedFaqs.push({ question: extra.question_en, answer: extra.answer_en });
+    }
+  }
 
   return (
     <>
@@ -88,17 +119,41 @@ export default async function CentersByTypePage({ params }: { params: Promise<{ 
           </div>
         )}
 
+        {topProvinces.length > 0 && (
+          <section className="mb-10">
+            <h2 className="font-serif text-2xl text-foreground mb-5">
+              Top provinces with {label.toLowerCase()} centers
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              {topProvinces.map((p, i) => (
+                <Link
+                  key={p.slug}
+                  href={`/en/centers/${type}/${p.slug}`}
+                  className="group relative p-4 bg-gradient-to-br from-sand-50 to-white border border-sand-200 rounded-2xl hover:border-terracotta-300 hover:shadow-soft transition-all"
+                >
+                  <span className="absolute top-2 right-3 text-xs text-[#a09383] font-semibold">#{i + 1}</span>
+                  <MapPin size={18} className="text-terracotta-600 mb-2" />
+                  <p className="font-serif text-base text-foreground group-hover:text-terracotta-600 transition-colors leading-tight">{p.name}</p>
+                  <p className="text-xs text-[#7a6b5d] mt-1">{p.count} center{p.count !== 1 ? 's' : ''}</p>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
         {provinces.length > 0 && (
           <section className="mb-12">
-            <h2 className="font-serif text-2xl text-foreground mb-6">{label} centers by province</h2>
-            <div className="flex flex-wrap gap-3">
+            <h2 className="font-serif text-xl text-foreground mb-4">
+              Explore {label.toLowerCase()} by province ({provinces.length})
+            </h2>
+            <div className="flex flex-wrap gap-2">
               {provinces.map((p) => (
                 <Link
                   key={p.slug}
                   href={`/en/centers/${type}/${p.slug}`}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-sand-200 rounded-full text-sm hover:border-terracotta-300 hover:text-terracotta-600 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-sand-200 rounded-full text-sm hover:border-terracotta-300 hover:text-terracotta-600 transition-colors"
                 >
-                  <MapPin size={14} />
+                  <MapPin size={13} />
                   {p.name}
                   <span className="text-xs text-[#a09383]">({p.count})</span>
                 </Link>
@@ -179,6 +234,100 @@ export default async function CentersByTypePage({ params }: { params: Promise<{ 
           </Link>
         </section>
 
+        {styles.length > 0 && (
+          <section className="mt-16 max-w-5xl">
+            <h2 className="font-serif text-2xl text-foreground mb-5">
+              Most practiced {label.toLowerCase()} styles in Spain
+            </h2>
+            <p className="text-sm text-[#7a6b5d] mb-6 max-w-3xl">
+              Not every center teaches the same styles. These are the variants you will find most often:
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {styles.map((s) => (
+                <div key={s.name} className="bg-white border border-sand-200 rounded-2xl p-5">
+                  <p className="font-serif text-lg text-foreground mb-1">{s.name}</p>
+                  <p className="text-sm text-[#7a6b5d] leading-relaxed">{s.description_en}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {tips.length > 0 && (
+          <section className="mt-14 max-w-3xl">
+            <h2 className="font-serif text-2xl text-foreground mb-5">
+              How to choose a {label.toLowerCase()} center
+            </h2>
+            <ol className="space-y-4">
+              {tips.map((t, i) => (
+                <li key={i} className="flex gap-4">
+                  <span className="flex-shrink-0 w-8 h-8 rounded-full bg-terracotta-100 text-terracotta-700 font-semibold flex items-center justify-center text-sm">{i + 1}</span>
+                  <div>
+                    <p className="font-semibold text-foreground mb-1">{t.title_en}</p>
+                    <p className="text-sm text-[#7a6b5d] leading-relaxed">{t.body_en}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+
+        {Array.isArray(relatedBlog) && relatedBlog.length > 0 && (
+          <section className="mt-14 max-w-5xl">
+            <div className="flex items-end justify-between gap-4 mb-5 flex-wrap">
+              <h2 className="font-serif text-2xl text-foreground">
+                Blog guides about {label.toLowerCase()}
+              </h2>
+              <Link href="/en/blog" className="text-sm font-semibold text-terracotta-600 hover:text-terracotta-700">
+                View blog →
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {relatedBlog.map((b: any) => {
+                const href = `/en/blog/${b.slug_en || b.slug}`;
+                const title = b.title_en || b.title_es;
+                const excerpt = b.excerpt_en || b.excerpt_es;
+                return (
+                  <Link
+                    key={b.id}
+                    href={href}
+                    className="group bg-white border border-sand-200 rounded-2xl overflow-hidden hover:shadow-soft hover:border-sand-300 transition-all"
+                  >
+                    <div className="relative w-full h-36 bg-sand-100">
+                      {b.cover_image_url ? (
+                        <Image src={b.cover_image_url} alt={title} fill loading="lazy" className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 33vw" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-2xl text-sand-300">📖</div>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-serif text-sm leading-tight group-hover:text-terracotta-600 transition-colors mb-1.5 line-clamp-2">{title}</h3>
+                      {excerpt && <p className="text-xs text-[#7a6b5d] line-clamp-2">{excerpt}</p>}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {mergedFaqs.length > 0 && (
+          <section className="mt-16 max-w-3xl">
+            <h2 className="font-serif text-2xl text-foreground mb-6">Frequently asked questions</h2>
+            <div className="space-y-4">
+              {mergedFaqs.map((item, i) => (
+                <details key={i} className="group bg-white border border-sand-200 rounded-xl">
+                  <summary className="flex items-center justify-between p-5 cursor-pointer font-medium text-foreground">
+                    {item.question}
+                    <svg className="w-5 h-5 text-[#a09383] shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6"/></svg>
+                  </summary>
+                  <div className="px-5 pb-5 text-sm text-[#7a6b5d] leading-relaxed">{item.answer}</div>
+                </details>
+              ))}
+            </div>
+          </section>
+        )}
+
         {centers.length > 0 && (
           <script
             type="application/ld+json"
@@ -202,6 +351,12 @@ export default async function CentersByTypePage({ params }: { params: Promise<{ 
             ])),
           }}
         />
+        {mergedFaqs.length > 0 && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLdFAQ(mergedFaqs)) }}
+          />
+        )}
       </div>
     </>
   );

@@ -2,7 +2,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { MapPin, Star } from 'lucide-react';
 import { getCenterProvinces, getCentersByProvince } from '@/lib/data';
 import { getCenterTypeLabel, stripMarkdownForPreview, isGenericDescription } from '@/lib/utils';
@@ -14,18 +14,14 @@ import type { Center } from '@/types';
 export const revalidate = 3600;
 
 export async function generateStaticParams() {
-  const provinces = await getCenterProvinces();
+  // Las provincias viven ahora en /en/provinces/[slug]; aquí sólo country/region.
   const supabase = createStaticSupabase();
   const { data: geo } = await supabase
     .from('destinations')
     .select('slug')
     .eq('is_active', true)
-    .in('kind', ['country', 'region', 'province']);
-  const slugs = new Set<string>([
-    ...provinces.map((p) => p.slug),
-    ...((geo || []).map((g) => g.slug)),
-  ]);
-  return Array.from(slugs).map((slug) => ({ slug }));
+    .in('kind', ['country', 'region']);
+  return (geo || []).map((g) => ({ slug: g.slug }));
 }
 
 async function fetchCentersForGeoEN(node: GeoNode): Promise<Center[]> {
@@ -42,6 +38,9 @@ async function fetchCentersForGeoEN(node: GeoNode): Promise<Center[]> {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const geo = await resolveGeoLanding(slug);
+  if (geo?.kind === 'province') {
+    permanentRedirect(`/en/provinces/${slug}`);
+  }
   let name = slug;
   if (geo) {
     name = geo.name_en;
@@ -65,11 +64,17 @@ export default async function CentersByGeoPageEN({ params }: { params: Promise<{
   let centers: Center[] = [];
   let placeName: string | null = null;
   const geo = await resolveGeoLanding(slug);
+  if (geo?.kind === 'province') {
+    permanentRedirect(`/en/provinces/${slug}`);
+  }
   if (geo) {
     placeName = geo.name_en;
     centers = await fetchCentersForGeoEN(geo);
   } else {
     const res = await getCentersByProvince(slug);
+    if (res.provinceName) {
+      permanentRedirect(`/en/provinces/${slug}`);
+    }
     centers = res.centers;
     placeName = res.provinceName;
   }

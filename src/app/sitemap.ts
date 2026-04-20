@@ -8,6 +8,8 @@ import {
   getCategoriesWithRetreats,
   getCategoryDestinationPairs,
   getCenterTypeProvincePairs,
+  getCenterTypeProvinceCityTriples,
+  getStyleProvincePairs,
 } from '@/lib/data';
 import { CATEGORY_SLUG_EN } from '@/lib/utils';
 
@@ -87,9 +89,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const { data: centerSlugs } = await supabase.from('centers').select('slug, updated_at').eq('status', 'active');
   (centerSlugs || []).forEach((c) => pushBilingual(`/es/centro/${c.slug}`, `/en/center/${c.slug}`, 'weekly', 0.7, c.updated_at));
 
-  // 2) Centros por provincia — solo provincias con >= 1 centro
+  // 2) Hub provincial unificado multi-disciplina — solo provincias con >= 1 centro
+  //    (desde #7 del PLAN_SEO, /es/centros-retiru/[slug] de provincia redirige 308 aquí).
   const provinces = await getCenterProvinces();
-  provinces.forEach((p) => pushBilingual(`/es/centros-retiru/${p.slug}`, `/en/centers-retiru/${p.slug}`, 'weekly', 0.8));
+  provinces.forEach((p) => pushBilingual(`/es/provincias/${p.slug}`, `/en/provinces/${p.slug}`, 'weekly', 0.85));
 
   // 3) Retiros individuales
   const { data: retreatSlugs } = await supabase.from('retreats').select('slug, updated_at').eq('status', 'published').gte('end_date', today);
@@ -145,17 +148,60 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     pushBilingual(`/es/centros/${esSlug}/${p.province}`, `/en/centers/${p.type}/${p.province}`, 'weekly', 0.7);
   });
 
-  // 13) Landings geográficas (país/CCAA/provincia) para retiros y centros
+  // 12b) Centros por tipo + provincia + ciudad (umbral ≥2 centros, long-tail)
+  const typeProvCityTriples = await getCenterTypeProvinceCityTriples(2);
+  typeProvCityTriples.forEach((t) => {
+    const esSlug = TYPE_ES_MAP[t.type] || t.type;
+    pushBilingual(
+      `/es/centros/${esSlug}/${t.provinceSlug}/${t.citySlug}`,
+      `/en/centers/${t.type}/${t.provinceSlug}/${t.citySlug}`,
+      'weekly',
+      0.65,
+    );
+  });
+
+  // 12c) Centros por tipo + estilo (nacional) y tipo + estilo + provincia (Fase 3 #10)
+  //      Umbral: ≥3 centros totales para nacional, ≥5 para provincial.
+  const stylePairs = await getStyleProvincePairs(5);
+  const styleTotals = new Map<string, { centerType: string; styleSlug: string; count: number }>();
+  stylePairs.forEach((p) => {
+    const key = `${p.centerType}|${p.styleSlug}`;
+    const entry = styleTotals.get(key) || { centerType: p.centerType, styleSlug: p.styleSlug, count: 0 };
+    entry.count += p.count;
+    styleTotals.set(key, entry);
+    const esSlug = TYPE_ES_MAP[p.centerType] || p.centerType;
+    pushBilingual(
+      `/es/centros/${esSlug}/estilo/${p.styleSlug}/${p.provinceSlug}`,
+      `/en/centers/${p.centerType}/style/${p.styleSlug}/${p.provinceSlug}`,
+      'weekly',
+      0.6,
+    );
+  });
+  Array.from(styleTotals.values())
+    .filter((t) => t.count >= 3)
+    .forEach((t) => {
+      const esSlug = TYPE_ES_MAP[t.centerType] || t.centerType;
+      pushBilingual(
+        `/es/centros/${esSlug}/estilo/${t.styleSlug}`,
+        `/en/centers/${t.centerType}/style/${t.styleSlug}`,
+        'weekly',
+        0.7,
+      );
+    });
+
+  // 13) Landings geográficas (país/CCAA) para retiros y centros
+  //     Provincias NO se incluyen aquí porque ya están en (2) como /provincias/[slug].
   const { data: geoNodes } = await supabase
     .from('destinations')
     .select('slug, kind, updated_at')
     .eq('is_active', true)
     .in('kind', ['country', 'region', 'province']);
   (geoNodes || []).forEach((g: { slug: string; kind: string; updated_at?: string }) => {
-    // Prioridad: país > región > provincia
     const prio = g.kind === 'country' ? 0.9 : g.kind === 'region' ? 0.8 : 0.75;
     pushBilingual(`/es/retiros-en/${g.slug}`, `/en/retreats-in/${g.slug}`, 'weekly', prio, g.updated_at);
-    pushBilingual(`/es/centros-retiru/${g.slug}`, `/en/centers-retiru/${g.slug}`, 'weekly', prio, g.updated_at);
+    if (g.kind !== 'province') {
+      pushBilingual(`/es/centros-retiru/${g.slug}`, `/en/centers-retiru/${g.slug}`, 'weekly', prio, g.updated_at);
+    }
   });
 
   return [...staticEntries, ...dynamicEntries];

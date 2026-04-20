@@ -2,9 +2,11 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Clock, Calendar, ArrowLeft, Share2, ChevronRight } from 'lucide-react';
 import { notFound, redirect } from 'next/navigation';
-import { getBlogPostSlugs } from '@/lib/data';
+import { getBlogPostSlugs, getCenterProvinces } from '@/lib/data';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { RichContentBody } from '@/components/ui/retreat-description-body';
+import { contentLooksLikeHtml } from '@/lib/sanitize-rich-html';
+import { autoLinkGeoHtml } from '@/lib/auto-link-geo';
 import { jsonLdArticle, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
 import { getSiteUrl } from '@/lib/site-url';
 
@@ -57,9 +59,25 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title,
       description,
       url: `${BASE_URL}/en/blog/${enSlug}`,
-      images: article.cover_image_url ? [article.cover_image_url] : undefined,
+      images: article.cover_image_url
+        ? [
+            {
+              url: article.cover_image_url,
+              width: 1536,
+              height: 1024,
+              alt: article.title_en || article.title_es,
+            },
+          ]
+        : undefined,
       locale: 'en_US',
       alternateLocale: 'es_ES',
+      type: 'article',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: article.cover_image_url ? [article.cover_image_url] : undefined,
     },
   };
 }
@@ -99,7 +117,13 @@ export default async function BlogPostEN({ params }: { params: Promise<{ slug: s
   }
 
   const articleTitle = article.title_en || article.title_es;
-  const articleContent = article.content_en || article.content_es;
+  const rawContent = article.content_en || article.content_es || '';
+  let articleContent = rawContent;
+  if (contentLooksLikeHtml(rawContent)) {
+    const provinces = await getCenterProvinces();
+    const entries = provinces.map((p) => ({ name: p.name, href: `/en/provinces/${p.slug}` }));
+    articleContent = autoLinkGeoHtml(rawContent, entries, { max: 4 });
+  }
 
   return (
     <div>
@@ -151,7 +175,7 @@ export default async function BlogPostEN({ params }: { params: Promise<{ slug: s
 
           {/* Article content */}
           <div className="max-w-3xl mx-auto mb-16">
-            <RichContentBody content={articleContent ?? ''} />
+            <RichContentBody content={articleContent} />
 
             {/* CTA */}
             <div className="mt-12 bg-gradient-to-br from-terracotta-600 to-terracotta-700 rounded-2xl p-8 text-center text-white">

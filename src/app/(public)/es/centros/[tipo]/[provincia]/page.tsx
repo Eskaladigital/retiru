@@ -5,9 +5,28 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { MapPin, Star } from 'lucide-react';
 import CentrosSearch from '@/components/home/CentrosSearch';
-import { getCenterTypeProvincePairs, getCentersByProvince, getCategoryBySlug } from '@/lib/data';
-import { getCenterTypeLabel, CENTER_TYPE_FROM_URL_ES, CENTER_TYPE_URL_ES, stripMarkdownForPreview, isGenericDescription } from '@/lib/utils';
-import { generatePageMetadata, jsonLdItemList, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
+import {
+  getCenterTypeProvincePairs,
+  getCentersByProvince,
+  getCategoryBySlug,
+  getCenterTypeProvinceSeo,
+  getProvincesForCenterType,
+  getCitiesForCenterTypeProvince,
+} from '@/lib/data';
+import {
+  getCenterTypeLabel,
+  CENTER_TYPE_FROM_URL_ES,
+  CENTER_TYPE_URL_ES,
+  stripMarkdownForPreview,
+  isGenericDescription,
+} from '@/lib/utils';
+import {
+  generatePageMetadata,
+  jsonLdItemList,
+  jsonLdBreadcrumb,
+  jsonLdFAQ,
+  jsonLdScript,
+} from '@/lib/seo';
 
 export const revalidate = 3600;
 
@@ -21,35 +40,77 @@ export async function generateStaticParams() {
   }));
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ tipo: string; provincia: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ tipo: string; provincia: string }>;
+}): Promise<Metadata> {
   const { tipo: urlType, provincia: province } = await params;
   if (!(VALID_TYPES_ES as readonly string[]).includes(urlType)) return {};
   const dbType = CENTER_TYPE_FROM_URL_ES[urlType] || urlType;
   const label = getCenterTypeLabel(dbType, 'es');
-  const { provinceName } = await getCentersByProvince(province);
+
+  const [{ centers, provinceName }, seo] = await Promise.all([
+    getCentersByProvince(province),
+    getCenterTypeProvinceSeo(dbType, province),
+  ]);
+  const filtered = centers.filter((c) => c.type === dbType);
   const name = provinceName || province;
+  const hasCenters = filtered.length > 0;
+
   return generatePageMetadata({
-    title: `Centros de ${label} en ${name} | Retiru`,
-    description: `Encuentra centros de ${label.toLowerCase()} en ${name}. Directorio verificado con reseñas reales, ubicación y servicios.`,
+    title:
+      (seo?.meta_title_es && seo.meta_title_es.trim()) ||
+      `Centros de ${label} en ${name} | Retiru`,
+    description:
+      (seo?.meta_description_es && seo.meta_description_es.trim()) ||
+      `Encuentra centros de ${label.toLowerCase()} en ${name}. Directorio verificado con reseñas reales, ubicación y servicios.`,
     locale: 'es',
     path: `/es/centros/${urlType}/${province}`,
     altPath: `/en/centers/${dbType}/${province}`,
-    keywords: [`centros de ${label.toLowerCase()} en ${name}`, `${label.toLowerCase()} ${name}`, 'retiru'],
+    keywords: [
+      `centros de ${label.toLowerCase()} en ${name}`,
+      `${label.toLowerCase()} ${name}`,
+      'retiru',
+    ],
+    noIndex: !hasCenters,
   });
 }
 
-export default async function CentrosTipoProvinciaPage({ params }: { params: Promise<{ tipo: string; provincia: string }> }) {
+export default async function CentrosTipoProvinciaPage({
+  params,
+}: {
+  params: Promise<{ tipo: string; provincia: string }>;
+}) {
   const { tipo: urlType, provincia: province } = await params;
   if (!(VALID_TYPES_ES as readonly string[]).includes(urlType)) notFound();
   const dbType = CENTER_TYPE_FROM_URL_ES[urlType] || urlType;
   const label = getCenterTypeLabel(dbType, 'es');
 
-  const { centers, provinceName } = await getCentersByProvince(province);
+  const [{ centers, provinceName }, seo] = await Promise.all([
+    getCentersByProvince(province),
+    getCenterTypeProvinceSeo(dbType, province),
+  ]);
   const filtered = centers.filter((c) => c.type === dbType);
   const catSlug = urlType === 'meditacion' ? 'meditacion' : urlType;
   const cat = await getCategoryBySlug(catSlug);
 
   if (!provinceName) notFound();
+
+  const introHtml = seo?.intro_es?.trim() || cat?.intro_es?.replace(/\n/g, '<br/>') || null;
+  const faqs = Array.isArray(seo?.faq_es) ? seo!.faq_es.filter((q) => q.question && q.answer) : [];
+
+  // "Otras provincias con {tipo}" — se calcula siempre (no solo en fallback)
+  // para reforzar el enlazado interno programático (#8 del PLAN_SEO).
+  const allProvinces = await getProvincesForCenterType(dbType);
+  const neighborProvinces = allProvinces
+    .filter((p) => p.slug !== province)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8);
+
+  // "Ciudades destacadas en {provincia}" — ciudades con ≥2 centros del mismo tipo
+  // dentro de la provincia actual, para alimentar las nuevas landings de ciudad.
+  const provinceCities = await getCitiesForCenterTypeProvince(dbType, province, null, 2);
 
   return (
     <>
@@ -73,7 +134,7 @@ export default async function CentrosTipoProvinciaPage({ params }: { params: Pro
       </section>
 
       <div className="container-wide py-10">
-        <nav className="flex items-center gap-1.5 text-sm text-[#7a6b5d] mb-8 flex-wrap">
+        <nav className="flex items-center gap-1.5 text-sm text-[#7a6b5d] mb-8 flex-wrap" aria-label="Migas de pan">
           <Link href="/es" className="hover:text-terracotta-600">Inicio</Link>
           <span>/</span>
           <Link href="/es/centros-retiru" className="hover:text-terracotta-600">Centros</Link>
@@ -83,18 +144,36 @@ export default async function CentrosTipoProvinciaPage({ params }: { params: Pro
           <span className="text-foreground font-medium">{provinceName}</span>
         </nav>
 
-        <div className="prose prose-sand max-w-3xl mb-10">
-          {cat?.intro_es && <div dangerouslySetInnerHTML={{ __html: cat.intro_es.replace(/\n/g, '<br/>') }} />}
-        </div>
+        {introHtml && (
+          <div
+            className="prose prose-sand max-w-3xl mb-10"
+            dangerouslySetInnerHTML={{ __html: introHtml }}
+          />
+        )}
 
         {filtered.length === 0 ? (
-          <div className="text-center py-16">
+          <div className="max-w-3xl mx-auto text-center py-12 px-6 bg-white border border-sand-200 rounded-2xl">
             <p className="text-4xl mb-4">🔍</p>
-            <p className="font-serif text-xl text-foreground mb-2">Próximamente centros de {label.toLowerCase()} en {provinceName}</p>
-            <p className="text-sm text-[#7a6b5d] mb-6">Explora todos los centros de {label.toLowerCase()} o centros en {provinceName}</p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Link href={`/es/centros/${urlType}`} className="text-sm font-semibold text-terracotta-600 hover:text-terracotta-700">Centros de {label}</Link>
-              <Link href={`/es/centros-retiru/${province}`} className="text-sm font-semibold text-terracotta-600 hover:text-terracotta-700">Centros en {provinceName}</Link>
+            <p className="font-serif text-2xl text-foreground mb-3">
+              Aún no tenemos centros de {label.toLowerCase()} verificados en {provinceName}
+            </p>
+            <p className="text-[#7a6b5d] mb-8 max-w-xl mx-auto">
+              Estamos ampliando el directorio. Si conoces un centro de {label.toLowerCase()} en {provinceName} que encaje con Retiru, ayúdanos a añadirlo.
+            </p>
+
+            <div className="flex flex-wrap justify-center gap-3">
+              <Link
+                href="/es/para-organizadores"
+                className="inline-flex items-center gap-2 bg-terracotta-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-terracotta-700 transition-colors"
+              >
+                Registra tu centro
+              </Link>
+              <Link
+                href={`/es/centros/${urlType}`}
+                className="inline-flex items-center gap-2 bg-white border border-sand-200 text-foreground font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-sand-50 transition-colors"
+              >
+                Ver todos los centros de {label}
+              </Link>
             </div>
           </div>
         ) : (
@@ -142,6 +221,98 @@ export default async function CentrosTipoProvinciaPage({ params }: { params: Pro
           </div>
         )}
 
+        {/* Ciudades destacadas dentro de la provincia (≥2 centros del tipo) */}
+        {provinceCities.length > 0 && (
+          <section className="mt-12">
+            <h2 className="font-serif text-2xl text-foreground mb-4">
+              Ciudades con centros de {label.toLowerCase()} en {provinceName}
+            </h2>
+            <p className="text-sm text-[#7a6b5d] mb-5">
+              Explora landings específicas por ciudad dentro de la provincia.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {provinceCities.map((c) => (
+                <Link
+                  key={c.slug}
+                  href={`/es/centros/${urlType}/${province}/${c.slug}`}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-sand-200 rounded-full text-sm text-foreground hover:border-terracotta-300 hover:text-terracotta-600 transition-colors"
+                >
+                  <MapPin size={13} />
+                  {c.name}
+                  <span className="text-xs text-[#a09383]">({c.count})</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Otras provincias con {tipo} — siempre visible (no solo en fallback) */}
+        {neighborProvinces.length > 0 && (
+          <section className="mt-12">
+            <h2 className="font-serif text-2xl text-foreground mb-4">
+              Otras provincias con centros de {label.toLowerCase()}
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {neighborProvinces.map((p) => (
+                <Link
+                  key={p.slug}
+                  href={`/es/centros/${urlType}/${p.slug}`}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-sand-200 rounded-full text-sm text-foreground hover:border-terracotta-300 hover:text-terracotta-600 transition-colors"
+                >
+                  <MapPin size={13} />
+                  {p.name}
+                  <span className="text-xs text-[#a09383]">({p.count})</span>
+                </Link>
+              ))}
+            </div>
+            <div className="mt-4">
+              <Link
+                href={`/es/centros/${urlType}`}
+                className="text-sm font-semibold text-terracotta-600 hover:text-terracotta-700"
+              >
+                Ver todas las provincias con centros de {label.toLowerCase()} →
+              </Link>
+            </div>
+          </section>
+        )}
+
+        {/* Enlace al hub provincial multi-disciplina */}
+        <section className="mt-12 p-5 bg-sand-50 border border-sand-200 rounded-2xl flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <p className="font-serif text-lg text-foreground">
+              ¿Buscas también meditación o ayurveda en {provinceName}?
+            </p>
+            <p className="text-sm text-[#7a6b5d] mt-1">
+              Visita el hub de bienestar de la provincia con todas las disciplinas.
+            </p>
+          </div>
+          <Link
+            href={`/es/provincias/${province}`}
+            className="inline-flex items-center gap-2 bg-terracotta-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-terracotta-700 transition-colors whitespace-nowrap"
+          >
+            Ver hub de {provinceName} →
+          </Link>
+        </section>
+
+        {faqs.length > 0 && (
+          <section className="mt-16 max-w-3xl">
+            <h2 className="font-serif text-2xl text-foreground mb-6">
+              Preguntas frecuentes sobre centros de {label.toLowerCase()} en {provinceName}
+            </h2>
+            <div className="space-y-4">
+              {faqs.map((item, i) => (
+                <details key={i} className="group bg-white border border-sand-200 rounded-xl">
+                  <summary className="flex items-center justify-between p-5 cursor-pointer font-medium text-foreground">
+                    {item.question}
+                    <svg className="w-5 h-5 text-[#a09383] shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6"/></svg>
+                  </summary>
+                  <div className="px-5 pb-5 text-sm text-[#7a6b5d] leading-relaxed">{item.answer}</div>
+                </details>
+              ))}
+            </div>
+          </section>
+        )}
+
         {filtered.length > 0 && (
           <script
             type="application/ld+json"
@@ -166,6 +337,12 @@ export default async function CentrosTipoProvinciaPage({ params }: { params: Pro
             ])),
           }}
         />
+        {faqs.length > 0 && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLdFAQ(faqs)) }}
+          />
+        )}
       </div>
     </>
   );

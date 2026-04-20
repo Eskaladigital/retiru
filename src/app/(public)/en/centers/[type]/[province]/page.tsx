@@ -5,9 +5,22 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { MapPin, Star } from 'lucide-react';
 import CentrosSearch from '@/components/home/CentrosSearch';
-import { getCenterTypeProvincePairs, getCentersByProvince, getCategoryBySlug } from '@/lib/data';
+import {
+  getCenterTypeProvincePairs,
+  getCentersByProvince,
+  getCategoryBySlug,
+  getCenterTypeProvinceSeo,
+  getProvincesForCenterType,
+  getCitiesForCenterTypeProvince,
+} from '@/lib/data';
 import { getCenterTypeLabel, stripMarkdownForPreview, isGenericDescription } from '@/lib/utils';
-import { generatePageMetadata, jsonLdItemList, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
+import {
+  generatePageMetadata,
+  jsonLdItemList,
+  jsonLdBreadcrumb,
+  jsonLdFAQ,
+  jsonLdScript,
+} from '@/lib/seo';
 
 export const revalidate = 3600;
 
@@ -19,34 +32,68 @@ export async function generateStaticParams() {
   return pairs.map((p) => ({ type: p.type, province: p.province }));
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ type: string; province: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ type: string; province: string }>;
+}): Promise<Metadata> {
   const { type, province } = await params;
   if (!VALID_CENTER_TYPES.has(type)) return {};
   const label = getCenterTypeLabel(type, 'en');
-  const { provinceName } = await getCentersByProvince(province);
+
+  const [{ centers, provinceName }, seo] = await Promise.all([
+    getCentersByProvince(province),
+    getCenterTypeProvinceSeo(type, province),
+  ]);
+  const filtered = centers.filter((c) => c.type === type);
   const name = provinceName || province;
   const esSlug = TYPE_ES_SLUG[type] || type;
+  const hasCenters = filtered.length > 0;
+
   return generatePageMetadata({
-    title: `${label} Centers in ${name} | Retiru`,
-    description: `Find ${label.toLowerCase()} centers in ${name}. Verified directory with real reviews, location and services.`,
+    title:
+      (seo?.meta_title_en && seo.meta_title_en.trim()) ||
+      `${label} Centers in ${name} | Retiru`,
+    description:
+      (seo?.meta_description_en && seo.meta_description_en.trim()) ||
+      `Find ${label.toLowerCase()} centers in ${name}. Verified directory with real reviews, location and services.`,
     locale: 'en',
     path: `/en/centers/${type}/${province}`,
     altPath: `/es/centros/${esSlug}/${province}`,
     keywords: [`${label.toLowerCase()} centers in ${name}`, `${label.toLowerCase()} ${name}`, 'retiru'],
+    noIndex: !hasCenters,
   });
 }
 
-export default async function CentersTypeProvincePage({ params }: { params: Promise<{ type: string; province: string }> }) {
+export default async function CentersTypeProvincePage({
+  params,
+}: {
+  params: Promise<{ type: string; province: string }>;
+}) {
   const { type, province } = await params;
   if (!type || !VALID_CENTER_TYPES.has(type)) notFound();
   const label = getCenterTypeLabel(type, 'en');
 
-  const { centers, provinceName } = await getCentersByProvince(province);
+  const [{ centers, provinceName }, seo] = await Promise.all([
+    getCentersByProvince(province),
+    getCenterTypeProvinceSeo(type, province),
+  ]);
   const filtered = centers.filter((c) => c.type === type);
   const catSlug = type === 'meditation' ? 'meditacion' : type;
   const cat = await getCategoryBySlug(catSlug);
 
   if (!provinceName) notFound();
+
+  const introHtml = seo?.intro_en?.trim() || cat?.intro_en?.replace(/\n/g, '<br/>') || null;
+  const faqs = Array.isArray(seo?.faq_en) ? seo!.faq_en.filter((q) => q.question && q.answer) : [];
+
+  const allProvinces = await getProvincesForCenterType(type);
+  const neighborProvinces = allProvinces
+    .filter((p) => p.slug !== province)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8);
+
+  const provinceCities = await getCitiesForCenterTypeProvince(type, province, null, 2);
 
   return (
     <>
@@ -70,7 +117,7 @@ export default async function CentersTypeProvincePage({ params }: { params: Prom
       </section>
 
       <div className="container-wide py-10">
-        <nav className="flex items-center gap-1.5 text-sm text-[#7a6b5d] mb-8 flex-wrap">
+        <nav className="flex items-center gap-1.5 text-sm text-[#7a6b5d] mb-8 flex-wrap" aria-label="Breadcrumb">
           <Link href="/en" className="hover:text-terracotta-600">Home</Link>
           <span>/</span>
           <Link href="/en/centers-retiru" className="hover:text-terracotta-600">Centers</Link>
@@ -80,18 +127,36 @@ export default async function CentersTypeProvincePage({ params }: { params: Prom
           <span className="text-foreground font-medium">{provinceName}</span>
         </nav>
 
-        <div className="prose prose-sand max-w-3xl mb-10">
-          {cat?.intro_en && <div dangerouslySetInnerHTML={{ __html: cat.intro_en.replace(/\n/g, '<br/>') }} />}
-        </div>
+        {introHtml && (
+          <div
+            className="prose prose-sand max-w-3xl mb-10"
+            dangerouslySetInnerHTML={{ __html: introHtml }}
+          />
+        )}
 
         {filtered.length === 0 ? (
-          <div className="text-center py-16">
+          <div className="max-w-3xl mx-auto text-center py-12 px-6 bg-white border border-sand-200 rounded-2xl">
             <p className="text-4xl mb-4">🔍</p>
-            <p className="font-serif text-xl text-foreground mb-2">Coming soon: {label.toLowerCase()} centers in {provinceName}</p>
-            <p className="text-sm text-[#7a6b5d] mb-6">Browse all {label.toLowerCase()} centers or centers in {provinceName}</p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Link href={`/en/centers/${type}`} className="text-sm font-semibold text-terracotta-600 hover:text-terracotta-700">{label} Centers</Link>
-              <Link href={`/en/centers-retiru/${province}`} className="text-sm font-semibold text-terracotta-600 hover:text-terracotta-700">Centers in {provinceName}</Link>
+            <p className="font-serif text-2xl text-foreground mb-3">
+              We don't have verified {label.toLowerCase()} centers in {provinceName} yet
+            </p>
+            <p className="text-[#7a6b5d] mb-8 max-w-xl mx-auto">
+              We're expanding the directory. If you know a {label.toLowerCase()} center in {provinceName} that fits Retiru, help us add it.
+            </p>
+
+            <div className="flex flex-wrap justify-center gap-3">
+              <Link
+                href="/en/for-organizers"
+                className="inline-flex items-center gap-2 bg-terracotta-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-terracotta-700 transition-colors"
+              >
+                List your center
+              </Link>
+              <Link
+                href={`/en/centers/${type}`}
+                className="inline-flex items-center gap-2 bg-white border border-sand-200 text-foreground font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-sand-50 transition-colors"
+              >
+                All {label} centers
+              </Link>
             </div>
           </div>
         ) : (
@@ -139,6 +204,95 @@ export default async function CentersTypeProvincePage({ params }: { params: Prom
           </div>
         )}
 
+        {provinceCities.length > 0 && (
+          <section className="mt-12">
+            <h2 className="font-serif text-2xl text-foreground mb-4">
+              Cities with {label.toLowerCase()} centers in {provinceName}
+            </h2>
+            <p className="text-sm text-[#7a6b5d] mb-5">
+              Explore city-specific landings inside the province.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {provinceCities.map((c) => (
+                <Link
+                  key={c.slug}
+                  href={`/en/centers/${type}/${province}/${c.slug}`}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-sand-200 rounded-full text-sm text-foreground hover:border-terracotta-300 hover:text-terracotta-600 transition-colors"
+                >
+                  <MapPin size={13} />
+                  {c.name}
+                  <span className="text-xs text-[#a09383]">({c.count})</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {neighborProvinces.length > 0 && (
+          <section className="mt-12">
+            <h2 className="font-serif text-2xl text-foreground mb-4">
+              Other provinces with {label.toLowerCase()} centers
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {neighborProvinces.map((p) => (
+                <Link
+                  key={p.slug}
+                  href={`/en/centers/${type}/${p.slug}`}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-sand-200 rounded-full text-sm text-foreground hover:border-terracotta-300 hover:text-terracotta-600 transition-colors"
+                >
+                  <MapPin size={13} />
+                  {p.name}
+                  <span className="text-xs text-[#a09383]">({p.count})</span>
+                </Link>
+              ))}
+            </div>
+            <div className="mt-4">
+              <Link
+                href={`/en/centers/${type}`}
+                className="text-sm font-semibold text-terracotta-600 hover:text-terracotta-700"
+              >
+                See all provinces with {label.toLowerCase()} centers →
+              </Link>
+            </div>
+          </section>
+        )}
+
+        <section className="mt-12 p-5 bg-sand-50 border border-sand-200 rounded-2xl flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <p className="font-serif text-lg text-foreground">
+              Looking for meditation or ayurveda in {provinceName} too?
+            </p>
+            <p className="text-sm text-[#7a6b5d] mt-1">
+              Visit the province wellness hub with all disciplines.
+            </p>
+          </div>
+          <Link
+            href={`/en/provinces/${province}`}
+            className="inline-flex items-center gap-2 bg-terracotta-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-terracotta-700 transition-colors whitespace-nowrap"
+          >
+            Visit {provinceName} hub →
+          </Link>
+        </section>
+
+        {faqs.length > 0 && (
+          <section className="mt-16 max-w-3xl">
+            <h2 className="font-serif text-2xl text-foreground mb-6">
+              Frequently asked questions about {label.toLowerCase()} centers in {provinceName}
+            </h2>
+            <div className="space-y-4">
+              {faqs.map((item, i) => (
+                <details key={i} className="group bg-white border border-sand-200 rounded-xl">
+                  <summary className="flex items-center justify-between p-5 cursor-pointer font-medium text-foreground">
+                    {item.question}
+                    <svg className="w-5 h-5 text-[#a09383] shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6"/></svg>
+                  </summary>
+                  <div className="px-5 pb-5 text-sm text-[#7a6b5d] leading-relaxed">{item.answer}</div>
+                </details>
+              ))}
+            </div>
+          </section>
+        )}
+
         {filtered.length > 0 && (
           <script
             type="application/ld+json"
@@ -163,6 +317,12 @@ export default async function CentersTypeProvincePage({ params }: { params: Prom
             ])),
           }}
         />
+        {faqs.length > 0 && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLdFAQ(faqs)) }}
+          />
+        )}
       </div>
     </>
   );

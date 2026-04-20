@@ -1,6 +1,7 @@
 // /es/tienda — Tienda (yoga, meditación, ayurveda)
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { shopES } from '@/lib/seo/page-metadata';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { ProductInterestSurvey } from '@/components/shop/ProductInterestSurvey';
@@ -41,12 +42,22 @@ export default async function TiendaPage() {
       {/* Products grid */}
       {products && products.length > 0 ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
-          {products.map((p: any) => {
+          {products.map((p: any, idx: number) => {
             const img = Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : null;
+            const eager = idx < 4;
             return (
               <Link key={p.id} href={`/es/tienda/${p.slug}`} className="group bg-white rounded-2xl border border-sand-200 overflow-hidden hover:shadow-soft hover:-translate-y-0.5 transition-all">
                 <div className="relative aspect-square overflow-hidden bg-sand-50">
-                  {img && <img src={img} alt={p.name_es} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />}
+                  {img && (
+                    <Image
+                      src={img}
+                      alt={p.name_es}
+                      fill
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      {...(eager ? { priority: true } : { loading: 'lazy' as const })}
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  )}
                   {p.compare_price && p.compare_price > p.price && (
                     <span className="absolute top-2 left-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-red-500 text-white">
                       -{Math.round((1 - p.price / p.compare_price) * 100)}%

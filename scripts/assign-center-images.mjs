@@ -13,6 +13,7 @@
 import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import sharp from 'sharp';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
@@ -98,13 +99,23 @@ async function downloadAndUpload(imageUrl, centerId, supabase) {
     });
     if (!res.ok) return null;
 
-    const contentType = res.headers.get('content-type') || 'image/jpeg';
-    const ext = contentType.includes('png') ? 'png' : 'jpg';
-    const buffer = Buffer.from(await res.arrayBuffer());
+    const rawBuffer = Buffer.from(await res.arrayBuffer());
+    let uploadBuffer = rawBuffer;
+    let contentType = 'image/webp';
+    let ext = 'webp';
+    try {
+      uploadBuffer = await sharp(rawBuffer).webp({ quality: 82, effort: 5 }).toBuffer();
+    } catch (e) {
+      console.warn('  ⚠ sharp falló, subiendo original:', e.message);
+      const srcContentType = res.headers.get('content-type') || 'image/jpeg';
+      contentType = srcContentType.split(';')[0].trim();
+      ext = contentType.includes('png') ? 'png' : 'jpg';
+    }
     const path = `${centerId}/cover.${ext}`;
 
-    const { error } = await supabase.storage.from('centers').upload(path, buffer, {
-      contentType: contentType.split(';')[0].trim(),
+    const { error } = await supabase.storage.from('centers').upload(path, uploadBuffer, {
+      contentType,
+      cacheControl: '31536000',
       upsert: true,
     });
 
