@@ -18,7 +18,11 @@ import {
   jsonLdScript,
 } from '@/lib/seo';
 
-export const revalidate = 3600;
+// Landing dinámica bajo (public)/layout (que usa cookies → getCurrentUserForHeader).
+// Con ISR (revalidate) + cookies en el layout, Next 14 marcaba la página como SSG
+// fallida (DYNAMIC_SERVER_USAGE) y servía 500 al visitar la URL tras el build.
+// La servimos como dinámica pero con cache-control largo en la CDN (ver headers()).
+export const dynamic = 'force-dynamic';
 
 const VALID_TYPES_ES = ['yoga', 'meditacion', 'ayurveda'] as const;
 const MIN_CENTERS_STYLE_PROVINCE = 5;

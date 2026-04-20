@@ -19,7 +19,8 @@ import {
   jsonLdScript,
 } from '@/lib/seo';
 
-export const revalidate = 3600;
+// Ver nota en /[provincia]/page.tsx: force-dynamic por interacción ISR + cookies layout.
+export const dynamic = 'force-dynamic';
 
 const VALID_TYPES_ES = ['yoga', 'meditacion', 'ayurveda'] as const;
 const MIN_CENTERS_STYLE_NATIONAL = 3; // umbral para indexar la combinación

@@ -14,7 +14,8 @@ import {
   jsonLdScript,
 } from '@/lib/seo';
 
-export const revalidate = 3600;
+// See note in /[province]/page.tsx: force-dynamic because of ISR + cookies in parent layout.
+export const dynamic = 'force-dynamic';
 
 const VALID_TYPES = ['yoga', 'meditation', 'ayurveda'] as const;
 const MIN_CENTERS_STYLE_NATIONAL = 3;

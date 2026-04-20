@@ -1006,7 +1006,7 @@ export interface Style {
 }
 
 export async function getStylesForType(centerType: string): Promise<Style[]> {
-  const supabase = await createServerSupabase();
+  const supabase = createStaticSupabase();
   const { data, error } = await supabase
     .from('styles')
     .select('id, slug, name_es, name_en, center_type, description_es, description_en, sort_order')
@@ -1018,7 +1018,7 @@ export async function getStylesForType(centerType: string): Promise<Style[]> {
 }
 
 export async function getStyleBySlug(slug: string): Promise<Style | null> {
-  const supabase = await createServerSupabase();
+  const supabase = createStaticSupabase();
   const { data, error } = await supabase
     .from('styles')
     .select('id, slug, name_es, name_en, center_type, description_es, description_en, sort_order')
@@ -1031,7 +1031,7 @@ export async function getStyleBySlug(slug: string): Promise<Style | null> {
 
 /** Devuelve las filas (centerId, styleSlug) activas para hacer conteos/provincias. */
 async function fetchAssignmentsForStyle(styleId: string): Promise<{ center_id: string }[]> {
-  const supabase = await createServerSupabase();
+  const supabase = createStaticSupabase();
   const { data, error } = await supabase
     .from('center_styles')
     .select('center_id')
@@ -1044,7 +1044,7 @@ export async function getCentersByStyle(styleSlug: string, opts: { province?: st
   const style = await getStyleBySlug(styleSlug);
   if (!style) return { centers: [], total: 0, style: null };
 
-  const supabase = await createServerSupabase();
+  const supabase = createStaticSupabase();
   const { data: assignments, error: aErr } = await supabase
     .from('center_styles')
     .select('center_id')
@@ -1077,7 +1077,7 @@ export async function getProvincesForStyle(styleSlug: string, min = 1): Promise<
   if (assignments.length === 0) return [];
   const ids = Array.from(new Set(assignments.map((a) => a.center_id)));
 
-  const supabase = await createServerSupabase();
+  const supabase = createStaticSupabase();
   const { data, error } = await supabase
     .from('centers')
     .select('province')
@@ -1152,7 +1152,7 @@ export async function getStyleProvincePairs(min = 5): Promise<{ centerType: stri
 
 /** Estilos ligados al centro (para renderizar badges en ficha). */
 export async function getStylesForCenter(centerId: string): Promise<Style[]> {
-  const supabase = await createServerSupabase();
+  const supabase = createStaticSupabase();
   const { data, error } = await supabase
     .from('center_styles')
     .select('style_id, styles:style_id (id, slug, name_es, name_en, center_type, description_es, description_en, sort_order, is_active)')

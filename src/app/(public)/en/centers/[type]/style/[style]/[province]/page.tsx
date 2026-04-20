@@ -13,7 +13,10 @@ import {
   jsonLdScript,
 } from '@/lib/seo';
 
-export const revalidate = 3600;
+// Dynamic landing under (public)/layout (uses cookies via getCurrentUserForHeader).
+// ISR + cookies in layout → Next 14 marked SSG as failed (DYNAMIC_SERVER_USAGE)
+// and served 500 after build. Force-dynamic avoids it (layout already dynamic anyway).
+export const dynamic = 'force-dynamic';
 
 const VALID_TYPES = ['yoga', 'meditation', 'ayurveda'] as const;
 const MIN_CENTERS_STYLE_PROVINCE = 5;
