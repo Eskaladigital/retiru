@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Clock, Calendar, ArrowLeft, Share2, ChevronRight } from 'lucide-react';
 import { notFound, redirect } from 'next/navigation';
-import { getBlogPostSlugs, getCenterProvinces } from '@/lib/data';
+import { getBlogPostSlugs, getCenterProvinces, getDominantCenterTypeMap } from '@/lib/data';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { RichContentBody } from '@/components/ui/retreat-description-body';
 import { contentLooksLikeHtml } from '@/lib/sanitize-rich-html';
@@ -120,8 +120,16 @@ export default async function BlogPostEN({ params }: { params: Promise<{ slug: s
   const rawContent = article.content_en || article.content_es || '';
   let articleContent = rawContent;
   if (contentLooksLikeHtml(rawContent)) {
-    const provinces = await getCenterProvinces();
-    const entries = provinces.map((p) => ({ name: p.name, href: `/en/provinces/${p.slug}` }));
+    // Desde 2026-04-22 /en/provinces/ se descartó (§8.1). Apuntamos a
+    // /en/centers/{dominantType}/{province}.
+    const [provinces, dominantMap] = await Promise.all([
+      getCenterProvinces(),
+      getDominantCenterTypeMap(),
+    ]);
+    const entries = provinces.map((p) => {
+      const dom = dominantMap[p.slug] || 'yoga';
+      return { name: p.name, href: `/en/centers/${dom}/${p.slug}` };
+    });
     articleContent = autoLinkGeoHtml(rawContent, entries, { max: 4 });
   }
 

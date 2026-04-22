@@ -3,7 +3,8 @@
 > **Documento vivo de roadmap SEO**. Se actualiza según avanzamos: se marcan tareas completadas, se añaden notas y aprendizajes, y se registran cambios en el changelog.
 >
 > - **Fecha de creación**: 2026-04-20
-> - **Última actualización**: 2026-04-20 (Fase 2 cerrada)
+> - **Última actualización**: 2026-04-22 (apertura **Fase 4 · Contenido editorial rico por capas anti-canibalización**)
+> - **Estado global**: ✅ Fase 1, Fase 2 y Fase 3 técnica completadas. 🟨 Fase 4 en arranque (doctrina + migración + auditoría listas). Pendientes Fase 3 #12 Reviews verificadas y #15 GSC.
 > - **Propietario**: Narciso
 > - **Documento complementario**: `docs/SEO-LANDINGS.md` (estado descriptivo actual de landings y schemas)
 >
@@ -17,6 +18,7 @@
 - [Fase 1 — Quick wins (máximo ROI)](#fase-1--quick-wins-máximo-roi)
 - [Fase 2 — Mejoras estructurales](#fase-2--mejoras-estructurales)
 - [Fase 3 — Escala y long-tail](#fase-3--escala-y-long-tail)
+- [Fase 4 — Contenido editorial rico por capas (anti-canibalización)](#fase-4--contenido-editorial-rico-por-capas-anti-canibalización)
 - [Convenciones del plan](#convenciones-del-plan)
 - [Changelog](#changelog)
 
@@ -244,6 +246,93 @@
 
 ---
 
+## Fase 4 — Contenido editorial rico por capas (anti-canibalización)
+
+> **Arrancada 2026-04-22.** Objetivo: multiplicar por 5-8× el contenido único indexable por landing sin canibalizar. El intro monolítico de hoy (220-320 palabras) se reemplaza por un array de 4-5 secciones con H2 propio más una FAQ ampliada a 7-10 preguntas, **pero con una matriz estricta de qué sección vive en qué capa** (§8 de `docs/SEO-LANDINGS.md`).
+>
+> Riesgo principal: 266 landings programáticas en 5 capas. Sin doctrina anti-canibalización, Google fusiona intents y dispersa PageRank.
+>
+> Decisiones arquitectónicas tomadas (2026-04-22):
+> - ❌ **Descartada** la capa Hub Prov `/es/provincias/[slug]` (57 páginas) — canibalizaba con Cap. 3 Tipo×Prov.
+> - ✅ Migración 045 crea `sections_es`, `sections_en`, `serp_data`, `suppress_reason` en las 4 tablas SEO existentes + nueva tabla `style_province_seo` para Cap. 4.
+> - ✅ Slugs canónicos para provincias duplicadas: `alava`, `islas-baleares`, `gipuzkoa`, `lleida`, `santa-cruz-de-tenerife`. Pyrénées-Atlantiques pendiente de decidir scope Francia.
+> - ✅ Niche angle para estilos dominantes: hatha y abhyanga pasan a contenido 100% didáctico (no lista comercial).
+
+### 🟨 16. Migración y doctrina anti-canibalización
+- **Estado**: ✅ Completada (2026-04-22, paso 1 de la Fase 4)
+- **Acción**:
+  - 🆕 `supabase/migrations/045_seo_sections.sql` — añade `sections_es/en JSONB`, `serp_data JSONB`, `suppress_reason TEXT` a `categories`, `destinations`, `center_type_province_seo`, `styles`. Crea nueva tabla `style_province_seo` para Cap. 4. Añade CHECK constraints para el `suppress_reason` (ENUM: `duplicate_of_parent` · `thin_content` · `dominant_style_educational_only` · `duplicate_province_slug`).
+  - 🆕 Sección 8 completa en `docs/SEO-LANDINGS.md` con:
+    - 8.1 Mapa de capas con intent primario único por capa.
+    - 8.2 Matriz de secciones **prohibidas** por capa.
+    - 8.3 Patrones únicos de H1 y meta_title por capa.
+    - 8.4 Reglas de supresión automática (R1-R5).
+    - 8.5 Ángulo "niche_angle" para estilos dominantes.
+    - 8.6 Enlazado jerárquico unidireccional (diagrama ASCII).
+    - 8.7 Almacenamiento del nuevo contenido rico (formato JSONB).
+    - 8.8 Flujo SerpApi + OpenAI por capa.
+    - 8.9 Slugs canónicos para provincias duplicadas.
+- **Impacto**: contrato estratégico. Sin esto, la generación masiva canibaliza seguro.
+
+### 🟨 17. Auditoría y consolidación de provincias duplicadas
+- **Estado**: 🟨 Paso 1 listo (auditoría). Paso 2 (consolidación) pendiente de revisión humana.
+- **Acción**:
+  - 🆕 `scripts/audit-duplicate-provinces.mjs` (+ `npm run seo:audit-provinces`) — reporta pares duplicados sin modificar datos. Sale reporte humano o JSON (`--json`) y opcionalmente lista centros afectados (`--with-centers`).
+  - ⬜ Pendiente: `scripts/consolidate-duplicate-provinces.mjs` (a crear tras revisar la salida del audit). Acciones: `UPDATE centers SET province = canónico`, `DELETE FROM center_type_province_seo` de los slugs alias, redirección 301 en `middleware.ts`.
+- **Comando**: `npm run seo:audit-provinces --with-centers`
+- **Bloqueante para**: #18.
+
+### 🔵 18. Cliente SerpApi + cache por landing
+- **Estado**: ⬜ Pendiente
+- **Acción**:
+  - 🆕 `scripts/lib/serpapi.mjs` — cliente con rate-limit, retries, fallback a caché local (`.cache/serp/*.json`). Devuelve `paa`, `related_searches`, `local_pack`, `featured_snippet`, `answer_box`.
+  - Gating: si `serp_data.fetched_at < 30 días`, se reutiliza. Ahorro ~40% de queries.
+  - Uso de `SERPAPI_API_KEY` ya existente en `.env.local`.
+- **Coste**: ~$1 para 266 landings.
+
+### 🔵 19. Generador unificado `seo:sections`
+- **Estado**: ⬜ Pendiente
+- **Acción**:
+  - 🆕 `scripts/generate-seo-sections.mjs` con flags `--capa=1..5`, `--type=`, `--province=`, `--city=`, `--style=`, `--force`, `--dry-run`, `--limit=N`, `--concurrency=2`.
+  - Un prompt de sistema **distinto por capa** que respeta §8.2 (matriz de prohibiciones) y §8.3 (patrones únicos H1/meta).
+  - Aplicación automática de `suppress_reason` según §8.4 (R1-R5): si R1/R2/R4, genera contenido mínimo + marca `noindex`; si R3, usa ángulo niche.
+  - Dossier combina datos BD + SERP cacheado + catálogo de estilos de Retiru.
+  - Upsert a `sections_es/en` + actualización de `serp_data`.
+- **Coste**: ~$24 OpenAI GPT-4o para la tanda completa.
+
+### 🔵 20. Componente renderer + eliminación de `/provincias/[slug]`
+- **Estado**: ⬜ Pendiente
+- **Acción**:
+  - 🆕 `src/components/seo/SeoSections.tsx` — renderiza el array `sections_*` mapeando cada bloque a `<section><h2>{heading}</h2><div dangerouslySetInnerHTML={{__html: sanitized(html)}}/></section>`. Con sanitización server-side (`sanitize-html`).
+  - 🔧 Integración en las 4 rutas activas (Cap. 1, 3, 5, 2, 4): insertar `<SeoSections>` tras el intro y antes de la FAQ.
+  - 🔧 En `generateMetadata`, si `suppress_reason IS NOT NULL` → `noIndex: true` y meta especial.
+  - ❌ **Eliminar**: `src/app/(public)/es/provincias/[slug]/page.tsx` + `src/app/(public)/en/provinces/[slug]/page.tsx`. Quitar del sitemap y del HTML sitemap. Revertir 301 de `centros-retiru/[slug]` hacia `/centros/yoga/{slug}` (disciplina dominante).
+  - 🔧 Actualizar `docs/ROUTES.md` con la desaparición de la capa hub.
+
+### 🔵 21. Piloto sobre Ayurveda·Álava
+- **Estado**: ⬜ Pendiente
+- **Acción**: ejecutar `npm run seo:sections -- --capa=3 --type=ayurveda --province=alava --dry-run` → revisar salida JSON → si OK, correr sin dry-run → validar visualmente en `https://www.retiru.com/es/centros/ayurveda/alava`. Ajustar prompts si hace falta ANTES de la masiva.
+- **Criterio de éxito**: 4 secciones con H2 diferenciados, FAQ de 8-10 preguntas, ninguna sección solapa contenido con `/es/centros/ayurveda`. Google Search Console detecta la nueva estructura en < 7 días.
+
+### 🔵 22. Generación masiva (4 tandas)
+- **Estado**: ⬜ Pendiente
+- **Acción**: ejecutar por capas para poder parar si algo va mal:
+  1. Cap. 3 Tipo×Prov (97 landings) — el volumen comercial principal.
+  2. Cap. 5 Tipo×Prov×Ciudad (58).
+  3. Cap. 1 Nacional tipo (3) y Cap. 2 Tipo×Estilo (10).
+  4. Cap. 4 Estilo×Prov (44).
+- Entre tanda y tanda: revisar 3 landings al azar, validar calidad, ajustar prompt si hace falta, commit.
+- **Coste total**: ~$25.
+
+### 🔵 23. Monitor GSC post-despliegue
+- **Estado**: ⬜ Pendiente (depende de #15 Fase 3)
+- **Acción**: 30 días después del despliegue, script que cruza GSC queries ↔ landings y reporta:
+  - Landings con impresiones < 10 → thin content probable.
+  - Queries duplicadas entre 2 landings distintas (canibalización residual) → candidatas a `suppress_reason` manual.
+  - Top queries ganadas vs perdidas por landing.
+
+---
+
 ## Convenciones del plan
 
 - **Estados**: ⬜ Pendiente · 🟨 En progreso · ✅ Completada · ⛔ Bloqueada · 🚫 Descartada.
@@ -256,6 +345,49 @@
 ---
 
 ## Changelog
+
+### 2026-04-22 — Apertura Fase 4: Contenido editorial rico por capas anti-canibalización
+
+#### Contexto
+- El intro monolítico (220-320 palabras) de las 266 landings programáticas es insuficiente: poco indexable, difícil de diferenciar entre `/es/centros/yoga/madrid` y `/es/provincias/madrid`. La keyword "yoga Madrid" aparecía disputada entre capas.
+- Análisis de canibalización identifica **7 choques** entre capas, siendo críticos: Hub Prov vs Tipo×Prov, estilos dominantes (hatha 47%, abhyanga 100%), y provincias duplicadas en BD.
+
+#### Decisiones estratégicas (§8 de `docs/SEO-LANDINGS.md`)
+- ❌ **Capa Hub Prov `/es/provincias/[slug]` descartada**. Solapaba intent con Cap. 3 Tipo×Prov. Se eliminará el código en #20; URLs redirigen 301 a la disciplina dominante de cada provincia.
+- ✅ **Matriz de secciones prohibidas por capa** (§8.2): cada sección editorial (`why_here`, `what_to_expect`, `how_to_choose`, `history`, `faq_expanded`) vive en unas capas concretas y NO puede duplicarse. La landing hija lo hereda de la madre vía enlace interno.
+- ✅ **Patrones únicos de H1/meta_title por capa** (§8.3): 5 patrones distintos sin solape semántico.
+- ✅ **Reglas de supresión automática** (§8.4, R1-R5): umbral ciudad ≥ 60% provincia, estilo×prov ≤ 3 centros, estilo dominante ≥ 40% del tipo, provincia duplicada.
+- ✅ **Ángulo "niche_angle"** para estilos dominantes (§8.5): hatha, abhyanga pasan a contenido 100% didáctico (no lista comercial) para no pisar a la Capa 1.
+- ✅ **Enlazado jerárquico unidireccional** (§8.6): nacional → tipo×prov → ciudad; estilo → estilo×prov. Nunca cross-canonicals, nunca horizontal entre provincias.
+- ✅ **Slugs canónicos de provincias duplicadas** (§8.9): `alava`, `islas-baleares`, `gipuzkoa`, `lleida`, `santa-cruz-de-tenerife`. Aliases migran vía 301.
+
+#### Entregables de este arranque
+- 🆕 Migración `supabase/migrations/045_seo_sections.sql`:
+  - Añade `sections_es/en JSONB`, `serp_data JSONB`, `suppress_reason TEXT` a `categories`, `destinations`, `center_type_province_seo`, `styles`.
+  - Crea nueva tabla `style_province_seo` para Cap. 4 (44 pares estilo×provincia).
+  - CHECK constraints para `suppress_reason` (ENUM de 4 valores).
+  - Trigger de `updated_at` en la nueva tabla. RLS public read.
+- 🆕 `scripts/audit-duplicate-provinces.mjs` (+ `npm run seo:audit-provinces[:json]`) — auditoría **no destructiva** de provincias duplicadas. Reporta pares con counts, centros afectados, SQL de migración sugerido y nota para el middleware. Flag `--with-centers` muestra muestra de centros por slug.
+- 🆕 Documentación: sección 8 completa en `docs/SEO-LANDINGS.md` (contrato estratégico del trabajo restante de Fase 4).
+- 🔧 `PLAN_SEO.md` — nueva sección **Fase 4** con 8 tareas (#16-#23) enlazadas al índice.
+
+#### Pendiente ejecutar
+1. ⬜ Aplicar migración 045 en Supabase (SQL Editor).
+2. ⬜ Ejecutar `npm run seo:audit-provinces --with-centers`, decidir scope Francia/Portugal.
+3. ⬜ Crear script de consolidación tras revisar audit.
+4. ⬜ Cliente SerpApi (#18).
+5. ⬜ Generador unificado por capa (#19).
+6. ⬜ Renderer + eliminación `/provincias/` (#20).
+7. ⬜ Piloto Álava (#21).
+8. ⬜ Tanda masiva (#22).
+
+### 2026-04-20 — Hotfix `force-dynamic` en landings de estilo (post-deploy Fase 3)
+- 🐞 Síntoma: tras desplegar Fase 3 #10, `https://www.retiru.com/es/centros/yoga/estilo/ashtanga/madrid` (y sus equivalentes) devolvía **500 Internal Server Error**. Stack: `digest: 'DYNAMIC_SERVER_USAGE'` al renderizar Server Component.
+- 🔎 Causa raíz: las 4 nuevas páginas de estilo (`/es/centros/[tipo]/estilo/[estilo]`, `…/[provincia]` + mirrors EN) declaraban `revalidate = 3600` (ISR). El layout padre `src/app/(public)/layout.tsx` llama a `getCurrentUserForHeader()` → `cookies()`; Next 14 caché el HTML producido durante el primer build con el error de "cookies fuera de request scope", y servía ese 500 cacheado en todas las visitas hasta el próximo revalidate (que nunca ocurría si siempre fallaba). Otras landings antiguas del mismo layout no se vieron afectadas porque su primer render estático ya había quedado bien cacheado.
+- 🔧 Fix aplicado:
+  1. Todos los helpers nuevos de styles en `src/lib/data/index.ts` (`getStyleBySlug`, `getStylesForType`, `getCentersByStyle`, `getProvincesForStyle`, `fetchAssignmentsForStyle`, `getStylesForCenter`) ahora usan `createStaticSupabase()` en lugar de `createServerSupabase()` (no tocan cookies; RLS permite anon read).
+  2. Las 4 páginas de estilo cambian `export const revalidate = 3600` por `export const dynamic = 'force-dynamic'` (con comentario explicativo). Las fichas se generan on-demand en SSR — rápidas (caché de Supabase anon, datos ligeros) y evitan el bucle de caché envenenado.
+- ✅ Verificación: `npx next build` + `npx next start` local → las 4 URLs responden **200** (`ashtanga/madrid`, `hatha`, `vinyasa/barcelona`, `vinyasa`). Commit `e3d30c0`.
 
 ### 2026-04-20 — Fase 3 (técnica): #10, #11, #13, #14 completadas
 

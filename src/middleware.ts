@@ -63,6 +63,35 @@ function isPublicPath(pathname: string): boolean {
   );
 }
 
+// ============================================================================
+// SEO · Redirecciones 301 para slugs de provincia duplicados (§8.9 SEO-LANDINGS).
+// Mapa `alias -> canonical`. Se aplica en cualquier ruta que contenga el alias
+// como segmento (p.ej. /es/centros/yoga/lerida -> /es/centros/yoga/lleida).
+// Ampliar en mayúscula/tildes NO es necesario: los slugs URL viajan en minúsculas.
+// ============================================================================
+const DUPLICATE_PROVINCE_REDIRECTS: Record<string, string> = {
+  'islas-baleares': 'baleares',
+  'guipuzcoa': 'gipuzkoa',
+  'lerida': 'lleida',
+  'tenerife': 'santa-cruz-de-tenerife',
+  'pirineos-atlanticos': 'pyrenees-atlantiques',
+};
+
+/** Devuelve la URL canónica si el pathname contiene un slug alias; si no, null. */
+function canonicalProvincePathname(pathname: string): string | null {
+  // Partimos por '/' y reemplazamos segmentos que coincidan con un alias.
+  const segments = pathname.split('/');
+  let changed = false;
+  for (let i = 0; i < segments.length; i++) {
+    const seg = segments[i];
+    if (seg && DUPLICATE_PROVINCE_REDIRECTS[seg]) {
+      segments[i] = DUPLICATE_PROVINCE_REDIRECTS[seg];
+      changed = true;
+    }
+  }
+  return changed ? segments.join('/') : null;
+}
+
 /** Para <html lang> en root layout (SEO / accesibilidad) */
 function withLocaleHeaders(request: NextRequest) {
   const h = new Headers(request.headers);
@@ -74,6 +103,15 @@ function withLocaleHeaders(request: NextRequest) {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // 0. SEO · 301 permanente para slugs de provincia duplicados (§8.9 SEO-LANDINGS).
+  //    Debe ir ANTES de cualquier otra redirección para que Google consolide link equity.
+  const canonicalPath = canonicalProvincePathname(pathname);
+  if (canonicalPath) {
+    const url = request.nextUrl.clone();
+    url.pathname = canonicalPath;
+    return NextResponse.redirect(url, 301);
+  }
 
   // 1. Root → redirect to locale
   if (pathname === '/') {

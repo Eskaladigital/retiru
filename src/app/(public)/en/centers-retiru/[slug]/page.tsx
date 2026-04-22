@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { MapPin, Star } from 'lucide-react';
-import { getCenterProvinces, getCentersByProvince } from '@/lib/data';
+import { getCenterProvinces, getCentersByProvince, getDominantCenterTypeForProvince } from '@/lib/data';
 import { getCenterTypeLabel, stripMarkdownForPreview, isGenericDescription } from '@/lib/utils';
 import { generatePageMetadata, jsonLdItemList, jsonLdScript } from '@/lib/seo';
 import { resolveGeoLanding, type GeoNode } from '@/lib/geo-landing';
@@ -14,7 +14,8 @@ import type { Center } from '@/types';
 export const revalidate = 3600;
 
 export async function generateStaticParams() {
-  // Las provincias viven ahora en /en/provinces/[slug]; aquí sólo country/region.
+  // Desde 2026-04-22 las provincias ya no tienen hub multi-disciplina
+  // (§8.1 SEO-LANDINGS.md). Aquí sólo country/region; provincias caen por 301.
   const supabase = createStaticSupabase();
   const { data: geo } = await supabase
     .from('destinations')
@@ -39,7 +40,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const geo = await resolveGeoLanding(slug);
   if (geo?.kind === 'province') {
-    permanentRedirect(`/en/provinces/${slug}`);
+    const dom = await getDominantCenterTypeForProvince(slug);
+    permanentRedirect(`/en/centers/${dom}/${slug}`);
   }
   let name = slug;
   if (geo) {
@@ -65,7 +67,8 @@ export default async function CentersByGeoPageEN({ params }: { params: Promise<{
   let placeName: string | null = null;
   const geo = await resolveGeoLanding(slug);
   if (geo?.kind === 'province') {
-    permanentRedirect(`/en/provinces/${slug}`);
+    const dom = await getDominantCenterTypeForProvince(slug);
+    permanentRedirect(`/en/centers/${dom}/${slug}`);
   }
   if (geo) {
     placeName = geo.name_en;
@@ -73,7 +76,8 @@ export default async function CentersByGeoPageEN({ params }: { params: Promise<{
   } else {
     const res = await getCentersByProvince(slug);
     if (res.provinceName) {
-      permanentRedirect(`/en/provinces/${slug}`);
+      const dom = await getDominantCenterTypeForProvince(slug);
+      permanentRedirect(`/en/centers/${dom}/${slug}`);
     }
     centers = res.centers;
     placeName = res.provinceName;

@@ -679,6 +679,58 @@ export async function getCenterTypeProvincePairs(): Promise<{ type: string; prov
 }
 
 /** Provincias con al menos 1 centro del tipo dado */
+/** Igual que getDominantCenterTypeForProvince, pero para todas las provincias
+ *  de una sola tacada. Usada por autolink del blog para no hacer N+1 queries. */
+export async function getDominantCenterTypeMap(): Promise<Record<string, 'yoga' | 'meditation' | 'ayurveda'>> {
+  const supabase = await createServerSupabase();
+  const { data } = await supabase
+    .from('centers')
+    .select('province, type')
+    .eq('status', 'active');
+  const normalize = (s: string) =>
+    s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
+  const counts = new Map<string, { yoga: number; meditation: number; ayurveda: number }>();
+  for (const r of data || []) {
+    if (!r.province || !r.type) continue;
+    const slug = normalize(r.province);
+    if (!counts.has(slug)) counts.set(slug, { yoga: 0, meditation: 0, ayurveda: 0 });
+    const bucket = counts.get(slug)!;
+    const t = r.type as 'yoga' | 'meditation' | 'ayurveda';
+    if (t === 'yoga' || t === 'meditation' || t === 'ayurveda') bucket[t]++;
+  }
+  const out: Record<string, 'yoga' | 'meditation' | 'ayurveda'> = {};
+  for (const [slug, b] of counts) {
+    const ordered = (Object.entries(b) as ['yoga' | 'meditation' | 'ayurveda', number][]).sort((a, z) => z[1] - a[1]);
+    out[slug] = ordered[0] && ordered[0][1] > 0 ? ordered[0][0] : 'yoga';
+  }
+  return out;
+}
+
+/** Devuelve la disciplina con más centros activos en una provincia.
+ *  Usada para resolver los 301 legacy (/provincias/[slug] → /centros/{tipo}/[slug])
+ *  cuando se eliminó el hub multi-disciplina (§8.1 SEO-LANDINGS.md, 2026-04-22).
+ *  Fallback: 'yoga' (la disciplina con más volumen en todo el país). */
+export async function getDominantCenterTypeForProvince(
+  provinceSlug: string,
+): Promise<'yoga' | 'meditation' | 'ayurveda'> {
+  const supabase = await createServerSupabase();
+  const normalize = (s: string) =>
+    s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
+
+  const { data } = await supabase
+    .from('centers')
+    .select('province, type')
+    .eq('status', 'active');
+  const counts: Record<string, number> = { yoga: 0, meditation: 0, ayurveda: 0 };
+  for (const r of data || []) {
+    if (!r.province || !r.type) continue;
+    if (normalize(r.province) !== provinceSlug) continue;
+    if (r.type in counts) counts[r.type]++;
+  }
+  const winner = (Object.entries(counts) as [keyof typeof counts, number][]).sort((a, b) => b[1] - a[1])[0];
+  return (winner && winner[1] > 0 ? winner[0] : 'yoga') as 'yoga' | 'meditation' | 'ayurveda';
+}
+
 export async function getProvincesForCenterType(type: string): Promise<{ slug: string; name: string; count: number }[]> {
   const supabase = await createServerSupabase();
   const { data, error } = await supabase
@@ -707,6 +759,13 @@ export async function getProvincesForCenterType(type: string): Promise<{ slug: s
 /** Contenido SEO (intro, FAQ, meta) para un par tipo×provincia (tabla center_type_province_seo).
  *  Devuelve null si aún no se ha generado contenido para ese par.
  *  city_slug/city_name son null para las filas provinciales y rellenos para las de ciudad. */
+/** Bloque editorial enriquecido (§8 SEO-LANDINGS.md). */
+export interface SeoSection {
+  key: string;
+  heading: string;
+  html: string;
+}
+
 export interface CenterTypeProvinceSeo {
   type: string;
   province_slug: string;
@@ -721,12 +780,28 @@ export interface CenterTypeProvinceSeo {
   meta_description_en: string | null;
   faq_es: { question: string; answer: string }[];
   faq_en: { question: string; answer: string }[];
+  sections_es: SeoSection[];
+  sections_en: SeoSection[];
+  suppress_reason: string | null;
 }
 
 const SEO_SELECT =
-  'type, province_slug, province_name, city_slug, city_name, intro_es, intro_en, meta_title_es, meta_title_en, meta_description_es, meta_description_en, faq_es, faq_en';
+  'type, province_slug, province_name, city_slug, city_name, intro_es, intro_en, meta_title_es, meta_title_en, meta_description_es, meta_description_en, faq_es, faq_en, sections_es, sections_en, suppress_reason';
 
-function normalizeSeoRow(data: Partial<CenterTypeProvinceSeo> & { faq_es?: unknown; faq_en?: unknown } | null): CenterTypeProvinceSeo | null {
+function normalizeSections(val: unknown): SeoSection[] {
+  if (!Array.isArray(val)) return [];
+  return val
+    .filter((s): s is SeoSection =>
+      !!s && typeof (s as SeoSection).key === 'string' &&
+      typeof (s as SeoSection).heading === 'string' &&
+      typeof (s as SeoSection).html === 'string',
+    )
+    .map((s) => ({ key: s.key, heading: s.heading, html: s.html }));
+}
+
+function normalizeSeoRow(
+  data: Partial<CenterTypeProvinceSeo> & { faq_es?: unknown; faq_en?: unknown; sections_es?: unknown; sections_en?: unknown } | null,
+): CenterTypeProvinceSeo | null {
   if (!data) return null;
   return {
     ...data,
@@ -734,6 +809,9 @@ function normalizeSeoRow(data: Partial<CenterTypeProvinceSeo> & { faq_es?: unkno
     city_name: (data.city_name as string | null) ?? null,
     faq_es: Array.isArray(data.faq_es) ? data.faq_es : [],
     faq_en: Array.isArray(data.faq_en) ? data.faq_en : [],
+    sections_es: normalizeSections(data.sections_es),
+    sections_en: normalizeSections(data.sections_en),
+    suppress_reason: (data.suppress_reason as string | null) ?? null,
   } as CenterTypeProvinceSeo;
 }
 
@@ -1097,6 +1175,61 @@ export async function getProvincesForStyle(styleSlug: string, min = 1): Promise<
     .map(([slug, { name, count }]) => ({ slug, name, count }))
     .filter((p) => p.count >= min)
     .sort((a, b) => b.count - a.count);
+}
+
+/** Lee una fila de style_province_seo (Capa 5). Normaliza sections_es/en. */
+export interface StyleProvinceSeo {
+  id: string;
+  center_type: 'yoga' | 'meditation' | 'ayurveda';
+  style_slug: string;
+  province_slug: string;
+  province_name: string;
+  intro_es: string | null;
+  intro_en: string | null;
+  meta_title_es: string | null;
+  meta_title_en: string | null;
+  meta_description_es: string | null;
+  meta_description_en: string | null;
+  faq_es: Array<{ question: string; answer: string }>;
+  faq_en: Array<{ question: string; answer: string }>;
+  sections_es: SeoSection[];
+  sections_en: SeoSection[];
+  suppress_reason: string | null;
+}
+
+export async function getStyleProvinceSeo(
+  centerType: string,
+  styleSlug: string,
+  provinceSlug: string,
+): Promise<StyleProvinceSeo | null> {
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from('style_province_seo')
+    .select('id, center_type, style_slug, province_slug, province_name, intro_es, intro_en, meta_title_es, meta_title_en, meta_description_es, meta_description_en, faq_es, faq_en, sections_es, sections_en, suppress_reason')
+    .eq('center_type', centerType)
+    .eq('style_slug', styleSlug)
+    .eq('province_slug', provinceSlug)
+    .maybeSingle();
+  if (error || !data) return null;
+  const row = data as Record<string, unknown>;
+  return {
+    id: String(row.id),
+    center_type: row.center_type as 'yoga' | 'meditation' | 'ayurveda',
+    style_slug: String(row.style_slug),
+    province_slug: String(row.province_slug),
+    province_name: String(row.province_name),
+    intro_es: (row.intro_es as string | null) ?? null,
+    intro_en: (row.intro_en as string | null) ?? null,
+    meta_title_es: (row.meta_title_es as string | null) ?? null,
+    meta_title_en: (row.meta_title_en as string | null) ?? null,
+    meta_description_es: (row.meta_description_es as string | null) ?? null,
+    meta_description_en: (row.meta_description_en as string | null) ?? null,
+    faq_es: Array.isArray(row.faq_es) ? (row.faq_es as Array<{ question: string; answer: string }>) : [],
+    faq_en: Array.isArray(row.faq_en) ? (row.faq_en as Array<{ question: string; answer: string }>) : [],
+    sections_es: normalizeSections(row.sections_es),
+    sections_en: normalizeSections(row.sections_en),
+    suppress_reason: (row.suppress_reason as string | null) ?? null,
+  };
 }
 
 /** Devuelve pares (styleSlug, provinceSlug) con al menos `min` centros, para `generateStaticParams` / sitemap (build sin cookies). */

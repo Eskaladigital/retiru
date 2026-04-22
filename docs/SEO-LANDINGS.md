@@ -16,6 +16,12 @@ Documento de referencia sobre la estructura de contenido único de las landings 
 | **Ficha producto** | `/es/tienda/[slug]` | Producto | Detalle de producto |
 | **Perfil organizador** | `/es/organizador/[slug]` | Organizador | Perfil público |
 | **Artículo blog** | `/es/blog/[slug]` | Post | Contenido editorial |
+| **Centros por tipo** | `/es/centros/[tipo]` | Tipo (yoga/meditacion/ayurveda) | H1 + intro + top 6 provincias + chips + estilos + FAQ (hasta 10) + blog relacionado |
+| **Centros tipo+provincia** | `/es/centros/[tipo]/[provincia]` | Tipo + provincia | Intro editorial IA + lista + FAQ provincial + ciudades + otras provincias |
+| **Centros tipo+provincia+ciudad** | `/es/centros/[tipo]/[provincia]/[ciudad]` | Tipo + provincia + ciudad | Intro IA por barrio/ciudad + lista + FAQ + "otras zonas" |
+| **Centros tipo+estilo** | `/es/centros/[tipo]/estilo/[estilo]` | Tipo + estilo (Fase 3 #10) | Intro del estilo + provincias + centros destacados + FAQ |
+| **Centros tipo+estilo+provincia** | `/es/centros/[tipo]/estilo/[estilo]/[provincia]` | Tipo + estilo + provincia | Lista filtrada + enlace al nacional del estilo |
+| ~~Hub provincia~~ | ~~`/es/provincias/[slug]`~~ | **DESCARTADA (2026-04-22)** — canibalizaba con Cap. 3 Tipo×Prov. Ver §8.1. | 301 → `/es/centros/yoga/[prov]` (disciplina dominante) |
 
 ---
 
@@ -26,12 +32,14 @@ Resumen rápido; el detalle de schemas implementados está en **§4.B** (p. ej. 
 | Landing | Metadata | JSON-LD destacado | OG image |
 |---------|----------|-------------------|----------|
 | retiros-retiru/[slug] | ✅ | ✅ ItemList (lista) + FAQ si hay contenido BD | Según hero |
-| centros-retiru/[slug] | ✅ | ✅ ItemList + FAQ si aplica | Según hero |
+| centros-retiru/[slug] | ✅ (301 → provincias si es provincia) | ✅ ItemList + FAQ si aplica | Según hero |
 | retiros-[category] / + destino | ✅ intros/meta BD | ✅ ItemList / FAQ combinados | Por defecto |
-| centros/[tipo] / + provincia | ✅ | ✅ ItemList | Por defecto |
+| centros/[tipo] / + provincia / + ciudad | ✅ intros/meta BD (042/043) | ✅ ItemList + FAQPage + BreadcrumbList | Por defecto |
+| centros/[tipo]/estilo/[estilo] (+/[prov]) | ✅ intros desde catálogo `styles` | ✅ ItemList + BreadcrumbList (+ FAQPage nacional) | Por defecto |
+| provincias/[slug] | ✅ | ✅ CollectionPage + Place + BreadcrumbList + FAQPage | Por defecto |
 | destinos/[slug] | ✅ | ItemList / Place (según implementación) | — |
 | retiro/[slug] | ✅ | ✅ Event + BreadcrumbList | Dinámica |
-| centro/[slug] | ✅ | ✅ LocalBusiness + BreadcrumbList | Dinámica |
+| centro/[slug] | ✅ | ✅ LocalBusiness enriquecido (YogaStudio/HealthAndBeautyBusiness + geo + sameAs + images + priceRange) + BreadcrumbList | Dinámica |
 | tienda/[slug] | ✅ | ✅ Product + BreadcrumbList | Dinámica |
 | blog/[slug] | ✅ | ✅ BlogPosting + BreadcrumbList | Por artículo |
 
@@ -173,6 +181,10 @@ El sitemap se genera en build time con ISR (`revalidate = 3600`). Genera URLs **
 | Retiros cat+destino | `getCategoryDestinationPairs()` | `/es/retiros-[cat]/[dest]` | `/en/retreats-[cat]/[dest]` | Solo pares con retiros |
 | Centros por tipo | Fijo (3 tipos) | `/es/centros/[tipo]` | `/en/centers/[type]` | Siempre |
 | Centros tipo+provincia | `getCenterTypeProvincePairs()` | `/es/centros/[tipo]/[prov]` | `/en/centers/[type]/[prov]` | Solo pares con centros |
+| Centros tipo+provincia+ciudad | `getCenterTypeProvinceCityTriples(2)` | `/es/centros/[tipo]/[prov]/[ciudad]` | `/en/centers/[type]/[prov]/[city]` | Umbral ≥ 2 centros en la ciudad |
+| Centros tipo+estilo (nacional) | `getStyleProvincePairs(3)` agregado por estilo | `/es/centros/[tipo]/estilo/[estilo]` | `/en/centers/[type]/style/[style]` | Umbral ≥ 3 centros con el estilo |
+| Centros tipo+estilo+provincia | `getStyleProvincePairs(5)` | `/es/centros/[tipo]/estilo/[estilo]/[prov]` | `/en/centers/[type]/style/[style]/[prov]` | Umbral ≥ 5 centros en la provincia |
+| Hub provincia | `getGeoNodeBySlug('province')` | `/es/provincias/[slug]` | `/en/provinces/[slug]` | Solo provincias con al menos 1 centro |
 
 Todas las entradas incluyen `alternates` con hreflang ES/EN.
 
@@ -186,13 +198,169 @@ Así no se generan páginas vacías ("thin content") en el deploy.
 
 ---
 
-## 8. Resumen
+## 8. Estrategia de diferenciación (anti-canibalización)
+
+> Añadida 2026-04-22. Es el **contrato estratégico** al que debe ajustarse cualquier generación futura de contenido SEO para las ~266 landings programáticas. Su razón de ser: impedir que Google vea varias landings como el mismo intent (canibalización) y disuelva su PageRank.
+
+### 8.1 Mapa de capas y sus intents primarios
+
+| Capa | Ruta | Nº | Intent **primario** (ÚNICO) | Query típica |
+|------|------|----|------------------------------|--------------|
+| 1 · Nacional tipo | `/es/centros/[tipo]` | 3 | "¿Qué es {disciplina}? ¿Dónde practicarla en España?" | "centros de yoga en España" |
+| 2 · Tipo×Estilo | `/es/centros/[tipo]/estilo/[estilo]` | 10 | "¿Qué es {estilo}? ¿En qué se diferencia?" | "qué es yoga vinyasa" |
+| 3 · Tipo×Prov | `/es/centros/[tipo]/[provincia]` | 97 | "**Directorio** de centros de {tipo} en {Prov}" | "centros de yoga Madrid" |
+| 4 · Estilo×Prov | `/es/centros/[tipo]/estilo/[estilo]/[provincia]` | 44 | "Centros de {tipo}-{estilo} concretamente en {Prov}" | "kundalini yoga Madrid" |
+| 5 · Tipo×Prov×Ciudad | `/es/centros/[tipo]/[provincia]/[ciudad]` | 58 | "Centros de {tipo} en {Ciudad} — acceso, transporte, carácter" | "yoga Arganzuela" |
+| (DESCARTADA) Hub Prov | `/es/provincias/[slug]` | 57 | — | — |
+
+**Capa Hub Prov (`/es/provincias/[slug]`) descartada el 2026-04-22** tras decidir que solapaba intent con Capa 3 ("yoga Madrid" competía con "bienestar Madrid" porque Google lee ambas como wellness/yoga genérico). Se elimina el código y se redirigen sus URLs a la Capa 3 con la disciplina dominante (yoga para provincias con yoga, meditación para provincias solo con meditación, etc.).
+
+### 8.2 Matriz de secciones PROHIBIDAS por capa
+
+Esta es la regla más importante. **Una sección existe en una capa y SOLO en esa capa.** Si una landing "hija" ya tiene información, la "madre" enlaza hacia ella en vez de duplicarla.
+
+| Sección editorial | Cap. 1 Nac. tipo | Cap. 3 Tipo×Prov | Cap. 5 Tipo×Prov×Ciudad | Cap. 2 Tipo×Estilo | Cap. 4 Estilo×Prov |
+|---|:---:|:---:|:---:|:---:|:---:|
+| `why_here` (por qué aquí) | ✅ disciplina | ✅ territorio | ❌ (heredado) | ✅ estilo | ⚠️ intersección estilo×prov |
+| `what_to_expect` (qué esperar) | ✅ sesión-tipo genérica | ✅ formatos locales | ✅ acceso al barrio | ✅ sesión-estilo | ❌ |
+| `how_to_choose` (cómo elegir) | ✅ criterios genéricos | ⚠️ criterios + ref local | ✅ cercanía, transporte, aparcamiento | ✅ distinguir buen profesor del estilo | ❌ |
+| `history` (tradición/origen) | ✅ disciplina en España | ❌ | ❌ | ✅ origen del estilo | ❌ |
+| `faq_expanded` (7-10 Q&A) | ✅ genérica | ✅ provincial | ✅ hiperlocal | ✅ estilo | ✅ estilo+prov |
+
+Leyenda · ✅ obligatoria · ⚠️ condicional · ❌ **prohibida** (la hereda su padre vía enlace interno)
+
+### 8.3 Patrones únicos de H1 y meta_title
+
+Cada capa tiene un patrón DISTINTO que no puede replicarse en otra capa:
+
+| Capa | Patrón H1 | Patrón meta_title |
+|------|-----------|--------------------|
+| 1 | `Centros de {tipo} en España` | `Centros de {tipo} · directorio Retiru` |
+| 2 | `{Estilo}: {tipo} {adjetivo-estilo}` | `{Estilo} en España · dónde practicar` |
+| 3 | `Centros de {tipo} en {Prov}` | `Centros de {tipo} en {Prov} · {N} opciones` |
+| 4 | `{Estilo} en {Prov}` | `{Estilo} en {Prov} · {N} escuelas` |
+| 5 | `{Tipo} en {Ciudad} ({Prov})` | `{Tipo} en {Ciudad} · centros verificados` |
+
+Sin años (`2024`, `2025`…), sin superlativos vacíos (`mejores`), sin patrones duplicados entre capas. La Capa 2 evita la palabra "centros" para diferenciarse de la Capa 1.
+
+### 8.4 Reglas de supresión automática (`suppress_reason`)
+
+Una landing se marca `noindex` cuando su índice amenaza con canibalizar a otra de mayor prioridad:
+
+| Regla | Condición | Acción | Razón SEO |
+|-------|-----------|--------|-----------|
+| R1 | Ciudad tiene ≥ 60% de los centros de la provincia (Cap. 5) | `noindex`, absorbe Cap. 3 | La provincia ya cubre el intent. |
+| R2 | Estilo×Prov (Cap. 4) con ≤ 3 centros | `noindex`, enlace al estilo nacional | Poca oferta = thin content. |
+| R3 | Estilo representa ≥ 40% del tipo (Cap. 2) — hatha (47% yoga), abhyanga (100% ayurveda visible) | El contenido pasa a ángulo **niche/didáctico** obligatorio | Evita canibalizar Cap. 1 con la misma query. |
+| R4 | Centros en una Cap. 3 < 2 | `noindex` + fallback amable | Thin content. Ya implementado. |
+| R5 | Provincia duplicada (ej. `lerida` vs `lleida`) | 301 del no-canónico al canónico | Misma entidad con dos slugs. |
+
+El campo `suppress_reason` (ENUM `'duplicate_of_parent' | 'thin_content' | 'dominant_style_educational_only' | 'duplicate_province_slug'`) vive en las tablas SEO y guía al renderer para emitir `noIndex: true` o aplicar el ángulo nicho.
+
+### 8.5 Ángulo especial "niche_angle" para estilos dominantes
+
+Los estilos que dominan el tipo NO pueden ser páginas de listado comercial — competirían con el tipo. Los tratamos como contenido **educativo/didáctico** con un ángulo purista:
+
+| Landing | Ángulo editorial | Intent objetivo |
+|---------|-----------------|-----------------|
+| `/es/centros/yoga/estilo/hatha` | "Hatha tradicional vs hatha moderno occidentalizado" | Usuario purista que ya sabe lo que es yoga |
+| `/es/centros/ayurveda/estilo/abhyanga` | "El masaje ayurvédico: técnica, aceites, formación" | Usuario con interés en la técnica, no en "un centro cercano" |
+
+Estas landings **no listan centros en primer plano** (solo una pequeña pasarela al final). El grueso del texto es historia + diferenciación + para quién. Las landings Cap. 4 (`/estilo/hatha/madrid`) pueden mantenerse si superan R2 porque el intent es hiperespecífico.
+
+### 8.6 Enlazado jerárquico unidireccional
+
+```
+Cap. 1 Nacional tipo ──→ Cap. 3 Tipo×Prov ──→ Cap. 5 Ciudad ──→ Ficha centro
+     │                         │
+     └──→ Cap. 2 Estilo ──→ Cap. 4 Estilo×Prov
+```
+
+- **Nunca cross-canonicals** entre capas (salvo el 301 legacy `centros-retiru` → `centros/yoga/...`).
+- **Nunca enlaces horizontales** entre provincias a otras provincias salvo en el módulo "Otras provincias con {tipo}" (que va a la MISMA capa).
+- **Los chips de ciudades de Cap. 3** siempre enlazan a Cap. 5, nunca a provincias distintas.
+- **La ficha del centro** enlaza hacia arriba (breadcrumb) y lateralmente ("Otros centros de {tipo} en {provincia}"), pero nunca cross-capa a Cap. 2/Cap. 4.
+
+### 8.7 Almacenamiento del nuevo contenido rico
+
+Migración `045_seo_sections.sql` añade a las 4 tablas SEO (`categories`, `destinations`, `center_type_province_seo`, `styles`):
+
+```sql
+ADD COLUMN sections_es JSONB NOT NULL DEFAULT '[]',
+ADD COLUMN sections_en JSONB NOT NULL DEFAULT '[]',
+ADD COLUMN serp_data   JSONB,  -- {paa, related, local_pack, featured_snippet, fetched_at}
+ADD COLUMN suppress_reason TEXT; -- NULL, 'duplicate_of_parent', 'thin_content', 'dominant_style_educational_only', 'duplicate_province_slug'
+```
+
+Formato de `sections_*`:
+
+```json
+[
+  { "key": "why_here",       "heading": "Por qué practicar ayurveda en Álava", "html": "<p>...</p>" },
+  { "key": "what_to_expect", "heading": "Qué esperar en tu primera sesión en Vitoria-Gasteiz", "html": "..." },
+  { "key": "how_to_choose",  "heading": "Cómo elegir un centro en Álava",       "html": "..." },
+  { "key": "history",        "heading": "Tradición ayurvédica en el País Vasco", "html": "..." }
+]
+```
+
+Orden del array = orden de renderizado. `key` es estable para identificar sección (usado por el renderer). `heading` es el H2 visible. `html` es contenido seguro (sanitizado) con solo `<p>, <ul>, <ol>, <li>, <strong>, <em>`.
+
+Nueva tabla `style_province_seo` paralela para Cap. 4 (mismos campos que `center_type_province_seo` pero con columna `style_slug`).
+
+### 8.8 Flujo de generación con SerpApi + OpenAI
+
+Script unificado `scripts/generate-seo-sections.mjs`:
+
+1. **Carga dossier de BD** (centros reales, ciudades, estilos, conteos).
+2. **Consulta SerpApi** por la query local canónica de la landing. Captura:
+   - `people_also_ask[]` → alimenta `faq_expanded`.
+   - `related_searches[]` → palabras clave para el prompt.
+   - `local_results.places[]` → valida nombres reales de centros.
+   - `answer_box` / `featured_snippet` → señala el intent dominante.
+3. **Prompt GPT-4o diferente por capa** (respeta §8.2 §8.3 §8.5).
+4. **Upsert** en la tabla correspondiente.
+5. **Cacheo** del `serp_data` en la fila — si se regenera el texto en < 30 días, se reutiliza sin llamar a SerpApi.
+
+Flags: `--capa=1..5`, `--type=yoga`, `--province=madrid`, `--city=arganzuela`, `--style=vinyasa`, `--force`, `--dry-run`, `--limit=N`, `--concurrency=2`.
+
+Coste estimado una tanda completa (266 landings): ~$1 SerpApi + ~$24 OpenAI GPT-4o = **~$25**.
+
+### 8.9 Slugs canónicos para provincias duplicadas
+
+Decisión revisada del 2026-04-22 **tras auditoría con `npm run seo:audit-provinces`**. La regla general: **el slug canónico es aquel donde están la mayoría de los centros reales** (no el "oficialmente más correcto"), porque queremos alinear el directorio operativo con el SEO.
+
+| Slug canónico | Aliases (301 → canónico) | Centros netos | Notas |
+|---------------|--------------------------|---------------|-------|
+| `alava` | — | (sin duplicado) | |
+| **`baleares`** | `islas-baleares` | 25+3=28 | "Baleares" tiene 25 centros vs 3 del oficial. Google Trends confirma que es el término más buscado en España. |
+| `gipuzkoa` | `guipuzcoa` | 9+1=10 | |
+| `lleida` | `lerida` | 4+1=5 | |
+| `santa-cruz-de-tenerife` | `tenerife` | 21+1=22 | Provincia ≠ isla. |
+| `pyrenees-atlantiques` | `pirineos-atlanticos` | 2+3=5 | Francia. Consolidar para superar R4. |
+
+**Provincias "huérfanas" (1 centro)** que NO se consolidan pero quedan automáticamente `suppress_reason='thin_content'` por R4:
+- `gironde` (Francia, 1) · `pyrenees-orientales` (Francia, 1) · `braganza` (Portugal, 1) — sus landings NO se generan ni indexan.
+
+**Andorra** (2 centros) se mantiene como país independiente — tiene su propio intent geográfico ("yoga Andorra") y supera R4.
+
+La consolidación se ejecuta con `scripts/consolidate-duplicate-provinces.mjs`:
+- Por defecto `--dry-run` (solo muestra qué haría).
+- Con `--execute` aplica los `UPDATE centers SET province = canónico` + limpia filas obsoletas de `center_type_province_seo`.
+- Las redirecciones 301 de URLs viejas (`/es/centros/yoga/lerida` → `/es/centros/yoga/lleida`, etc.) se añaden a `src/middleware.ts` en una lista fija `DUPLICATE_PROVINCE_REDIRECTS`.
+
+---
+
+## 9. Resumen
 
 - **Listas por destino/provincia**: ✅ Contenido editorial (intro, FAQ) generado por IA en BD, schema ItemList.
 - **Landings por categoría**: ✅ `/es/retiros-yoga`, `/es/retiros-meditacion`, etc. con intro, FAQ, destinos, JSON-LD.
 - **Landings categoría+destino**: ✅ `/es/retiros-yoga/ibiza` con contenido combinado, FAQ, JSON-LD.
-- **Landings centros por tipo**: ✅ `/es/centros/yoga`, `/es/centros/meditacion`, `/es/centros/ayurveda` con provincias, JSON-LD. (Redirección 308 desde `/es/centros-*` antiguas.)
-- **Landings tipo+provincia**: ✅ `/es/centros/yoga/madrid` con listado filtrado, JSON-LD.
-- **Fichas**: ✅ JSON-LD Event, LocalBusiness, Product, BlogPosting, BreadcrumbList.
-- **Sitemap**: ✅ Completo y bilingüe, con todas las landings programáticas incluidas.
-- **Internal linking**: ✅ Home enlaza a categorías, categorías enlazan a destinos, breadcrumbs en todas las landings.
+- **Landings centros por tipo**: ✅ `/es/centros/yoga`, `/es/centros/meditacion`, `/es/centros/ayurveda` con top provincias, estilos, tips, FAQ ampliada, blog relacionado y JSON-LD `FAQPage + ItemList + BreadcrumbList`. (Redirección 308 desde `/es/centros-*` antiguas.)
+- **Landings tipo+provincia**: ✅ `/es/centros/yoga/madrid` con intro única, listado, FAQ, "otras provincias", "ciudades con centros", JSON-LD.
+- **Landings tipo+provincia+ciudad**: ✅ `/es/centros/yoga/madrid/getafe` (58 páginas generadas en primera ronda; umbral ≥ 2 centros).
+- **Landings tipo+estilo (nacional y provincial)**: ✅ `/es/centros/yoga/estilo/vinyasa`, `/es/centros/yoga/estilo/vinyasa/barcelona`, etc. (Fase 3 #10). **18 nacionales + 44 provinciales** elegibles tras correr `npm run centers:infer-styles --min-confidence=0.7` sobre 496 centros (441 clasificados, 89 % cobertura).
+- **Hub provincia**: ✅ `/es/provincias/[slug]` (Fase 3 #7) con top centros por tipo, retiros próximos, blog local y `CollectionPage + Place`. Canonical geográfico.
+- **Fichas**: ✅ JSON-LD Event, LocalBusiness enriquecido (YogaStudio/HealthAndBeautyBusiness + geo + sameAs + priceRange + images + areaServed), Product, BlogPosting, BreadcrumbList.
+- **Sitemap**: ✅ Completo y bilingüe, con todas las landings programáticas incluidas (estáticas + provincia + ciudad + estilos nacional/provincial + hub provincia).
+- **Internal linking**: ✅ Home → categorías → destinos; breadcrumbs en todas las landings; módulos "Otras provincias con {tipo}", "Ciudades con centros", "Otros centros de {tipo} en {provincia}" y autolink de provincias en el blog (`src/lib/auto-link-geo.ts`).
+- **Core Web Vitals**: ✅ `next/image` + WebP + lazy-map Leaflet (Fase 3 #13). Script `centers:covers-to-webp` para masivo.

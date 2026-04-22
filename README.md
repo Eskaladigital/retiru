@@ -100,6 +100,8 @@ npm run db:types         # Generar tipos TypeScript desde el esquema de Supabase
 npm run db:verify-schema       # Comprueba esquema vía .env.local (031a/031b, user_roles, bucket organizer-docs, pasos por org)
 npm run verify-shop-survey-db  # Tabla + RPC encuesta tienda y unicidad anónima (migraciones 030 + 032)
 node scripts/generate-seo-content.mjs   # Rellenar intros/FAQ/meta en categories y destinations (opciones: --categories, --destinations, --force)
+npm run seo:type-province                # Genera intro + meta + FAQ bilingüe por par tipo×provincia (tabla center_type_province_seo, migración 042)
+npm run seo:type-province:dry            # Igual en modo dry-run (sin escribir). Flags comunes: --type=yoga --province=madrid --limit=N --concurrency=3 --city --city-min=N --all --force
 node scripts/moderate-retreat.mjs       # Probar moderación IA de un retiro por slug (requiere ANTHROPIC_API_KEY en .env.local)
 npm run stripe:listen    # Escuchar webhooks de Stripe en local
 
@@ -138,6 +140,15 @@ npm run centers:group-types:update                        # Aplicar a BD (enum d
 npm run centers:reclassify-three                          # CSV centros-tres-tipos-ia.csv
 npm run centers:reclassify-three -- --limit 20
 npm run centers:reclassify-three:update
+
+# Centros — estilos (taxonomía SEO Fase 3 #10; tabla `styles` + `center_styles`, migración 044)
+npm run centers:infer-styles:dry                          # Dry-run: clasifica descripciones con GPT-4o-mini y muestra cambios
+npm run centers:infer-styles                              # Real: asigna estilos en BD. Flags: --min-confidence=0.7 --concurrency=3 --limit=N --id=uuid --force
+node scripts/report-center-styles.mjs                     # Informe: distribución por estilo, cobertura, pares estilo×provincia, estilos huérfanos
+
+# Centros — portadas / imágenes a WebP (Core Web Vitals Fase 3 #13)
+npm run centers:covers-to-webp:dry                        # Dry-run: lista qué portadas y fotos de galería pasarían a WebP
+npm run centers:covers-to-webp                            # Real: convierte `centers.cover_url` y `centers.images[]` a WebP. Flags: --keep-original --limit=N --id=uuid --quality=82 --cover-only
 
 # Legacy (9 tipos; no usar tras migración 014)
 npm run centers:infer-types-ai
@@ -225,6 +236,18 @@ Con **Supabase CLI** (`supabase link` + `supabase db push`) se aplican solas en 
 32. `supabase/migrations/031a_verification_enum_extend.sql` — amplía enum `verification_step` con `economic_activity` e `insurance` (debe ejecutarse y commitearse antes de 031b)
 33. `supabase/migrations/031b_organizer_verification_v2.sql` — sistema de verificación de organizadores: añade `contract_accepted_at` a `organizer_profiles`, `file_url` a `organizer_verification_steps`, actualiza trigger `handle_new_organizer` (5 pasos sin `personal_data`), crea bucket privado `organizer-docs` con políticas RLS, migra organizadores existentes verificados
 34. `supabase/migrations/032_shop_product_interests_unique_fix.sql` — **tras 030**: corrige unicidad para que **varios visitantes anónimos** puedan votar la misma categoría (índices únicos parciales por `user_id` o `session_id`). Comprueba con `npm run verify-shop-survey-db`.
+35. `supabase/migrations/033_fix_signup_trigger_chain.sql` — endurece la cadena de triggers del alta de usuario (`handle_new_profile` + rol `attendee` automático) para que no falle si un paso intermedio da error.
+36. `supabase/migrations/034_masqi_alicante_cover_local_image.sql` — fix puntual: portada local para el retiro "Masqi Alicante".
+37. `supabase/migrations/035_masqi_alicante_description_disambiguation.sql` — desambigua descripciones duplicadas del mismo retiro.
+38. `supabase/migrations/036_centers_email_traceability.sql` — trazabilidad del origen del email en `centers` (útil para la campaña de claim).
+39. `supabase/migrations/037_destinations_hierarchy.sql` — jerarquía en `destinations` (country / region / province / city) para el hub provincial y `getGeoNodeBySlug`.
+40. `supabase/migrations/038_mailing_system.sql` — CRM de mailing: `mailing_campaigns`, `mailing_recipients`, vista `mailing_campaigns_stats`.
+41. `supabase/migrations/039_mailing_campaigns_extended.sql` — amplía el CRM: campos para `batch_size_per_tick`, `max_per_hour`, flags de auto-pausa, templates, etc.
+42. `supabase/migrations/040_support_chat_clear.sql` — `conversations.user_cleared_at` para soft-clear del chat de soporte del usuario.
+43. `supabase/migrations/041_email_suppressions.sql` — tabla `email_suppressions` (opt-out RGPD) + columnas `marketing_opt_out_*` en `centers`.
+44. `supabase/migrations/042_center_type_province_seo.sql` — **SEO Fase 1 #1/2/3**: tabla `center_type_province_seo` (intro, meta, FAQ bilingüe por par tipo×provincia) + RLS public read. Generada con `npm run seo:type-province`.
+45. `supabase/migrations/043_center_type_province_city_seo.sql` — **SEO Fase 2 #6**: extiende `center_type_province_seo` con `city_slug` + `city_name`; sustituye el UNIQUE por dos índices parciales (provincial vs ciudad). 58 ciudades generadas en la primera pasada.
+46. `supabase/migrations/044_center_styles.sql` — **SEO Fase 3 #10**: catálogo `styles` (24 estilos seed: kundalini, vinyasa, hatha, yin, ashtanga, aereo, prenatal, mindfulness, vipassana, zen, panchakarma, marma, abhyanga, shirodhara, etc.) + tabla puente `center_styles (center_id, style_id, source, confidence)` + trigger `check_center_style_type_match` + RLS public read. 441 centros clasificados con `npm run centers:infer-styles` (89 % cobertura).
 
 **Seeds** (después de las migraciones):
 
@@ -247,6 +270,9 @@ Las páginas consumen datos a través de `src/lib/data/index.ts`:
 - `getBookingsForUser(userId)` — reservas del usuario con retiro e imagen de portada
 - `getBookingById(bookingId)` — detalle de una reserva con retiro, organizador y destino
 - Slugs para build: `getCenterSlugs()`, `getRetreatSlugs()`, `getBlogPostSlugs()`, `getOrganizerSlugs()`, `getProductSlugs()`, `getDestinationSlugs()`
+- **SEO landings por tipo/provincia/ciudad**: `getCenterTypeProvincePairs()`, `getCenterTypeProvinceCityTriples(min)`, `getCenterTypeProvinceSeo(type, province)`, `getCenterTypeProvinceCitySeo(type, province, city)`, `getCitiesForCenterTypeProvince(type, province)`.
+- **SEO landings por estilo** (Fase 3 #10): `getStylesForType(type)`, `getStyleBySlug(slug)`, `getCentersByStyle(slug, { province, limit })`, `getProvincesForStyle(slug, min)`, `getStyleProvincePairs(min)`, `getStylesForCenter(centerId)`. Interface `Style` exportada. Usan `createStaticSupabase()` (no acceden a cookies).
+- **Hub geográfico** (Fase 3 #7): `getGeoNodeBySlug(slug, kind)`, `getUpcomingRetreatsForDestinations(ids, limit)`, `getBlogArticlesMentioning(terms, limit)`.
 
 Las APIs `/api/retreats`, `/api/centers` y `/api/catalog` exponen datos para búsqueda y filtros.
 
@@ -319,8 +345,11 @@ La ruta `/es/mis-eventos/verificacion` **redirige** a `/es/panel/verificacion` (
   2. `retiros-retiru/[slug]` — Retiros en [destino] ✅ Supabase
 - **Retiros por categoría** (segmento dinámico Next: carpeta `retiros-[category]/`): ej. `/es/retiros-yoga`, `/es/retiros-yoga/ibiza` (destino = slug BD). Solo se generan combinaciones con al menos un retiro publicado.
 - **Centros por tipo** (tres valores BD `yoga` / `meditation` / `ayurveda`; en URL ES `meditation` → `meditacion`): ej. `/es/centros/yoga`, `/es/centros/yoga/madrid`. Índice de tipos siempre; **tipo + provincia** solo si hay centros activos en esa pareja. Las rutas antiguas `/es/centros-*` redirigen **308** a `/es/centros/...`.
+- **Centros por tipo + provincia + ciudad** (Fase 2 SEO #6): ej. `/es/centros/yoga/madrid/getafe`. Umbral ≥ 2 centros; intro y meta únicas por ciudad en `center_type_province_seo` (migración 043).
+- **Centros por tipo + estilo** (Fase 3 SEO #10): ej. `/es/centros/yoga/estilo/vinyasa`, `/es/centros/yoga/estilo/vinyasa/barcelona`. Tabla puente `center_styles` (migración 044). Umbrales: ≥ 3 centros nacional, ≥ 5 provincial. Renderizan con `dynamic = 'force-dynamic'` (no ISR) para evitar conflictos con `cookies()` en el layout padre.
+- **Hub provincial multi-disciplina** (Fase 3 SEO #7/#14): `/es/provincias/[slug]` (+ EN `/en/provinces/[slug]`). Canonical geográfico; 301 permanente desde `/es/centros-retiru/[slug]` cuando el slug resuelve a una provincia.
 
-Detalle de slugs EN de categorías y del sitemap: [`docs/ROUTES.md`](docs/ROUTES.md), [`docs/SEO-LANDINGS.md`](docs/SEO-LANDINGS.md).
+Detalle de slugs EN de categorías y del sitemap: [`docs/ROUTES.md`](docs/ROUTES.md), [`docs/SEO-LANDINGS.md`](docs/SEO-LANDINGS.md), [`PLAN_SEO.md`](PLAN_SEO.md) (roadmap completo y changelog).
 
 **Generación estática condicional:** Provincias, destinos y pares categoría+destino / tipo+provincia solo entran en `generateStaticParams` (y en el sitemap) cuando hay datos; evita páginas vacías.
 
@@ -339,6 +368,10 @@ El sitemap se genera automáticamente en cada deploy con ISR (revalidate 1h). In
 | Retiros categoría + destino | variable | variable ×2 |
 | Centros por tipo (3) | 3 | 6 |
 | Centros tipo + provincia | variable | variable ×2 |
+| Centros tipo + provincia + ciudad | ~58 (umbral ≥ 2) | ~116 |
+| Centros tipo + estilo (nacional) | ~18 (umbral ≥ 3) | ~36 |
+| Centros tipo + estilo + provincia | ~44 (umbral ≥ 5) | ~88 |
+| Provincias (hub multi-disciplina) | ~50 | ~100 |
 | Blog | ~10 | ~20 |
 | Destinos | ~12 | ~24 |
 | Organizadores | ~1 | ~2 |
@@ -366,6 +399,10 @@ Los totales (~1.956 u otras cifras) son **orientativos** según datos en Supabas
 | `/es/retiros-[categoría]/[destino]` | `/en/retreats-[category]/[destination]` |
 | `/es/centros/[tipo]` (ej. `/es/centros/meditacion`) | `/en/centers/[type]` (ej. `/en/centers/meditation`) |
 | `/es/centros/[tipo]/[provincia]` | `/en/centers/[type]/[province]` |
+| `/es/centros/[tipo]/[provincia]/[ciudad]` | `/en/centers/[type]/[province]/[city]` |
+| `/es/centros/[tipo]/estilo/[estilo]` | `/en/centers/[type]/style/[style]` |
+| `/es/centros/[tipo]/estilo/[estilo]/[provincia]` | `/en/centers/[type]/style/[style]/[province]` |
+| `/es/provincias/[slug]` | `/en/provinces/[slug]` |
 
 ---
 

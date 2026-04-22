@@ -33,6 +33,10 @@ Documentación de la arquitectura de rutas y landings.
 | `/es/retiros-[category]/[destination]` | `src/app/(public)/es/retiros-[category]/[destination]/page.tsx` | Categoría + destino |
 | `/es/centros/[tipo]` | `src/app/(public)/es/centros/[tipo]/page.tsx` | Centros por tipo (`yoga` / `meditacion` / `ayurveda` en URL ES) |
 | `/es/centros/[tipo]/[provincia]` | `src/app/(public)/es/centros/[tipo]/[provincia]/page.tsx` | Tipo + provincia |
+| `/es/centros/[tipo]/[provincia]/[ciudad]` | `src/app/(public)/es/centros/[tipo]/[provincia]/[ciudad]/page.tsx` | Tipo + provincia + ciudad (long-tail; umbral ≥ 2 centros) |
+| `/es/centros/[tipo]/estilo/[estilo]` | `src/app/(public)/es/centros/[tipo]/estilo/[estilo]/page.tsx` | Centros por tipo + **estilo** (nacional). Umbral ≥ 3 centros. `dynamic = 'force-dynamic'` |
+| `/es/centros/[tipo]/estilo/[estilo]/[provincia]` | `src/app/(public)/es/centros/[tipo]/estilo/[estilo]/[provincia]/page.tsx` | Tipo + estilo + provincia. Umbral ≥ 5 centros. `dynamic = 'force-dynamic'` |
+| `/es/provincias/[slug]` | `src/app/(public)/es/provincias/[slug]/page.tsx` | Hub multi-disciplina por provincia (yoga + meditación + ayurveda + retiros + blog). Canonical geográfico |
 
 ---
 
@@ -57,6 +61,10 @@ Documentación de la arquitectura de rutas y landings.
 | `/en/retreats-[category]/[destination]` | `src/app/(public)/en/retreats-[category]/[destination]/page.tsx` |
 | `/en/centers/[type]` | `src/app/(public)/en/centers/[type]/page.tsx` |
 | `/en/centers/[type]/[province]` | `src/app/(public)/en/centers/[type]/[province]/page.tsx` |
+| `/en/centers/[type]/[province]/[city]` | `src/app/(public)/en/centers/[type]/[province]/[city]/page.tsx` |
+| `/en/centers/[type]/style/[style]` | `src/app/(public)/en/centers/[type]/style/[style]/page.tsx` |
+| `/en/centers/[type]/style/[style]/[province]` | `src/app/(public)/en/centers/[type]/style/[style]/[province]/page.tsx` |
+| `/en/provinces/[slug]` | `src/app/(public)/en/provinces/[slug]/page.tsx` |
 | `/en/shop` | `src/app/(public)/en/shop/page.tsx` — misma lógica que `/es/tienda` (encuesta si no hay productos) |
 | `/en/shop/[slug]` | `src/app/(public)/en/shop/[slug]/page.tsx` |
 | `/en/blog` | `src/app/(public)/en/blog/page.tsx` |
@@ -164,12 +172,32 @@ Slug EN equivalente: yoga, meditation, ayurveda, detox, nature, gastronomy, well
 
 ### Centros por tipo (ES / EN)
 
-| Ruta ES | Ruta EN | Descripción |
-|---------|---------|-------------|
-| `/es/centros/[tipo]` | `/en/centers/[type]` | Índice de centros por tipo (yoga, meditacion, ayurveda) |
-| `/es/centros/[tipo]/[provincia]` | `/en/centers/[type]/[province]` | Centros de tipo en provincia específica |
+| Ruta ES | Ruta EN | Descripción | Umbral SSG |
+|---------|---------|-------------|------------|
+| `/es/centros/[tipo]` | `/en/centers/[type]` | Índice de centros por tipo (yoga, meditacion, ayurveda) | Siempre (3 tipos) |
+| `/es/centros/[tipo]/[provincia]` | `/en/centers/[type]/[province]` | Centros de tipo en provincia específica | ≥ 1 centro |
+| `/es/centros/[tipo]/[provincia]/[ciudad]` | `/en/centers/[type]/[province]/[city]` | Tipo + provincia + ciudad (long-tail) | ≥ 2 centros |
+| `/es/centros/[tipo]/estilo/[estilo]` | `/en/centers/[type]/style/[style]` | Centros por tipo y **estilo** (Ashtanga, Kundalini, Vinyasa…) nacional | ≥ 3 centros totales |
+| `/es/centros/[tipo]/estilo/[estilo]/[provincia]` | `/en/centers/[type]/style/[style]/[province]` | Tipo + estilo + provincia | ≥ 5 centros en la provincia |
 
 Tipos ES: yoga, meditacion, ayurveda. Tipos EN (= BD): yoga, meditation, ayurveda.
+
+**Estilos disponibles (catálogo `styles`, seed en migración 044):**
+- Yoga: `kundalini`, `vinyasa`, `hatha`, `iyengar`, `ashtanga`, `yin`, `restorative`, `aereo`, `prenatal`, `power`, `nidra`, `bikram`.
+- Meditación: `mindfulness`, `vipassana`, `zen`, `trascendental`, `metta`.
+- Ayurveda: `panchakarma`, `marma`, `shirodhara`, `abhyanga`.
+
+La asignación centro↔estilo vive en la tabla puente `center_styles` (many-to-many; trigger `check_center_style_type_match` valida que `styles.center_type = centers.type`). Inferencia automática con GPT-4o-mini vía `npm run centers:infer-styles`.
+
+**Nota técnica:** las 4 páginas de estilo usan `export const dynamic = 'force-dynamic'` (no ISR): el layout padre `(public)/layout.tsx` llama a `cookies()` vía `getCurrentUserForHeader`, lo que causaba errores `DYNAMIC_SERVER_USAGE` cuando Next 14 intentaba pre-renderizar estas páginas con `revalidate`. SSR puro + caché de Supabase anon es suficiente.
+
+### Hub geográfico provincial (ES / EN)
+
+| Ruta ES | Ruta EN | Descripción |
+|---------|---------|-------------|
+| `/es/provincias/[slug]` | `/en/provinces/[slug]` | Hub multi-disciplina: top centros por tipo, retiros próximos, blog local, FAQ, JSON-LD `CollectionPage` + `Place` |
+
+Redirecciones 301 activas: `/es/centros-retiru/[slug]` → `/es/provincias/[slug]` (+ mirror EN) cuando el slug resuelve a una provincia. Canonical geográfico consolidado: Fase 3 #7 + #14.
 
 ### Generación de contenido
 

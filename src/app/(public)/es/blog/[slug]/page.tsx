@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Clock, Calendar, ArrowLeft, Share2, ChevronRight } from 'lucide-react';
 import { notFound } from 'next/navigation';
-import { getBlogPostSlugs, getCenterProvinces } from '@/lib/data';
+import { getBlogPostSlugs, getCenterProvinces, getDominantCenterTypeMap } from '@/lib/data';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { RichContentBody } from '@/components/ui/retreat-description-body';
 import { contentLooksLikeHtml } from '@/lib/sanitize-rich-html';
@@ -90,14 +90,21 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
 
   const categoryName = (article.blog_categories as any)?.name_es ?? 'General';
 
-  // Autolink geográfico: enlaza automáticamente la primera mención de cada
-  // provincia con ≥1 centro hacia su hub /es/provincias/[slug]. Solo si el
-  // cuerpo es HTML (TinyMCE); el sanitizer posterior mantiene nuestros <a>.
+  // Autolink geográfico: desde 2026-04-22 el hub /provincias/ se eliminó por
+  // canibalización (§8.1 SEO-LANDINGS.md). Enlazamos a la landing de la
+  // disciplina DOMINANTE de esa provincia: /es/centros/{tipo}/{provincia}.
   const rawContent = article.content_es ?? '';
   let content = rawContent;
   if (contentLooksLikeHtml(rawContent)) {
-    const provinces = await getCenterProvinces();
-    const entries = provinces.map((p) => ({ name: p.name, href: `/es/provincias/${p.slug}` }));
+    const [provinces, dominantMap] = await Promise.all([
+      getCenterProvinces(),
+      getDominantCenterTypeMap(),
+    ]);
+    const TYPE_ES: Record<string, string> = { yoga: 'yoga', meditation: 'meditacion', ayurveda: 'ayurveda' };
+    const entries = provinces.map((p) => {
+      const dom = dominantMap[p.slug] || 'yoga';
+      return { name: p.name, href: `/es/centros/${TYPE_ES[dom]}/${p.slug}` };
+    });
     content = autoLinkGeoHtml(rawContent, entries, { max: 4 });
   }
 

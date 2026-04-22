@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { MapPin, Star } from 'lucide-react';
 import CentrosSearch from '@/components/home/CentrosSearch';
-import { getCenterProvinces, getCentersByProvince } from '@/lib/data';
+import { getCenterProvinces, getCentersByProvince, getDominantCenterTypeForProvince } from '@/lib/data';
 import { getCenterTypeLabel, CENTER_TYPE_URL_ES, stripMarkdownForPreview, isGenericDescription } from '@/lib/utils';
 import { generatePageMetadata, jsonLdItemList, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
 import { resolveGeoLanding, type GeoNode } from '@/lib/geo-landing';
@@ -18,9 +18,10 @@ import type { Center } from '@/types';
 export const revalidate = 3600;
 
 export async function generateStaticParams() {
-  // Desde #7 del PLAN_SEO las provincias canónicas viven en /es/provincias/[slug].
-  // Aquí solo pre-generamos país y comunidades autónomas (las provincias
-  // caen por permanentRedirect y no necesitan estáticos propios).
+  // Desde 2026-04-22 las provincias ya NO tienen hub multi-disciplina
+  // (§8.1 SEO-LANDINGS.md, ruta /es/provincias/[slug] descartada).
+  // Aquí solo pre-generamos país y comunidades autónomas; provincias caen
+  // por permanentRedirect a /es/centros/{tipoDominante}/{provincia}.
   const supabase = createStaticSupabase();
   const { data: geo } = await supabase
     .from('destinations')
@@ -54,7 +55,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const geo = await resolveGeoLanding(slug);
   if (geo?.kind === 'province') {
-    permanentRedirect(`/es/provincias/${slug}`);
+    const dom = await getDominantCenterTypeForProvince(slug);
+    const urlType = CENTER_TYPE_URL_ES[dom] || dom;
+    permanentRedirect(`/es/centros/${urlType}/${slug}`);
   }
   let name = slug;
   if (geo) {
@@ -82,16 +85,20 @@ export default async function CentrosPorGeoPage({ params }: { params: Promise<{ 
 
   geo = await resolveGeoLanding(slug);
   if (geo?.kind === 'province') {
-    permanentRedirect(`/es/provincias/${slug}`);
+    const dom = await getDominantCenterTypeForProvince(slug);
+    const urlType = CENTER_TYPE_URL_ES[dom] || dom;
+    permanentRedirect(`/es/centros/${urlType}/${slug}`);
   }
   if (geo) {
     placeName = geo.name_es;
     centers = await fetchCentersForGeo(geo);
   } else {
-    // Fallback provincia por match textual (legacy): también redirigimos al nuevo hub.
+    // Fallback provincia por match textual (legacy): también redirigimos.
     const res = await getCentersByProvince(slug);
     if (res.provinceName) {
-      permanentRedirect(`/es/provincias/${slug}`);
+      const dom = await getDominantCenterTypeForProvince(slug);
+      const urlType = CENTER_TYPE_URL_ES[dom] || dom;
+      permanentRedirect(`/es/centros/${urlType}/${slug}`);
     }
     centers = res.centers;
     placeName = res.provinceName;

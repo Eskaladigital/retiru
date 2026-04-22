@@ -3,7 +3,6 @@ import type { MetadataRoute } from 'next';
 import { getSiteUrl } from '@/lib/site-url';
 import { createStaticSupabase } from '@/lib/supabase/server';
 import {
-  getCenterProvinces,
   getDestinationsWithRetreats,
   getCategoriesWithRetreats,
   getCategoryDestinationPairs,
@@ -89,10 +88,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const { data: centerSlugs } = await supabase.from('centers').select('slug, updated_at').eq('status', 'active');
   (centerSlugs || []).forEach((c) => pushBilingual(`/es/centro/${c.slug}`, `/en/center/${c.slug}`, 'weekly', 0.7, c.updated_at));
 
-  // 2) Hub provincial unificado multi-disciplina — solo provincias con >= 1 centro
-  //    (desde #7 del PLAN_SEO, /es/centros-retiru/[slug] de provincia redirige 308 aquí).
-  const provinces = await getCenterProvinces();
-  provinces.forEach((p) => pushBilingual(`/es/provincias/${p.slug}`, `/en/provinces/${p.slug}`, 'weekly', 0.85));
+  // 2) (DESCARTADO 2026-04-22) Hub provincial multi-disciplina eliminado
+  //    por canibalización con /centros/[tipo]/[provincia] (§8.1 SEO-LANDINGS.md).
+  //    Las provincias ya quedan representadas en el bloque 12 (type×province).
 
   // 3) Retiros individuales
   const { data: retreatSlugs } = await supabase.from('retreats').select('slug, updated_at').eq('status', 'published').gte('end_date', today);
@@ -141,9 +139,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     pushBilingual(`/es/centros/${esSlug}`, `/en/centers/${dbType}`, 'weekly', 0.8);
   }
 
+  // ── Supresiones SEO (§8 SEO-LANDINGS): no listamos en sitemap las landings
+  //    marcadas con suppress_reason (ya van con noIndex en su metadata).
+  const { data: seoSuppressed } = await supabase
+    .from('center_type_province_seo')
+    .select('type, province_slug, city_slug')
+    .not('suppress_reason', 'is', null);
+  const suppressedTypeProv = new Set<string>();
+  const suppressedTypeProvCity = new Set<string>();
+  for (const row of seoSuppressed || []) {
+    if (row.city_slug) suppressedTypeProvCity.add(`${row.type}|${row.province_slug}|${row.city_slug}`);
+    else suppressedTypeProv.add(`${row.type}|${row.province_slug}`);
+  }
+  const { data: styleSuppressed } = await supabase
+    .from('style_province_seo')
+    .select('center_type, style_slug, province_slug')
+    .not('suppress_reason', 'is', null);
+  const suppressedStyleProv = new Set<string>();
+  for (const row of styleSuppressed || []) {
+    suppressedStyleProv.add(`${row.center_type}|${row.style_slug}|${row.province_slug}`);
+  }
+
   // 12) Centros por tipo + provincia
   const typeProvPairs = await getCenterTypeProvincePairs();
   typeProvPairs.forEach((p) => {
+    if (suppressedTypeProv.has(`${p.type}|${p.province}`)) return;
     const esSlug = TYPE_ES_MAP[p.type] || p.type;
     pushBilingual(`/es/centros/${esSlug}/${p.province}`, `/en/centers/${p.type}/${p.province}`, 'weekly', 0.7);
   });
@@ -151,6 +171,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 12b) Centros por tipo + provincia + ciudad (umbral ≥2 centros, long-tail)
   const typeProvCityTriples = await getCenterTypeProvinceCityTriples(2);
   typeProvCityTriples.forEach((t) => {
+    if (suppressedTypeProvCity.has(`${t.type}|${t.provinceSlug}|${t.citySlug}`)) return;
     const esSlug = TYPE_ES_MAP[t.type] || t.type;
     pushBilingual(
       `/es/centros/${esSlug}/${t.provinceSlug}/${t.citySlug}`,
@@ -162,6 +183,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // 12c) Centros por tipo + estilo (nacional) y tipo + estilo + provincia (Fase 3 #10)
   //      Umbral: ≥3 centros totales para nacional, ≥5 para provincial.
+  //      Suprimimos los pares con `suppress_reason` (dominante, thin_content, etc.).
   const stylePairs = await getStyleProvincePairs(5);
   const styleTotals = new Map<string, { centerType: string; styleSlug: string; count: number }>();
   stylePairs.forEach((p) => {
@@ -169,6 +191,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const entry = styleTotals.get(key) || { centerType: p.centerType, styleSlug: p.styleSlug, count: 0 };
     entry.count += p.count;
     styleTotals.set(key, entry);
+    if (suppressedStyleProv.has(`${p.centerType}|${p.styleSlug}|${p.provinceSlug}`)) return;
     const esSlug = TYPE_ES_MAP[p.centerType] || p.centerType;
     pushBilingual(
       `/es/centros/${esSlug}/estilo/${p.styleSlug}/${p.provinceSlug}`,

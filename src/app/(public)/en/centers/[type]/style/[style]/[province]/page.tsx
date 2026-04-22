@@ -4,14 +4,16 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { MapPin, Star } from 'lucide-react';
-import { getCentersByStyle, getStyleProvincePairs } from '@/lib/data';
+import { getCentersByStyle, getStyleProvincePairs, getStyleProvinceSeo } from '@/lib/data';
 import { getCenterTypeLabel, stripMarkdownForPreview, isGenericDescription } from '@/lib/utils';
 import {
   generatePageMetadata,
   jsonLdItemList,
   jsonLdBreadcrumb,
+  jsonLdFAQ,
   jsonLdScript,
 } from '@/lib/seo';
+import SeoSections from '@/components/seo/SeoSections';
 
 // Dynamic landing under (public)/layout (uses cookies via getCurrentUserForHeader).
 // ISR + cookies in layout → Next 14 marked SSG as failed (DYNAMIC_SERVER_USAGE)
@@ -46,9 +48,14 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const provinceName = matches[0].province;
   const typeLabel = getCenterTypeLabel(type, 'en').toLowerCase();
   const esType = type === 'meditation' ? 'meditacion' : type;
+  const seo = await getStyleProvinceSeo(type, styleSlug, province);
   return generatePageMetadata({
-    title: `${style.name_en} in ${provinceName} — ${matches.length} ${typeLabel} centers | Retiru`,
-    description: `${typeLabel} ${style.name_en} centers in ${provinceName}. ${matches.length} verified options with real reviews.`,
+    title:
+      (seo?.meta_title_en && seo.meta_title_en.trim()) ||
+      `${style.name_en} in ${provinceName} — ${matches.length} ${typeLabel} centers | Retiru`,
+    description:
+      (seo?.meta_description_en && seo.meta_description_en.trim()) ||
+      `${typeLabel} ${style.name_en} centers in ${provinceName}. ${matches.length} verified options with real reviews.`,
     locale: 'en',
     path: `/en/centers/${type}/style/${styleSlug}/${province}`,
     altPath: `/es/centros/${esType}/estilo/${styleSlug}/${province}`,
@@ -57,6 +64,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
       `${typeLabel} ${provinceName?.toLowerCase()}`,
       'retiru',
     ],
+    noIndex: Boolean(seo?.suppress_reason),
   });
 }
 
@@ -74,6 +82,9 @@ export default async function CentersStyleProvincePage({ params }: { params: Par
 
   const provinceName = provinceCenters[0].province;
   const typeLabel = getCenterTypeLabel(type, 'en');
+  const seo = await getStyleProvinceSeo(type, styleSlug, province);
+  const introHtml = seo?.intro_en?.trim() || null;
+  const faqs = Array.isArray(seo?.faq_en) ? seo!.faq_en.filter((q) => q.question && q.answer) : [];
 
   const itemListLd = jsonLdItemList(
     provinceCenters.slice(0, 20).map((c, i) => ({
@@ -115,6 +126,13 @@ export default async function CentersStyleProvincePage({ params }: { params: Par
 
       <section className="py-12 md:py-16">
         <div className="container-wide">
+          {introHtml && (
+            <div
+              className="prose prose-sand max-w-3xl mb-10"
+              dangerouslySetInnerHTML={{ __html: introHtml }}
+            />
+          )}
+
           <div className="space-y-4">
             {provinceCenters.map((c, idx) => {
               const imgSrc = c.cover_url || (Array.isArray(c.images) && c.images[0]) || '';
@@ -161,6 +179,29 @@ export default async function CentersStyleProvincePage({ params }: { params: Par
             })}
           </div>
 
+          {Array.isArray(seo?.sections_en) && seo!.sections_en.length > 0 && (
+            <SeoSections sections={seo!.sections_en} className="mt-12" />
+          )}
+
+          {faqs.length > 0 && (
+            <section className="mt-16 max-w-3xl">
+              <h2 className="font-serif text-2xl text-foreground mb-6">
+                Frequently asked questions about {style.name_en} in {provinceName}
+              </h2>
+              <div className="space-y-4">
+                {faqs.map((item, i) => (
+                  <details key={i} className="group bg-white border border-sand-200 rounded-xl">
+                    <summary className="flex items-center justify-between p-5 cursor-pointer font-medium text-foreground">
+                      {item.question}
+                      <svg className="w-5 h-5 text-[#a09383] shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6"/></svg>
+                    </summary>
+                    <div className="px-5 pb-5 text-sm text-[#7a6b5d] leading-relaxed">{item.answer}</div>
+                  </details>
+                ))}
+              </div>
+            </section>
+          )}
+
           <div className="mt-10 p-5 rounded-2xl bg-sand-50 border border-sand-200 text-sm leading-relaxed text-[#7a6b5d]">
             Looking for {style.name_en} outside {provinceName}? Discover{' '}
             <Link href={`/en/centers/${type}/style/${styleSlug}`} className="text-terracotta-600 font-semibold underline">
@@ -176,6 +217,9 @@ export default async function CentersStyleProvincePage({ params }: { params: Par
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(itemListLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbLd) }} />
+      {faqs.length > 0 && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLdFAQ(faqs)) }} />
+      )}
     </>
   );
 }

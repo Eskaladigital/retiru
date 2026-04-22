@@ -21,6 +21,7 @@ import {
   jsonLdFAQ,
   jsonLdScript,
 } from '@/lib/seo';
+import SeoSections from '@/components/seo/SeoSections';
 
 export const revalidate = 3600;
 
@@ -61,7 +62,7 @@ export async function generateMetadata({
     path: `/en/centers/${type}/${province}`,
     altPath: `/es/centros/${esSlug}/${province}`,
     keywords: [`${label.toLowerCase()} centers in ${name}`, `${label.toLowerCase()} ${name}`, 'retiru'],
-    noIndex: !hasCenters,
+    noIndex: !hasCenters || Boolean(seo?.suppress_reason),
   });
 }
 
@@ -204,6 +205,10 @@ export default async function CentersTypeProvincePage({
           </div>
         )}
 
+        {Array.isArray(seo?.sections_en) && seo!.sections_en.length > 0 && (
+          <SeoSections sections={seo!.sections_en} className="mt-12" />
+        )}
+
         {provinceCities.length > 0 && (
           <section className="mt-12">
             <h2 className="font-serif text-2xl text-foreground mb-4">
@@ -257,22 +262,8 @@ export default async function CentersTypeProvincePage({
           </section>
         )}
 
-        <section className="mt-12 p-5 bg-sand-50 border border-sand-200 rounded-2xl flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <p className="font-serif text-lg text-foreground">
-              Looking for meditation or ayurveda in {provinceName} too?
-            </p>
-            <p className="text-sm text-[#7a6b5d] mt-1">
-              Visit the province wellness hub with all disciplines.
-            </p>
-          </div>
-          <Link
-            href={`/en/provinces/${province}`}
-            className="inline-flex items-center gap-2 bg-terracotta-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-terracotta-700 transition-colors whitespace-nowrap"
-          >
-            Visit {provinceName} hub →
-          </Link>
-        </section>
+        {/* NOTE: /en/provinces/[slug] hub discarded 2026-04-22 (anti-
+            cannibalization §8 SEO-LANDINGS.md). No multi-discipline link. */}
 
         {faqs.length > 0 && (
           <section className="mt-16 max-w-3xl">

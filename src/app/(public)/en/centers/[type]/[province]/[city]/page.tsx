@@ -20,6 +20,7 @@ import {
   jsonLdFAQ,
   jsonLdScript,
 } from '@/lib/seo';
+import SeoSections from '@/components/seo/SeoSections';
 
 export const revalidate = 3600;
 
@@ -61,7 +62,7 @@ export async function generateMetadata({
     path: `/en/centers/${type}/${province}/${city}`,
     altPath: `/es/centros/${esSlug}/${province}/${city}`,
     keywords: [`${label.toLowerCase()} centers in ${cName}`, `${label.toLowerCase()} ${cName}`, 'retiru'],
-    noIndex: !hasCenters,
+    noIndex: !hasCenters || Boolean(seo?.suppress_reason),
   });
 }
 
@@ -201,6 +202,10 @@ export default async function CentersTypeProvinceCityPage({
               );
             })}
           </div>
+        )}
+
+        {Array.isArray(citySeo?.sections_en) && citySeo!.sections_en.length > 0 && (
+          <SeoSections sections={citySeo!.sections_en} className="mt-12" />
         )}
 
         {topOtherCities.length > 0 && (

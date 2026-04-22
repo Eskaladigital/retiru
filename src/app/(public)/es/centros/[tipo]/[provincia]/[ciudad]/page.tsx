@@ -26,6 +26,7 @@ import {
   jsonLdFAQ,
   jsonLdScript,
 } from '@/lib/seo';
+import SeoSections from '@/components/seo/SeoSections';
 
 export const revalidate = 3600;
 
@@ -75,7 +76,7 @@ export async function generateMetadata({
       `${label.toLowerCase()} ${pName}`,
       'retiru',
     ],
-    noIndex: !hasCenters,
+    noIndex: !hasCenters || Boolean(seo?.suppress_reason),
   });
 }
 
@@ -217,6 +218,10 @@ export default async function CentrosTipoProvinciaCiudadPage({
               );
             })}
           </div>
+        )}
+
+        {Array.isArray(citySeo?.sections_es) && citySeo!.sections_es.length > 0 && (
+          <SeoSections sections={citySeo!.sections_es} className="mt-12" />
         )}
 
         {topOtherCities.length > 0 && (

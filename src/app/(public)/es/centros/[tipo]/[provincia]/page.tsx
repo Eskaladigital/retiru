@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { MapPin, Star } from 'lucide-react';
 import CentrosSearch from '@/components/home/CentrosSearch';
+import SeoSections from '@/components/seo/SeoSections';
 import {
   getCenterTypeProvincePairs,
   getCentersByProvince,
@@ -73,7 +74,7 @@ export async function generateMetadata({
       `${label.toLowerCase()} ${name}`,
       'retiru',
     ],
-    noIndex: !hasCenters,
+    noIndex: !hasCenters || Boolean(seo?.suppress_reason),
   });
 }
 
@@ -99,6 +100,7 @@ export default async function CentrosTipoProvinciaPage({
 
   const introHtml = seo?.intro_es?.trim() || cat?.intro_es?.replace(/\n/g, '<br/>') || null;
   const faqs = Array.isArray(seo?.faq_es) ? seo!.faq_es.filter((q) => q.question && q.answer) : [];
+  const sections = seo?.sections_es ?? [];
 
   // "Otras provincias con {tipo}" — se calcula siempre (no solo en fallback)
   // para reforzar el enlazado interno programático (#8 del PLAN_SEO).
@@ -221,6 +223,13 @@ export default async function CentrosTipoProvinciaPage({
           </div>
         )}
 
+        {/* Secciones editoriales enriquecidas (why_here, how_to_choose) §8 SEO-LANDINGS */}
+        {sections.length > 0 && (
+          <div className="mt-12">
+            <SeoSections sections={sections} />
+          </div>
+        )}
+
         {/* Ciudades destacadas dentro de la provincia (≥2 centros del tipo) */}
         {provinceCities.length > 0 && (
           <section className="mt-12">
@@ -276,23 +285,10 @@ export default async function CentrosTipoProvinciaPage({
           </section>
         )}
 
-        {/* Enlace al hub provincial multi-disciplina */}
-        <section className="mt-12 p-5 bg-sand-50 border border-sand-200 rounded-2xl flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <p className="font-serif text-lg text-foreground">
-              ¿Buscas también meditación o ayurveda en {provinceName}?
-            </p>
-            <p className="text-sm text-[#7a6b5d] mt-1">
-              Visita el hub de bienestar de la provincia con todas las disciplinas.
-            </p>
-          </div>
-          <Link
-            href={`/es/provincias/${province}`}
-            className="inline-flex items-center gap-2 bg-terracotta-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-terracotta-700 transition-colors whitespace-nowrap"
-          >
-            Ver hub de {provinceName} →
-          </Link>
-        </section>
+        {/* NOTA: el hub /es/provincias/[slug] se descartó el 2026-04-22 por
+            canibalización con esta página (§8 docs/SEO-LANDINGS.md). No hay
+            enlace al multi-disciplina; el usuario navega vía breadcrumb + tags
+            de "otras provincias". */}
 
         {faqs.length > 0 && (
           <section className="mt-16 max-w-3xl">
