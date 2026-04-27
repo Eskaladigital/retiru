@@ -164,7 +164,7 @@ export default function SupportChatWidget({ locale }: Props) {
       {/* Burbuja */}
       <button
         onClick={handleToggle}
-        className="fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full bg-terracotta-500 text-white shadow-lg hover:bg-terracotta-600 transition-all hover:scale-105 flex items-center justify-center"
+        className="mobile-float-above-cta fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full bg-terracotta-500 text-white shadow-lg hover:bg-terracotta-600 transition-all hover:scale-105 flex items-center justify-center"
         aria-label="Soporte"
       >
         {open ? <X size={22} /> : <MessageCircle size={22} />}
@@ -177,7 +177,7 @@ export default function SupportChatWidget({ locale }: Props) {
 
       {/* Panel de chat */}
       {open && (
-        <div className="fixed bottom-24 right-5 z-50 w-[360px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-sand-200 flex flex-col overflow-hidden" style={{ height: 'min(480px, calc(100vh - 140px))' }}>
+        <div className="mobile-panel-above-cta fixed bottom-24 right-5 z-50 w-[360px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-sand-200 flex flex-col overflow-hidden" style={{ height: 'min(480px, calc(100vh - 140px))' }}>
           {/* Header */}
           <div className="px-4 py-3 bg-terracotta-500 text-white shrink-0 rounded-t-2xl">
             <div className="flex items-center gap-3">

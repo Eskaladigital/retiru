@@ -42,9 +42,12 @@ const dryRun = process.argv.includes('--dry-run');
 // ─── Datos maestros ─────────────────────────────────────────────────────────
 
 // Países con landing propia
+// Aunque la mayoría de retiros se organizan desde España, se aceptan
+// celebraciones en Marruecos y Portugal (cercanía cultural y logística).
 const COUNTRIES = [
   { slug: 'espana', name_es: 'España', name_en: 'Spain', country: 'ES' },
   { slug: 'marruecos', name_es: 'Marruecos', name_en: 'Morocco', country: 'MA' },
+  { slug: 'portugal', name_es: 'Portugal', name_en: 'Portugal', country: 'PT' },
 ];
 
 // Comunidades autónomas de España (parent_slug = 'espana')

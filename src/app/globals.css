@@ -126,8 +126,21 @@
 
   /* Sticky booking CTA mobile */
   .sticky-cta {
-    @apply fixed bottom-0 left-0 right-0 z-40 border-t border-sand-200 bg-white/95 
+    @apply fixed bottom-0 left-0 right-0 z-40 border-t border-sand-200 bg-white/95
            backdrop-blur-sm p-4 shadow-elevated md:hidden;
+  }
+
+  /* Cuando hay una sticky CTA mobile (ficha de retiro), los botones flotantes
+     (back-to-top abajo-izquierda y burbuja de chat abajo-derecha) suben para
+     no quedar tapados por la barra inferior. Solo aplica en mobile, que es
+     donde la sticky CTA es visible (`md:hidden`). */
+  @media (max-width: 767px) {
+    body:has(.sticky-cta) .mobile-float-above-cta {
+      bottom: 5.5rem;
+    }
+    body:has(.sticky-cta) .mobile-panel-above-cta {
+      bottom: 9.25rem;
+    }
   }
 
   /* Text gradient */
