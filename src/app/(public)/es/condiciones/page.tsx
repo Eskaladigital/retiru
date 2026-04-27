@@ -201,6 +201,10 @@ export default function CondicionesPage() {
             <p>
               <strong className="text-foreground">Reclama tu centro:</strong> Si tu centro ya aparece en el directorio, puedes reclamarlo creando una cuenta y haciendo clic en &quot;Reclamar este centro&quot; en tu ficha. Nuestro equipo verificará tu identidad como propietario.
             </p>
+            <p className="text-sm">
+              Las condiciones detalladas del directorio (tarifa, veracidad de la ficha, reseñas, RGPD y baja) están en el{' '}
+              <Link href="/es/legal/contrato-centro" className="text-terracotta-600 font-medium hover:underline">contrato del centro</Link>.
+            </p>
           </div>
         </section>
 
@@ -224,11 +228,77 @@ export default function CondicionesPage() {
             </p>
           </div>
         </section>
+
+        {/* ═══ ACUERDOS CONTRACTUALES ═══ */}
+        <section id="acuerdos-contractuales" className="scroll-mt-20">
+          <h2 className="font-serif text-2xl font-bold text-foreground mb-2">
+            Acuerdos contractuales
+          </h2>
+          <p className="text-[15px] leading-relaxed text-muted-foreground mb-6">
+            En Retiru convivimos tres figuras —visitantes, centros del directorio y organizadores de retiros— y cada una tiene su propio documento. Los publicamos en abierto para que cualquiera pueda consultarlos antes de registrarse o reservar.
+          </p>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <Link
+              href="/es/legal/terminos"
+              className="group block bg-white border border-sand-200 rounded-2xl p-5 hover:border-terracotta-300 hover:shadow-soft transition-all"
+            >
+              <p className="text-[11px] font-bold uppercase tracking-wider text-[#a09383] mb-2">
+                1. Visitantes y usuarios
+              </p>
+              <h3 className="font-serif text-lg text-foreground mb-2 group-hover:text-terracotta-700 transition-colors">
+                Términos legales
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                Términos generales que aplican a cualquier persona que navega por la web o crea una cuenta: uso del servicio, propiedad intelectual, responsabilidad y jurisdicción.
+              </p>
+              <span className="text-sm text-terracotta-600 font-medium">Leer términos →</span>
+            </Link>
+
+            <Link
+              href="/es/legal/contrato-centro"
+              className="group block bg-white border border-sand-200 rounded-2xl p-5 hover:border-terracotta-300 hover:shadow-soft transition-all"
+            >
+              <p className="text-[11px] font-bold uppercase tracking-wider text-[#a09383] mb-2">
+                2. Centros del directorio
+              </p>
+              <h3 className="font-serif text-lg text-foreground mb-2 group-hover:text-terracotta-700 transition-colors">
+                Contrato del centro
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                Acuerdo para los centros con ficha en el directorio: tarifa de 20&nbsp;€/mes, 6 meses de cortesía, veracidad del contenido, reseñas, RGPD y baja del servicio.
+              </p>
+              <span className="text-sm text-terracotta-600 font-medium">Leer contrato →</span>
+            </Link>
+
+            <Link
+              href="/es/legal/contrato-organizador"
+              className="group block bg-white border border-sand-200 rounded-2xl p-5 hover:border-terracotta-300 hover:shadow-soft transition-all"
+            >
+              <p className="text-[11px] font-bold uppercase tracking-wider text-[#a09383] mb-2">
+                3. Organizadores de retiros
+              </p>
+              <h3 className="font-serif text-lg text-foreground mb-2 group-hover:text-terracotta-700 transition-colors">
+                Contrato del organizador
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                Las 12 cláusulas que cada organizador acepta antes de publicar su primer retiro: comisiones escalonadas, KYC, cancelaciones, payouts, RGPD y aceptación electrónica.
+              </p>
+              <span className="text-sm text-terracotta-600 font-medium">Leer contrato →</span>
+            </Link>
+          </div>
+        </section>
       </div>
 
       <div className="mt-12 pt-8 border-t border-sand-200 flex flex-wrap gap-4">
         <Link href="/es/legal/terminos" className="text-sm text-terracotta-600 hover:underline">
           Términos legales
+        </Link>
+        <Link href="/es/legal/contrato-centro" className="text-sm text-terracotta-600 hover:underline">
+          Contrato del centro
+        </Link>
+        <Link href="/es/legal/contrato-organizador" className="text-sm text-terracotta-600 hover:underline">
+          Contrato del organizador
         </Link>
         <Link href="/es/legal/privacidad" className="text-sm text-terracotta-600 hover:underline">
           Política de privacidad

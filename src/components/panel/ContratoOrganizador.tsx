@@ -1,93 +1,97 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { FileText, Shield, CheckCircle } from 'lucide-react';
 import type { Locale } from '@/i18n/config';
+import {
+  CONTRACT_VERSION,
+  OrganizerContractClauses,
+} from '@/lib/legal/organizer-contract';
 
-const COPY: Record<Locale, {
+type Copy = {
   title: string;
+  badge: string;
   intro: string;
+  versionLabel: string;
+  partiesTitle: string;
+  partiesBody: string;
   readFull: string;
-  accept: string;
-  processing: string;
+  termsLabel: string;
+  privacyLabel: string;
+  acceptLabel: string;
+  acceptHint: string;
+  acceptButton: string;
+  acceptingButton: string;
   errorAccept: string;
   errorConn: string;
-  bullets: { title: string; body: string }[];
-  wizardBegin: string;
-  wizardContinue: string;
-  wizardBack: string;
-  stepProgress: (current: number, total: number) => string;
-  sectionAckLabel: string;
-  finalTitle: string;
-  finalIntro: string;
-  masterConfirmLabel: string;
-}> = {
+  acknowledgement: string;
+};
+
+const COPY: Record<Locale, Copy> = {
   es: {
-    title: 'Contrato de organizador',
-    intro: 'Antes de publicar o crear tu primer evento, lee y acepta el acuerdo con Retiru. Te lo mostramos por apartados; en el último paso confirmarás la aceptación completa.',
-    readFull: 'Leer condiciones completas →',
-    accept: 'Aceptar contrato y continuar',
-    processing: 'Procesando...',
-    errorAccept: 'Error al aceptar el contrato',
-    errorConn: 'Error de conexión',
-    bullets: [
-      { title: 'Modelo de comisiones', body: 'Retiru cobra una comisión sobre cada reserva confirmada. La comisión varía según tu volumen de actividad (consulta las condiciones completas).' },
-      { title: 'Verificación obligatoria', body: 'Deberás aportar documentación que acredite tu actividad (alta económica, seguro de responsabilidad civil, datos fiscales y bancarios). Tu perfil estará pendiente de homologación hasta que nuestro equipo lo verifique.' },
-      { title: 'Revisión de eventos', body: 'Todos los eventos serán revisados por el equipo de Retiru antes de publicarse. Solo podrán aprobarse una vez tu perfil esté verificado.' },
-      { title: 'Calidad y responsabilidad', body: 'Te comprometes a ofrecer la experiencia descrita en tu evento, responder a los asistentes en los plazos establecidos y cumplir con la normativa vigente.' },
-    ],
-    wizardBegin: 'Comenzar',
-    wizardContinue: 'Continuar',
-    wizardBack: 'Volver',
-    stepProgress: (current, total) => `Paso ${current} de ${total}`,
-    sectionAckLabel: 'He leído y comprendo este apartado.',
-    finalTitle: 'Confirmación final',
-    finalIntro: 'Has revisado todos los apartados. Para firmar digitalmente el acuerdo, marca la casilla inferior y pulsa el botón.',
-    masterConfirmLabel: 'Confirmo que he leído todos los apartados anteriores y acepto íntegramente el contrato de organizador y las condiciones de servicio de Retiru.',
+    title: 'Contrato del organizador',
+    badge: 'Lectura previa antes de tu primer evento',
+    intro:
+      'Antes de crear y publicar tu primer evento en Retiru, necesitamos que leas y aceptes este acuerdo. Recoge cómo funciona la plataforma, qué se compromete a hacer cada parte, cómo se calcula la remuneración y qué obligaciones asumes como organizador.',
+    versionLabel: `Versión ${CONTRACT_VERSION}`,
+    partiesTitle: 'Partes del acuerdo',
+    partiesBody:
+      'Este contrato se celebra entre Retiru (la plataforma marketplace que opera bajo la marca Retiru, en adelante "Retiru") y la persona física o jurídica titular de la cuenta que va a publicar eventos (en adelante el "Organizador"). Al pulsar el botón final, el Organizador acepta íntegramente las cláusulas que figuran a continuación.',
+    readFull: 'Ver contrato público completo',
+    termsLabel: 'Términos legales',
+    privacyLabel: 'Política de privacidad',
+    acceptLabel:
+      'He leído íntegramente el contrato del organizador y acepto todas sus cláusulas, así como los Términos legales y la Política de privacidad de Retiru.',
+    acceptHint:
+      'Al marcar la casilla y pulsar el botón se registrará tu aceptación electrónica con fecha, hora e identificador de cuenta. Esta aceptación tiene valor probatorio.',
+    acceptButton: 'Aceptar contrato y continuar a verificación',
+    acceptingButton: 'Procesando aceptación…',
+    errorAccept: 'No se pudo registrar la aceptación del contrato.',
+    errorConn: 'Error de conexión. Inténtalo de nuevo.',
+    acknowledgement:
+      'Una vez aceptado, pasarás al siguiente paso: subir la documentación que acredita tu actividad para que nuestro equipo verifique tu perfil.',
   },
   en: {
     title: 'Organizer agreement',
-    intro: 'Before publishing or creating your first event, read and accept the agreement with Retiru. We show it section by section; at the end you will confirm full acceptance.',
-    readFull: 'Read full conditions →',
-    accept: 'Accept agreement and continue',
-    processing: 'Processing...',
-    errorAccept: 'Could not accept the agreement',
-    errorConn: 'Connection error',
-    bullets: [
-      { title: 'Commission model', body: 'Retiru charges a commission on each confirmed booking. The rate depends on your activity volume (see the full conditions).' },
-      { title: 'Mandatory verification', body: 'You must provide documentation proving your activity (business registration, liability insurance, tax and bank details). Your profile stays pending until our team verifies it.' },
-      { title: 'Event review', body: 'All events are reviewed by the Retiru team before publication. They can only be approved once your profile is verified.' },
-      { title: 'Quality and responsibility', body: 'You commit to delivering the experience described, replying to attendees within the agreed timeframes, and complying with applicable regulations.' },
-    ],
-    wizardBegin: 'Start',
-    wizardContinue: 'Continue',
-    wizardBack: 'Back',
-    stepProgress: (current, total) => `Step ${current} of ${total}`,
-    sectionAckLabel: 'I have read and understood this section.',
-    finalTitle: 'Final confirmation',
-    finalIntro: 'You have reviewed every section. To sign digitally, tick the box below and press the button.',
-    masterConfirmLabel: "I confirm that I have read all previous sections and fully accept the organizer agreement and Retiru's terms of service.",
+    badge: 'Read before creating your first event',
+    intro:
+      'Before creating and publishing your first event on Retiru, we need you to read and accept this agreement. It covers how the platform works, what each party commits to, how revenue is calculated and the obligations you take on as an organizer.',
+    versionLabel: `Version ${CONTRACT_VERSION}`,
+    partiesTitle: 'Parties to this agreement',
+    partiesBody:
+      'This agreement is entered into between Retiru (the marketplace platform operating under the Retiru brand, hereafter "Retiru") and the natural or legal person who owns the account publishing events (hereafter the "Organizer"). By pressing the final button, the Organizer fully accepts the clauses below.',
+    readFull: 'View the full public agreement',
+    termsLabel: 'Legal terms',
+    privacyLabel: 'Privacy policy',
+    acceptLabel:
+      "I have read the entire organizer agreement and accept all its clauses, as well as Retiru's legal terms and privacy policy.",
+    acceptHint:
+      'Ticking the box and pressing the button records your electronic acceptance with date, time and account identifier. This acceptance has evidential value.',
+    acceptButton: 'Accept agreement and continue to verification',
+    acceptingButton: 'Processing acceptance…',
+    errorAccept: 'We could not record acceptance of the agreement.',
+    errorConn: 'Connection error. Please try again.',
+    acknowledgement:
+      'Once accepted, you will move on to the next step: uploading the documentation that proves your activity, so our team can verify your profile.',
   },
 };
 
 export function ContratoOrganizador({ locale = 'es' }: { locale?: Locale }) {
   const c = COPY[locale];
-  const condicionesHref = locale === 'en' ? '/en/condiciones' : '/es/condiciones';
+  const router = useRouter();
+  const condicionesHref =
+    locale === 'en' ? '/en/legal/contrato-organizador' : '/es/legal/contrato-organizador';
   const terminosHref = locale === 'en' ? '/en/legal/terminos' : '/es/legal/terminos';
-  const n = c.bullets.length;
-  const totalSteps = n + 2;
-  const [uiStep, setUiStep] = useState(0);
-  const [sectionAck, setSectionAck] = useState(false);
-  const [masterAck, setMasterAck] = useState(false);
+  const privacidadHref = locale === 'en' ? '/en/legal/privacidad' : '/es/legal/privacidad';
+  const verificacionHref = locale === 'en' ? '/en/panel/verificacion' : '/es/panel/verificacion';
+
+  const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    setSectionAck(false);
-  }, [uiStep]);
-
   async function handleAccept() {
-    if (!masterAck) return;
+    if (!accepted || loading) return;
     setLoading(true);
     setError('');
     try {
@@ -98,162 +102,110 @@ export function ContratoOrganizador({ locale = 'es' }: { locale?: Locale }) {
       });
       const data = await res.json();
       if (res.ok) {
-        window.location.reload();
+        router.push(verificacionHref);
+        router.refresh();
       } else {
         setError(data.error || c.errorAccept);
+        setLoading(false);
       }
     } catch {
       setError(c.errorConn);
-    } finally {
       setLoading(false);
     }
   }
 
-  const progressLabel = c.stepProgress(uiStep + 1, totalSteps);
-  const sectionIndex = uiStep - 1;
-
   return (
-    <div className="max-w-2xl mx-auto py-12 px-4">
-      <div className="text-center mb-6">
+    <div className="max-w-3xl mx-auto py-10 px-4">
+      <div className="text-center mb-10">
         <div className="w-16 h-16 bg-terracotta-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
           <FileText className="w-8 h-8 text-terracotta-600" />
         </div>
-        <h1 className="font-serif text-3xl text-foreground mb-2">{c.title}</h1>
-        <p className="text-xs font-semibold uppercase tracking-wider text-[#a09383] mb-3">{progressLabel}</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-terracotta-600 mb-2">
+          {c.badge}
+        </p>
+        <h1 className="font-serif text-3xl md:text-4xl text-foreground mb-3">{c.title}</h1>
+        <p className="text-sm text-[#7a6b5d] max-w-2xl mx-auto leading-relaxed">{c.intro}</p>
+        <p className="text-[11px] uppercase tracking-wider text-[#a09383] mt-4">{c.versionLabel}</p>
       </div>
 
-      {uiStep === 0 && (
-        <div className="bg-white border border-sand-200 rounded-2xl p-6 mb-6">
-          <p className="text-sm text-[#7a6b5d] leading-relaxed mb-6">{c.intro}</p>
-          <div className="flex flex-wrap gap-3 justify-center">
-            <a
-              href={condicionesHref}
-              target="_blank"
-              rel="noopener"
-              className="text-sm font-medium text-terracotta-600 hover:underline"
-            >
-              {c.readFull}
-            </a>
-          </div>
-          <button
-            type="button"
-            onClick={() => setUiStep(1)}
-            className="mt-6 w-full bg-terracotta-600 text-white font-semibold py-3 rounded-xl hover:bg-terracotta-700 transition-colors text-sm"
+      <div className="bg-white border border-sand-200 rounded-2xl p-6 md:p-8 mb-6 shadow-soft">
+        <h2 className="font-serif text-xl text-foreground mb-3 flex items-center gap-2">
+          <Shield className="w-5 h-5 text-terracotta-600" />
+          {c.partiesTitle}
+        </h2>
+        <p className="text-sm text-[#7a6b5d] leading-relaxed">{c.partiesBody}</p>
+        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs">
+          <a
+            href={condicionesHref}
+            target="_blank"
+            rel="noopener"
+            className="text-terracotta-600 font-medium hover:underline"
           >
-            {c.wizardBegin}
-          </button>
+            {c.readFull} ↗
+          </a>
+          <a
+            href={terminosHref}
+            target="_blank"
+            rel="noopener"
+            className="text-terracotta-600 font-medium hover:underline"
+          >
+            {c.termsLabel} ↗
+          </a>
+          <a
+            href={privacidadHref}
+            target="_blank"
+            rel="noopener"
+            className="text-terracotta-600 font-medium hover:underline"
+          >
+            {c.privacyLabel} ↗
+          </a>
         </div>
-      )}
+      </div>
 
-      {uiStep >= 1 && uiStep <= n && (
-        <div className="bg-white border border-sand-200 rounded-2xl p-6 mb-6">
-          <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-            <Shield className="w-5 h-5 text-terracotta-600 shrink-0" />
-            {c.bullets[sectionIndex]?.title}
-          </h2>
-          <p className="text-sm text-[#7a6b5d] leading-relaxed mb-6">{c.bullets[sectionIndex]?.body}</p>
-          <label className="flex items-start gap-3 cursor-pointer group mb-6">
-            <input
-              type="checkbox"
-              checked={sectionAck}
-              onChange={(e) => setSectionAck(e.target.checked)}
-              className="mt-1 w-5 h-5 rounded border-sand-300 text-terracotta-600 focus:ring-terracotta-300"
-            />
-            <span className="text-sm text-[#7a6b5d]">{c.sectionAckLabel}</span>
-          </label>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <button
-              type="button"
-              onClick={() => setUiStep((s) => Math.max(0, s - 1))}
-              className="sm:flex-1 order-2 sm:order-1 py-3 rounded-xl border border-sand-300 text-sm font-semibold text-[#7a6b5d] hover:bg-sand-50 transition-colors"
-            >
-              {c.wizardBack}
-            </button>
-            <button
-              type="button"
-              disabled={!sectionAck}
-              onClick={() => setUiStep((s) => s + 1)}
-              className="sm:flex-1 order-1 sm:order-2 bg-terracotta-600 text-white font-semibold py-3 rounded-xl hover:bg-terracotta-700 transition-colors disabled:opacity-45 disabled:cursor-not-allowed text-sm"
-            >
-              {c.wizardContinue}
-            </button>
-          </div>
+      <div className="mb-8">
+        <OrganizerContractClauses locale={locale} />
+      </div>
+
+      <div className="bg-gradient-to-br from-terracotta-50 to-sand-50 border-2 border-terracotta-200 rounded-2xl p-6 md:p-8 sticky bottom-4 shadow-soft">
+        <div className="flex items-start gap-3 mb-4">
+          <CheckCircle className="w-6 h-6 text-terracotta-600 shrink-0 mt-0.5" />
+          <p className="text-sm text-[#5e5247] leading-relaxed">{c.acknowledgement}</p>
         </div>
-      )}
 
-      {uiStep === n + 1 && (
-        <div className="space-y-6">
-          <div className="bg-white border border-sand-200 rounded-2xl p-6">
-            <h2 className="font-serif text-xl text-foreground mb-2">{c.finalTitle}</h2>
-            <p className="text-sm text-[#7a6b5d] mb-4">{c.finalIntro}</p>
-            <ul className="space-y-2 text-sm text-[#7a6b5d] mb-4">
-              {c.bullets.map((b) => (
-                <li key={b.title} className="flex gap-2">
-                  <CheckCircle className="w-4 h-4 text-sage-600 shrink-0 mt-0.5" />
-                  <span><span className="font-medium text-foreground">{b.title}:</span> {b.body}</span>
-                </li>
-              ))}
-            </ul>
-            <a
-              href={condicionesHref}
-              target="_blank"
-              rel="noopener"
-              className="text-sm font-medium text-terracotta-600 hover:underline inline-block mb-4"
-            >
-              {c.readFull}
-            </a>
-          </div>
+        <label className="flex items-start gap-3 cursor-pointer group mb-3 p-3 bg-white rounded-xl border border-sand-200 hover:border-terracotta-300 transition-colors">
+          <input
+            type="checkbox"
+            checked={accepted}
+            onChange={(e) => setAccepted(e.target.checked)}
+            className="mt-0.5 w-5 h-5 rounded border-sand-300 text-terracotta-600 focus:ring-terracotta-300 shrink-0"
+          />
+          <span className="text-sm text-foreground font-medium leading-relaxed">{c.acceptLabel}</span>
+        </label>
 
-          <div className="bg-white border border-sand-200 rounded-2xl p-6">
-            <label className="flex items-start gap-3 cursor-pointer group mb-4">
-              <input
-                type="checkbox"
-                checked={masterAck}
-                onChange={(e) => setMasterAck(e.target.checked)}
-                className="mt-1 w-5 h-5 rounded border-sand-300 text-terracotta-600 focus:ring-terracotta-300"
-              />
-              <span className="text-sm text-[#7a6b5d] leading-relaxed">{c.masterConfirmLabel}</span>
-            </label>
-            <p className="text-xs text-[#a09383] mb-4 pl-8">
-              {locale === 'es' ? (
-                <>
-                  Texto legal:{' '}
-                  <a href={condicionesHref} target="_blank" rel="noopener" className="text-terracotta-600 underline">Condiciones</a>
-                  {' · '}
-                  <a href={terminosHref} target="_blank" rel="noopener" className="text-terracotta-600 underline">Términos</a>
-                </>
-              ) : (
-                <>
-                  Legal:{' '}
-                  <a href={condicionesHref} target="_blank" rel="noopener" className="text-terracotta-600 underline">Conditions</a>
-                  {' · '}
-                  <a href={terminosHref} target="_blank" rel="noopener" className="text-terracotta-600 underline">Terms</a>
-                </>
-              )}
-            </p>
+        <p className="text-[11px] text-[#a09383] mb-4 leading-relaxed pl-1">{c.acceptHint}</p>
 
-            {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
+        {error && (
+          <p className="text-sm text-red-600 mb-3 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+            {error}
+          </p>
+        )}
 
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                type="button"
-                onClick={() => setUiStep(n)}
-                className="sm:flex-1 py-3 rounded-xl border border-sand-300 text-sm font-semibold text-[#7a6b5d] hover:bg-sand-50 transition-colors"
-              >
-                {c.wizardBack}
-              </button>
-              <button
-                type="button"
-                disabled={!masterAck || loading}
-                onClick={handleAccept}
-                className="sm:flex-1 bg-terracotta-600 text-white font-semibold py-3 rounded-xl hover:bg-terracotta-700 transition-colors disabled:opacity-45 disabled:cursor-not-allowed text-sm"
-              >
-                {loading ? c.processing : c.accept}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+        <button
+          type="button"
+          onClick={handleAccept}
+          disabled={!accepted || loading}
+          className="w-full bg-terracotta-600 text-white font-semibold py-3.5 rounded-xl hover:bg-terracotta-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base inline-flex items-center justify-center gap-2"
+        >
+          {loading ? (
+            c.acceptingButton
+          ) : (
+            <>
+              {c.acceptButton}
+              <span aria-hidden>→</span>
+            </>
+          )}
+        </button>
+      </div>
     </div>
   );
 }

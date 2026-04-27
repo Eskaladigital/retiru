@@ -194,6 +194,10 @@ export default function CondicionesPageEn() {
             <p>
               <strong className="text-foreground">Claim your center:</strong> If your center already appears in the directory, you can claim it by creating an account and clicking &quot;Claim this center&quot; on your listing. Our team will verify your identity as the owner.
             </p>
+            <p className="text-sm">
+              The detailed directory terms (fee, listing accuracy, reviews, GDPR and exit) are in the{' '}
+              <Link href="/en/legal/contrato-centro" className="text-terracotta-600 font-medium hover:underline">center directory agreement</Link>.
+            </p>
           </div>
         </section>
 
@@ -216,11 +220,77 @@ export default function CondicionesPageEn() {
             </p>
           </div>
         </section>
+
+        {/* ═══ CONTRACTUAL AGREEMENTS ═══ */}
+        <section id="contractual-agreements" className="scroll-mt-20">
+          <h2 className="font-serif text-2xl font-bold text-foreground mb-2">
+            Contractual agreements
+          </h2>
+          <p className="text-[15px] leading-relaxed text-muted-foreground mb-6">
+            On Retiru three different parties coexist — visitors, directory centers and retreat organizers — and each one has its own document. We publish them openly so anyone can review them before signing up or booking.
+          </p>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <Link
+              href="/en/legal/terminos"
+              className="group block bg-white border border-sand-200 rounded-2xl p-5 hover:border-terracotta-300 hover:shadow-soft transition-all"
+            >
+              <p className="text-[11px] font-bold uppercase tracking-wider text-[#a09383] mb-2">
+                1. Visitors and users
+              </p>
+              <h3 className="font-serif text-lg text-foreground mb-2 group-hover:text-terracotta-700 transition-colors">
+                Legal terms
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                General terms applying to anyone browsing the site or creating an account: use of the service, intellectual property, liability and jurisdiction.
+              </p>
+              <span className="text-sm text-terracotta-600 font-medium">Read terms →</span>
+            </Link>
+
+            <Link
+              href="/en/legal/contrato-centro"
+              className="group block bg-white border border-sand-200 rounded-2xl p-5 hover:border-terracotta-300 hover:shadow-soft transition-all"
+            >
+              <p className="text-[11px] font-bold uppercase tracking-wider text-[#a09383] mb-2">
+                2. Directory centers
+              </p>
+              <h3 className="font-serif text-lg text-foreground mb-2 group-hover:text-terracotta-700 transition-colors">
+                Center directory agreement
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                Agreement for centers with a public listing in the directory: €20/month fee, 6-month courtesy period, listing accuracy, reviews, GDPR and exit from the service.
+              </p>
+              <span className="text-sm text-terracotta-600 font-medium">Read agreement →</span>
+            </Link>
+
+            <Link
+              href="/en/legal/contrato-organizador"
+              className="group block bg-white border border-sand-200 rounded-2xl p-5 hover:border-terracotta-300 hover:shadow-soft transition-all"
+            >
+              <p className="text-[11px] font-bold uppercase tracking-wider text-[#a09383] mb-2">
+                3. Retreat organizers
+              </p>
+              <h3 className="font-serif text-lg text-foreground mb-2 group-hover:text-terracotta-700 transition-colors">
+                Organizer agreement
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                The 12 clauses each organizer accepts before publishing their first retreat: tiered commissions, KYC, cancellations, payouts, GDPR and electronic acceptance.
+              </p>
+              <span className="text-sm text-terracotta-600 font-medium">Read agreement →</span>
+            </Link>
+          </div>
+        </section>
       </div>
 
       <div className="mt-12 pt-8 border-t border-sand-200 flex flex-wrap gap-4">
         <Link href="/en/legal/terminos" className="text-sm text-terracotta-600 hover:underline">
           Legal terms
+        </Link>
+        <Link href="/en/legal/contrato-centro" className="text-sm text-terracotta-600 hover:underline">
+          Center directory agreement
+        </Link>
+        <Link href="/en/legal/contrato-organizador" className="text-sm text-terracotta-600 hover:underline">
+          Organizer agreement
         </Link>
         <Link href="/en/legal/privacidad" className="text-sm text-terracotta-600 hover:underline">
           Privacy policy

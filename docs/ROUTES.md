@@ -28,7 +28,12 @@ Documentación de la arquitectura de rutas y landings.
 | `/es/sobre-nosotros` | `src/app/(public)/es/sobre-nosotros/page.tsx` | Sobre nosotros |
 | `/es/ayuda` | `src/app/(public)/es/ayuda/page.tsx` | Centro de ayuda (FAQs) |
 | `/es/contacto` | `src/app/(public)/es/contacto/page.tsx` | Contacto |
-| `/es/condiciones` | `src/app/(public)/es/condiciones/page.tsx` | Condiciones de uso y precios |
+| `/es/condiciones` | `src/app/(public)/es/condiciones/page.tsx` | Condiciones de uso y precios + tarjetas a los tres acuerdos contractuales |
+| `/es/legal/terminos` | `src/app/(public)/es/legal/terminos/page.tsx` | Términos legales generales del visitante/usuario web |
+| `/es/legal/contrato-organizador` | `src/app/(public)/es/legal/contrato-organizador/page.tsx` | Contrato del organizador (12 cláusulas, fuente única `src/lib/legal/organizer-contract.tsx`) |
+| `/es/legal/contrato-centro` | `src/app/(public)/es/legal/contrato-centro/page.tsx` | Contrato del centro del directorio (cláusulas en `src/lib/legal/center-contract.tsx`, borrador 0.1) |
+| `/es/legal/privacidad` | `src/app/(public)/es/legal/privacidad/page.tsx` | Política de privacidad |
+| `/es/legal/cookies` | `src/app/(public)/es/legal/cookies/page.tsx` | Política de cookies |
 | `/es/retiros-[category]` | `src/app/(public)/es/retiros-[category]/page.tsx` | Landing SEO por categoría de retiro (ej. `/es/retiros-yoga`) |
 | `/es/retiros-[category]/[destination]` | `src/app/(public)/es/retiros-[category]/[destination]/page.tsx` | Categoría + destino |
 | `/es/centros/[tipo]` | `src/app/(public)/es/centros/[tipo]/page.tsx` | Centros por tipo (`yoga` / `meditacion` / `ayurveda` en URL ES) |
@@ -73,6 +78,11 @@ Documentación de la arquitectura de rutas y landings.
 | `/en/help` | `src/app/(public)/en/help/page.tsx` |
 | `/en/contact` | `src/app/(public)/en/contact/page.tsx` |
 | `/en/condiciones` | `src/app/(public)/en/condiciones/page.tsx` |
+| `/en/legal/terminos` | `src/app/(public)/en/legal/terminos/page.tsx` |
+| `/en/legal/contrato-organizador` | `src/app/(public)/en/legal/contrato-organizador/page.tsx` |
+| `/en/legal/contrato-centro` | `src/app/(public)/en/legal/contrato-centro/page.tsx` |
+| `/en/legal/privacidad` | `src/app/(public)/en/legal/privacidad/page.tsx` |
+| `/en/legal/cookies` | `src/app/(public)/en/legal/cookies/page.tsx` |
 
 ---
 

@@ -182,6 +182,22 @@ export const conditionsES: Metadata = generatePageMetadata({
   altPath: '/en/condiciones',
 });
 
+export const organizerContractES: Metadata = generatePageMetadata({
+  title: 'Contrato del organizador',
+  description: 'Texto íntegro del contrato que cada organizador acepta antes de publicar su primer retiro en Retiru: comisiones, KYC, cancelaciones, payouts, RGPD y aceptación electrónica.',
+  locale: 'es',
+  path: '/es/legal/contrato-organizador',
+  altPath: '/en/legal/contrato-organizador',
+});
+
+export const centerContractES: Metadata = generatePageMetadata({
+  title: 'Contrato del centro (directorio)',
+  description: 'Contrato del directorio de centros de Retiru: tarifa mensual de 20 €, periodo de cortesía de 6 meses, veracidad de la ficha, reseñas, RGPD y baja del servicio.',
+  locale: 'es',
+  path: '/es/legal/contrato-centro',
+  altPath: '/en/legal/contrato-centro',
+});
+
 // ─── EN pages ───────────────────────────────────────────────────────────────
 
 export const homeEN: Metadata = generatePageMetadata({
@@ -354,6 +370,22 @@ export const conditionsEN: Metadata = generatePageMetadata({
   locale: 'en',
   path: '/en/condiciones',
   altPath: '/es/condiciones',
+});
+
+export const organizerContractEN: Metadata = generatePageMetadata({
+  title: 'Organizer agreement',
+  description: 'Full text of the agreement every organizer signs electronically before publishing their first retreat on Retiru: commissions, KYC, cancellations, payouts, GDPR and electronic acceptance.',
+  locale: 'en',
+  path: '/en/legal/contrato-organizador',
+  altPath: '/es/legal/contrato-organizador',
+});
+
+export const centerContractEN: Metadata = generatePageMetadata({
+  title: 'Center directory agreement',
+  description: 'Center directory agreement on Retiru: €20/month subscription, 6-month courtesy period, listing accuracy, reviews, GDPR and exit from the service.',
+  locale: 'en',
+  path: '/en/legal/contrato-centro',
+  altPath: '/es/legal/contrato-centro',
 });
 
 // ─── Dashboard / Panel / Admin (noIndex) ────────────────────────────────────

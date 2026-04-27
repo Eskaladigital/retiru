@@ -50,7 +50,13 @@ export const LAYERS = {
     label: 'Tipo×Provincia',
     urlPattern: '/{locale}/centros/[tipo]/[provincia]',
     primaryIntent: 'Directorio de centros de {tipo} en {Prov}',
-    allowedSections: ['why_here', 'how_to_choose'],
+    // 4 secciones TODAS localizadas (no duplican nacional):
+    //  - why_here: atractivo de la provincia para esta disciplina
+    //  - what_to_expect: qué esperar de un centro de esa disciplina EN esa provincia
+    //                    (formato local, tipo de público, duración típica, rango de precios local)
+    //  - how_to_choose: criterios prácticos para elegir
+    //  - local_scene:   comunidad, eventos, retiros cercanos, escuelas referentes LOCALES
+    allowedSections: ['why_here', 'what_to_expect', 'how_to_choose', 'local_scene'],
     forbiddenInH1: [],
     faqCount: [6, 8],
   },
@@ -91,6 +97,17 @@ export const SUPPRESSION_REASONS = {
 // Estilos "dominantes": mayoritarios en el corpus → nacional pasa a educativo,
 // no se generan landings Estilo×Provincia (R3 §8.4).
 export const DOMINANT_STYLES = new Set(['hatha', 'abhyanga']);
+
+// Mapeo de slug de disciplina → label legible en ES/EN para el prompt.
+// Sin esto, el modelo escribía literal "Centros de meditation en Madrid"
+// (slug en lugar de palabra en español). Corrige §B1.
+const TYPE_LABELS = {
+  yoga:       { es: 'yoga',       en: 'yoga' },
+  meditation: { es: 'meditación', en: 'meditation' },
+  ayurveda:   { es: 'ayurveda',   en: 'ayurveda' },
+};
+function typeEs(slug) { return TYPE_LABELS[slug]?.es || slug; }
+function typeEn(slug) { return TYPE_LABELS[slug]?.en || slug; }
 
 // Provincias alias ya consolidadas (no deberían aparecer, pero por seguridad).
 const ALIAS_PROVINCE_SLUGS = new Set([
@@ -232,7 +249,34 @@ Reglas duras (comunes a todas las capas):
 - NO repitas frases entre secciones.
 - FAQ: preguntas REALES extraídas del bloque "People Also Ask" del dossier cuando estén disponibles. Si no, preguntas útiles relacionadas con precios, acceso, transporte, idiomas, nivel. Respuestas 50-90 palabras.
 - meta_title: máx. 60 chars. meta_description: 150-160 chars. Ambos sin años.
-- En inglés mantén los mismos datos reales (nombres, topónimos) sin traducir; traduce solo el texto explicativo.`;
+- En inglés mantén los mismos datos reales (nombres, topónimos) sin traducir; traduce solo el texto explicativo.
+
+LISTA NEGRA anti-cliché (PROHIBIDO usar estas frases o sinónimos obvios):
+- "refugio para", "oasis de", "paisajes verdes", "rica cultura", "cultura milenaria"
+- "equilibrio entre cuerpo y mente", "estilo de vida", "bienestar integral"
+- "práctica ancestral", "técnicas ancestrales", "sabiduría milenaria"
+- "enclave único", "punto de referencia", "destino imprescindible"
+- "sumérgete", "descubre", "déjate llevar", "conecta con tu esencia"
+- "hermosa", "vibrante", "bullicioso", "mezcla de tradición y modernidad"
+- "amplia oferta", "amplia variedad", "variedad de opciones", "numerosas posibilidades"
+- "ambiente bohemio", "ambiente tranquilo", "encanto especial"
+- "ideal para", "perfecto para" (sustituir con razón concreta)
+
+CÓMO SUSTITUIR esos tópicos:
+- En lugar de "refugio de paisajes verdes" → nombra una comarca/sierra/río/barrio concreto.
+- En lugar de "variedad de centros" → di cuántos hay (si lo sabes del dossier) o qué tipos se repiten.
+- En lugar de "sumérgete/descubre" → usa verbos concretos: "empieza por", "prueba", "elige", "reserva", "pregunta por".
+- En lugar de frases de relleno → aporta UN dato concreto (rango horario típico, barrio donde se concentran, tipo de espacio físico).
+
+Calidad mínima exigida:
+- Cada sección DEBE contener al menos DOS nombres propios del dossier (barrio, comarca, ciudad, estación de tren, parque, sierra, playa) cuando la capa sea geográfica.
+- NO abras dos secciones consecutivas con la misma palabra.
+- Cifras: si el dossier trae precios/ratings/local_pack, cítalos con naturalidad.
+
+AUTO-CHECK antes de devolver:
+1. Busca en tu borrador cualquier palabra de la LISTA NEGRA. Si aparece, reescribe esa frase.
+2. Si encuentras "<p>Breve intro.</p>" o cualquier placeholder literal del prompt en tu salida, reescríbelo con contenido real.
+3. Si una sección tiene menos de dos nombres propios concretos (barrios, sierras, estaciones…), añádelos.`;
 
 const LAYER_PROMPTS = {
   type_national: (ctx) => `Estás escribiendo la landing nacional de ${ctx.type} en España (Retiru).
@@ -276,34 +320,47 @@ Campos adicionales: intro_es/en (220-280 palabras), meta_title_es/en, meta_descr
 
 JSON output: misma estructura que capa 1 con las 3 secciones mencionadas.`,
 
-  type_province: (ctx) => `Estás escribiendo la landing de DIRECTORIO de centros de ${ctx.type} en ${ctx.provinceName} (Retiru).
-Intent primario: el usuario busca un DIRECTORIO concreto de la provincia y quiere elegir. NO repetir el "qué es ${ctx.type}" (eso vive en la capa nacional — ya se linka).
+  type_province: (ctx) => {
+    const tEs = typeEs(ctx.type); const tEn = typeEn(ctx.type);
+    return `Estás escribiendo la landing de DIRECTORIO de centros de ${tEs} en ${ctx.provinceName} (Retiru).
+Intent primario: el usuario busca un DIRECTORIO concreto de la provincia y quiere elegir. NO repetir el "qué es ${tEs}" en términos universales (eso vive en la capa nacional).
 
 ${BASE_RULES}
 
 CONTRATO DE SALIDA (JSON con TODAS estas claves, sin excepciones):
 {
-  "intro_es":           <string HTML 220-300 palabras, 2-3 <p>, localizado con topónimos y nombres reales del dossier>,
-  "intro_en":           <string HTML 220-300 words, same facts>,
-  "meta_title_es":      <≤60 chars, patrón "Centros de ${ctx.type} en ${ctx.provinceName}" + gancho sin años>,
-  "meta_title_en":      <≤60 chars, "${ctx.type} Centers in ${ctx.provinceName}" + hook>,
+  "intro_es":           <HTML 220-280 palabras, 2-3 <p>. Primer párrafo localiza geográficamente (menciona al menos 2 comarcas/barrios/sierras del dossier). Segundo párrafo dice cuántos centros hay, qué tipo predominan y qué formatos. Nada de "refugio/oasis/paisajes verdes">,
+  "intro_en":           <HTML 220-280 words, same facts>,
+  "meta_title_es":      <≤60 chars, patrón "Centros de ${tEs} en ${ctx.provinceName}" + gancho sin años>,
+  "meta_title_en":      <≤60 chars, "${tEn} centers in ${ctx.provinceName}" + hook>,
   "meta_description_es":<150-160 chars sin años>,
   "meta_description_en":<150-160 chars sin años>,
   "sections_es": [
-    { "key":"why_here",      "heading":"Por qué practicar ${ctx.type} en ${ctx.provinceName}",
-      "html":"<p>…</p><p>…</p>  (2-3 párrafos, 170-230 palabras, MENCIONAR comarcas/barrios/geografía/cultura local + tipología de practicante local + al menos 2 señales del local_pack del dossier)" },
-    { "key":"how_to_choose", "heading":"Cómo elegir un centro de ${ctx.type} en ${ctx.provinceName}",
-      "html":"<p>…</p><ul><li>…</li></ul>  (170-230 palabras, criterios prácticos: horarios típicos, rango de precios REAL si está en dossier SerpApi, accesibilidad, estilos predominantes localmente, retiro vs clase suelta, idioma)" }
+    { "key":"why_here",
+      "heading":"Por qué practicar ${tEs} en ${ctx.provinceName}",
+      "html":"<p>…</p><p>…</p> — 170-220 palabras. Enfócate en las SEÑAS PROPIAS del territorio (geografía, clima, densidad urbana vs rural, barrios donde se concentran los centros, escena cultural). Al menos 3 nombres propios del dossier. PROHIBIDO frases cliché." },
+    { "key":"what_to_expect",
+      "heading":"Qué esperar de un centro de ${tEs} en ${ctx.provinceName}",
+      "html":"<p>…</p><p>…</p> — 150-200 palabras. Habla del FORMATO LOCAL: duración típica de una clase o retiro, tipo de espacios (bajo de calle, casa rural, finca en sierra, centro de barrio), perfil de alumnado frecuente, idioma predominante (ES/EN si aplica), rango de precios si el dossier lo trae. NO expliques qué es ${tEs} a nivel universal — esto se asume conocido." },
+    { "key":"how_to_choose",
+      "heading":"Cómo elegir un centro de ${tEs} en ${ctx.provinceName}",
+      "html":"Abre con 1 párrafo corto REAL (NO uses 'Breve intro.' literal, escribe tú el párrafo) que enmarque la decisión. Luego una <ul> con 5-6 <li>. Cada <li> empieza con <strong>concepto (2-3 palabras)</strong> seguido de em dash y la explicación concreta. Cubre: nivel requerido, horarios compatibles, estilo preferido, formación del profesorado, acceso en transporte público, retiro vs clase suelta, política de primera clase. Total 160-220 palabras." },
+    { "key":"local_scene",
+      "heading":"Comunidad y escena local de ${tEs} en ${ctx.provinceName}",
+      "html":"<p>…</p><p>…</p> — 140-200 palabras. Habla de la ESCENA LOCAL: eventos/encuentros recurrentes si el dossier los menciona, escuelas o centros de referencia por volumen/reputación del local_pack, posibilidades de retiros en la misma provincia o limítrofes, rutas o enclaves naturales aptos (montaña/mar). Si el dossier no trae datos suficientes, sé breve y honesto: describe tipologías sin inventar nombres." }
   ],
-  "sections_en": [ {"key":"why_here","heading":"Why practice ${ctx.type} in ${ctx.provinceName}","html":"…"}, {"key":"how_to_choose","heading":"How to choose a ${ctx.type} centre in ${ctx.provinceName}","html":"…"} ],
+  "sections_en": [ exactamente los 4 items anteriores, en inglés, mismos keys, mismos datos reales. Los headings en inglés usan "${tEn}" ],
   "faq_es": [ 6-8 Q&A locales — usa PREGUNTAS REALES del bloque People Also Ask del dossier si existen + añade hasta llegar a 7: precios, aparcamiento, retiros cercanos, niveles para principiantes, idiomas, accesibilidad en transporte público ],
   "faq_en": [ same 6-8 FAQ in English, mismas preguntas traducidas ]
 }
 
 REGLAS CRÍTICAS:
-- sections_es y sections_en SON OBLIGATORIAS y deben contener EXACTAMENTE 2 items cada una con las keys y headings especificados. Si las omites, el sistema descarta tu respuesta.
-- NO generes secciones "what_to_expect" ni "history" (viven en capa nacional y sería canibalización).
-- Usa el bloque SerpApi del dossier: los nombres de Google Maps para validar que hay escena local; los PAA como inspiración DIRECTA para las FAQ.`,
+- sections_es y sections_en SON OBLIGATORIAS: EXACTAMENTE 4 items cada una, con las keys y headings especificados en este orden: why_here → what_to_expect → how_to_choose → local_scene.
+- Si omites alguno, el sistema descartará tu respuesta.
+- Usa el bloque SerpApi del dossier: los nombres del local_pack para validar la escena; los PAA como inspiración DIRECTA para las FAQ; las related searches para afinar vocabulario.
+- Cada sección debe empezar con una frase distinta (no arrancar dos secciones con "En ${ctx.provinceName}…" o "${ctx.provinceName} es…").
+- En español dices SIEMPRE "${tEs}" (nunca "${ctx.type}" en crudo). En inglés dices "${tEn}".`;
+  },
 
   style_province: (ctx) => `Estás escribiendo la landing de ${ctx.type} ${ctx.styleName} EN ${ctx.provinceName} (Retiru).
 Intent primario: el usuario busca concretamente este estilo en esta provincia. Foco: qué hace diferente al estilo ${ctx.styleName} en esta zona concreta.
@@ -392,7 +449,7 @@ function normalizeFaq(arr) {
  * @param {boolean} [opts.useSerp=true]
  * @returns {Promise<{intro_es, intro_en, meta_title_es, meta_title_en, meta_description_es, meta_description_en, sections_es, sections_en, faq_es, faq_en, serp_data, suppress_reason}>}
  */
-export async function generateLayerContent({ context, useSerp = true }) {
+export async function generateLayerContent({ context, useSerp = true, model = 'gpt-4o', temperature = 0.55 }) {
   const suppress = applySuppressionRules(context);
   if (suppress) {
     return {
@@ -435,7 +492,10 @@ export async function generateLayerContent({ context, useSerp = true }) {
   const { parsed, usage } = await openAIJSON({
     system,
     user: userPrompt,
-    maxTokens: context.layer.id === 5 ? 2600 : 3800,
+    model,
+    temperature,
+    // Cap.3 ahora tiene 4 secciones + 8 FAQs → necesita más tokens.
+    maxTokens: context.layer.id === 3 ? 5200 : (context.layer.id === 5 ? 2600 : 3800),
   });
 
   const allowedKeys = context.layer.allowedSections;

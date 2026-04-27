@@ -27,6 +27,8 @@
  *   --province=alava    Filtra por slug de provincia.
  *   --style=kundalini   Filtra por slug de estilo (capas 2, 4).
  *   --city=vitoria      Filtra por slug de ciudad (capa 5).
+ *   --model=gpt-4o      Modelo OpenAI (gpt-4o | gpt-4o-mini | gpt-4.1 | gpt-4-turbo).
+ *   --temp=0.55         Temperatura (0.3-0.8). Default 0.55.
  */
 import { readFileSync, existsSync } from 'fs';
 import { dirname, join } from 'path';
@@ -72,6 +74,11 @@ const styleFilter = arg('style');
 const cityFilter = arg('city');
 const cityMin = Math.max(1, parseInt(arg('city-min') || '2', 10) || 2);
 const layerArg = arg('layer') || 'all';
+// Default: gpt-4.1 (mucho mejor obedeciendo listas negras y produciendo datos
+// concretos) + temperatura baja para reducir deriva hacia tópicos. Cambiar con
+// --model y --temp.
+const model = arg('model') || 'gpt-4.1';
+const temperature = parseFloat(arg('temp') || '0.4') || 0.4;
 
 // Capa 1 (nacional por tipo) vive en `src/lib/center-type-editorial.ts` como
 // contenido estático curado; NO se genera aquí. Si en el futuro se mueve a BD
@@ -423,6 +430,7 @@ function applyFilters(ctxList) {
 async function main() {
   console.log(`\n═══ generate-seo-sections ═══`);
   console.log(`Capas: ${layerIds.join(',')} | dryRun=${dryRun} force=${force} useSerp=${useSerp} conc=${concurrency} limit=${limit ?? '—'}`);
+  console.log(`Modelo: ${model} temp=${temperature}`);
   console.log(`Filtros: type=${typeFilter ?? '—'} prov=${provinceFilter ?? '—'} style=${styleFilter ?? '—'} city=${cityFilter ?? '—'}\n`);
 
   let allContexts = [];
@@ -472,7 +480,7 @@ async function main() {
         return;
       }
 
-      const content = await generateLayerContent({ context: ctx, useSerp });
+      const content = await generateLayerContent({ context: ctx, useSerp, model, temperature });
       if (content.suppress_reason) {
         await upsertForLayer(ctx, content);
         console.log(`🚫 ${label} — suppress: ${content.suppress_reason}`);
@@ -492,8 +500,18 @@ async function main() {
 
   console.log(`\nResumen: ok=${stats.ok} suppressed=${stats.suppress} fail=${stats.fail}`);
   if (costs.in || costs.out) {
-    const cost = (costs.in * 2.5 + costs.out * 10) / 1_000_000;
-    console.log(`Tokens: in=${costs.in} out=${costs.out} ≈ $${cost.toFixed(3)} USD (GPT-4o)`);
+    // Pricing aprox. USD / 1M tokens:
+    //   gpt-4o     → in 2.5, out 10
+    //   gpt-4o-mini→ in 0.15, out 0.60
+    //   gpt-4.1    → in 2.0, out 8.0
+    const rates = {
+      'gpt-4o':      [2.5, 10],
+      'gpt-4o-mini': [0.15, 0.60],
+      'gpt-4.1':     [2.0, 8.0],
+    };
+    const [rIn, rOut] = rates[model] || rates['gpt-4o'];
+    const cost = (costs.in * rIn + costs.out * rOut) / 1_000_000;
+    console.log(`Tokens: in=${costs.in} out=${costs.out} ≈ $${cost.toFixed(3)} USD (${model})`);
   }
 }
 

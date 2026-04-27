@@ -20,7 +20,7 @@ import {
   jsonLdFAQ,
   jsonLdScript,
 } from '@/lib/seo';
-import SeoSections from '@/components/seo/SeoSections';
+import SeoSections, { SeoFaqSection } from '@/components/seo/SeoSections';
 
 export const revalidate = 3600;
 
@@ -129,10 +129,16 @@ export default async function CentersTypeProvinceCityPage({
         </nav>
 
         {introHtml && (
-          <div
-            className="prose prose-sand max-w-3xl mb-10"
-            dangerouslySetInnerHTML={{ __html: introHtml }}
-          />
+          <div className="max-w-4xl mb-10 bg-gradient-to-br from-sand-50 to-cream-50 border border-sand-200 rounded-2xl p-6 md:p-8">
+            <div
+              className="prose prose-sand max-w-none text-[#44362b] leading-relaxed prose-p:mb-3 prose-strong:text-foreground"
+              dangerouslySetInnerHTML={{ __html: introHtml }}
+            />
+          </div>
+        )}
+
+        {Array.isArray(citySeo?.sections_en) && citySeo!.sections_en.length > 0 && (
+          <SeoSections sections={citySeo!.sections_en} className="mb-12" />
         )}
 
         {filtered.length === 0 ? (
@@ -204,10 +210,6 @@ export default async function CentersTypeProvinceCityPage({
           </div>
         )}
 
-        {Array.isArray(citySeo?.sections_en) && citySeo!.sections_en.length > 0 && (
-          <SeoSections sections={citySeo!.sections_en} className="mt-12" />
-        )}
-
         {topOtherCities.length > 0 && (
           <section className="mt-12 max-w-4xl">
             <h2 className="font-serif text-xl text-foreground mb-4">
@@ -233,24 +235,11 @@ export default async function CentersTypeProvinceCityPage({
           </section>
         )}
 
-        {faqs.length > 0 && (
-          <section className="mt-16 max-w-3xl">
-            <h2 className="font-serif text-2xl text-foreground mb-6">
-              Frequently asked questions about {label.toLowerCase()} in {cityName}
-            </h2>
-            <div className="space-y-4">
-              {faqs.map((item, i) => (
-                <details key={i} className="group bg-white border border-sand-200 rounded-xl">
-                  <summary className="flex items-center justify-between p-5 cursor-pointer font-medium text-foreground">
-                    {item.question}
-                    <svg className="w-5 h-5 text-[#a09383] shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6"/></svg>
-                  </summary>
-                  <div className="px-5 pb-5 text-sm text-[#7a6b5d] leading-relaxed">{item.answer}</div>
-                </details>
-              ))}
-            </div>
-          </section>
-        )}
+        <SeoFaqSection
+          items={faqs}
+          heading={`Frequently asked questions about ${label.toLowerCase()} in ${cityName}`}
+          className="mt-16"
+        />
 
         {filtered.length > 0 && (
           <script

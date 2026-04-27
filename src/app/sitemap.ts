@@ -35,6 +35,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/es/blog', priority: 0.7, changeFrequency: 'weekly' as const },
     { path: '/es/condiciones', priority: 0.3, changeFrequency: 'yearly' as const },
     { path: '/es/legal/terminos', priority: 0.2, changeFrequency: 'yearly' as const },
+    { path: '/es/legal/contrato-organizador', priority: 0.3, changeFrequency: 'yearly' as const },
+    { path: '/es/legal/contrato-centro', priority: 0.3, changeFrequency: 'yearly' as const },
     { path: '/es/legal/privacidad', priority: 0.2, changeFrequency: 'yearly' as const },
     { path: '/es/legal/cookies', priority: 0.2, changeFrequency: 'yearly' as const },
   ];
@@ -54,6 +56,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/en/blog', priority: 0.7, changeFrequency: 'weekly' as const },
     { path: '/en/condiciones', priority: 0.3, changeFrequency: 'yearly' as const },
     { path: '/en/legal/terminos', priority: 0.2, changeFrequency: 'yearly' as const },
+    { path: '/en/legal/contrato-organizador', priority: 0.3, changeFrequency: 'yearly' as const },
+    { path: '/en/legal/contrato-centro', priority: 0.3, changeFrequency: 'yearly' as const },
     { path: '/en/legal/privacidad', priority: 0.2, changeFrequency: 'yearly' as const },
     { path: '/en/legal/cookies', priority: 0.2, changeFrequency: 'yearly' as const },
   ];

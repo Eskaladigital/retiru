@@ -18,7 +18,7 @@ import {
   jsonLdFAQ,
   jsonLdScript,
 } from '@/lib/seo';
-import SeoSections from '@/components/seo/SeoSections';
+import SeoSections, { SeoFaqSection } from '@/components/seo/SeoSections';
 
 // Landing dinámica bajo (public)/layout (que usa cookies → getCurrentUserForHeader).
 // Con ISR (revalidate) + cookies en el layout, Next 14 marcaba la página como SSG
@@ -138,10 +138,16 @@ export default async function CentrosEstiloProvinciaPage({ params }: { params: P
       <section className="py-12 md:py-16">
         <div className="container-wide">
           {introHtml && (
-            <div
-              className="prose prose-sand max-w-3xl mb-10"
-              dangerouslySetInnerHTML={{ __html: introHtml }}
-            />
+            <div className="max-w-4xl mb-10 bg-gradient-to-br from-sand-50 to-cream-50 border border-sand-200 rounded-2xl p-6 md:p-8">
+              <div
+                className="prose prose-sand max-w-none text-[#44362b] leading-relaxed prose-p:mb-3 prose-strong:text-foreground"
+                dangerouslySetInnerHTML={{ __html: introHtml }}
+              />
+            </div>
+          )}
+
+          {Array.isArray(seo?.sections_es) && seo!.sections_es.length > 0 && (
+            <SeoSections sections={seo!.sections_es} className="mb-12" />
           )}
 
           <div className="space-y-4">
@@ -191,28 +197,11 @@ export default async function CentrosEstiloProvinciaPage({ params }: { params: P
             })}
           </div>
 
-          {Array.isArray(seo?.sections_es) && seo!.sections_es.length > 0 && (
-            <SeoSections sections={seo!.sections_es} className="mt-12" />
-          )}
-
-          {faqs.length > 0 && (
-            <section className="mt-16 max-w-3xl">
-              <h2 className="font-serif text-2xl text-foreground mb-6">
-                Preguntas frecuentes sobre {style.name_es} en {provinceName}
-              </h2>
-              <div className="space-y-4">
-                {faqs.map((item, i) => (
-                  <details key={i} className="group bg-white border border-sand-200 rounded-xl">
-                    <summary className="flex items-center justify-between p-5 cursor-pointer font-medium text-foreground">
-                      {item.question}
-                      <svg className="w-5 h-5 text-[#a09383] shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6"/></svg>
-                    </summary>
-                    <div className="px-5 pb-5 text-sm text-[#7a6b5d] leading-relaxed">{item.answer}</div>
-                  </details>
-                ))}
-              </div>
-            </section>
-          )}
+          <SeoFaqSection
+            items={faqs}
+            heading={`Preguntas frecuentes sobre ${style.name_es} en ${provinceName}`}
+            className="mt-16"
+          />
 
           <div className="mt-10 p-5 rounded-2xl bg-sand-50 border border-sand-200 text-sm leading-relaxed text-[#7a6b5d]">
             ¿Buscas {style.name_es} fuera de {provinceName}? Descubre{' '}

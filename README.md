@@ -2,7 +2,7 @@
 
 Plataforma web bilingüe (ES/EN) donde las personas descubren y reservan retiros y eventos centrados en **yoga, meditación y ayurveda**, y los organizadores publican y gestionan sus retiros sin cuota de suscripción (comisión escalonada por retiro).
 
-> "Airbnb de los retiros" — pensado para España y el mercado hispanohablante.
+> "Airbnb de los retiros" — pensado para España y el mercado hispanohablante. Los **retiros se organizan desde España** pero pueden **celebrarse también en Marruecos y Portugal** (destinos internacionales habilitados en la tabla `destinations`).
 
 ---
 
@@ -186,6 +186,19 @@ En esos textos **no** deben figurar **teléfonos móviles ni emails de contacto*
 | `npm run retreats:backfill-covers-ai` | Igual que la API: dossier completo desde Supabase → **GPT-4o** → **GPT Image 1.5** (`1536x1024`, `high`). Migrado desde DALL·E 3 por deprecación; prioridad absoluta al look de **fotografía real**. Opciones: `--dry-run`, `--limit=N`, `--replace-ai-covers`. |
 
 Para otro retiro, añadir un script análogo en `scripts/` o generalizar con un JSON + slug (mismo patrón).
+
+### Destinos internacionales (Marruecos y Portugal)
+
+Aunque los retiros se organizan desde España, se permite celebrar el retiro en **Marruecos** o **Portugal** (vínculo cultural y logística cercana). Ambos países viven como filas en `destinations` con `kind='destination'` y código ISO en `country` (`MA` / `PT`):
+
+```sql
+slug='marruecos', country='MA', kind='destination'   -- en uso por el retiro de Alma Nómada
+slug='portugal',  country='PT', kind='destination'   -- añadido para futuros retiros
+```
+
+Cuando un organizador crea/edita su evento en `/es/panel/eventos/...`, ambos aparecen automáticamente en el desplegable de "Destino" porque el wizard lee todos los destinos activos sin filtro de país. La ficha pública y los listados (`/es/retiros-retiru/...`) los tratan exactamente igual que los destinos españoles.
+
+Para promover estos destinos a `kind='country'` con landing propia y colgar destinos hoja específicos (Marrakech, Sahara, Algarve, Lisboa, Porto…), ejecutar `node scripts/seed-geo-hierarchy.mjs` (idempotente: crea `marruecos-pais` y `portugal-pais` como alias country si ya existen como `destination` para no romper retiros con `destination_id` existente).
 
 ### Migraciones y seeds
 
@@ -708,16 +721,18 @@ Un usuario puede combinar roles: por ejemplo, `attendee` + `organizer` + `center
 
 1. **Registro**: todo usuario nuevo recibe el rol `attendee` (trigger `tr_new_profile_role`).
 2. **Reclamar centro (claim aprobado)**: al aprobar un claim (admin o auto-aprobación por email match), se añade el rol `center` automáticamente vía `assignRole()`.
-3. **Aceptar contrato de organizador**: al aceptar el contrato en `/es/mis-eventos`, se crea `organizer_profile` con `status: 'pending'` y se añade el rol `organizer`.
+3. **Aceptar contrato de organizador**: al aceptar el contrato en `/es/panel/eventos` (entrada por `/es/mis-eventos`), se crea `organizer_profile` con `status: 'pending'`, se registra `contract_accepted_at`, se añade el rol `organizer` y se redirige a `/es/panel/verificacion` para iniciar el KYC.
 4. **Aprobar retiro**: al aprobar un retiro desde `/administrator/retiros`, se añade el rol `organizer` al dueño (idempotente).
 
 ### Verificación del organizador (KYC)
 
 Antes de poder publicar eventos, el organizador debe completar un proceso de verificación:
 
-1. **Aceptar contrato**: al acceder a `/es/mis-eventos` por primera vez, el usuario ve una pantalla bloqueante con el contrato de Retiru. Debe aceptarlo para continuar. Esto crea el `organizer_profile` con `contract_accepted_at` y `status: 'pending'`.
+1. **Aceptar contrato**: al acceder a `/es/mis-eventos` (redirige a `/es/panel/eventos`) por primera vez, el usuario ve una pantalla bloqueante con el **contrato del organizador** completo, dividido en 12 cláusulas que reflejan la operativa real (objeto del servicio, comisiones escalonadas 0/10/20 %, KYC obligatorio, calidad y veracidad del contenido, prohibición de canales externos para eludir comisión, plazos operativos —48 h confirmación—, mínimo viable, política de cancelación, payouts, RGPD, suspensión y aceptación electrónica con valor probatorio). Componente bilingüe en `src/components/panel/ContratoOrganizador.tsx` (versión `1.0 · 2026-04`). El usuario debe marcar la casilla final «He leído íntegramente el contrato y acepto todas sus cláusulas» y pulsar **«Aceptar contrato y continuar a verificación»**. Esto crea el `organizer_profile` con `contract_accepted_at` y `status: 'pending'`, y redirige automáticamente a `/es/panel/verificacion` (paso 2).
 
-2. **Subir documentación**: en `/es/mis-eventos/verificacion`, el organizador sube 5 documentos:
+   Las cláusulas viven en una **fuente única** (`src/lib/legal/organizer-contract.tsx`: `CONTRACT_VERSION`, `getOrganizerContractClauses(locale)`, componente `<OrganizerContractClauses>`) y se consumen tanto desde el contrato del panel como desde la página pública dedicada `/es/legal/contrato-organizador` (+ `/en/legal/contrato-organizador`), accesible para cualquier asistente, centro u organizador sin estar logueado. Cualquier cambio en las cláusulas se refleja automáticamente en los dos puntos.
+
+2. **Subir documentación**: en `/es/panel/verificacion` (alias legado `/es/mis-eventos/verificacion`), el organizador sube 5 documentos:
    - **Documento de identidad** (DNI/NIE/pasaporte)
    - **Alta en actividad económica** (certificado de autónomo o escritura de sociedad)
    - **Seguro de responsabilidad civil** (póliza vigente)
@@ -819,7 +834,11 @@ El cron `/api/cron/payment-deadlines` (cada hora) gestiona la gracia y cancelaci
 - **Tienda** (`/es/tienda`, `/es/tienda/[slug]`; EN: `/en/shop`): productos desde `shop_products`; si el listado público está vacío, **encuesta de interés** (cada clic 1–5 se guarda al instante vía `POST /api/shop/product-interest`; comentario opcional con botón propio) → `shop_product_interests`. Admin: `/administrator/tienda` + `docs/SHOP-SURVEY.md`
 - **Para asistentes** (`/para-asistentes`): garantías de pago seguro, organizadores verificados, soporte, comparativa vs contratación directa/redes
 - **Para centros y organizadores** (`/para-organizadores`): secciones centros + organizadores
-- **Condiciones** (`/condiciones`): modelo de precios transparente (en footer)
+- **Condiciones** (`/condiciones`): modelo de precios transparente, política de cancelación y, al final, las tres tarjetas «Acuerdos contractuales» que enlazan con los tres documentos formales (en footer)
+- **Documentos legales** — tres acuerdos diferenciados por figura, todos accesibles sin login:
+  1. **Términos legales** (`/legal/terminos`, EN `/en/legal/terminos`): términos generales del visitante/usuario web (uso del servicio, propiedad intelectual, responsabilidad, jurisdicción).
+  2. **Contrato del centro** (`/es/legal/contrato-centro`, EN `/en/legal/contrato-centro`): acuerdo del directorio para centros con ficha de pago — tarifa 20 €/mes, 6 meses de cortesía, veracidad, cesión de derechos de uso, reseñas, RGPD, baja. Cláusulas en `src/lib/legal/center-contract.tsx` (`CENTER_CONTRACT_VERSION`, componente `<CenterContractClauses>`). Versión actual: borrador `0.1 · 2026-04`; la aceptación electrónica desde el panel se activará al término del periodo de cortesía.
+  3. **Contrato del organizador** (`/es/legal/contrato-organizador`, EN `/en/legal/contrato-organizador`): 12 cláusulas operativas que cada organizador acepta antes de publicar su primer retiro (ver "Verificación del organizador (KYC)").
 
 ### Dashboard de usuario (cualquier usuario logueado)
 - **Mis reservas**: reservas como asistente con estados visuales; reservas `reserved_no_payment` con botón para pagar cuando corresponda (datos desde BD)
