@@ -2,6 +2,8 @@
 // POST /api/admin/organizers/[id] — Aprobar/rechazar paso o todo el organizador
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
+import { sendOrganizerRejectedEmail, sendOrganizerVerifiedEmail } from '@/lib/email';
+import { assignRole } from '@/lib/roles';
 
 async function requireAdmin() {
   const supabase = await createServerSupabase();
@@ -15,6 +17,75 @@ async function requireAdmin() {
     .maybeSingle();
   if (!adminRole) return null;
   return user;
+}
+
+/** Notifica una sola vez al pasar a verified + refuerzo rol organizer (idempotente). */
+async function trySendOrganizerVerifiedEmail(
+  admin: { from: (table: string) => any },
+  organizerId: string,
+) {
+  try {
+    const { data: row } = await admin
+      .from('organizer_profiles')
+      .select('user_id, business_name, slug')
+      .eq('id', organizerId)
+      .maybeSingle();
+
+    if (!row?.user_id) return;
+
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('email, preferred_locale')
+      .eq('id', row.user_id)
+      .maybeSingle();
+
+    if (!profile?.email) return;
+
+    const locale = (profile.preferred_locale || 'es') as 'es' | 'en';
+    await assignRole(admin, row.user_id, 'organizer');
+    await sendOrganizerVerifiedEmail({
+      to: profile.email,
+      locale,
+      businessName: row.business_name || 'Organizador',
+      organizerSlug: row.slug,
+    });
+  } catch (e) {
+    console.error('Failed to send organizer verified email:', e);
+  }
+}
+
+async function trySendOrganizerRejectedEmail(
+  admin: { from: (table: string) => any },
+  organizerId: string,
+  reason: string | null | undefined,
+) {
+  try {
+    const { data: row } = await admin
+      .from('organizer_profiles')
+      .select('user_id, business_name')
+      .eq('id', organizerId)
+      .maybeSingle();
+
+    if (!row?.user_id) return;
+
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('email, preferred_locale')
+      .eq('id', row.user_id)
+      .maybeSingle();
+
+    if (!profile?.email) return;
+
+    const locale = (profile.preferred_locale || 'es') as 'es' | 'en';
+    await sendOrganizerRejectedEmail({
+      to: profile.email,
+      locale,
+      businessName: row.business_name || 'Organizador',
+      rejectionReason: reason?.trim() || undefined,
+    });
+  } catch (e) {
+    console.error('Failed to send organizer rejected email:', e);
+  }
 }
 
 export async function GET(
@@ -64,10 +135,9 @@ export async function POST(
   const admin = createAdminSupabase();
   const now = new Date().toISOString();
 
-  // Verify organizer exists
   const { data: org } = await admin
     .from('organizer_profiles')
-    .select('id, status')
+    .select('id, status, user_id, business_name, slug')
     .eq('id', id)
     .single();
 
@@ -97,7 +167,6 @@ export async function POST(
       return NextResponse.json({ error: stepErr.message }, { status: 500 });
     }
 
-    // Check if all steps are now approved → auto-verify organizer
     if (action === 'approve_step') {
       const { data: allSteps } = await admin
         .from('organizer_verification_steps')
@@ -112,6 +181,8 @@ export async function POST(
           verified_at: now,
           verified_by: user.id,
         }).eq('id', id);
+
+        await trySendOrganizerVerifiedEmail(admin, id);
 
         return NextResponse.json({
           success: true,
@@ -131,7 +202,8 @@ export async function POST(
   }
 
   if (action === 'verify') {
-    // Force-verify the organizer (all steps at once)
+    const wasAlreadyVerified = org.status === 'verified';
+
     await admin.from('organizer_verification_steps')
       .update({ status: 'approved', reviewed_at: now, reviewed_by: user.id })
       .eq('organizer_id', id);
@@ -142,14 +214,24 @@ export async function POST(
       verified_by: user.id,
     }).eq('id', id);
 
+    if (!wasAlreadyVerified) {
+      await trySendOrganizerVerifiedEmail(admin, id);
+    }
+
     return NextResponse.json({ success: true, message: 'Organizador verificado.' });
   }
 
   if (action === 'reject') {
+    const prevStatus = org.status;
+
     await admin.from('organizer_profiles').update({
       status: 'rejected',
       rejection_reason: notes || null,
     }).eq('id', id);
+
+    if (prevStatus !== 'rejected') {
+      await trySendOrganizerRejectedEmail(admin, id, notes);
+    }
 
     return NextResponse.json({ success: true, message: 'Organizador rechazado.' });
   }

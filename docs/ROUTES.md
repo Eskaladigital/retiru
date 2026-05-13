@@ -23,11 +23,11 @@ Documentación de la arquitectura de rutas y landings.
 | `/es/para-organizadores` | `src/app/(public)/es/para-organizadores/page.tsx` | Para centros y organizadores |
 | `/es/tienda` | `src/app/(public)/es/tienda/page.tsx` | Tienda (`shop_products`); si no hay productos, encuesta `ProductInterestSurvey` → `shop_product_interests` |
 | `/es/tienda/[slug]` | `src/app/(public)/es/tienda/[slug]/page.tsx` | Ficha de producto |
-| `/es/blog` | `src/app/(public)/es/blog/page.tsx` | Blog |
+| `/es/blog` | `src/app/(public)/es/blog/page.tsx` | Blog (`?q=` búsqueda por título/resumen, `?categoria=` slug categoría) |
 | `/es/blog/[slug]` | `src/app/(public)/es/blog/[slug]/page.tsx` | Artículo de blog |
 | `/es/sobre-nosotros` | `src/app/(public)/es/sobre-nosotros/page.tsx` | Sobre nosotros |
 | `/es/ayuda` | `src/app/(public)/es/ayuda/page.tsx` | Centro de ayuda (FAQs) |
-| `/es/contacto` | `src/app/(public)/es/contacto/page.tsx` | Contacto |
+| `/es/contacto` | `src/app/(public)/es/contacto/page.tsx` | Contacto (CTA «Iniciar chat» abre `SupportChatWidget` vía evento `retiru:open-support-chat`) |
 | `/es/condiciones` | `src/app/(public)/es/condiciones/page.tsx` | Condiciones de uso y precios + tarjetas a los tres acuerdos contractuales |
 | `/es/legal/terminos` | `src/app/(public)/es/legal/terminos/page.tsx` | Términos legales generales del visitante/usuario web |
 | `/es/legal/contrato-organizador` | `src/app/(public)/es/legal/contrato-organizador/page.tsx` | Contrato del organizador (12 cláusulas, fuente única `src/lib/legal/organizer-contract.tsx`) |
@@ -72,11 +72,11 @@ Documentación de la arquitectura de rutas y landings.
 | `/en/provinces/[slug]` | `src/app/(public)/en/provinces/[slug]/page.tsx` — **Redirect 301** → `/en/centers/{type}/{slug}`. Deprecated 2026-04-22. |
 | `/en/shop` | `src/app/(public)/en/shop/page.tsx` — misma lógica que `/es/tienda` (encuesta si no hay productos) |
 | `/en/shop/[slug]` | `src/app/(public)/en/shop/[slug]/page.tsx` |
-| `/en/blog` | `src/app/(public)/en/blog/page.tsx` |
+| `/en/blog` | `src/app/(public)/en/blog/page.tsx` — listado; `?q=` búsqueda, `?category=` slug |
 | `/en/blog/[slug]` | `src/app/(public)/en/blog/[slug]/page.tsx` |
 | `/en/about` | `src/app/(public)/en/about/page.tsx` |
 | `/en/help` | `src/app/(public)/en/help/page.tsx` |
-| `/en/contact` | `src/app/(public)/en/contact/page.tsx` |
+| `/en/contact` | `src/app/(public)/en/contact/page.tsx` — CTA «Start chat» abre el widget de soporte (`retiru:open-support-chat`) |
 | `/en/condiciones` | `src/app/(public)/en/condiciones/page.tsx` |
 | `/en/legal/terminos` | `src/app/(public)/en/legal/terminos/page.tsx` |
 | `/en/legal/contrato-organizador` | `src/app/(public)/en/legal/contrato-organizador/page.tsx` |

@@ -1,13 +1,28 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Clock, ArrowRight } from 'lucide-react';
+import { Clock, ArrowRight, Search } from 'lucide-react';
 import { blogES } from '@/lib/seo/page-metadata';
 import { createServerSupabase } from '@/lib/supabase/server';
 
 export const revalidate = 60;
 export const metadata: Metadata = blogES;
 
-export default async function BlogPage() {
+function normalizeForSearch(s: string): string {
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+function blogListHrefEs(opts: { q?: string; categoria?: string }): string {
+  const p = new URLSearchParams();
+  const q = opts.q?.trim();
+  if (q) p.set('q', q);
+  if (opts.categoria) p.set('categoria', opts.categoria);
+  const qs = p.toString();
+  return qs ? `/es/blog?${qs}` : '/es/blog';
+}
+
+type SearchParams = { q?: string; categoria?: string };
+
+export default async function BlogPage({ searchParams }: { searchParams?: SearchParams }) {
   const supabase = await createServerSupabase();
 
   const { data: categories } = await supabase
@@ -17,23 +32,44 @@ export default async function BlogPage() {
 
   const { data: articles } = await supabase
     .from('blog_articles')
-    .select('id, title_es, slug, excerpt_es, cover_image_url, read_time_min, published_at, category_id, blog_categories(name_es)')
+    .select('id, title_es, title_en, slug, excerpt_es, cover_image_url, read_time_min, published_at, category_id, blog_categories(name_es)')
     .eq('is_published', true)
     .order('published_at', { ascending: false });
 
-  const featured = articles?.[0];
-  const rest = articles?.slice(1) ?? [];
+  const qRaw = (searchParams?.q ?? '').trim();
+  const categoriaSlug = (searchParams?.categoria ?? '').trim();
+
+  let list = [...(articles ?? [])];
+  if (categoriaSlug && categories?.length) {
+    const cat = categories.find((c) => c.slug === categoriaSlug);
+    if (cat) list = list.filter((a) => a.category_id === cat.id);
+  }
+
+  if (qRaw) {
+    const needle = normalizeForSearch(qRaw);
+    list = list.filter((a) => {
+      const blob = normalizeForSearch(`${a.title_es} ${a.title_en ?? ''} ${a.excerpt_es ?? ''}`);
+      return blob.includes(needle);
+    });
+  }
+
+  const featured = list[0];
+  const rest = list.slice(1);
+  const hasActiveFilters = !!(qRaw || categoriaSlug);
+  const poolEmpty = !articles || articles.length === 0;
+  const filteredEmpty = !poolEmpty && list.length === 0;
 
   function formatDate(dateStr: string | null) {
     if (!dateStr) return '';
     return new Date(dateStr).toLocaleDateString('es-ES', {
-      day: 'numeric', month: 'short', year: 'numeric',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
     });
   }
 
   return (
     <div>
-      {/* Hero */}
       <section className="bg-gradient-to-b from-cream-100 to-white">
         <div className="container-wide py-14 md:py-18 text-center">
           <span className="inline-block text-xs font-bold uppercase tracking-[0.12em] text-terracotta-600 mb-3">Blog</span>
@@ -46,17 +82,50 @@ export default async function BlogPage() {
         </div>
       </section>
 
-      {/* Category pills */}
+      <div className="container-wide mb-8">
+        <form action="/es/blog" method="get" className="flex flex-col sm:flex-row gap-2 max-w-xl mx-auto items-stretch sm:items-center">
+          {categoriaSlug ? <input type="hidden" name="categoria" value={categoriaSlug} /> : null}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a09383]" aria-hidden />
+            <input
+              type="search"
+              name="q"
+              defaultValue={qRaw}
+              placeholder="Buscar por título..."
+              autoComplete="off"
+              className="w-full pl-10 pr-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all"
+            />
+          </div>
+          <button type="submit" className="bg-terracotta-600 text-white font-semibold px-6 py-3 rounded-xl hover:bg-terracotta-700 transition-colors whitespace-nowrap shrink-0">
+            Buscar
+          </button>
+          {hasActiveFilters && (
+            <Link href="/es/blog" className="text-center text-sm font-semibold text-[#7a6b5d] hover:text-terracotta-600 py-2 sm:self-center">
+              Limpiar filtros
+            </Link>
+          )}
+        </form>
+      </div>
+
       <div className="container-wide -mt-2 mb-10">
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          <Link href="/es/blog" className="shrink-0 px-4 py-2 rounded-full text-sm font-semibold bg-terracotta-600 text-white">
+          <Link
+            href={blogListHrefEs({ q: qRaw })}
+            className={`shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
+              !categoriaSlug ? 'bg-terracotta-600 text-white' : 'border border-sand-300 text-[#7a6b5d] hover:border-terracotta-300 hover:text-terracotta-600 hover:bg-terracotta-50 font-medium'
+            }`}
+          >
             Todos
           </Link>
           {categories?.map((c) => (
             <Link
               key={c.id}
-              href={`/es/blog?categoria=${c.slug}`}
-              className="shrink-0 px-4 py-2 rounded-full text-sm font-medium border border-sand-300 text-[#7a6b5d] hover:border-terracotta-300 hover:text-terracotta-600 hover:bg-terracotta-50 transition-colors"
+              href={blogListHrefEs({ categoria: c.slug, q: qRaw })}
+              className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
+                categoriaSlug === c.slug
+                  ? 'bg-terracotta-600 text-white border-terracotta-600'
+                  : 'border border-sand-300 text-[#7a6b5d] hover:border-terracotta-300 hover:text-terracotta-600 hover:bg-terracotta-50'
+              }`}
             >
               {c.name_es}
             </Link>
@@ -64,7 +133,6 @@ export default async function BlogPage() {
         </div>
       </div>
 
-      {/* Featured article */}
       {featured && (
         <section className="container-wide mb-12">
           <Link href={`/es/blog/${featured.slug}`} className="group grid md:grid-cols-2 gap-0 bg-white rounded-3xl border border-sand-200 overflow-hidden hover:shadow-elevated transition-all duration-300">
@@ -78,7 +146,7 @@ export default async function BlogPage() {
             <div className="p-8 md:p-10 flex flex-col justify-center">
               <div className="flex items-center gap-3 mb-4">
                 <span className="text-xs font-semibold px-3 py-1 rounded-full bg-terracotta-100 text-terracotta-700">
-                  {(featured.blog_categories as any)?.name_es ?? 'General'}
+                  {(featured.blog_categories as { name_es?: string })?.name_es ?? 'General'}
                 </span>
                 <span className="text-xs text-[#a09383] flex items-center gap-1"><Clock size={12} /> {featured.read_time_min} min</span>
               </div>
@@ -105,7 +173,6 @@ export default async function BlogPage() {
         </section>
       )}
 
-      {/* Articles grid */}
       {rest.length > 0 && (
         <section className="container-wide mb-16">
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -125,7 +192,7 @@ export default async function BlogPage() {
                 <div className="p-5">
                   <div className="flex items-center gap-3 mb-3">
                     <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-sand-200 text-[#7a6b5d]">
-                      {(article.blog_categories as any)?.name_es ?? 'General'}
+                      {(article.blog_categories as { name_es?: string })?.name_es ?? 'General'}
                     </span>
                     <span className="text-[11px] text-[#a09383] flex items-center gap-1"><Clock size={11} /> {article.read_time_min} min</span>
                   </div>
@@ -143,14 +210,19 @@ export default async function BlogPage() {
         </section>
       )}
 
-      {/* Empty state */}
-      {(!articles || articles.length === 0) && (
+      {poolEmpty && (
         <section className="container-wide mb-16 text-center py-12">
           <p className="text-[#7a6b5d] text-lg">Próximamente publicaremos artículos sobre yoga, meditación y ayurveda.</p>
         </section>
       )}
 
-      {/* Newsletter CTA */}
+      {filteredEmpty && (
+        <section className="container-wide mb-16 text-center py-12">
+          <p className="text-[#7a6b5d] text-lg mb-2">No encontramos artículos con esos criterios.</p>
+          <p className="text-sm text-[#a09383]">Prueba otras palabras o <Link href="/es/blog" className="text-terracotta-600 font-semibold hover:underline">limpia filtros</Link>.</p>
+        </section>
+      )}
+
       <section className="bg-sand-100">
         <div className="container-wide py-14">
           <div className="max-w-xl mx-auto text-center">

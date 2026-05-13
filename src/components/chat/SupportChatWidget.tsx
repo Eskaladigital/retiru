@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { MessageCircle, X, Send, LifeBuoy, RotateCcw } from 'lucide-react';
+import { OPEN_RETIRU_SUPPORT_CHAT } from '@/lib/support-chat-events';
 
 interface Message {
   id: string;
@@ -108,6 +109,21 @@ export default function SupportChatWidget({ locale }: Props) {
       initConversation();
     }
   }, [open]);
+
+  useEffect(() => {
+    const openNow = () => {
+      setOpen(true);
+      setUnread(0);
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener(OPEN_RETIRU_SUPPORT_CHAT, openNow);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener(OPEN_RETIRU_SUPPORT_CHAT, openNow);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!open || !convId) return;
@@ -285,6 +301,10 @@ export default function SupportChatWidget({ locale }: Props) {
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
                   placeholder={i.placeholder}
                   rows={1}
+                  name="retiru-support-message"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck={false}
                   className="flex-1 resize-none rounded-xl border border-sand-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-terracotta-300 bg-white"
                   style={{ maxHeight: '80px' }}
                 />

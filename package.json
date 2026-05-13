@@ -14,6 +14,7 @@
     "verify-env": "node scripts/verify-env.mjs",
     "db:apply-signup-fix": "node scripts/run-sql-migration.mjs supabase/migrations/033_fix_signup_trigger_chain.sql",
     "db:verify-schema": "node scripts/verify-schema-db.mjs",
+    "db:peek-destinations": "node scripts/peek-destinations.mjs",
     "verify-shop-survey-db": "node scripts/verify-shop-survey-db.mjs",
     "import-directorio": "node scripts/import-directorio.mjs",
     "blog:generate": "node scripts/generate-blog-articles.mjs",

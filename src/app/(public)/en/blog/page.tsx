@@ -1,13 +1,28 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Clock, ArrowRight } from 'lucide-react';
+import { Clock, ArrowRight, Search } from 'lucide-react';
 import { blogEN } from '@/lib/seo/page-metadata';
 import { createServerSupabase } from '@/lib/supabase/server';
 
 export const revalidate = 60;
 export const metadata: Metadata = blogEN;
 
-export default async function BlogPageEN() {
+function normalizeForSearch(s: string): string {
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+function blogListHrefEn(opts: { q?: string; category?: string }): string {
+  const p = new URLSearchParams();
+  const q = opts.q?.trim();
+  if (q) p.set('q', q);
+  if (opts.category) p.set('category', opts.category);
+  const qs = p.toString();
+  return qs ? `/en/blog?${qs}` : '/en/blog';
+}
+
+type SearchParams = { q?: string; category?: string };
+
+export default async function BlogPageEN({ searchParams }: { searchParams?: SearchParams }) {
   const supabase = await createServerSupabase();
 
   const { data: categories } = await supabase
@@ -21,24 +36,58 @@ export default async function BlogPageEN() {
     .eq('is_published', true)
     .order('published_at', { ascending: false });
 
-  const featured = articles?.[0];
-  const rest = articles?.slice(1) ?? [];
+  const qRaw = (searchParams?.q ?? '').trim();
+  const categorySlug = (searchParams?.category ?? '').trim();
+
+  let list = [...(articles ?? [])];
+  if (categorySlug && categories?.length) {
+    const cat = categories.find((c) => c.slug === categorySlug);
+    if (cat) list = list.filter((a) => a.category_id === cat.id);
+  }
+
+  if (qRaw) {
+    const needle = normalizeForSearch(qRaw);
+    list = list.filter((a) => {
+      const tit = `${a.title_en ?? ''} ${a.title_es ?? ''}`;
+      const ex = `${a.excerpt_en ?? ''} ${a.excerpt_es ?? ''}`;
+      const blob = normalizeForSearch(`${tit} ${ex}`);
+      return blob.includes(needle);
+    });
+  }
+
+  const featured = list[0];
+  const rest = list.slice(1);
+  const hasActiveFilters = !!(qRaw || categorySlug);
+  const poolEmpty = !articles || articles.length === 0;
+  const filteredEmpty = !poolEmpty && list.length === 0;
+
+  type ArticleRow = (typeof list)[number];
 
   function formatDate(dateStr: string | null) {
     if (!dateStr) return '';
     return new Date(dateStr).toLocaleDateString('en-GB', {
-      day: 'numeric', month: 'short', year: 'numeric',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
     });
   }
 
-  function title(a: any) { return a.title_en || a.title_es; }
-  function excerpt(a: any) { return a.excerpt_en || a.excerpt_es; }
-  function catName(a: any) { return (a.blog_categories as any)?.name_en || (a.blog_categories as any)?.name_es || 'General'; }
-  function enSlug(a: any) { return a.slug_en || a.slug; }
+  function title(a: ArticleRow) {
+    return a.title_en || a.title_es;
+  }
+  function excerpt(a: ArticleRow) {
+    return a.excerpt_en || a.excerpt_es;
+  }
+  function catName(a: ArticleRow) {
+    const bc = a.blog_categories as { name_en?: string; name_es?: string } | null;
+    return bc?.name_en || bc?.name_es || 'General';
+  }
+  function enSlug(a: ArticleRow) {
+    return a.slug_en || a.slug;
+  }
 
   return (
     <div>
-      {/* Hero */}
       <section className="bg-gradient-to-b from-cream-100 to-white">
         <div className="container-wide py-14 md:py-18 text-center">
           <span className="inline-block text-xs font-bold uppercase tracking-[0.12em] text-terracotta-600 mb-3">Blog</span>
@@ -51,25 +100,57 @@ export default async function BlogPageEN() {
         </div>
       </section>
 
-      {/* Category pills */}
+      <div className="container-wide mb-8">
+        <form action="/en/blog" method="get" className="flex flex-col sm:flex-row gap-2 max-w-xl mx-auto items-stretch sm:items-center">
+          {categorySlug ? <input type="hidden" name="category" value={categorySlug} /> : null}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a09383]" aria-hidden />
+            <input
+              type="search"
+              name="q"
+              defaultValue={qRaw}
+              placeholder="Search by title..."
+              autoComplete="off"
+              className="w-full pl-10 pr-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all"
+            />
+          </div>
+          <button type="submit" className="bg-terracotta-600 text-white font-semibold px-6 py-3 rounded-xl hover:bg-terracotta-700 transition-colors whitespace-nowrap shrink-0">
+            Search
+          </button>
+          {hasActiveFilters && (
+            <Link href="/en/blog" className="text-center text-sm font-semibold text-[#7a6b5d] hover:text-terracotta-600 py-2 sm:self-center">
+              Clear filters
+            </Link>
+          )}
+        </form>
+      </div>
+
       <div className="container-wide -mt-2 mb-10">
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          <Link href="/en/blog" className="shrink-0 px-4 py-2 rounded-full text-sm font-semibold bg-terracotta-600 text-white">
+          <Link
+            href={blogListHrefEn({ q: qRaw })}
+            className={`shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
+              !categorySlug ? 'bg-terracotta-600 text-white' : 'border border-sand-300 text-[#7a6b5d] hover:border-terracotta-300 hover:text-terracotta-600 hover:bg-terracotta-50 font-medium'
+            }`}
+          >
             All
           </Link>
           {categories?.map((c) => (
             <Link
               key={c.id}
-              href={`/en/blog?category=${c.slug}`}
-              className="shrink-0 px-4 py-2 rounded-full text-sm font-medium border border-sand-300 text-[#7a6b5d] hover:border-terracotta-300 hover:text-terracotta-600 hover:bg-terracotta-50 transition-colors"
+              href={blogListHrefEn({ category: c.slug, q: qRaw })}
+              className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
+                categorySlug === c.slug
+                  ? 'bg-terracotta-600 text-white border-terracotta-600'
+                  : 'border border-sand-300 text-[#7a6b5d] hover:border-terracotta-300 hover:text-terracotta-600 hover:bg-terracotta-50'
+              }`}
             >
-              {(c as any).name_en || (c as any).name_es}
+              {(c as { name_en?: string; name_es?: string }).name_en || (c as { name_en?: string; name_es?: string }).name_es}
             </Link>
           ))}
         </div>
       </div>
 
-      {/* Featured article */}
       {featured && (
         <section className="container-wide mb-12">
           <Link href={`/en/blog/${enSlug(featured)}`} className="group grid md:grid-cols-2 gap-0 bg-white rounded-3xl border border-sand-200 overflow-hidden hover:shadow-elevated transition-all duration-300">
@@ -110,7 +191,6 @@ export default async function BlogPageEN() {
         </section>
       )}
 
-      {/* Articles grid */}
       {rest.length > 0 && (
         <section className="container-wide mb-16">
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -148,14 +228,21 @@ export default async function BlogPageEN() {
         </section>
       )}
 
-      {/* Empty state */}
-      {(!articles || articles.length === 0) && (
+      {poolEmpty && (
         <section className="container-wide mb-16 text-center py-12">
           <p className="text-[#7a6b5d] text-lg">We&apos;ll be publishing articles about yoga, meditation and ayurveda soon.</p>
         </section>
       )}
 
-      {/* Newsletter CTA */}
+      {filteredEmpty && (
+        <section className="container-wide mb-16 text-center py-12">
+          <p className="text-[#7a6b5d] text-lg mb-2">No articles match your search.</p>
+          <p className="text-sm text-[#a09383]">
+            Try different words or <Link href="/en/blog" className="text-terracotta-600 font-semibold hover:underline">clear filters</Link>.
+          </p>
+        </section>
+      )}
+
       <section className="bg-sand-100">
         <div className="container-wide py-14">
           <div className="max-w-xl mx-auto text-center">

@@ -1,35 +1,58 @@
 // /en/contact
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Mail, MessageCircle, Clock, MapPin } from 'lucide-react';
 import { contactEN } from '@/lib/seo/page-metadata';
+import { OpenSupportChatButton } from '@/components/chat/OpenSupportChatButton';
+
 export const metadata: Metadata = contactEN;
+
+const cardCls = 'bg-white border border-sand-200 rounded-2xl p-5 text-center flex flex-col';
+const ctaCls =
+  'mt-4 inline-flex w-full justify-center bg-terracotta-600 text-white font-semibold text-sm px-4 py-2.5 rounded-xl hover:bg-terracotta-700 transition-colors';
+
 export default function ContactPageEN() {
   return (
     <div className="container-wide py-12">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         <h1 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground mb-2 text-center">Contact us</h1>
-        <p className="text-[#7a6b5d] mb-10 text-center">We'd love to hear from you. Get in touch and we'll respond within 24h.</p>
+        <p className="text-[#7a6b5d] mb-10 text-center">
+          We&apos;d love to hear from you. Get in touch — we reply during business hours.
+        </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-          <div className="bg-white border border-sand-200 rounded-2xl p-5 text-center">
-            <span className="text-2xl block mb-2">📧</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+          <div className={cardCls}>
+            <Mail className="w-7 h-7 text-terracotta-600 mx-auto mb-2" aria-hidden />
             <h3 className="text-sm font-semibold mb-1">Email</h3>
-            <a href="mailto:contacto@retiru.com" className="text-sm text-terracotta-600 hover:underline">contacto@retiru.com</a>
+            <a href="mailto:contacto@retiru.com" className="text-sm text-terracotta-600 hover:underline">
+              contacto@retiru.com
+            </a>
           </div>
-          <div className="bg-white border border-sand-200 rounded-2xl p-5 text-center">
-            <span className="text-2xl block mb-2">⏰</span>
+          <div className={`${cardCls} items-center`}>
+            <MessageCircle className="w-7 h-7 text-terracotta-600 mb-2" aria-hidden />
+            <h3 className="text-sm font-semibold mb-1">Live support chat</h3>
+            <p className="text-xs text-[#a09383] mb-1">Mon–Fri, 9:00–18:00 CET</p>
+            <OpenSupportChatButton className={ctaCls}>Start chat</OpenSupportChatButton>
+          </div>
+          <div className={cardCls}>
+            <Clock className="w-7 h-7 text-terracotta-600 mx-auto mb-2" aria-hidden />
             <h3 className="text-sm font-semibold mb-1">Hours</h3>
             <p className="text-sm text-[#7a6b5d]">Mon–Fri, 9:00–18:00 CET</p>
           </div>
-          <div className="bg-white border border-sand-200 rounded-2xl p-5 text-center">
-            <span className="text-2xl block mb-2">📍</span>
+          <div className={cardCls}>
+            <MapPin className="w-7 h-7 text-terracotta-600 mx-auto mb-2" aria-hidden />
             <h3 className="text-sm font-semibold mb-1">Location</h3>
             <p className="text-sm text-[#7a6b5d]">Murcia, Spain</p>
           </div>
         </div>
 
         <div className="bg-sand-100 rounded-2xl p-6 text-center mb-8">
-          <p className="text-sm text-[#7a6b5d]">Looking for answers first? Check our <Link href="/en/help" className="text-terracotta-600 font-semibold hover:underline">Help Center</Link></p>
+          <p className="text-sm text-[#7a6b5d]">
+            Looking for answers first? Check our{' '}
+            <Link href="/en/help" className="text-terracotta-600 font-semibold hover:underline">
+              Help Center
+            </Link>
+          </p>
         </div>
 
         <div className="text-center">

@@ -454,6 +454,96 @@ export async function sendRetreatRejectedEmail(
   return resend.emails.send({ from: FROM, to, subject, html });
 }
 
+// ─── Organizer profile verified (KYC) ───────────────────────────────────────
+// Preview / edición HTML: mailing/app/20-organizer-verified.html (espejo de emailLayout)
+
+export async function sendOrganizerVerifiedEmail(
+  options: EmailOptions & {
+    businessName: string;
+    organizerSlug: string;
+  },
+) {
+  const { to, locale, businessName, organizerSlug } = options;
+
+  const subject = t(locale,
+    `Perfil de organizador verificado — ${businessName}`,
+    `Organizer profile verified — ${businessName}`,
+  );
+
+  const body = [
+    paragraph(t(locale,
+      `Hemos verificado la documentaci&oacute;n de <strong>${businessName}</strong>. Tu perfil de organizador queda homologado en Retiru.`,
+      `We have verified the documentation for <strong>${businessName}</strong>. Your organizer profile is now approved on Retiru.`,
+    )),
+    paragraph(t(locale,
+      'Ya puedes enviar retiros a revisi&oacute;n y, una vez publicados, recibir reservas y pagos a trav&eacute;s de la plataforma.',
+      'You can submit retreats for review and, once published, receive bookings and payments through the platform.',
+    )),
+  ].join('');
+
+  const publicUrl = `${APP_URL}/${t(locale, 'es/organizador', 'en/organizer')}/${organizerSlug}`;
+
+  const html = emailLayout({
+    locale,
+    preheader: subject,
+    title: t(locale, '&iexcl;Perfil de organizador verificado!', 'Your organizer profile is verified!'),
+    body,
+    cta: {
+      href: `${APP_URL}/${t(locale, 'es/panel/eventos', 'en/panel/events')}`,
+      label: t(locale, 'Ir a mis eventos', 'Go to my events'),
+    },
+    footnote: `<a href="${publicUrl}" style="color: #c85a30; text-decoration: underline;">${t(locale, 'Ver tu perfil p&uacute;blico de organizador', 'View your public organizer profile')}</a>`,
+  });
+
+  return resend.emails.send({ from: FROM, to, subject, html });
+}
+
+// ─── Organizer profile rejected (KYC / admin) ─────────────────────────────
+// Preview / edición HTML: mailing/app/21-organizer-rejected.html
+
+export async function sendOrganizerRejectedEmail(
+  options: EmailOptions & {
+    businessName: string;
+    rejectionReason?: string;
+  },
+) {
+  const { to, locale, businessName, rejectionReason } = options;
+
+  const subject = t(locale,
+    `Tu perfil de organizador necesita revisi&oacute;n — ${businessName}`,
+    `Your organizer profile needs review — ${businessName}`,
+  );
+
+  const reasonHtml = rejectionReason
+    ? infoBox(`<p style="margin: 0; font-size: 14px; color: #555555; font-family: Arial, sans-serif;"><strong>${t(locale, 'Motivo', 'Reason')}:</strong> ${rejectionReason}</p>`)
+    : '';
+
+  const body = [
+    paragraph(t(locale,
+      `No hemos podido verificar el perfil de <strong>${businessName}</strong> en esta ocasi&oacute;n.`,
+      `We were unable to verify the profile for <strong>${businessName}</strong> at this time.`,
+    )),
+    reasonHtml,
+    paragraph(t(locale,
+      'Puedes volver a enviar la documentaci&oacute;n desde tu panel de verificaci&oacute;n o contactar con soporte si necesitas ayuda.',
+      'You can resubmit your documents from your verification dashboard or contact support if you need help.',
+    )),
+  ].join('');
+
+  const html = emailLayout({
+    locale,
+    preheader: subject,
+    title: t(locale, 'Perfil no verificado', 'Profile not verified'),
+    body,
+    cta: {
+      href: `${APP_URL}/${t(locale, 'es/panel/verificacion', 'en/panel/verificacion')}`,
+      label: t(locale, 'Ir a verificaci&oacute;n', 'Go to verification'),
+    },
+  });
+
+  return resend.emails.send({ from: FROM, to, subject, html });
+}
+
 // ─── New Message Notification ───────────────────────────────────────────────
 
 export async function sendNewMessageEmail(

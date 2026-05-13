@@ -1,6 +1,9 @@
 // PATCH /api/admin/retreats/[id] — Editar retiro (solo admin)
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
+import { sendRetreatApprovedEmail } from '@/lib/email';
+import { assignRole } from '@/lib/roles';
+import { getCommissionTier } from '@/lib/utils';
 
 async function requireAdmin(supabase: Awaited<ReturnType<typeof createServerSupabase>>) {
   const { data: { user } } = await supabase.auth.getUser();
@@ -23,7 +26,7 @@ export async function PATCH(
 
   const { data: existing } = await admin
     .from('retreats')
-    .select('id')
+    .select('id, status, title_es, slug, organizer_id')
     .eq('id', id)
     .single();
 
@@ -65,10 +68,25 @@ export async function PATCH(
   if (schedule !== undefined) updateData.schedule = schedule;
   if (cancellation_policy !== undefined) updateData.cancellation_policy = cancellation_policy;
 
+  const publishingFromPending =
+    existing.status === 'pending_review'
+    && status === 'published';
+
   if (status !== undefined && ['draft', 'pending_review', 'published', 'rejected', 'archived', 'cancelled'].includes(status)) {
     updateData.status = status;
     if (status === 'published') {
       updateData.published_at = new Date().toISOString();
+    }
+    if (publishingFromPending) {
+      updateData.reviewed_by = user.id;
+      updateData.reviewed_at = new Date().toISOString();
+      const { count: paidCount } = await admin
+        .from('retreats')
+        .select('id', { count: 'exact', head: true })
+        .eq('organizer_id', existing.organizer_id)
+        .in('status', ['published', 'archived', 'cancelled'])
+        .gt('confirmed_bookings', 0);
+      updateData.commission_percent = getCommissionTier(paidCount ?? 0);
     }
   }
 
@@ -103,6 +121,38 @@ export async function PATCH(
           sort_order: i,
         })),
       );
+    }
+  }
+
+  if (publishingFromPending) {
+    try {
+      const { data: orgProfile } = await admin
+        .from('organizer_profiles')
+        .select('user_id')
+        .eq('id', existing.organizer_id)
+        .single();
+
+      if (orgProfile?.user_id) {
+        await assignRole(admin, orgProfile.user_id, 'organizer');
+
+        const { data: orgUser } = await admin
+          .from('profiles')
+          .select('email, preferred_locale')
+          .eq('id', orgProfile.user_id)
+          .single();
+
+        if (orgUser?.email) {
+          const locale = (orgUser.preferred_locale || 'es') as 'es' | 'en';
+          await sendRetreatApprovedEmail({
+            to: orgUser.email,
+            locale,
+            eventTitle: (existing.title_es as string) || 'Retiro',
+            eventSlug: (existing.slug as string) || id,
+          });
+        }
+      }
+    } catch (emailErr) {
+      console.error('Failed to send retreat approved email (PATCH):', emailErr);
     }
   }
 

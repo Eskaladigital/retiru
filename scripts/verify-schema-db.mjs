@@ -197,6 +197,46 @@ await check('Opcional · shop_product_interests (migración 030)', async () => {
   }
 });
 
+await check('destinations · cobertura por país (selector de eventos)', async () => {
+  const { data, error } = await admin
+    .from('destinations')
+    .select('name_es, name_en, slug, country, region, sort_order')
+    .order('country', { ascending: true })
+    .order('sort_order', { ascending: true });
+
+  if (error) {
+    fail('Select destinations', error.message);
+    return;
+  }
+
+  const rows = data ?? [];
+  const byCountry = new Map();
+  for (const row of rows) {
+    const c = (row.country ?? '').trim() || '?';
+    if (!byCountry.has(c)) byCountry.set(c, []);
+    byCountry.get(c).push(row);
+  }
+
+  ok(`Total filas en destinations: ${rows.length}`);
+  const order = [...byCountry.keys()].sort();
+  for (const code of order) {
+    console.log(`     [${code}] ${byCountry.get(code).length} destinos`);
+  }
+
+  const pt = byCountry.get('PT');
+  const ma = byCountry.get('MA');
+  if (!pt || pt.length === 0) {
+    console.log('  ⚠ No hay country=PT. Portugal no aparecerá en el alta de eventos hasta insertar destinos Portugal en esta tabla.');
+  } else {
+    console.log(`  ✅ Portugal (PT): ${pt.map((d) => d.slug).join(', ')}`);
+  }
+  if (!ma || ma.length === 0) {
+    console.log('  ⏭ Sin country=MA (Marruecos). Omitido si no ofrecéis ese mercado.');
+  } else {
+    console.log(`  ✅ Marruecos (MA): ${ma.map((d) => d.slug).join(', ')}`);
+  }
+});
+
 console.log('\n' + '─'.repeat(56));
 if (failures > 0) {
   console.log(`\n❌ Verificación terminada con ${failures} error(es).\n`);

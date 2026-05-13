@@ -2,32 +2,66 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Mail, MessageCircle, Clock, MapPin, HelpCircle } from 'lucide-react';
 import { contactES } from '@/lib/seo/page-metadata';
+import { OpenSupportChatButton } from '@/components/chat/OpenSupportChatButton';
 export const metadata: Metadata = contactES;
 
-const CHANNELS = [
+const ctaClass =
+  'inline-flex items-center justify-center gap-2 bg-terracotta-600 text-white font-semibold text-sm px-6 py-2.5 rounded-xl hover:bg-terracotta-700 transition-colors';
+
+type Channel =
+  | {
+      id: 'email';
+      icon: typeof Mail;
+      title: string;
+      description: string;
+      actionLabel: string;
+      mailto: string;
+      buttonLabel: string;
+    }
+  | {
+      id: 'support';
+      icon: typeof MessageCircle;
+      title: string;
+      description: string;
+      actionLabel: string;
+      buttonLabel: string;
+    }
+  | {
+      id: 'help';
+      icon: typeof HelpCircle;
+      title: string;
+      description: string;
+      actionLabel: string;
+      href: string;
+      buttonLabel: string;
+    };
+
+const CHANNELS: Channel[] = [
   {
+    id: 'email',
     icon: Mail,
     title: 'Email',
     description: 'Para consultas generales, colaboraciones o soporte técnico.',
-    action: 'contacto@retiru.com',
-    href: 'mailto:contacto@retiru.com',
-    label: 'Enviar email',
+    actionLabel: 'contacto@retiru.com',
+    mailto: 'mailto:contacto@retiru.com',
+    buttonLabel: 'Enviar email',
   },
   {
+    id: 'support',
     icon: MessageCircle,
     title: 'Chat de soporte',
     description: 'Asistencia en tiempo real para asistentes y organizadores.',
-    action: 'Disponible L-V, 9:00–18:00',
-    href: '#',
-    label: 'Iniciar chat',
+    actionLabel: 'Disponible L-V, 9:00–18:00',
+    buttonLabel: 'Iniciar chat',
   },
   {
+    id: 'help',
     icon: HelpCircle,
     title: 'Centro de ayuda',
     description: 'Respuestas a las preguntas más frecuentes, paso a paso.',
-    action: 'FAQ y guías',
+    actionLabel: 'FAQ y guías',
     href: '/es/ayuda',
-    label: 'Ver centro de ayuda',
+    buttonLabel: 'Ver centro de ayuda',
   },
 ];
 
@@ -58,18 +92,26 @@ export default function ContactoPage() {
       <section className="container-wide py-12">
         <div className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
           {CHANNELS.map((ch) => (
-            <div key={ch.title} className="bg-white rounded-2xl border border-sand-200 p-6 text-center hover:shadow-soft transition-shadow">
+            <div key={ch.id} className="bg-white rounded-2xl border border-sand-200 p-6 text-center hover:shadow-soft transition-shadow">
               <div className="w-12 h-12 rounded-xl bg-terracotta-50 flex items-center justify-center mx-auto mb-4">
                 <ch.icon className="w-6 h-6 text-terracotta-600" />
               </div>
               <h3 className="font-semibold text-foreground mb-1">{ch.title}</h3>
               <p className="text-sm text-[#7a6b5d] mb-4 leading-relaxed">{ch.description}</p>
-              <a
-                href={ch.href}
-                className="inline-flex items-center justify-center gap-2 bg-terracotta-600 text-white font-semibold text-sm px-6 py-2.5 rounded-xl hover:bg-terracotta-700 transition-colors"
-              >
-                {ch.label}
-              </a>
+              <p className="text-xs text-[#a09383] mb-3">{ch.actionLabel}</p>
+              {ch.id === 'email' && (
+                <a href={ch.mailto} className={ctaClass}>
+                  {ch.buttonLabel}
+                </a>
+              )}
+              {ch.id === 'support' && (
+                <OpenSupportChatButton className={ctaClass}>{ch.buttonLabel}</OpenSupportChatButton>
+              )}
+              {ch.id === 'help' && (
+                <Link href={ch.href} className={ctaClass}>
+                  {ch.buttonLabel}
+                </Link>
+              )}
             </div>
           ))}
         </div>

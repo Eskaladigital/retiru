@@ -445,7 +445,7 @@ Sistema de comunicación dentro de la plataforma entre usuarios y organizadores,
 - Migraciones: `008_conversations_messaging.sql` (mensajería base) + `010_support_conversations.sql` (soporte) + `040_support_chat_clear.sql` (columna `user_cleared_at` para soft-clear del usuario)
 - API: `POST/GET /api/messages/conversations`, `GET/POST /api/messages/conversations/[id]`, `POST/PATCH /api/messages/support` (`PATCH { action: 'clear' }` hace el soft-clear), `GET /api/admin/messages`, `POST /api/admin/messages/support`, `DELETE /api/admin/messages/[messageId]`
 - UI usuario: `/es/mensajes` (lista + botón soporte) y `/es/mensajes/[id]` (chat con burbujas)
-- UI usuario: widget de chat flotante en todas las páginas públicas (`SupportChatWidget`), oculto para administradores desde `PublicShell` (`!user.roles.includes('admin')`)
+- UI usuario: widget de chat flotante en todas las páginas públicas (`SupportChatWidget`), oculto para administradores desde `PublicShell` (`!user.roles.includes('admin')`). Las páginas `/es/contacto` y `/en/contact` pueden abrir el mismo panel con «Iniciar chat» / «Start chat» mediante el evento `retiru:open-support-chat` (`src/lib/support-chat-events.ts`).
 - UI organizador: `/es/panel/mensajes` y `/en/panel/mensajes` (lista + botón soporte; la vista EN reexporta la misma página que ES)
 - UI admin: `/administrator/mensajes` (tabla + chat overlay flotante para soporte)
 - Componentes: `src/components/messaging/AskOrganizerButton.tsx`, `src/components/chat/SupportChatWidget.tsx`
@@ -469,8 +469,10 @@ Sistema de emails automáticos enviados por la plataforma en eventos clave. Todo
 | `sendPaymentReminderEmail` | ~~Desactivado~~ | ~~Modelo anterior (pago 80% al organizador)~~ | ~~Cron diario~~ |
 | `sendClaimApprovedEmail` | Usuario (propietario) | Admin aprueba claim de centro | `/api/admin/center-claims` |
 | `sendClaimRejectedEmail` | Usuario (propietario) | Admin rechaza claim de centro | `/api/admin/center-claims` |
-| `sendRetreatApprovedEmail` | Organizador | Admin aprueba retiro (se publica) | `/api/admin/retreats` |
-| `sendRetreatRejectedEmail` | Organizador | Admin rechaza retiro (necesita cambios) | `/api/admin/retreats` |
+| `sendRetreatApprovedEmail` | Organizador | Admin aprueba retiro (se publica) | `POST /api/admin/retreats` · `PATCH /api/admin/retreats/[id]` (solo `pending_review` → `published`) |
+| `sendRetreatRejectedEmail` | Organizador | Admin rechaza retiro (necesita cambios) | `POST /api/admin/retreats` |
+| `sendOrganizerVerifiedEmail` | Organizador | Admin verifica el perfil/KYC del organizador | `POST /api/admin/organizers/[id]` (`verify` o último paso aprobado) |
+| `sendOrganizerRejectedEmail` | Organizador | Admin rechaza el perfil de organizador | `POST /api/admin/organizers/[id]` (`reject`) |
 | `sendNewMessageEmail` | Usuario / Organizador | Nuevo mensaje en conversación o soporte | `/api/messages/conversations/[id]` |
 | `sendBookingRejectedEmail` | Asistente | Organizador rechaza su reserva | `/api/bookings/[id]` |
 | `sendBookingCancelledEmail` | Asistente + Organizador | Reserva cancelada / reembolso | Webhook Stripe (charge.refunded) |
@@ -478,14 +480,25 @@ Sistema de emails automáticos enviados por la plataforma en eventos clave. Todo
 | Solicitud de reseña | Asistente | 2 días después del retiro | Cron diario (11:00) |
 | Broadcast del organizador | Asistentes del evento | Organizador envía mensaje masivo (opcional email) | `/api/organizer/events/[id]/broadcast` |
 | `sendWelcomeEmail` | Usuario | Primera vez que verifica email (signup) | `/api/auth/callback` |
-| `sendRetreatPendingReviewEmail` | Admin | Organizador envía retiro a revisión | `/api/retreats/[id]` (PATCH → pending_review) |
+| `sendRetreatPendingReviewEmail` | Admin | Organizador envía retiro a revisión | `/api/retreats/[id]` (PATCH → `pending_review`) |
 | `sendBookingExpiredEmail` | Asistente | Reserva expirada (SLA del organizador) | Cron diario (9:00) |
 | `sendRetreatCancelledToAttendeeEmail` | Asistentes del evento | Organizador cancela un retiro | `/api/retreats/[id]` (POST → cancel) |
 | `sendNewClaimPendingEmail` | Admin | Usuario solicita reclamar un centro (manual) | `/api/centers/claim` |
 | `sendNewCenterProposalEmail` | Admin | Usuario propone un centro nuevo (pendiente revisión) | `/api/centers/propose` |
 | `sendPaymentOverdueToOrganizerEmail` | ~~Desactivado~~ | ~~Modelo anterior (pago 80% al organizador)~~ | ~~Cron diario~~ |
 
-**Total: 22 emails activos** (2 desactivados del modelo histórico 80 % fuera de plataforma).
+**Bienvenidas por fase (valorar)**  
+Hay **una** bienvenida genérica al verificar el email (`sendWelcomeEmail`). Complementos posibles:
+
+| Fase | Objetivo | Cobertura hoy |
+|------|----------|----------------|
+| Usuario habitual | Explorar, reservar, favoritos | `sendWelcomeEmail` |
+| Centro (propietario) | Tras reclamo exitoso del directorio | `sendClaimApprovedEmail` cuando admin aprueba el claim |
+| Organizador | Homologación KYC y retiros | Aún no hay correo específico solo al **aceptar contrato** (`POST /api/organizer/contract`); sí al verificar perfil (`sendOrganizerVerifiedEmail`), al enviar a revisión (`sendRetreatPendingReviewEmail`) y al publicar (`sendRetreatApprovedEmail`). |
+
+Plantillas HTML: carpeta `mailing/` (`mailing/README.md`). Implementación Resend/HTML: `src/lib/email/index.ts`.
+
+**Total: 24 emails activos** (2 desactivados del modelo histórico 80 % fuera de plataforma).
 
 **Cron jobs (Vercel):** configurados en `vercel.json` (proteger con `Authorization: Bearer CRON_SECRET` si `CRON_SECRET` está definido):
 - `0 9 * * *` — `payment-reminders` (no-op con pago 100 %)
