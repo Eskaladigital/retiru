@@ -116,6 +116,7 @@ const FAQS = [
   { q: '¿Puedo crear un retiro antes de estar homologado como organizador?', a: 'Sí. Tras aceptar el contrato puedes crear borradores y enviarlos a revisión mientras subes la documentación. Retiru revisará el retiro, pero no podrá aprobarse ni publicarse hasta que tu perfil de organizador esté verificado documentalmente.' },
   { q: '¿Cómo reclamo o doy de alta mi centro?', a: 'Si tu centro ya está en el directorio, búscalo y usa «Reclamar este centro» (o regístrate si aún no tienes cuenta). Si no está listado, entra en «Mis centros» tras iniciar sesión, elige «Proponer nuevo centro» y localiza el lugar en Google Maps; enviaremos la propuesta a revisión y, al aprobarla, podrás gestionar la ficha.' },
   { q: '¿Y si un asistente cancela?', a: 'Tú configuras la política de cancelación (plazos y porcentajes sobre lo pagado). Si al asistente le corresponde reembolso, se le devuelve ese importe íntegro. La compensación de la comisión de Retiru en esos casos se regula en el acuerdo comercial contigo, no como retención adicional sobre el reembolso del asistente.' },
+  { q: '¿Qué pasa si activo confirmación manual de reservas y no actúo en el plazo?', a: 'Cada pago recibido tiene un plazo máximo (SLA) para que aceptes o rechaces la reserva en tu panel. Si el plazo expira sin decisión, la reserva se cancela automáticamente; si ya se cobró al asistente, se procesa el reembolso completo y recibe un email. Revisa las reservas pendientes con frecuencia.' },
 ];
 
 export default function ParaOrganizadoresPage() {

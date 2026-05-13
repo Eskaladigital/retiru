@@ -13,6 +13,10 @@ const SECTIONS = [
         a: 'For most retreats you pay the PVP (listed price per person) in one secure card payment (Stripe). If the retreat has a minimum group size that is not yet met, you can hold a spot without paying until it is reached; you then get a link to pay by the deadline. Retiru handles the booking and the split with the organizer, with no extra surcharge to you.',
       },
       {
+        q: 'What if the organizer must confirm my booking and does not respond in time?',
+        a: 'When a retreat uses manual confirmation, the organizer has a maximum window to accept or decline. If it expires with no response, the booking is cancelled. If you already paid, you receive a full refund to the same payment method and a notification email.',
+      },
+      {
         q: 'Can I cancel my booking?',
         a: 'Yes. Each retreat has its cancellation policy (deadlines and percentages based on what you paid). If a refund applies, you receive that amount in full—we do not keep an extra non-refundable "platform fee" from your refund.',
       },

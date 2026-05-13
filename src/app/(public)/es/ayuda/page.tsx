@@ -6,6 +6,7 @@ export const metadata: Metadata = helpES;
 const SECTIONS = [
   { title: 'Para asistentes', items: [
     { q: '¿Cómo funciona la reserva?', a: 'En la mayoría de retiros pagas el PVP (precio publicado por persona) en un solo pago seguro con tarjeta (Stripe). Si el retiro tiene un mínimo de plazas y aún no se ha alcanzado, puedes reservar plaza sin pagar hasta que se cumpla el mínimo; después te enviamos un enlace para pagar dentro del plazo. Retiru gestiona la reserva y el reparto con el organizador, sin recargo extra para ti.' },
+    { q: '¿Qué pasa si el organizador debe confirmar mi reserva y no responde a tiempo?', a: 'Cuando un retiro lleva confirmación manual, el organizador tiene un plazo máximo para aceptar o rechazar. Si vence sin respuesta, la reserva se cancela; si ya pagaste, se te devuelve el importe íntegro al mismo medio y recibirás un email de aviso.' },
     { q: '¿Puedo cancelar mi reserva?', a: 'Sí. Cada retiro tiene su política de cancelación (plazos y porcentajes sobre lo que pagaste). Si te corresponde reembolso, recibes ese importe íntegro; no aplicamos una retención extra tipo «cuota no reembolsable» sobre tu devolución.' },
     { q: '¿Cómo contacto al organizador?', a: 'Una vez confirmada tu reserva, tendrás acceso al chat directo con el organizador desde tu panel.' },
     { q: '¿El precio incluye alojamiento?', a: 'Depende de cada retiro. Revisa la sección "Qué incluye" en la ficha del retiro.' },

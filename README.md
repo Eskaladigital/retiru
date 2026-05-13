@@ -85,7 +85,7 @@ Copia `.env.example` a `.env.local` y rellena los valores:
 | `ANTHROPIC_API_KEY` | (opcional) Moderación de contenido de retiros antes de publicar (`POST /api/admin/retreats/moderate`, Claude vía SDK `ai`). Si no está definida, el flujo de aprobación en admin **omite** la revisión automática |
 | `NEXT_PUBLIC_TINYMCE_API_KEY` | (opcional) Clave [Tiny Cloud](https://www.tiny.cloud/) para el editor visual de la **descripción** en crear/editar evento (`/es/mis-eventos/...`) y del **cuerpo del artículo** en `/administrator/blog/...`. Si está vacía se usa `no-api-key` (solo adecuado en desarrollo; en producción conviene clave y dominio aprobados) |
 | `GOOGLE_PLACES_API_KEY` | (opcional) Para obtener reseñas de Google Places |
-| `CRON_SECRET` | (recomendado en producción) Secreto `Bearer` para `POST /api/cron/*` (p. ej. `payment-deadlines`). Si está vacío, los cron no exigen autorización (solo aceptable en local) |
+| `CRON_SECRET` | (recomendado en producción) Secreto `Bearer` para `POST /api/cron/*` (`sla-deadlines`, `payment-deadlines`, `event-reminders`, `review-requests`, `mailing-tick`). Si está vacío, los cron no exigen autorización (solo aceptable en local) |
 
 > **Nota:** Supabase es necesario para que la app muestre retiros, centros, blog y tienda. Sin él, las páginas mostrarán listas vacías.
 
@@ -608,6 +608,7 @@ src/
 - Ejemplo (comisión estándar): retiro de 500 € → el asistente paga 500 € → Retiru retiene 100 € (20 %) y transfiere 400 € (80 %) al organizador.
 - **Ventajas**: un solo pago para el asistente, mayor conversión, control total del flujo financiero, sin pagos pendientes.
 - **Cancelaciones**: el organizador define políticas flexibles (porcentajes y plazos sobre el importe pagado). Si al asistente le corresponde reembolso según esa política, recibe ese importe íntegro en su método de pago. La compensación de la comisión de Retiru en supuestos de cancelación se regula en el **acuerdo comercial con el organizador**, no como retención adicional sobre el reembolso del asistente.
+- **Confirmación manual de reservas:** en retiros con confirmación manual (`confirmation_type: 'manual'`), el organizador debe aceptar o rechazar cada reserva dentro del plazo SLA (`sla_deadline`, configurable en horas en la ficha). Si el plazo vence sin decisión, el cron `POST /api/cron/sla-deadlines` (horario) cancela la reserva, reembolsa el pago íntegro al asistente vía Stripe si hubo cobro y envía el email `sendBookingExpiredEmail`.
 
 ### Directorio de centros (suscripción)
 

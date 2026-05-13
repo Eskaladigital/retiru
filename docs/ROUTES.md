@@ -345,7 +345,8 @@ Protegido por middleware y comprobación de admin. No indexado en buscadores.
 | PATCH | `/api/organizer/bookings/[id]/payment` | Legacy: marcar liquidación/pago complementario (modelo histórico 80 % fuera de plataforma; con pago 100 % suele no aplicar) |
 | POST | `/api/organizer/events/[id]/broadcast` | Enviar mensaje a todos los asistentes |
 | GET | `/api/organizer/events/[id]/communications` | Timeline de comunicaciones del evento |
-| POST | `/api/cron/payment-reminders` | Cron: no-op con pago 100 % (antes recordatorio del 80 %) |
+| POST | `/api/cron/payment-reminders` | Cron legacy: no-op con pago 100 % (antes recordatorio del 80 %); **no** está en `vercel.json` |
+| POST | `/api/cron/sla-deadlines` | Cron (horario en `vercel.json`): reservas `pending_confirmation` con `sla_deadline` vencido (organizador con confirmación manual que no confirma a tiempo) → cancelación, reembolso Stripe íntegro si hubo cobro, email `sendBookingExpiredEmail` al asistente; `CRON_SECRET` |
 | POST | `/api/cron/payment-deadlines` | Cron: procesa plazos de pago de reservas sin pago — gracia +24h y cancelación automática |
 | POST | `/api/cron/event-reminders` | Cron: recordatorios pre-evento (7d y 2d) |
 | POST | `/api/cron/review-requests` | Cron: solicitar reseñas post-evento |
