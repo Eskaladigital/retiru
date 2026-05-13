@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { MapPin, Star, CalendarDays, Users } from 'lucide-react';
 import EventosSearch from '@/components/home/EventosSearch';
 import {
@@ -22,6 +22,15 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ category: string }> }): Promise<Metadata> {
   const { category } = await params;
+  if (category === 'retiru') {
+    return generatePageMetadata({
+      title: 'Retiros y escapadas | Retiru',
+      description: 'Descubre retiros y escapadas de yoga, meditación y bienestar en Retiru.',
+      locale: 'es',
+      path: '/es/retiros-retiru',
+      altPath: '/en/retreats-retiru',
+    });
+  }
   const cat = await getCategoryBySlug(category);
   const name = cat?.name_es || category;
   const enSlug = CATEGORY_SLUG_EN[category] || category;
@@ -37,6 +46,11 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
 
 export default async function RetirosPorCategoriaPage({ params }: { params: Promise<{ category: string }> }) {
   const { category } = await params;
+
+  if (category === 'retiru') {
+    redirect('/es/retiros-retiru');
+  }
+
   const cat = await getCategoryBySlug(category);
 
   if (!cat) notFound();

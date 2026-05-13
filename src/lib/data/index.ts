@@ -174,7 +174,10 @@ export async function getPublishedRetreats(filters?: {
 
   const { data, error, count } = await query;
 
-  if (error) throw error;
+  if (error) {
+    console.error('[getPublishedRetreats]', { filters, message: error.message, code: (error as { code?: string }).code });
+    return { retreats: [], total: 0 };
+  }
 
   const retreats = (data || []).map((r: Record<string, unknown>) => {
     const { organizer_profiles, destinations, retreat_images, ...rest } = r;
@@ -448,7 +451,10 @@ export async function getDestinationsWithRetreats(): Promise<{ slug: string; nam
     .eq('status', 'published')
     .gte('end_date', today)
     .gt('start_date', today);
-  if (rErr) throw rErr;
+  if (rErr) {
+    console.error('[getDestinationsWithRetreats] retreats', rErr.message);
+    return [];
+  }
   const destIds = [...new Set((retreats || []).map((r) => r.destination_id).filter(Boolean))] as string[];
   if (!destIds.length) return [];
 
@@ -456,7 +462,10 @@ export async function getDestinationsWithRetreats(): Promise<{ slug: string; nam
     .from('destinations')
     .select('slug, name_es, name_en, parent_slug')
     .eq('is_active', true);
-  if (allErr) throw allErr;
+  if (allErr) {
+    console.error('[getDestinationsWithRetreats] active', allErr.message);
+    return [];
+  }
 
   const bySlug = new Map(
     (allActive || []).map((d) => [d.slug, d as { slug: string; name_es: string; name_en: string; parent_slug: string | null }]),
@@ -467,7 +476,10 @@ export async function getDestinationsWithRetreats(): Promise<{ slug: string; nam
     .select('slug, name_es, name_en, parent_slug')
     .eq('is_active', true)
     .in('id', destIds);
-  if (leafErr) throw leafErr;
+  if (leafErr) {
+    console.error('[getDestinationsWithRetreats] leaves', leafErr.message);
+    return [];
+  }
 
   const out = new Map<string, { slug: string; name_es: string; name_en: string }>();
 

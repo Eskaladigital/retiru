@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
+import { redirect } from 'next/navigation';
 import { MapPin, Star, CalendarDays, Users } from 'lucide-react';
 import EventosSearch from '@/components/home/EventosSearch';
 import {
@@ -21,6 +22,15 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ category: string; destination: string }> }): Promise<Metadata> {
   const { category: enSlug, destination } = await params;
+  if (enSlug === 'retiru') {
+    return generatePageMetadata({
+      title: `Retreats in ${destination} | Retiru`,
+      description: `Discover retreats and events in ${destination}. Book with full transparency on Retiru.`,
+      locale: 'en',
+      path: `/en/retreats-retiru/${destination}`,
+      altPath: `/es/retiros-retiru/${destination}`,
+    });
+  }
   const dbSlug = CATEGORY_SLUG_FROM_EN[enSlug] || enSlug;
   const [cat, dest] = await Promise.all([getCategoryBySlug(dbSlug), getDestinationBySlug(destination)]);
   const catName = cat?.name_en || enSlug;
@@ -37,6 +47,11 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
 
 export default async function RetreatsCategoryDestinationPage({ params }: { params: Promise<{ category: string; destination: string }> }) {
   const { category: enSlug, destination } = await params;
+
+  if (enSlug === 'retiru') {
+    redirect(`/en/retreats-retiru/${destination}`);
+  }
+
   const dbSlug = CATEGORY_SLUG_FROM_EN[enSlug] || enSlug;
   const [cat, dest, { retreats, total }] = await Promise.all([
     getCategoryBySlug(dbSlug),
