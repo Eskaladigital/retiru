@@ -130,6 +130,8 @@ export function jsonLdWebSite(locale: Locale) {
   };
 }
 
+/** JSON-LD Event (retiros). Sin aggregateRating: Google no lo admite como padre
+ *  válido para fragmentos de reseña y marca error «tipo de objeto … no válido». */
 export function jsonLdEvent({
   name,
   description,
@@ -142,8 +144,6 @@ export function jsonLdEvent({
   url,
   organizer,
   availability,
-  rating,
-  reviewCount,
 }: {
   name: string;
   description: string;
@@ -156,8 +156,6 @@ export function jsonLdEvent({
   url: string;
   organizer: string;
   availability: 'InStock' | 'SoldOut' | 'LimitedAvailability';
-  rating?: number;
-  reviewCount?: number;
 }) {
   const ld: Record<string, unknown> = {
     '@context': 'https://schema.org',
@@ -185,9 +183,6 @@ export function jsonLdEvent({
       validFrom: new Date().toISOString(),
     },
   };
-  if (rating && reviewCount) {
-    ld.aggregateRating = { '@type': 'AggregateRating', ratingValue: rating, reviewCount, bestRating: 5 };
-  }
   return ld;
 }
 

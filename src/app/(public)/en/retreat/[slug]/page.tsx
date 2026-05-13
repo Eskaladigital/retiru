@@ -116,8 +116,6 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
     url: `/en/retreat/${r.slug}`,
     organizer: r.organizer?.business_name ?? 'Retiru',
     availability,
-    rating: r.review_count > 0 ? r.avg_rating : ((r.organizer?.review_count ?? 0) > 0 ? r.organizer?.avg_rating : undefined),
-    reviewCount: r.review_count > 0 ? r.review_count : ((r.organizer?.review_count ?? 0) > 0 ? r.organizer?.review_count : undefined),
   });
 
   const primaryCat = r.categories?.[0];

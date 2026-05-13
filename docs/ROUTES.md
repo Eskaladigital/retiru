@@ -41,7 +41,7 @@ Documentación de la arquitectura de rutas y landings.
 | `/es/centros/[tipo]/[provincia]/[ciudad]` | `src/app/(public)/es/centros/[tipo]/[provincia]/[ciudad]/page.tsx` | Tipo + provincia + ciudad (long-tail; umbral ≥ 2 centros) |
 | `/es/centros/[tipo]/estilo/[estilo]` | `src/app/(public)/es/centros/[tipo]/estilo/[estilo]/page.tsx` | Centros por tipo + **estilo** (nacional). Umbral ≥ 3 centros. `dynamic = 'force-dynamic'` |
 | `/es/centros/[tipo]/estilo/[estilo]/[provincia]` | `src/app/(public)/es/centros/[tipo]/estilo/[estilo]/[provincia]/page.tsx` | Tipo + estilo + provincia. Umbral ≥ 5 centros. `dynamic = 'force-dynamic'` |
-| `/es/provincias/[slug]` | `src/app/(public)/es/provincias/[slug]/page.tsx` | Hub multi-disciplina por provincia (yoga + meditación + ayurveda + retiros + blog). Canonical geográfico |
+| `/es/provincias/[slug]` | `src/app/(public)/es/provincias/[slug]/page.tsx` | **Redirect 301** → `/es/centros/{tipo-dominante}/{slug}`. Hub descartado 2026-04-22 (§8.1 SEO-LANDINGS.md). |
 
 ---
 
@@ -69,7 +69,7 @@ Documentación de la arquitectura de rutas y landings.
 | `/en/centers/[type]/[province]/[city]` | `src/app/(public)/en/centers/[type]/[province]/[city]/page.tsx` |
 | `/en/centers/[type]/style/[style]` | `src/app/(public)/en/centers/[type]/style/[style]/page.tsx` |
 | `/en/centers/[type]/style/[style]/[province]` | `src/app/(public)/en/centers/[type]/style/[style]/[province]/page.tsx` |
-| `/en/provinces/[slug]` | `src/app/(public)/en/provinces/[slug]/page.tsx` |
+| `/en/provinces/[slug]` | `src/app/(public)/en/provinces/[slug]/page.tsx` — **Redirect 301** → `/en/centers/{type}/{slug}`. Deprecated 2026-04-22. |
 | `/en/shop` | `src/app/(public)/en/shop/page.tsx` — misma lógica que `/es/tienda` (encuesta si no hay productos) |
 | `/en/shop/[slug]` | `src/app/(public)/en/shop/[slug]/page.tsx` |
 | `/en/blog` | `src/app/(public)/en/blog/page.tsx` |
@@ -201,13 +201,13 @@ La asignación centro↔estilo vive en la tabla puente `center_styles` (many-to-
 
 **Nota técnica:** las 4 páginas de estilo usan `export const dynamic = 'force-dynamic'` (no ISR): el layout padre `(public)/layout.tsx` llama a `cookies()` vía `getCurrentUserForHeader`, lo que causaba errores `DYNAMIC_SERVER_USAGE` cuando Next 14 intentaba pre-renderizar estas páginas con `revalidate`. SSR puro + caché de Supabase anon es suficiente.
 
-### Hub geográfico provincial (ES / EN)
+### ~~Hub geográfico provincial (ES / EN)~~ — DESCARTADO 2026-04-22
 
-| Ruta ES | Ruta EN | Descripción |
-|---------|---------|-------------|
-| `/es/provincias/[slug]` | `/en/provinces/[slug]` | Hub multi-disciplina: top centros por tipo, retiros próximos, blog local, FAQ, JSON-LD `CollectionPage` + `Place` |
+| Ruta ES | Ruta EN | Estado |
+|---------|---------|--------|
+| `/es/provincias/[slug]` | `/en/provinces/[slug]` | **Redirect 301** → `/es/centros/{tipo-dominante}/{slug}` / `/en/centers/{type}/{slug}`. Descartado por canibalización con Cap. 3 (Tipo × Provincia). Ver §8.1 SEO-LANDINGS.md. |
 
-Redirecciones 301 activas: `/es/centros-retiru/[slug]` → `/es/provincias/[slug]` (+ mirror EN) cuando el slug resuelve a una provincia. Canonical geográfico consolidado: Fase 3 #7 + #14.
+Flujo actual: `/es/centros-retiru/[slug-provincia]` → redirect 301 directo a `/es/centros/{tipo}/{slug}` (bypassing `/es/provincias/`).
 
 ### Generación de contenido
 
