@@ -362,7 +362,7 @@ La ruta `/es/mis-eventos/verificacion` **redirige** a `/es/panel/verificacion` (
 - **Listas por ciudad/destino** (slugs desde BD):
   1. `centros-retiru/[slug]` — Centros en [provincia/ciudad] ✅ Supabase
   2. `retiros-retiru/[slug]` — Retiros en [destino] ✅ Supabase
-- **Retiros por categoría** (segmento dinámico Next: carpeta `retiros-[category]/`): ej. `/es/retiros-yoga`, `/es/retiros-yoga/ibiza` (destino = slug BD). Solo se generan combinaciones con al menos un retiro publicado.
+- **Retiros por categoría** (URL pública `/es/retiros-yoga`, `/es/retiros-yoga/ibiza`, …): la carpeta App Router se llama **`cat-retiros/[category](/[destination])`** y se sirve via rewrite invisible del middleware. Razón histórica: en Next 14 las literales hermanas `retiros-retiru/`, `retiros-en/` rompían el match del segmento dinámico `retiros-[category]/`. Mismo patrón en EN (`cat-retreats/...`). Detalle en [`docs/ROUTES.md`](docs/ROUTES.md#%EF%B8%8F-patr%C3%B3n-de-rewrites-del-middleware-url-p%C3%BAblica--carpeta-app-router). Solo se generan combinaciones con al menos un retiro publicado.
 - **Centros por tipo** (tres valores BD `yoga` / `meditation` / `ayurveda`; en URL ES `meditation` → `meditacion`): ej. `/es/centros/yoga`, `/es/centros/yoga/madrid`. Índice de tipos siempre; **tipo + provincia** solo si hay centros activos en esa pareja. Las rutas antiguas `/es/centros-*` redirigen **308** a `/es/centros/...`.
 - **Centros por tipo + provincia + ciudad** (Fase 2 SEO #6): ej. `/es/centros/yoga/madrid/getafe`. Umbral ≥ 2 centros; intro y meta únicas por ciudad en `center_type_province_seo` (migración 043).
 - **Centros por tipo + estilo** (Fase 3 SEO #10): ej. `/es/centros/yoga/estilo/vinyasa`, `/es/centros/yoga/estilo/vinyasa/barcelona`. Tabla puente `center_styles` (migración 044). Umbrales: ≥ 3 centros nacional, ≥ 5 provincial. Renderizan con `dynamic = 'force-dynamic'` (no ISR) para evitar conflictos con `cookies()` en el layout padre.
@@ -526,10 +526,14 @@ src/
 ├── app/
 │   ├── es/
 │   │   ├── (public)/           # Páginas públicas (datos desde Supabase)
-│   │   │   ├── retiros-retiru/ # Retiros (hero + EventosSearch + EventosClient)
+│   │   │   ├── destino-retiros/    # ⚠ Sirve /es/retiros-retiru(/[slug]) vía rewrite del middleware
 │   │   │   │   ├── page.tsx
 │   │   │   │   ├── EventosClient.tsx
-│   │   │   │   └── [slug]/     # Por ciudad (murcia, barcelona...)
+│   │   │   │   └── [slug]/     # Por ciudad (murcia, barcelona...) o jerarquía
+│   │   │   ├── cat-retiros/[category]/(+[destination])/
+│   │   │   │                   # ⚠ Sirve /es/retiros-yoga, /es/retiros-yoga/ibiza vía rewrite
+│   │   │   ├── geo-retiros/[slug]/
+│   │   │   │                   # ⚠ Sirve /es/retiros-en/[slug] vía rewrite (force-dynamic)
 │   │   │   ├── retiro/[slug]/  # Ficha retiro: galería → breadcrumb → contenido (retreat_images)
 │   │   │   ├── centros-retiru/ # Centros (hero + CentrosClient)
 │   │   │   │   ├── page.tsx

@@ -4,14 +4,39 @@ Documentación de la arquitectura de rutas y landings.
 
 ---
 
+## ⚠️ Patrón de rewrites del middleware (URL pública ≠ carpeta App Router)
+
+Para tres familias de rutas, **la URL pública NO coincide con la carpeta del App Router**. El usuario y Google ven la URL bonita, pero internamente Next sirve el `page.tsx` desde otra carpeta. Esto se resuelve en `src/middleware.ts` con `NextResponse.rewrite()` (transparente, sin redirect).
+
+| URL pública (lo que ven usuarios y sitemap) | Carpeta interna (App Router) | Por qué |
+|---|---|---|
+| `/es/retiros-retiru` y `/es/retiros-retiru/[slug]` | `(public)/es/destino-retiros/` y `…/[slug]/` | Si la carpeta literal `retiros-retiru/` viviese al lado de la dinámica `retiros-[category]/`, **Next 14 da 500** (colisión App Router). |
+| `/es/retiros-[category]` y `/es/retiros-[category]/[destination]` | `(public)/es/cat-retiros/[category]/` (+ `[destination]/`) | Misma razón: el segmento dinámico hermano `retiros-retiru` (literal) provoca 404 al matchear el dinámico `retiros-[category]` en Next 14. Renombrando a `cat-retiros/[category]` desaparece la colisión. |
+| `/es/retiros-en/[slug]` | `(public)/es/geo-retiros/[slug]/` | Mismo prefijo `retiros-` que la dinámica `retiros-[category]`. Para evitar el match ambiguo se sirve desde `geo-retiros/[slug]`. Esta página usa `export const dynamic = 'force-dynamic'` (combina cookies del layout + jerarquía geográfica al vuelo). |
+
+Equivalente EN exactamente igual:
+
+- `/en/retreats-retiru(/[slug])` → `(public)/en/destination-retreats/...`
+- `/en/retreats-[category](/[destination])` → `(public)/en/cat-retreats/[category]/...`
+- `/en/retreats-in/[slug]` → `(public)/en/geo-retreats/[slug]/`
+
+**Reglas de oro (no romper esto):**
+
+1. Las URLs públicas (sitemap, links internos, canonicals, alternates, JSON-LD, redirects, …) deben seguir siendo `retiros-retiru/...`, `retiros-yoga/ibiza`, `retiros-en/...`. No publicar nunca `cat-retiros`, `destino-retiros` ni `geo-retiros` hacia fuera.
+2. Los `Link href=` y `redirect()` también pueden seguir apuntando a la URL pública: el middleware reescribe igualmente.
+3. Si añades nuevas rutas con prefijo `retiros-XXX` (ES) o `retreats-XXX` (EN), o tocas las que ya están, revisa primero estos rewrites en `src/middleware.ts` — el orden importa: más específico → más genérico.
+4. En `PUBLIC_PATHS` (mismo archivo) deben aparecer las **carpetas internas** (`/es/cat-retiros`, `/es/destino-retiros`, `/es/geo-retiros`, …) para que el middleware de auth no las trate como protegidas.
+
+---
+
 ## Rutas públicas (ES)
 
 | Ruta | Archivo | Descripción |
 |------|---------|-------------|
 | `/es` | `src/app/(public)/es/page.tsx` | Home |
 | `/es/buscar` | `src/app/(public)/es/buscar/page.tsx` | Buscador general (retiros + centros) |
-| `/es/retiros-retiru` | `src/app/(public)/es/retiros-retiru/page.tsx` | Lista retiros (`getPublishedRetreats`: publicados, `start_date > hoy`, `end_date ≥ hoy`) |
-| `/es/retiros-retiru/[slug]` | `src/app/(public)/es/retiros-retiru/[slug]/page.tsx` | Retiros por `destinations.slug`: admite **hoja** (ciudad) o nivel superior (**provincia / CCAA / país**). Los retiros se enlazan a destinos hoja; el listado agrega todos los descendientes vía `getLeafDestinationIdsForRetreatFilter` en `getPublishedRetreats`. |
+| `/es/retiros-retiru` | `src/app/(public)/es/destino-retiros/page.tsx` (vía rewrite del middleware) | Lista retiros (`getPublishedRetreats`: publicados, `start_date > hoy`, `end_date ≥ hoy`) |
+| `/es/retiros-retiru/[slug]` | `src/app/(public)/es/destino-retiros/[slug]/page.tsx` (vía rewrite del middleware) | Retiros por `destinations.slug`: admite **hoja** (ciudad) o nivel superior (**provincia / CCAA / país**). Los retiros se enlazan a destinos hoja; el listado agrega todos los descendientes vía `getLeafDestinationIdsForRetreatFilter` en `getPublishedRetreats`. |
 | `/es/retiro/[slug]` | `src/app/(public)/es/retiro/[slug]/page.tsx` | Ficha de retiro (galería `retreat_images` → breadcrumb → contenido + sidebar reserva; mismo patrón visual que centro). Sigue accesible por URL directa aunque el evento ya haya empezado; los **listados** no muestran retiros en curso. |
 | `/es/centros-retiru` | `src/app/(public)/es/centros-retiru/page.tsx` | Directorio centros |
 | `/es/centros-retiru/[slug]` | `src/app/(public)/es/centros-retiru/[slug]/page.tsx` | Centros por provincia |
@@ -34,8 +59,9 @@ Documentación de la arquitectura de rutas y landings.
 | `/es/legal/contrato-centro` | `src/app/(public)/es/legal/contrato-centro/page.tsx` | Contrato del centro del directorio (cláusulas en `src/lib/legal/center-contract.tsx`, borrador 0.1) |
 | `/es/legal/privacidad` | `src/app/(public)/es/legal/privacidad/page.tsx` | Política de privacidad |
 | `/es/legal/cookies` | `src/app/(public)/es/legal/cookies/page.tsx` | Política de cookies |
-| `/es/retiros-[category]` | `src/app/(public)/es/retiros-[category]/page.tsx` | Landing SEO por categoría de retiro (ej. `/es/retiros-yoga`) |
-| `/es/retiros-[category]/[destination]` | `src/app/(public)/es/retiros-[category]/[destination]/page.tsx` | Categoría + destino |
+| `/es/retiros-[category]` | `src/app/(public)/es/cat-retiros/[category]/page.tsx` (vía rewrite del middleware) | Landing SEO por categoría de retiro (ej. `/es/retiros-yoga`) |
+| `/es/retiros-[category]/[destination]` | `src/app/(public)/es/cat-retiros/[category]/[destination]/page.tsx` (vía rewrite del middleware) | Categoría + destino |
+| `/es/retiros-en/[slug]` | `src/app/(public)/es/geo-retiros/[slug]/page.tsx` (vía rewrite del middleware; `force-dynamic`) | Landing geográfica jerárquica (país / CCAA / provincia) |
 | `/es/centros/[tipo]` | `src/app/(public)/es/centros/[tipo]/page.tsx` | Centros por tipo (`yoga` / `meditacion` / `ayurveda` en URL ES) |
 | `/es/centros/[tipo]/[provincia]` | `src/app/(public)/es/centros/[tipo]/[provincia]/page.tsx` | Tipo + provincia |
 | `/es/centros/[tipo]/[provincia]/[ciudad]` | `src/app/(public)/es/centros/[tipo]/[provincia]/[ciudad]/page.tsx` | Tipo + provincia + ciudad (long-tail; umbral ≥ 2 centros) |
@@ -51,8 +77,8 @@ Documentación de la arquitectura de rutas y landings.
 |------|---------|
 | `/en` | `src/app/(public)/en/page.tsx` |
 | `/en/search` | `src/app/(public)/en/search/page.tsx` |
-| `/en/retreats-retiru` | `src/app/(public)/en/retreats-retiru/page.tsx` |
-| `/en/retreats-retiru/[slug]` | `src/app/(public)/en/retreats-retiru/[slug]/page.tsx` |
+| `/en/retreats-retiru` | `src/app/(public)/en/destination-retreats/page.tsx` (vía rewrite del middleware) |
+| `/en/retreats-retiru/[slug]` | `src/app/(public)/en/destination-retreats/[slug]/page.tsx` (vía rewrite del middleware) |
 | `/en/retreat/[slug]` | `src/app/(public)/en/retreat/[slug]/page.tsx` |
 | `/en/centers-retiru` | `src/app/(public)/en/centers-retiru/page.tsx` |
 | `/en/centers-retiru/[slug]` | `src/app/(public)/en/centers-retiru/[slug]/page.tsx` |
@@ -62,8 +88,9 @@ Documentación de la arquitectura de rutas y landings.
 | `/en/organizer/[slug]` | `src/app/(public)/en/organizer/[slug]/page.tsx` |
 | `/en/for-attendees` | `src/app/(public)/en/for-attendees/page.tsx` |
 | `/en/for-organizers` | `src/app/(public)/en/for-organizers/page.tsx` |
-| `/en/retreats-[category]` | `src/app/(public)/en/retreats-[category]/page.tsx` |
-| `/en/retreats-[category]/[destination]` | `src/app/(public)/en/retreats-[category]/[destination]/page.tsx` |
+| `/en/retreats-[category]` | `src/app/(public)/en/cat-retreats/[category]/page.tsx` (vía rewrite del middleware) |
+| `/en/retreats-[category]/[destination]` | `src/app/(public)/en/cat-retreats/[category]/[destination]/page.tsx` (vía rewrite del middleware) |
+| `/en/retreats-in/[slug]` | `src/app/(public)/en/geo-retreats/[slug]/page.tsx` (vía rewrite del middleware; `force-dynamic`) |
 | `/en/centers/[type]` | `src/app/(public)/en/centers/[type]/page.tsx` |
 | `/en/centers/[type]/[province]` | `src/app/(public)/en/centers/[type]/[province]/page.tsx` |
 | `/en/centers/[type]/[province]/[city]` | `src/app/(public)/en/centers/[type]/[province]/[city]/page.tsx` |
@@ -199,7 +226,9 @@ Tipos ES: yoga, meditacion, ayurveda. Tipos EN (= BD): yoga, meditation, ayurved
 
 La asignación centro↔estilo vive en la tabla puente `center_styles` (many-to-many; trigger `check_center_style_type_match` valida que `styles.center_type = centers.type`). Inferencia automática con GPT-4o-mini vía `npm run centers:infer-styles`.
 
-**Nota técnica:** las 4 páginas de estilo usan `export const dynamic = 'force-dynamic'` (no ISR): el layout padre `(public)/layout.tsx` llama a `cookies()` vía `getCurrentUserForHeader`, lo que causaba errores `DYNAMIC_SERVER_USAGE` cuando Next 14 intentaba pre-renderizar estas páginas con `revalidate`. SSR puro + caché de Supabase anon es suficiente.
+**Nota técnica:** las 4 páginas de estilo y la landing geográfica `geo-retiros/[slug]` (rewrite de `/es/retiros-en/[slug]`) usan `export const dynamic = 'force-dynamic'` (no ISR): el layout padre `(public)/layout.tsx` llama a `cookies()` vía `getCurrentUserForHeader`, lo que causaba errores `DYNAMIC_SERVER_USAGE` cuando Next 14 intentaba pre-renderizar estas páginas con `revalidate`. SSR puro + caché de Supabase anon es suficiente.
+
+> Las landings de categoría (`cat-retiros/[category]`, `cat-retreats/[category]`) sí siguen con `revalidate = 3600` + `generateStaticParams` (entran en SSG/ISR sin colisiones porque su carpeta ya no comparte prefijo con las literales `retiros-retiru` / `retiros-en` — ese fue el motivo del rewrite).
 
 ### ~~Hub geográfico provincial (ES / EN)~~ — DESCARTADO 2026-04-22
 
@@ -246,11 +275,12 @@ Código de referencia: `getOrganizerReviewStats`, `organizerHasRatingToShow` en 
 
 ### Público principal
 
-| Carpeta | Contenido |
-|---------|-----------|
-| `retiros-retiru/` | Lista, `EventosClient`, `[slug]/` por destino |
-| `retiros-[category]/` | Landing por categoría + `[destination]/` |
-| `centros-retiru/` | Directorio, `[slug]/` por provincia |
+| Carpeta | URL pública | Contenido |
+|---------|-------------|-----------|
+| `destino-retiros/` (rewrite desde `retiros-retiru`) | `/es/retiros-retiru` y `/es/retiros-retiru/[slug]` | Lista global y por destino, `EventosClient` |
+| `cat-retiros/[category]/` (rewrite desde `retiros-[category]`) | `/es/retiros-yoga`, `/es/retiros-yoga/ibiza`, … | Landing por categoría + `[destination]/` |
+| `geo-retiros/[slug]/` (rewrite desde `retiros-en`) | `/es/retiros-en/[slug]` | Landing geográfica jerárquica país/CCAA/provincia (`force-dynamic`) |
+| `centros-retiru/` | `/es/centros-retiru` y `…/[slug]` | Directorio, `[slug]/` por provincia |
 | `centros/[tipo]/` | Por tipo BD (URL ES `meditacion` ↔ BD `meditation`) + `[provincia]/` |
 | `retiro/[slug]/` | Ficha retiro (galería → breadcrumb → contenido + sidebar) |
 | `centro/[slug]/` | Ficha centro (galería → breadcrumb → contenido + sidebar) |
@@ -266,7 +296,9 @@ Código de referencia: `getOrganizerReviewStats`, `organizerHasRatingToShow` en 
 
 ### Landings dinámicas (implementadas)
 
-- **Retiros:** `/es/retiros-yoga`, `/es/retiros-meditacion/ibiza`, etc. → carpeta **`retiros-[category]`** (segmento dinámico; no colisiona con `/es/retiro/[slug]`).
+- **Retiros por categoría:** `/es/retiros-yoga`, `/es/retiros-meditacion/ibiza`, etc. → carpeta interna **`cat-retiros/[category](/[destination])`** servida via rewrite del middleware. Ver tabla "Patrón de rewrites del middleware" arriba.
+- **Retiros por destino (lista raíz y por slug):** `/es/retiros-retiru`, `/es/retiros-retiru/murcia`, … → carpeta interna **`destino-retiros/(/[slug])`** vía rewrite.
+- **Landing geográfica (país/CCAA/provincia):** `/es/retiros-en/[slug]` → carpeta interna **`geo-retiros/[slug]`** vía rewrite. `force-dynamic`.
 - **Centros por tipo:** canónicas **`/es/centros/yoga`**, **`/es/centros/meditacion/madrid`**, etc. → carpeta **`centros/[tipo]`**. Las URLs antiguas con guión (`/es/centros-yoga`, …) redirigen **308** a la forma con barra (`next.config.js`).
 
 Ver tablas arriba y `docs/SEO-LANDINGS.md`.
