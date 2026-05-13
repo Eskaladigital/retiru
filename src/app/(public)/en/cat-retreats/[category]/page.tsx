@@ -19,13 +19,13 @@ export const dynamicParams = true;
 export async function generateMetadata({ params }: { params: Promise<{ category: string }> }): Promise<Metadata> {
   const { category: enSlug } = await params;
   if (!enSlug || enSlug === 'retiru') {
-    return { title: 'Retreats | Retiru', robots: { index: false, follow: false } };
+    return { title: 'Retreats', robots: { index: false, follow: false } };
   }
   const dbSlug = CATEGORY_SLUG_FROM_EN[enSlug] || enSlug;
   const cat = await getCategoryBySlug(dbSlug);
   const name = cat?.name_en || enSlug;
   return generatePageMetadata({
-    title: cat?.meta_title_en || `${name} Retreats in Spain — Find & Book | Retiru`,
+    title: cat?.meta_title_en || `${name} Retreats in Spain — Find & Book`,
     description: cat?.meta_description_en || `Discover the best ${name.toLowerCase()} retreats in Spain. Compare prices, read reviews and book with full transparency on Retiru.`,
     locale: 'en',
     path: `/en/retreats-${enSlug}`,

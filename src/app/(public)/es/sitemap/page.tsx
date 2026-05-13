@@ -4,7 +4,7 @@ import HtmlSitemap from '@/components/sitemap/HtmlSitemap';
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: 'Mapa del sitio | Retiru',
+  title: 'Mapa del sitio',
   description: 'Índice completo de páginas de Retiru (vista HTML interna).',
   robots: { index: false, follow: true },
 };

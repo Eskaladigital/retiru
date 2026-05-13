@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const typeLabel = getCenterTypeLabel(type, 'en').toLowerCase();
   const esType = type === 'meditation' ? 'meditacion' : type;
   return generatePageMetadata({
-    title: `${style.name_en} in Spain — ${typeLabel} ${style.name_en} centers | Retiru`,
+    title: `${style.name_en} in Spain — ${typeLabel} ${style.name_en} centers`,
     description: `Verified directory of ${typeLabel} ${style.name_en} centers in Spain. ${style.description_en || ''}`.trim(),
     locale: 'en',
     path: `/en/centers/${type}/style/${styleSlug}`,

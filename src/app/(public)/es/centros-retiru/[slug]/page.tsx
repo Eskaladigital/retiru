@@ -67,7 +67,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     if (provinceName) name = provinceName;
   }
   return generatePageMetadata({
-    title: `Centros de yoga, meditación y ayurveda en ${name} | Retiru`,
+    title: `Centros de yoga, meditación y ayurveda en ${name}`,
     description: `Encuentra centros de yoga, meditación y ayurveda en ${name}. Directorio verificado con reseñas reales.`,
     locale: 'es',
     path: `/es/centros-retiru/${slug}`,

@@ -62,7 +62,7 @@ export async function generateMetadata({
   return generatePageMetadata({
     title:
       (seo?.meta_title_es && seo.meta_title_es.trim()) ||
-      `Centros de ${label} en ${name} | Retiru`,
+      `Centros de ${label} en ${name}`,
     description:
       (seo?.meta_description_es && seo.meta_description_es.trim()) ||
       `Encuentra centros de ${label.toLowerCase()} en ${name}. Directorio verificado con reseñas reales, ubicación y servicios.`,

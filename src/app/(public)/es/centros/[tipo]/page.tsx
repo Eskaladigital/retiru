@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: { params: Promise<{ tipo: str
   const label = getCenterTypeLabel(dbType, 'es');
   const enType = dbType;
   return generatePageMetadata({
-    title: `Centros de ${label} en España — Directorio verificado | Retiru`,
+    title: `Centros de ${label} en España — Directorio verificado`,
     description: `Encuentra centros de ${label.toLowerCase()} en toda España. Directorio con reseñas reales, ubicación y servicios. Busca tu centro ideal en Retiru.`,
     locale: 'es',
     path: `/es/centros/${urlType}`,

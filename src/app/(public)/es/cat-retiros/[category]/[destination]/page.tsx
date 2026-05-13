@@ -19,14 +19,14 @@ export const dynamicParams = true;
 export async function generateMetadata({ params }: { params: Promise<{ category: string; destination: string }> }): Promise<Metadata> {
   const { category, destination } = await params;
   if (!category || category === 'retiru') {
-    return { title: 'Retiros | Retiru', robots: { index: false, follow: false } };
+    return { title: 'Retiros', robots: { index: false, follow: false } };
   }
   const [cat, dest] = await Promise.all([getCategoryBySlug(category), getDestinationBySlug(destination)]);
   const catName = cat?.name_es || category;
   const destName = dest?.name_es || destination;
   const enSlug = CATEGORY_SLUG_EN[category] || category;
   return generatePageMetadata({
-    title: `Retiros de ${catName} en ${destName} | Retiru`,
+    title: `Retiros de ${catName} en ${destName}`,
     description: `Reserva retiros de ${catName.toLowerCase()} en ${destName}. Precios transparentes, reseñas reales y reserva segura en Retiru.`,
     locale: 'es',
     path: `/es/retiros-${category}/${destination}`,

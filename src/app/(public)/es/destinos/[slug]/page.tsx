@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 
   return generatePageMetadata({
-    title: `Retiros de yoga y meditación en ${destination.name_es} | Retiru`,
+    title: `Retiros de yoga y meditación en ${destination.name_es}`,
     description: `Descubre los mejores retiros y escapadas de bienestar en ${destination.name_es}. Compara fechas, precios y reserva con confirmación inmediata.`,
     locale: 'es',
     path: `/es/destinos/${slug}`,

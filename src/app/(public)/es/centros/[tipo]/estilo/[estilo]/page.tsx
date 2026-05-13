@@ -54,7 +54,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 
   const typeLabel = getCenterTypeLabel(dbType, 'es').toLowerCase();
   return generatePageMetadata({
-    title: `${style.name_es} en España — Centros de ${typeLabel} ${style.name_es} | Retiru`,
+    title: `${style.name_es} en España — Centros de ${typeLabel} ${style.name_es}`,
     description: `Directorio verificado de centros de ${typeLabel} ${style.name_es} en España. ${style.description_es || ''}`.trim(),
     locale: 'es',
     path: `/es/centros/${urlType}/estilo/${estilo}`,

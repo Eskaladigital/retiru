@@ -6,7 +6,7 @@ import type { Metadata } from 'next';
 import AdminShell from './AdminShell';
 
 export const metadata: Metadata = {
-  title: 'Panel de administración | Retiru',
+  title: 'Panel de administración',
   description: 'Panel de administración de Retiru',
   robots: { index: false, follow: false },
 };

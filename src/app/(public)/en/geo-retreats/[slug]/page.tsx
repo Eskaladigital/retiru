@@ -19,10 +19,10 @@ export const dynamic = 'force-dynamic';
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const node = await resolveGeoLanding(slug);
-  if (!node) return generatePageMetadata({ title: 'Not found | Retiru', description: '', locale: 'en', path: `/en/retreats-in/${slug}` });
+  if (!node) return generatePageMetadata({ title: 'Not found', description: '', locale: 'en', path: `/en/retreats-in/${slug}` });
   const name = node.name_en;
   return generatePageMetadata({
-    title: `Retreats in ${name} | Retiru`,
+    title: `Retreats in ${name}`,
     description: `Discover the best yoga, meditation and wellness retreats in ${name}. Compare dates, prices and real reviews. Secure booking on Retiru.`,
     locale: 'en',
     path: `/en/retreats-in/${slug}`,

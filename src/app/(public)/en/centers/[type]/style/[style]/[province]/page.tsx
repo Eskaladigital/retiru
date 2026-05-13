@@ -52,7 +52,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   return generatePageMetadata({
     title:
       (seo?.meta_title_en && seo.meta_title_en.trim()) ||
-      `${style.name_en} in ${provinceName} — ${matches.length} ${typeLabel} centers | Retiru`,
+      `${style.name_en} in ${provinceName} — ${matches.length} ${typeLabel} centers`,
     description:
       (seo?.meta_description_en && seo.meta_description_en.trim()) ||
       `${typeLabel} ${style.name_en} centers in ${provinceName}. ${matches.length} verified options with real reviews.`,

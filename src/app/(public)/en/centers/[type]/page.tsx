@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: { params: Promise<{ type: str
   const label = getCenterTypeLabel(type, 'en');
   const esSlug = TYPE_ES_SLUG[type] || type;
   return generatePageMetadata({
-    title: `${label} Centers in Spain — Verified Directory | Retiru`,
+    title: `${label} Centers in Spain — Verified Directory`,
     description: `Find ${label.toLowerCase()} centers across Spain. Directory with real reviews, location and services. Find your ideal center on Retiru.`,
     locale: 'en',
     path: `/en/centers/${type}`,

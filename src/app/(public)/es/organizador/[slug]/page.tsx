@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 
   return generatePageMetadata({
-    title: `${organizer.business_name} — Organizador de retiros | Retiru`,
+    title: `${organizer.business_name} — Organizador de retiros`,
     description: organizer.description_es?.slice(0, 160) || `Descubre los retiros y eventos organizados por ${organizer.business_name} en Retiru.`,
     locale: 'es',
     path: `/es/organizador/${slug}`,

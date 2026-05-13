@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const dest = await getDestinationBySlug(slug);
   const name = dest?.name_es || slug;
   return generatePageMetadata({
-    title: `Retiros en ${name} — Yoga, meditación y ayurveda | Retiru`,
+    title: `Retiros en ${name} — Yoga, meditación y ayurveda`,
     description: `Descubre retiros y eventos de yoga, meditación y ayurveda en ${name}. Reserva tu plaza con transparencia total.`,
     locale: 'es',
     path: `/es/retiros-retiru/${slug}`,

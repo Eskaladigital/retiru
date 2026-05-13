@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 
   return generatePageMetadata({
-    title: `${organizer.business_name} — Retreat Organizer | Retiru`,
+    title: `${organizer.business_name} — Retreat Organizer`,
     description: organizer.description_en?.slice(0, 160) || organizer.description_es?.slice(0, 160) || `Discover retreats and events organized by ${organizer.business_name} on Retiru.`,
     locale: 'en',
     path: `/en/organizer/${slug}`,

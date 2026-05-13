@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const dest = await getDestinationBySlug(slug);
   const name = dest?.name_en || dest?.name_es || slug;
   return generatePageMetadata({
-    title: `Retreats in ${name} — Yoga, meditation & ayurveda | Retiru`,
+    title: `Retreats in ${name} — Yoga, meditation & ayurveda`,
     description: `Discover yoga, meditation and ayurveda retreats and events in ${name}. Book with full transparency.`,
     locale: 'en',
     path: `/en/retreats-retiru/${slug}`,

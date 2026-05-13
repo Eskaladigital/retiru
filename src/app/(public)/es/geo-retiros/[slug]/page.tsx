@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const node = await resolveGeoLanding(slug);
   if (!node) {
     return generatePageMetadata({
-      title: 'No encontrado | Retiru',
+      title: 'No encontrado',
       description: '',
       locale: 'es',
       path: `/es/retiros-en/${slug}`,
@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
   const name = node.name_es;
   return generatePageMetadata({
-    title: `Retiros en ${name} | Retiru`,
+    title: `Retiros en ${name}`,
     description: `Descubre los mejores retiros de yoga, meditación y bienestar en ${name}. Compara fechas, precios y reseñas reales. Reserva segura en Retiru.`,
     locale: 'es',
     path: `/es/retiros-en/${slug}`,

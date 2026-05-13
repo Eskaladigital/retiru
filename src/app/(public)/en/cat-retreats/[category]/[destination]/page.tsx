@@ -19,14 +19,14 @@ export const dynamicParams = true;
 export async function generateMetadata({ params }: { params: Promise<{ category: string; destination: string }> }): Promise<Metadata> {
   const { category: enSlug, destination } = await params;
   if (!enSlug || enSlug === 'retiru') {
-    return { title: 'Retreats | Retiru', robots: { index: false, follow: false } };
+    return { title: 'Retreats', robots: { index: false, follow: false } };
   }
   const dbSlug = CATEGORY_SLUG_FROM_EN[enSlug] || enSlug;
   const [cat, dest] = await Promise.all([getCategoryBySlug(dbSlug), getDestinationBySlug(destination)]);
   const catName = cat?.name_en || enSlug;
   const destName = dest?.name_en || destination;
   return generatePageMetadata({
-    title: `${catName} Retreats in ${destName} | Retiru`,
+    title: `${catName} Retreats in ${destName}`,
     description: `Book ${catName.toLowerCase()} retreats in ${destName}. Transparent pricing, real reviews and secure booking on Retiru.`,
     locale: 'en',
     path: `/en/retreats-${enSlug}/${destination}`,

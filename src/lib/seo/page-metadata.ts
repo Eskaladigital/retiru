@@ -72,7 +72,7 @@ export const forOrganizersES: Metadata = generatePageMetadata({
 });
 
 export const forAttendeesES: Metadata = generatePageMetadata({
-  title: 'Para asistentes — Reserva retiros con garantía | Retiru',
+  title: 'Para asistentes — Reserva retiros con garantía',
   description: 'Reserva retiros de yoga, meditación y ayurveda con pago seguro, organizadores verificados y soporte dedicado. Tu dinero protegido hasta que el evento se confirma.',
   locale: 'es',
   path: '/es/para-asistentes',
@@ -263,7 +263,7 @@ export const forOrganizersEN: Metadata = generatePageMetadata({
 });
 
 export const forAttendeesEN: Metadata = generatePageMetadata({
-  title: 'For attendees — Book retreats with full confidence | Retiru',
+  title: 'For attendees — Book retreats with full confidence',
   description: 'Book yoga, meditation and ayurveda retreats with secure payment, verified organizers and dedicated support. Your money protected until the event is confirmed.',
   locale: 'en',
   path: '/en/for-attendees',

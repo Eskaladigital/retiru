@@ -61,7 +61,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   return generatePageMetadata({
     title:
       (seo?.meta_title_es && seo.meta_title_es.trim()) ||
-      `${style.name_es} en ${provinceName} — ${provinceMatches.length} centros de ${typeLabel} | Retiru`,
+      `${style.name_es} en ${provinceName} — ${provinceMatches.length} centros de ${typeLabel}`,
     description:
       (seo?.meta_description_es && seo.meta_description_es.trim()) ||
       `Centros de ${typeLabel} ${style.name_es} en ${provinceName}. ${provinceMatches.length} opciones verificadas con reseñas reales.`,

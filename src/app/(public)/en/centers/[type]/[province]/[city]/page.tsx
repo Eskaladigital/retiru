@@ -54,7 +54,7 @@ export async function generateMetadata({
   return generatePageMetadata({
     title:
       (seo?.meta_title_en && seo.meta_title_en.trim()) ||
-      `${label} Centers in ${cName} (${pName}) | Retiru`,
+      `${label} Centers in ${cName} (${pName})`,
     description:
       (seo?.meta_description_en && seo.meta_description_en.trim()) ||
       `Find ${label.toLowerCase()} centers in ${cName}, ${pName}. Verified directory with real reviews, location and services.`,

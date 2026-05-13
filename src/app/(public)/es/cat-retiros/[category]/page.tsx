@@ -21,13 +21,13 @@ export const dynamicParams = true;
 export async function generateMetadata({ params }: { params: Promise<{ category: string }> }): Promise<Metadata> {
   const { category } = await params;
   if (!category || category === 'retiru') {
-    return { title: 'Retiros | Retiru', robots: { index: false, follow: false } };
+    return { title: 'Retiros', robots: { index: false, follow: false } };
   }
   const cat = await getCategoryBySlug(category);
   const name = cat?.name_es || category;
   const enSlug = CATEGORY_SLUG_EN[category] || category;
   return generatePageMetadata({
-    title: cat?.meta_title_es || `Retiros de ${name} en España — Encuentra y reserva | Retiru`,
+    title: cat?.meta_title_es || `Retiros de ${name} en España — Encuentra y reserva`,
     description: cat?.meta_description_es || `Descubre los mejores retiros de ${name.toLowerCase()} en España. Compara precios, lee reseñas y reserva con transparencia total en Retiru.`,
     locale: 'es',
     path: `/es/retiros-${category}`,
