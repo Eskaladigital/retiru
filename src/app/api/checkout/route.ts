@@ -8,7 +8,6 @@ import {
   sendReservationConfirmedEmail,
   sendMinViableReachedEmail,
   sendMinViableReachedToOrganizerEmail,
-  sendNewBookingToOrganizerEmail,
 } from '@/lib/email';
 
 function generateBookingNumber(): string {

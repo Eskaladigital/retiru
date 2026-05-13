@@ -489,7 +489,7 @@ Sistema de emails automáticos enviados por la plataforma en eventos clave. **Sa
 | Broadcast del organizador | Asistentes del evento | Organizador envía mensaje masivo (opcional email) | `/api/organizer/events/[id]/broadcast` |
 | `sendWelcomeEmail` | Usuario | Primera vez que verifica email (signup) | `/api/auth/callback` |
 | `sendRetreatPendingReviewEmail` | Admin | Organizador envía retiro a revisión | `/api/retreats/[id]` (PATCH → `pending_review`) |
-| `sendBookingExpiredEmail` | Asistente | Reserva expirada (SLA del organizador) | Cron diario (9:00) |
+| `sendBookingExpiredEmail` | Asistente | Reserva expirada porque el organizador no confirmó dentro del SLA (`pending_confirmation` con `sla_deadline` vencido). Reembolso completo automático si hubo pago. | `POST /api/cron/sla-deadlines` (horario) |
 | `sendRetreatCancelledToAttendeeEmail` | Asistentes del evento | Organizador cancela un retiro | `/api/retreats/[id]` (POST → cancel) |
 | `sendNewClaimPendingEmail` | Admin | Usuario solicita reclamar un centro (manual) | `/api/centers/claim` |
 | `sendNewCenterProposalEmail` | Admin | Usuario propone un centro nuevo (pendiente revisión) | `/api/centers/propose` |
@@ -509,10 +509,13 @@ Plantillas HTML de referencia: carpeta `mailing/` (`mailing/README.md`). Envío 
 **Total: 24 emails activos** (2 desactivados del modelo histórico 80 % fuera de plataforma).
 
 **Cron jobs (Vercel):** configurados en `vercel.json` (proteger con `Authorization: Bearer CRON_SECRET` si `CRON_SECRET` está definido):
-- `0 9 * * *` — `payment-reminders` (no-op con pago 100 %)
+- `0 * * * *` — `sla-deadlines` (cancela `pending_confirmation` con `sla_deadline` vencido, reembolsa Stripe y notifica al asistente con `sendBookingExpiredEmail`)
 - `0 * * * *` — `payment-deadlines` (gracia +24 h y cancelación de reservas `reserved_no_payment` vencidas)
-- `0 10 * * *` — recordatorios pre-evento
-- `0 11 * * *` — solicitudes de reseña post-evento
+- `0 10 * * *` — `event-reminders` (recordatorio pre-evento 7 d / 2 d)
+- `0 11 * * *` — `review-requests` (solicitud de reseña +2 d)
+- `* * * * *` — `mailing-tick` (cron del módulo de campañas SMTP del panel)
+
+> Las rutas legacy `/api/cron/payment-reminders` (modelo 80 % del organizador) se mantienen como no-op para retrocompatibilidad: ya no están programadas en `vercel.json`.
 
 ---
 
