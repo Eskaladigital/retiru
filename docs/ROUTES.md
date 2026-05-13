@@ -11,7 +11,7 @@ Documentación de la arquitectura de rutas y landings.
 | `/es` | `src/app/(public)/es/page.tsx` | Home |
 | `/es/buscar` | `src/app/(public)/es/buscar/page.tsx` | Buscador general (retiros + centros) |
 | `/es/retiros-retiru` | `src/app/(public)/es/retiros-retiru/page.tsx` | Lista retiros (`getPublishedRetreats`: publicados, `start_date > hoy`, `end_date ≥ hoy`) |
-| `/es/retiros-retiru/[slug]` | `src/app/(public)/es/retiros-retiru/[slug]/page.tsx` | Retiros por ciudad/destino (misma lógica) |
+| `/es/retiros-retiru/[slug]` | `src/app/(public)/es/retiros-retiru/[slug]/page.tsx` | Retiros por `destinations.slug`: admite **hoja** (ciudad) o nivel superior (**provincia / CCAA / país**). Los retiros se enlazan a destinos hoja; el listado agrega todos los descendientes vía `getLeafDestinationIdsForRetreatFilter` en `getPublishedRetreats`. |
 | `/es/retiro/[slug]` | `src/app/(public)/es/retiro/[slug]/page.tsx` | Ficha de retiro (galería `retreat_images` → breadcrumb → contenido + sidebar reserva; mismo patrón visual que centro). Sigue accesible por URL directa aunque el evento ya haya empezado; los **listados** no muestran retiros en curso. |
 | `/es/centros-retiru` | `src/app/(public)/es/centros-retiru/page.tsx` | Directorio centros |
 | `/es/centros-retiru/[slug]` | `src/app/(public)/es/centros-retiru/[slug]/page.tsx` | Centros por provincia |

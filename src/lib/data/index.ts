@@ -43,13 +43,69 @@ export async function getDestinationBySlug(slug: string): Promise<Destination | 
     .select('*')
     .eq('slug', slug)
     .eq('is_active', true)
-    .single();
+    .limit(1)
+    .maybeSingle();
 
   if (error) {
-    if (error.code === 'PGRST116') return null;
-    throw error;
+    console.error('[getDestinationBySlug]', slug, error.message);
+    return null;
   }
-  return data as Destination;
+  return (data as Destination) ?? null;
+}
+
+/**
+ * IDs de filas `destinations` con kind=destination enlazables por `retreats.destination_id`
+ * bajo un slug (hoja o nivel superior país/CCAA/provincia).
+ * Sin hojas descendientes → []. Slug inexistente o error → null.
+ */
+async function getLeafDestinationIdsForRetreatFilter(slug: string): Promise<string[] | null> {
+  const supabase = await createServerSupabase();
+  const { data: row, error } = await supabase
+    .from('destinations')
+    .select('id, kind')
+    .eq('slug', slug)
+    .eq('is_active', true)
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error('[getLeafDestinationIdsForRetreatFilter] lookup', slug, error.message);
+    return null;
+  }
+  if (!row) return null;
+
+  const kind = (row as { kind?: string | null }).kind ?? 'destination';
+  if (kind === 'destination') {
+    return [row.id];
+  }
+
+  const leafIds: string[] = [];
+  let frontier: string[] = [slug];
+  for (let depth = 0; depth < 8 && frontier.length > 0; depth++) {
+    const { data: children, error: chErr } = await supabase
+      .from('destinations')
+      .select('id, slug, kind')
+      .in('parent_slug', frontier)
+      .eq('is_active', true);
+
+    if (chErr) {
+      console.error('[getLeafDestinationIdsForRetreatFilter] children', chErr.message);
+      return null;
+    }
+
+    const next: string[] = [];
+    for (const c of children || []) {
+      const ck = (c as { kind?: string | null; id: string; slug?: string | null }).kind ?? 'destination';
+      if (ck === 'destination') {
+        leafIds.push((c as { id: string }).id);
+      } else if ((c as { slug?: string | null }).slug) {
+        next.push((c as { slug: string }).slug);
+      }
+    }
+    frontier = next;
+  }
+
+  return leafIds;
 }
 
 // ─── Retreats ──────────────────────────────────────────────────────────────
@@ -100,12 +156,16 @@ export async function getPublishedRetreats(filters?: {
   }
 
   if (filters?.destinationSlug) {
-    const { data: dest } = await supabase
-      .from('destinations')
-      .select('id')
-      .eq('slug', filters.destinationSlug)
-      .single();
-    if (dest) query = query.eq('destination_id', dest.id);
+    const destIds = await getLeafDestinationIdsForRetreatFilter(filters.destinationSlug);
+    if (destIds === null) {
+      return { retreats: [], total: 0 };
+    }
+    if (destIds.length === 0) {
+      return { retreats: [], total: 0 };
+    }
+    query = destIds.length === 1
+      ? query.eq('destination_id', destIds[0])
+      : query.in('destination_id', destIds);
   }
 
   const limit = filters?.limit ?? 12;
@@ -376,7 +436,9 @@ export async function getDestinationSlugs(): Promise<string[]> {
   return (data || []).map((r) => r.slug).filter(Boolean);
 }
 
-/** Destinos que tienen al menos 1 retiro publicado (para sitemap y generateStaticParams) */
+/** Destinos que tienen al menos 1 retiro publicado vigente (hoja), más slugs
+ *  de niveles superiores (provincia/CCAA/país) por los que también se lista en
+ *  `/es/retiros-retiru/[slug]`. */
 export async function getDestinationsWithRetreats(): Promise<{ slug: string; name_es: string; name_en: string }[]> {
   const supabase = createStaticSupabase();
   const today = new Date().toISOString().slice(0, 10);
@@ -387,16 +449,40 @@ export async function getDestinationsWithRetreats(): Promise<{ slug: string; nam
     .gte('end_date', today)
     .gt('start_date', today);
   if (rErr) throw rErr;
-  const destIds = [...new Set((retreats || []).map(r => r.destination_id).filter(Boolean))];
+  const destIds = [...new Set((retreats || []).map((r) => r.destination_id).filter(Boolean))] as string[];
   if (!destIds.length) return [];
-  const { data: dests, error: dErr } = await supabase
+
+  const { data: allActive, error: allErr } = await supabase
     .from('destinations')
-    .select('slug, name_es, name_en')
+    .select('slug, name_es, name_en, parent_slug')
+    .eq('is_active', true);
+  if (allErr) throw allErr;
+
+  const bySlug = new Map(
+    (allActive || []).map((d) => [d.slug, d as { slug: string; name_es: string; name_en: string; parent_slug: string | null }]),
+  );
+
+  const { data: leafRows, error: leafErr } = await supabase
+    .from('destinations')
+    .select('slug, name_es, name_en, parent_slug')
     .eq('is_active', true)
-    .in('id', destIds)
-    .order('slug');
-  if (dErr) throw dErr;
-  return (dests || []).map(d => ({ slug: d.slug, name_es: d.name_es, name_en: d.name_en }));
+    .in('id', destIds);
+  if (leafErr) throw leafErr;
+
+  const out = new Map<string, { slug: string; name_es: string; name_en: string }>();
+
+  for (const leaf of leafRows || []) {
+    out.set(leaf.slug, { slug: leaf.slug, name_es: leaf.name_es, name_en: leaf.name_en });
+    let parentSlug: string | null = leaf.parent_slug;
+    for (let i = 0; i < 8 && parentSlug; i++) {
+      const parent = bySlug.get(parentSlug);
+      if (!parent) break;
+      out.set(parent.slug, { slug: parent.slug, name_es: parent.name_es, name_en: parent.name_en });
+      parentSlug = parent.parent_slug;
+    }
+  }
+
+  return Array.from(out.values()).sort((a, b) => a.slug.localeCompare(b.slug));
 }
 
 /** Ciudades/provincias distintas con centros activos (para generateStaticParams) */
