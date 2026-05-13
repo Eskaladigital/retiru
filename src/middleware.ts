@@ -22,6 +22,8 @@ const PUBLIC_PATHS = [
   '/en/shop',
   '/es/retiros-retiru',
   '/en/retreats-retiru',
+  '/es/destino-retiros',
+  '/en/destination-retreats',
   '/es/destinos',
   '/en/destinations',
   '/es/organizador',
@@ -111,6 +113,27 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = canonicalPath;
     return NextResponse.redirect(url, 301);
+  }
+
+  // 0b. Rewrite invisible · landings de retiros por destino.
+  //     Next 14 tiene un comportamiento ambiguo cuando una ruta literal hermana
+  //     comparte prefijo con una ruta dinámica `prefijo-[var]`. La URL pública
+  //     `/es/retiros-retiru/<slug>` colisiona con `/es/retiros-[category]/[destination]`
+  //     y Next acaba renderizando la dinámica con `category=undefined`, provocando 500.
+  //     Para evitarlo servimos esa landing desde una carpeta sin colisión
+  //     (`destino-retiros/[slug]` en ES, `retreats-by-destination/[slug]` en EN)
+  //     manteniendo intacta la URL pública.
+  const esDestMatch = pathname.match(/^\/es\/retiros-retiru\/([^\/]+)\/?$/);
+  if (esDestMatch) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/es/destino-retiros/${esDestMatch[1]}`;
+    return NextResponse.rewrite(url);
+  }
+  const enDestMatch = pathname.match(/^\/en\/retreats-retiru\/([^\/]+)\/?$/);
+  if (enDestMatch) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/en/destination-retreats/${enDestMatch[1]}`;
+    return NextResponse.rewrite(url);
   }
 
   // 1. Root → redirect to locale

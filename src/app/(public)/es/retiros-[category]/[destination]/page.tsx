@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
-import { redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { MapPin, Star, CalendarDays, Users } from 'lucide-react';
 import EventosSearch from '@/components/home/EventosSearch';
 import {
@@ -17,19 +17,15 @@ export const revalidate = 3600;
 
 export async function generateStaticParams() {
   const pairs = await getCategoryDestinationPairs();
-  return pairs.map(p => ({ category: p.category, destination: p.destination }));
+  return pairs
+    .filter(p => p.category && p.category !== 'retiru')
+    .map(p => ({ category: p.category, destination: p.destination }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ category: string; destination: string }> }): Promise<Metadata> {
   const { category, destination } = await params;
-  if (category === 'retiru') {
-    return generatePageMetadata({
-      title: `Retiros en ${destination} | Retiru`,
-      description: `Descubre retiros y eventos en ${destination}. Reserva con transparencia total en Retiru.`,
-      locale: 'es',
-      path: `/es/retiros-retiru/${destination}`,
-      altPath: `/en/retreats-retiru/${destination}`,
-    });
+  if (!category || category === 'retiru') {
+    return { title: 'Retiros | Retiru', robots: { index: false, follow: false } };
   }
   const [cat, dest] = await Promise.all([getCategoryBySlug(category), getDestinationBySlug(destination)]);
   const catName = cat?.name_es || category;
@@ -48,8 +44,10 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
 export default async function RetirosCategoriaDestinoPage({ params }: { params: Promise<{ category: string; destination: string }> }) {
   const { category, destination } = await params;
 
-  if (category === 'retiru') {
-    redirect(`/es/retiros-retiru/${destination}`);
+  // Defensa: si Next entra aquí con `category` vacío o el reservado `retiru`
+  // (caso de colisión con la ruta literal), devolvemos 404 limpio en vez de 500.
+  if (!category || category === 'retiru') {
+    notFound();
   }
 
   const [cat, dest, { retreats, total }] = await Promise.all([
@@ -59,15 +57,7 @@ export default async function RetirosCategoriaDestinoPage({ params }: { params: 
   ]);
 
   if (!cat || !dest) {
-    return (
-      <div className="container-wide py-12">
-        <Link href={`/es/retiros-${category}`} className="inline-flex items-center gap-1.5 text-sm text-[#7a6b5d] hover:text-terracotta-600 mb-6">
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg>
-          Volver
-        </Link>
-        <p className="font-serif text-xl text-foreground">Página no encontrada</p>
-      </div>
-    );
+    notFound();
   }
 
   const combinedFaq = [

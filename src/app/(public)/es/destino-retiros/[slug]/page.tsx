@@ -1,4 +1,6 @@
-// /es/retiros-retiru/[slug] — Retiros filtrados por destino (datos reales de Supabase)
+// /es/retiros-retiru/[slug] (servida por rewrite del middleware desde una ruta sin colisión).
+// Se ubica en `destino-retiros/[slug]` para evitar la ambigüedad de matching de Next 14
+// con la ruta dinámica hermana `retiros-[category]/[destination]`. La URL pública NO cambia.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';

@@ -1,4 +1,7 @@
-// /en/retreats-retiru/[slug] — Retreats filtered by destination (real Supabase data)
+// /en/retreats-retiru/[slug] (served via middleware rewrite from a non-colliding route).
+// Located at `destination-retreats/[slug]` (no `retreats-` prefix) to avoid Next 14
+// routing ambiguity with the sibling dynamic route `retreats-[category]/[destination]`.
+// Public URL is unchanged.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
