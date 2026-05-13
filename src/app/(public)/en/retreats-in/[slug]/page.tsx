@@ -55,13 +55,15 @@ export default async function RetreatsInPage({ params }: { params: Promise<{ slu
 
   let retreats: Array<any> = [];
   if (destHijoIds.length) {
+    const today = new Date().toISOString().slice(0, 10);
     const { data: rs } = await supabase
       .from('retreats')
       .select(
         'id, slug, title_en, total_price, start_date, end_date, duration_days, available_spots, destinations!destination_id(name_en), retreat_images(url, is_cover)',
       )
       .eq('status', 'published')
-      .gte('end_date', new Date().toISOString().slice(0, 10))
+      .gte('end_date', today)
+      .gt('start_date', today)
       .in('destination_id', destHijoIds)
       .order('start_date', { ascending: true })
       .limit(60);

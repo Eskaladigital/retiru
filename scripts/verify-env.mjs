@@ -49,7 +49,7 @@ const OPTIONAL = [
   { key: 'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY', desc: 'Stripe PK' },
   { key: 'STRIPE_SECRET_KEY', desc: 'Stripe SK' },
   { key: 'STRIPE_WEBHOOK_SECRET', desc: 'Stripe webhook secret' },
-  { key: 'RESEND_API_KEY', desc: 'Resend para emails' },
+  { key: 'SMTP_HOST', desc: 'SMTP OVH · transaccionales + campañas (con SMTP_USER/PASSWORD)' },
   { key: 'NEXT_PUBLIC_APP_URL', desc: 'URL de la app' },
   { key: 'NEXT_PUBLIC_TINYMCE_API_KEY', desc: 'Tiny Cloud (descripción retiros + contenido blog admin)' },
 ];

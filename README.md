@@ -14,7 +14,7 @@ Plataforma web bilingüe (ES/EN) donde las personas descubren y reservan retiros
 | Estilos | Tailwind CSS, Radix UI, Lucide Icons |
 | Backend | Supabase (PostgreSQL, Auth, Storage, Realtime, Edge Functions) |
 | Pagos | Stripe (PVP = precio público por persona; el asistente paga ese importe íntegro; **comisión escalonada**: 0 % 1.er retiro, 10 % 2.º, 20 % a partir del 3.º — cada retiro mantiene su nivel; cobro 100 % al reservar salvo flujo «mínimo viable»; payout manual; reembolsos vía webhooks) |
-| Emails | Resend |
+| Emails | SMTP OVH (nodemailer): transaccionales + CRM campañas (`src/lib/mailing/transport.ts`) |
 | i18n | next-intl (ES base + EN completo) |
 | Formularios | React Hook Form + Zod |
 | Deploy | Vercel |
@@ -26,7 +26,7 @@ Plataforma web bilingüe (ES/EN) donde las personas descubren y reservan retiros
 - **Node.js** 18+ y **npm** (o pnpm/yarn)
 - Cuenta en [Supabase](https://supabase.com) — necesaria para datos (retiros, centros, blog, tienda)
 - Cuenta en [Stripe](https://stripe.com) (opcional — necesario solo para el flujo de pagos)
-- Cuenta en [Resend](https://resend.com) (opcional — necesario solo para el envío de emails)
+- Buzón SMTP (OVH/Zimbra u otro) — **obligatorio para enviar** reservas, claims, retiros, crons de recordatorio, etc. Variables `SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD` (mismo bloque que `/administrator/mails` y `mailing-tick`)
 
 ---
 
@@ -71,8 +71,14 @@ Copia `.env.example` a `.env.local` y rellena los valores:
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Clave pública de Stripe |
 | `STRIPE_SECRET_KEY` | Clave secreta de Stripe |
 | `STRIPE_WEBHOOK_SECRET` | Secreto del webhook de Stripe |
-| `RESEND_API_KEY` | API key de Resend |
-| `RESEND_FROM_EMAIL` | Email remitente (ej: `contacto@retiru.com`) |
+| `SMTP_HOST` | Servidor SMTP (p. ej. `ssl0.ovh.net`) · transaccionales + campañas |
+| `SMTP_PORT` | `465` (SSL) típico OVH |
+| `SMTP_USER` | Usuario del buzón (p. ej. `contacto@retiru.com`) |
+| `SMTP_PASSWORD` | Contraseña del buzón |
+| `SMTP_FROM_EMAIL` | (opcional) Remitente; por defecto = `SMTP_USER` |
+| `SMTP_FROM_NAME` | (opcional) Nombre remitente; por defecto `Retiru` |
+| `SMTP_STRICT_TLS` | (opcional) `true` para no relajar TLS (útil solo si la red no inyecta CA) |
+| `SMTP_INTERNAL_COPY_EMAIL` | (opcional) BCC archivo en cada transaccional; vacío = desactiva. Sin variable → `contacto@retiru.com`. Alias legado: `RESEND_INTERNAL_COPY_EMAIL` |
 | `NEXT_PUBLIC_APP_URL` | URL base de la app |
 | `NEXT_PUBLIC_APP_NAME` | Nombre de la app (`Retiru`) |
 | `OPENAI_API_KEY` | (opcional) Descripciones IA, blog, centros y **portadas de eventos**: agente **GPT-4o** sintetiza un dossier completo del evento (destino, fechas, categorías, programa, incluidos…) en un prompt en español; **GPT Image 1.5** genera la imagen panorámica (`POST /api/retreats/generate-cover-image`; definir también en Vercel). Objetivo visual: **fotografía editorial hiperrealista**, evitando look ilustrado o “IA” |
@@ -275,7 +281,7 @@ Las páginas consumen datos a través de `src/lib/data/index.ts`:
 
 - `getCategories(locale)`, `getDestinations(locale)`, `getDestinationBySlug(slug)`
 - `getHomeShopProducts(limit)` — productos `shop_products` para la home (misma tabla que `/es/tienda`). La encuesta pública escribe en `shop_product_interests` (ver `docs/SHOP-SURVEY.md`); el admin agrega resultados con `get_shop_interest_stats()` en `/administrator/tienda`
-- `getPublishedRetreats(filters)`, `getRetreatBySlug(slug)`
+- `getPublishedRetreats(filters)`, `getRetreatBySlug(slug)` — los listados y API usan **`start_date > hoy`** (fecha del servidor ISO) además de `published` + `end_date ≥ hoy`, para no mostrar retiros ya iniciados. La **ficha** `/es/retiro/[slug]` sigue resolviendo el retiro publicado aunque haya empezado.
 - `getOrganizerBySlug(slug)`, `getActiveCenters(filters)`, `getCenterBySlug(slug)`
 - `getCenterProvinces()` — provincias únicas con centros activos (para `generateStaticParams` y sitemap)
 - `getCentersByProvince(slug)` — centros filtrados por provincia normalizada
@@ -452,9 +458,9 @@ Sistema de comunicación dentro de la plataforma entre usuarios y organizadores,
 
 ---
 
-## Emails transaccionales (Resend)
+## Emails transaccionales (SMTP OVH)
 
-Sistema de emails automáticos enviados por la plataforma en eventos clave. Todos bilingües (ES/EN) según `preferred_locale` del usuario.
+Sistema de emails automáticos enviados por la plataforma en eventos clave. **Salida única:** nodemailer + las mismas variables `SMTP_*` que el cron de mailing. Todos bilingües (ES/EN) según `preferred_locale` del usuario. Por defecto se añade **BCC** a `contacto@retiru.com` (archivo interno), salvo que el destinatario principal ya sea ese buzón o que `SMTP_INTERNAL_COPY_EMAIL=` esté vacío.
 
 **Archivo central:** `src/lib/email/index.ts`
 
@@ -496,7 +502,7 @@ Hay **una** bienvenida genérica al verificar el email (`sendWelcomeEmail`). Com
 | Centro (propietario) | Tras reclamo exitoso del directorio | `sendClaimApprovedEmail` cuando admin aprueba el claim |
 | Organizador | Homologación KYC y retiros | Aún no hay correo específico solo al **aceptar contrato** (`POST /api/organizer/contract`); sí al verificar perfil (`sendOrganizerVerifiedEmail`), al enviar a revisión (`sendRetreatPendingReviewEmail`) y al publicar (`sendRetreatApprovedEmail`). |
 
-Plantillas HTML: carpeta `mailing/` (`mailing/README.md`). Implementación Resend/HTML: `src/lib/email/index.ts`.
+Plantillas HTML de referencia: carpeta `mailing/` (`mailing/README.md`). Envío efectivo (`sendTransactionalMail`): `src/lib/email/index.ts` + `src/lib/mailing/transport.ts`.
 
 **Total: 24 emails activos** (2 desactivados del modelo histórico 80 % fuera de plataforma).
 
@@ -691,7 +697,7 @@ El dueño de un centro puede vincularse como propietario verificado mediante:
 
 | Métrica | Cómo se mide |
 |---------|-------------|
-| Tasa de apertura del email | Plataforma de envío (Resend) |
+| Tasa de apertura del email | Proveedor SMTP / estadísticas externas si se conectan |
 | Centros que visitan su perfil | Analítica web (GA4) |
 | Centros que se registran | Tabla `center_claims` con status=approved |
 | Centros que crean eventos | Tabla `retreats` con organizer vinculado a centro |

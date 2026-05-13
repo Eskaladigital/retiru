@@ -1,11 +1,7 @@
 // POST /api/organizer/events/[id]/broadcast — Send message to all attendees
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
-import { Resend } from 'resend';
-import { buildBroadcastHtml } from '@/lib/email';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = process.env.RESEND_FROM_EMAIL || 'hola@retiru.com';
+import { buildBroadcastHtml, sendTransactionalMail } from '@/lib/email';
 
 export async function POST(
   request: NextRequest,
@@ -119,8 +115,7 @@ export async function POST(
               eventTitle: retreat.title_es,
               message: message.trim(),
             });
-            await resend.emails.send({
-              from: FROM,
+            await sendTransactionalMail({
               to: attendee.email,
               subject: `${locale === 'es' ? 'Mensaje de' : 'Message from'} ${orgProfile.business_name} — ${retreat.title_es}`,
               html,

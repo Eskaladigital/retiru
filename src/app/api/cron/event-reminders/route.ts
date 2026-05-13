@@ -1,11 +1,8 @@
 // POST /api/cron/event-reminders — Send pre-event reminders (7d and 2d before)
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminSupabase } from '@/lib/supabase/server';
-import { Resend } from 'resend';
-import { buildEventReminderHtml } from '@/lib/email';
+import { buildEventReminderHtml, sendTransactionalMail } from '@/lib/email';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = process.env.RESEND_FROM_EMAIL || 'hola@retiru.com';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://retiru.com';
 
 export async function POST(request: NextRequest) {
@@ -52,8 +49,8 @@ export async function POST(request: NextRequest) {
           const formComplete = b.form_responses && Object.keys(b.form_responses as object).length > 0;
           const formReminder = !formComplete
             ? `&#128221; ${locale === 'es'
-                ? `Recuerda completar tu <a href="${APP_URL}/${locale === 'es' ? 'es' : 'en'}/${locale === 'es' ? 'mis-reservas' : 'my-bookings'}/${b.id}/formulario" style="color: #c85a30; text-decoration: underline;">formulario de inscripci&oacute;n</a>`
-                : `Remember to complete your <a href="${APP_URL}/en/my-bookings/${b.id}/formulario" style="color: #c85a30; text-decoration: underline;">registration form</a>`}`
+              ? `Recuerda completar tu <a href="${APP_URL}/${locale === 'es' ? 'es' : 'en'}/${locale === 'es' ? 'mis-reservas' : 'my-bookings'}/${b.id}/formulario" style="color: #c85a30; text-decoration: underline;">formulario de inscripci&oacute;n</a>`
+              : `Remember to complete your <a href="${APP_URL}/en/my-bookings/${b.id}/formulario" style="color: #c85a30; text-decoration: underline;">registration form</a>`}`
             : undefined;
 
           const eventTitle = locale === 'es' ? retreat.title_es : (retreat.title_en || retreat.title_es);
@@ -74,7 +71,7 @@ export async function POST(request: NextRequest) {
           });
 
           try {
-            await resend.emails.send({ from: FROM, to: attendee.email, subject, html });
+            await sendTransactionalMail({ to: attendee.email, subject, html });
             sent++;
           } catch (err) {
             console.error(`Failed reminder for booking ${b.id}:`, err);

@@ -62,7 +62,7 @@ function deriveDisplayStatus(r: RetreatRow): DisplayStatus {
     return r.confirmed_bookings > 0 ? 'finished' : 'expired';
   }
   if (started) {
-    return r.confirmed_bookings > 0 ? 'in_progress' : 'expired';
+    return 'in_progress';
   }
   return 'published';
 }

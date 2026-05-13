@@ -70,13 +70,15 @@ export default async function RetirosEnPage({ params }: { params: Promise<{ slug
 
   let retreats: Array<{ id: string; slug: string; title_es: string; total_price: number; start_date: string | null; end_date: string | null; duration_days: number | null; available_spots: number | null; cover_url: string | null; dest_name: string | null; }> = [];
   if (destHijoIds.length) {
+    const today = new Date().toISOString().slice(0, 10);
     const { data: rs } = await supabase
       .from('retreats')
       .select(
         'id, slug, title_es, total_price, start_date, end_date, duration_days, available_spots, destinations!destination_id(name_es), retreat_images(url, is_cover)',
       )
       .eq('status', 'published')
-      .gte('end_date', new Date().toISOString().slice(0, 10))
+      .gte('end_date', today)
+      .gt('start_date', today)
       .in('destination_id', destHijoIds)
       .order('start_date', { ascending: true })
       .limit(60);

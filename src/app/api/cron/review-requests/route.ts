@@ -1,11 +1,8 @@
 // POST /api/cron/review-requests — Request reviews 2 days after event ends
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminSupabase } from '@/lib/supabase/server';
-import { Resend } from 'resend';
-import { buildReviewRequestHtml } from '@/lib/email';
+import { buildReviewRequestHtml, sendTransactionalMail } from '@/lib/email';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = process.env.RESEND_FROM_EMAIL || 'hola@retiru.com';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://retiru.com';
 
 export async function POST(request: NextRequest) {
@@ -71,7 +68,7 @@ export async function POST(request: NextRequest) {
         });
 
         try {
-          await resend.emails.send({ from: FROM, to: attendee.email, subject, html });
+          await sendTransactionalMail({ to: attendee.email, subject, html });
           sent++;
         } catch (err) {
           console.error(`Failed review request for booking ${b.id}:`, err);

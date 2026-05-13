@@ -98,10 +98,10 @@ export default async function AdminRetirosPage({
     (r) => r.status === 'published' && r.start_date > today,
   ).length;
   const inProgress = list.filter(
-    (r) => r.status === 'published' && r.start_date <= today && r.end_date >= today && r.confirmed_bookings > 0,
+    (r) => r.status === 'published' && r.start_date <= today && r.end_date >= today,
   ).length;
   const expired = list.filter(
-    (r) => r.status === 'published' && r.start_date <= today && r.confirmed_bookings === 0,
+    (r) => r.status === 'published' && r.end_date < today && r.confirmed_bookings === 0,
   ).length;
   const finished = list.filter(
     (r) => r.status === 'published' && r.end_date < today && r.confirmed_bookings > 0,

@@ -5,20 +5,11 @@
  * Lee un archivo HTML de la carpeta `mailing/` y lo envía a un destinatario
  * para ver cómo llega el email real al inbox antes de lanzarlo a los centros.
  *
- * Soporta dos proveedores:
- *   1. SMTP (por defecto)  → usa nodemailer con SMTP_HOST/PORT/USER/PASSWORD.
- *      Pensado para el buzón de OVH (ssl0.ovh.net:465). No toca DNS.
- *   2. Resend (--provider=resend) → HTTP API. Requiere dominio verificado
- *      en Resend y RESEND_API_KEY.
- *
- * Selecciona automáticamente el proveedor:
- *   - Si hay SMTP_HOST + SMTP_USER + SMTP_PASSWORD → SMTP.
- *   - Si no, si hay RESEND_API_KEY válida → Resend.
- *   - En caso contrario, muestra qué falta.
+ * Solo SMTP OVH/Zimbra — mismo stack que campañas `/administrator/mails` y emails
+ * transaccionales (`src/lib/email/index.ts`). Requiere SMTP_HOST/USER/PASSWORD.
  *
  * Uso:
- *   node scripts/send-mailing-test.mjs                                    # recordatorio a contacto@retiru.com por SMTP
- *   node scripts/send-mailing-test.mjs --provider=resend                  # forzar Resend
+ *   node scripts/send-mailing-test.mjs                                    # por SMTP
  *   node scripts/send-mailing-test.mjs --file=retiru-bienvenida-centro.html
  *   node scripts/send-mailing-test.mjs --to=otroemail@dominio.com
  *   node scripts/send-mailing-test.mjs --subject="Asunto custom"
@@ -35,10 +26,6 @@
  *   SMTP_PASSWORD      contraseña del buzón
  *   SMTP_FROM_EMAIL    p.ej. contacto@retiru.com   (opcional; por defecto = SMTP_USER)
  *   SMTP_FROM_NAME     p.ej. Retiru                (opcional)
- *
- * Variables .env.local (Resend):
- *   RESEND_API_KEY     re_...
- *   RESEND_FROM_EMAIL  opcional; por defecto "Retiru <contacto@retiru.com>"
  */
 
 import { readFileSync, existsSync } from 'fs';
@@ -75,7 +62,7 @@ function flag(name, def) {
   return found ? found.split('=').slice(1).join('=') : def;
 }
 
-const file = flag('file', 'retiru-recordatorio-centro.html');
+const file = flag('file', '2-2026-04-19-retiru-recordatorio-centro.html');
 const to = flag('to', 'contacto@retiru.com');
 const subject = flag(
   'subject',
@@ -150,30 +137,25 @@ const finMembresiaAuto = (() => {
 const finMembresia = flag('fin-membresia', finMembresiaAuto || defaultFinMembresia());
 
 // ─── Selección de proveedor ────────────────────────────────────────────────
-const providerFlag = flag('provider', null);
-
 const smtpHost = process.env.SMTP_HOST;
 const smtpUser = process.env.SMTP_USER;
 const smtpPass = process.env.SMTP_PASSWORD;
 const smtpReady = Boolean(smtpHost && smtpUser && smtpPass && !smtpPass.startsWith('your_'));
 
-const resendKey = process.env.RESEND_API_KEY;
-const resendReady = Boolean(resendKey && !resendKey.startsWith('your_'));
+const providerFlag = flag('provider', null);
 
-let provider;
-if (providerFlag === 'smtp') provider = 'smtp';
-else if (providerFlag === 'resend') provider = 'resend';
-else if (smtpReady) provider = 'smtp';
-else if (resendReady) provider = 'resend';
-else {
-  console.error('❌  No hay proveedor de email configurado en .env.local.');
-  console.error('    Opción 1 (recomendada, sin tocar DNS): SMTP de OVH');
+if (providerFlag && providerFlag !== 'smtp') {
+  console.error('❌  Solo está soportado SMTP (omite --provider o usa --provider=smtp).');
+  process.exit(1);
+}
+
+if (!smtpReady) {
+  console.error('❌  No hay SMTP configurado en .env.local.');
+  console.error('    SMTP de OVH (sin tocar DNS):');
   console.error('      SMTP_HOST=ssl0.ovh.net');
   console.error('      SMTP_PORT=465');
   console.error('      SMTP_USER=contacto@retiru.com');
   console.error('      SMTP_PASSWORD=********');
-  console.error('    Opción 2: Resend (requiere dominio verificado en resend.com/domains)');
-  console.error('      RESEND_API_KEY=re_XXXXXXXXXXXX');
   process.exit(1);
 }
 
@@ -191,82 +173,56 @@ html = html
   .replaceAll('{{FIN_MEMBRESIA}}', finMembresia);
 
 // ─── Envío ─────────────────────────────────────────────────────────────────
-if (provider === 'smtp') {
-  const port = Number(process.env.SMTP_PORT || 465);
-  const secure = port === 465; // 465 = SSL, 587 = STARTTLS
-  const fromEmail = process.env.SMTP_FROM_EMAIL || smtpUser;
-  const fromName = process.env.SMTP_FROM_NAME || 'Retiru';
-  const from = flag('from', `${fromName} <${fromEmail}>`);
+const port = Number(process.env.SMTP_PORT || 465);
+const secure = port === 465; // 465 = SSL, 587 = STARTTLS
+const fromEmail = process.env.SMTP_FROM_EMAIL || smtpUser;
+const fromName = process.env.SMTP_FROM_NAME || 'Retiru';
+const from = flag('from', `${fromName} <${fromEmail}>`);
 
-  console.log('📧  Enviando por SMTP:');
-  console.log(`   • host:      ${smtpHost}:${port} (${secure ? 'SSL' : 'STARTTLS'})`);
-  console.log(`   • usuario:   ${smtpUser}`);
-  console.log(`   • plantilla: ${file}`);
-  console.log(`   • de:        ${from}`);
-  console.log(`   • para:      ${to}`);
-  console.log(`   • asunto:    ${subject}`);
-  if (centerData) {
-    console.log(`   • centro:    ${centerData.name} (${centerData.slug})`);
-    console.log(`   • añadido:   ${new Date(centerData.created_at).toISOString().slice(0, 10)}`);
-  }
-  console.log(`   • nombre:    ${nombreCentro}`);
-  console.log(`   • location:  ${location}`);
-  console.log(`   • fin memb.: ${finMembresia}`);
+console.log('📧  Enviando por SMTP:');
+console.log(`   • host:      ${smtpHost}:${port} (${secure ? 'SSL' : 'STARTTLS'})`);
+console.log(`   • usuario:   ${smtpUser}`);
+console.log(`   • plantilla: ${file}`);
+console.log(`   • de:        ${from}`);
+console.log(`   • para:      ${to}`);
+console.log(`   • asunto:    ${subject}`);
+if (centerData) {
+  console.log(`   • centro:    ${centerData.name} (${centerData.slug})`);
+  console.log(`   • añadido:   ${new Date(centerData.created_at).toISOString().slice(0, 10)}`);
+}
+console.log(`   • nombre:    ${nombreCentro}`);
+console.log(`   • location:  ${location}`);
+console.log(`   • fin memb.: ${finMembresia}`);
 
-  // Algunas redes corporativas (proxies/AV) inyectan su propia CA en la
-  // cadena TLS y rompen la verificación contra OVH. Para un script local de
-  // prueba es aceptable relajar la verificación; en producción (Vercel/N8N)
-  // esto NO sería necesario.
-  const strictTls = (process.env.SMTP_STRICT_TLS || '').toLowerCase() === 'true';
+// Algunas redes corporativas (proxies/AV) inyectan su propia CA en la
+// cadena TLS y rompen la verificación contra OVH. Para un script local de
+// prueba es aceptable relajar la verificación; en producción (Vercel/N8N)
+// esto NO sería necesario.
+const strictTls = (process.env.SMTP_STRICT_TLS || '').toLowerCase() === 'true';
 
-  const transport = nodemailer.createTransport({
-    host: smtpHost,
-    port,
-    secure,
-    auth: { user: smtpUser, pass: smtpPass },
-    tls: strictTls ? undefined : { rejectUnauthorized: false },
-  });
+const transport = nodemailer.createTransport({
+  host: smtpHost,
+  port,
+  secure,
+  auth: { user: smtpUser, pass: smtpPass },
+  tls: strictTls ? undefined : { rejectUnauthorized: false },
+});
 
-  try {
-    await transport.verify();
-  } catch (err) {
-    console.error('\n❌  No se pudo conectar al servidor SMTP:');
-    console.error('    ', err.message || err);
-    process.exit(1);
-  }
+try {
+  await transport.verify();
+} catch (err) {
+  console.error('\n❌  No se pudo conectar al servidor SMTP:');
+  console.error('    ', err.message || err);
+  process.exit(1);
+}
 
-  try {
-    const info = await transport.sendMail({ from, to, subject, html });
-    console.log(`\n✅  Enviado. messageId = ${info.messageId}`);
-    if (info.accepted?.length) console.log(`    aceptado por: ${info.accepted.join(', ')}`);
-    if (info.rejected?.length) console.log(`    rechazado por: ${info.rejected.join(', ')}`);
-  } catch (err) {
-    console.error('\n❌  Error al enviar por SMTP:');
-    console.error('    ', err.message || err);
-    process.exit(1);
-  }
-} else {
-  const from = flag('from', process.env.RESEND_FROM_EMAIL || 'Retiru <contacto@retiru.com>');
-
-  console.log('📧  Enviando por Resend:');
-  console.log(`   • plantilla: ${file}`);
-  console.log(`   • de:        ${from}`);
-  console.log(`   • para:      ${to}`);
-  console.log(`   • asunto:    ${subject}`);
-
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${resendKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ from, to: [to], subject, html }),
-  });
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    console.error(`\n❌  Resend devolvió ${res.status}:`, data);
-    process.exit(1);
-  }
-  console.log(`\n✅  Enviado. id = ${data.id ?? '(sin id)'}`);
+try {
+  const info = await transport.sendMail({ from, to, subject, html });
+  console.log(`\n✅  Enviado. messageId = ${info.messageId}`);
+  if (info.accepted?.length) console.log(`    aceptado por: ${info.accepted.join(', ')}`);
+  if (info.rejected?.length) console.log(`    rechazado por: ${info.rejected.join(', ')}`);
+} catch (sendErr) {
+  console.error('\n❌  Error enviando el correo:');
+  console.error('    ', sendErr.message || sendErr);
+  process.exit(1);
 }

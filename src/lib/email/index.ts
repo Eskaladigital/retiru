@@ -1,15 +1,80 @@
 // ============================================================================
-// RETIRU · Email templates with Resend
-// Layout idéntico a mailing/retiru-bienvenida-centro.html:
-// Tablas HTML, condicionales MSO (Outlook), responsive 600px,
-// logo, firma, footer con nav + cancelar suscripción.
+// RETIRU · Plantillas de email transaccional (HTML) + envío por SMTP (OVH).
+// Mismo transporte que `src/lib/mailing/transport.ts` (cron / panel mailing).
 // ============================================================================
 
-import { Resend } from 'resend';
+import type { Transporter } from 'nodemailer';
+import { buildTransport, loadSmtpConfig } from '@/lib/mailing/transport';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = process.env.RESEND_FROM_EMAIL || 'hola@retiru.com';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.retiru.com';
+
+/** Copia BCC archivo. `SMTP_INTERNAL_COPY_EMAIL=''` desactiva; sin variable → contacto@retiru.com. */
+function internalArchiveEmail(): string {
+  const v = process.env.SMTP_INTERNAL_COPY_EMAIL ?? process.env.RESEND_INTERNAL_COPY_EMAIL;
+  if (v !== undefined) return v.trim();
+  return 'contacto@retiru.com';
+}
+
+function asEmailList(recipients: string | string[] | undefined | null): string[] {
+  if (recipients == null) return [];
+  return (Array.isArray(recipients) ? recipients : [recipients]).map(String);
+}
+
+function listIncludesEmail(list: string[], addr: string): boolean {
+  const a = addr.toLowerCase();
+  return list.some((x) => String(x).toLowerCase() === a);
+}
+
+/** Remitente efectivo transaccional: SMTP habitual; permite override puntual respetando DKIM/OVH (mismo dominio que el buzón). */
+function transactionalFromAddress(override?: string): string {
+  if (override && override.trim()) return override.trim();
+  return loadSmtpConfig().from;
+}
+
+let cachedTransport: Transporter | null = null;
+function getSmtpTransport(): Transporter {
+  if (!cachedTransport) cachedTransport = buildTransport();
+  return cachedTransport;
+}
+
+export type TransactionalMailPayload = {
+  /** Si omites, se usa `SMTP_FROM_NAME <SMTP_FROM_EMAIL>` del transporte */
+  from?: string;
+  to: string | string[];
+  subject: string;
+  html: string;
+  bcc?: string | string[];
+  replyTo?: string;
+  text?: string;
+};
+
+/**
+ * Envío transaccional unificado (OVH SMTP) + copia BCC archivo cuando el `to` no es ya ese buzón.
+ * Exportado para crons / rutas que armaban el HTML fuera de este módulo.
+ */
+export async function sendTransactionalMail(payload: TransactionalMailPayload) {
+  const copy = internalArchiveEmail();
+  const toList = asEmailList(payload.to);
+  let bccList = asEmailList(payload.bcc);
+  if (copy && !listIncludesEmail(toList, copy) && !listIncludesEmail(bccList, copy)) {
+    bccList.push(copy);
+  }
+
+  const from = transactionalFromAddress(payload.from);
+  const info = await getSmtpTransport().sendMail({
+    from,
+    to: payload.to,
+    subject: payload.subject,
+    html: payload.html,
+    bcc: bccList.length === 0 ? undefined : bccList.length === 1 ? bccList[0] : bccList,
+    replyTo: payload.replyTo,
+    text: payload.text,
+  });
+  return { data: { id: info.messageId } };
+}
+
+/** @deprecated Usar `sendTransactionalMail`; se mantiene por compatibilidad con imports antiguos. */
+export const sendResendTransactional = sendTransactionalMail;
 
 interface EmailOptions {
   to: string;
@@ -236,7 +301,7 @@ export async function sendBookingConfirmedEmail(
     },
   });
 
-  return resend.emails.send({ from: FROM, to, subject, html });
+  return sendTransactionalMail({ to, subject, html });
 }
 
 // ─── Payment Reminder to Attendee (DEPRECATED — full payment model) ─────────
@@ -288,7 +353,7 @@ export async function sendNewBookingToOrganizerEmail(
     },
   });
 
-  return resend.emails.send({ from: FROM, to, subject, html });
+  return sendTransactionalMail({ to, subject, html });
 }
 
 // ─── Claim Approved ─────────────────────────────────────────────────────────
@@ -324,7 +389,7 @@ export async function sendClaimApprovedEmail(
     footnote: `<a href="${APP_URL}/${t(locale, 'es/centro', 'en/center')}/${centerSlug}" style="color: #c85a30; text-decoration: underline;">${t(locale, 'Ver la ficha p&uacute;blica de tu centro', 'View your center&#39;s public page')}</a>`,
   });
 
-  return resend.emails.send({ from: FROM, to, subject, html });
+  return sendTransactionalMail({ to, subject, html });
 }
 
 // ─── Claim Rejected ─────────────────────────────────────────────────────────
@@ -368,7 +433,7 @@ export async function sendClaimRejectedEmail(
     },
   });
 
-  return resend.emails.send({ from: FROM, to, subject, html });
+  return sendTransactionalMail({ to, subject, html });
 }
 
 // ─── Retreat Approved ───────────────────────────────────────────────────────
@@ -407,7 +472,7 @@ export async function sendRetreatApprovedEmail(
     },
   });
 
-  return resend.emails.send({ from: FROM, to, subject, html });
+  return sendTransactionalMail({ to, subject, html });
 }
 
 // ─── Retreat Rejected ───────────────────────────────────────────────────────
@@ -451,7 +516,7 @@ export async function sendRetreatRejectedEmail(
     },
   });
 
-  return resend.emails.send({ from: FROM, to, subject, html });
+  return sendTransactionalMail({ to, subject, html });
 }
 
 // ─── Organizer profile verified (KYC) ───────────────────────────────────────
@@ -495,7 +560,7 @@ export async function sendOrganizerVerifiedEmail(
     footnote: `<a href="${publicUrl}" style="color: #c85a30; text-decoration: underline;">${t(locale, 'Ver tu perfil p&uacute;blico de organizador', 'View your public organizer profile')}</a>`,
   });
 
-  return resend.emails.send({ from: FROM, to, subject, html });
+  return sendTransactionalMail({ to, subject, html });
 }
 
 // ─── Organizer profile rejected (KYC / admin) ─────────────────────────────
@@ -541,7 +606,7 @@ export async function sendOrganizerRejectedEmail(
     },
   });
 
-  return resend.emails.send({ from: FROM, to, subject, html });
+  return sendTransactionalMail({ to, subject, html });
 }
 
 // ─── New Message Notification ───────────────────────────────────────────────
@@ -585,7 +650,7 @@ export async function sendNewMessageEmail(
     },
   });
 
-  return resend.emails.send({ from: FROM, to, subject, html });
+  return sendTransactionalMail({ to, subject, html });
 }
 
 // ─── Booking Cancelled ──────────────────────────────────────────────────────
@@ -641,7 +706,7 @@ export async function sendBookingCancelledEmail(
     body,
   });
 
-  return resend.emails.send({ from: FROM, to, subject, html });
+  return sendTransactionalMail({ to, subject, html });
 }
 
 // ─── Booking Rejected (to attendee) ────────────────────────────────────────
@@ -695,7 +760,7 @@ export async function sendBookingRejectedEmail(
     },
   });
 
-  return resend.emails.send({ from: FROM, to, subject, html });
+  return sendTransactionalMail({ to, subject, html });
 }
 
 // ─── Event Reminder (pre-event) ─────────────────────────────────────────────
@@ -840,7 +905,7 @@ export async function sendWelcomeEmail(
     },
   });
 
-  return resend.emails.send({ from: FROM, to, subject, html });
+  return sendTransactionalMail({ to, subject, html });
 }
 
 // ─── Retreat Sent to Review (→ admin) ───────────────────────────────────────
@@ -871,8 +936,7 @@ export async function sendRetreatPendingReviewEmail(
     },
   });
 
-  return resend.emails.send({
-    from: FROM,
+  return sendTransactionalMail({
     to: ADMIN_EMAIL,
     subject: `🔔 Retiro pendiente de revisión: ${eventTitle}`,
     html,
@@ -917,7 +981,7 @@ export async function sendBookingExpiredEmail(
     },
   });
 
-  return resend.emails.send({ from: FROM, to, subject, html });
+  return sendTransactionalMail({ to, subject, html });
 }
 
 // ─── Retreat Cancelled → all attendees ──────────────────────────────────────
@@ -958,7 +1022,7 @@ export async function sendRetreatCancelledToAttendeeEmail(
     },
   });
 
-  return resend.emails.send({ from: FROM, to, subject, html });
+  return sendTransactionalMail({ to, subject, html });
 }
 
 // ─── New Claim Pending → admin ──────────────────────────────────────────────
@@ -989,8 +1053,7 @@ export async function sendNewClaimPendingEmail(
     },
   });
 
-  return resend.emails.send({
-    from: FROM,
+  return sendTransactionalMail({
     to: ADMIN_EMAIL,
     subject: `🔔 Nuevo claim pendiente: ${centerName}`,
     html,
@@ -1032,8 +1095,7 @@ export async function sendNewCenterProposalEmail(options: {
     },
   });
 
-  return resend.emails.send({
-    from: FROM,
+  return sendTransactionalMail({
     to: ADMIN_EMAIL,
     subject: `📍 Nueva propuesta de centro: ${centerName}`,
     html,
@@ -1093,7 +1155,7 @@ export async function sendMinViableReachedEmail(
     cta: { href: payUrl, label: t(locale, 'Pagar ahora', 'Pay now') },
   });
 
-  return resend.emails.send({ from: FROM, to, subject, html });
+  return sendTransactionalMail({ to, subject, html });
 }
 
 // ─── Min Viable Reached → organizer ─────────────────────────────────────────
@@ -1134,7 +1196,7 @@ export async function sendMinViableReachedToOrganizerEmail(
     },
   });
 
-  return resend.emails.send({ from: FROM, to, subject, html });
+  return sendTransactionalMail({ to, subject, html });
 }
 
 // ─── Payment Deadline Grace Reminder → attendee ─────────────────────────────
@@ -1178,7 +1240,7 @@ export async function sendPaymentDeadlineReminderEmail(
     cta: { href: payUrl, label: t(locale, 'Pagar ahora', 'Pay now') },
   });
 
-  return resend.emails.send({ from: FROM, to, subject, html });
+  return sendTransactionalMail({ to, subject, html });
 }
 
 // ─── Reservation Confirmed (no payment yet) → attendee ─────────────────────
@@ -1229,5 +1291,5 @@ export async function sendReservationConfirmedEmail(
     },
   });
 
-  return resend.emails.send({ from: FROM, to, subject, html });
+  return sendTransactionalMail({ to, subject, html });
 }

@@ -37,7 +37,7 @@ function deriveDisplayStatus(r: Retreat): string {
   const started = (r.start_date ?? '') <= today;
   const ended = (r.end_date ?? '') < today;
   if (ended) return r.confirmed_bookings > 0 ? 'finished' : 'expired';
-  if (started) return r.confirmed_bookings > 0 ? 'in_progress' : 'expired';
+  if (started) return 'in_progress';
   return 'published';
 }
 

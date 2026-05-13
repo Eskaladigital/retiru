@@ -73,11 +73,13 @@ export async function getPublishedRetreats(filters?: {
   offset?: number;
 }): Promise<{ retreats: Retreat[]; total: number }> {
   const supabase = await createServerSupabase();
+  const today = new Date().toISOString().slice(0, 10);
   let query = supabase
     .from('retreats')
     .select(RETREAT_SELECT, { count: 'exact' })
     .eq('status', 'published')
-    .gte('end_date', new Date().toISOString().slice(0, 10))
+    .gte('end_date', today)
+    .gt('start_date', today)
     .order('start_date', { ascending: true });
 
   if (filters?.categorySlug) {
@@ -382,7 +384,8 @@ export async function getDestinationsWithRetreats(): Promise<{ slug: string; nam
     .from('retreats')
     .select('destination_id')
     .eq('status', 'published')
-    .gte('end_date', today);
+    .gte('end_date', today)
+    .gt('start_date', today);
   if (rErr) throw rErr;
   const destIds = [...new Set((retreats || []).map(r => r.destination_id).filter(Boolean))];
   if (!destIds.length) return [];
@@ -593,9 +596,10 @@ export async function getCategoriesWithRetreats(): Promise<{ slug: string; name_
 
   const { data: links, error: lErr } = await supabase
     .from('retreat_categories')
-    .select('category_id, retreats!inner(status, end_date)')
+    .select('category_id, retreats!inner(status, end_date, start_date)')
     .eq('retreats.status', 'published')
-    .gte('retreats.end_date', today);
+    .gte('retreats.end_date', today)
+    .gt('retreats.start_date', today);
   if (lErr) throw lErr;
 
   const catIds = [...new Set((links || []).map((l: any) => l.category_id).filter(Boolean))];
@@ -620,7 +624,8 @@ export async function getCategoryDestinationPairs(): Promise<{ category: string;
     .from('retreats')
     .select('id, destination_id')
     .eq('status', 'published')
-    .gte('end_date', today);
+    .gte('end_date', today)
+    .gt('start_date', today);
   if (rErr) throw rErr;
   if (!retreats?.length) return [];
 
@@ -934,6 +939,7 @@ export async function getUpcomingRetreatsForDestinations(
     .eq('status', 'published')
     .in('destination_id', destIds)
     .gte('end_date', new Date().toISOString().slice(0, 10))
+    .gt('start_date', new Date().toISOString().slice(0, 10))
     .order('start_date', { ascending: true })
     .limit(limit);
   if (error) return [];
@@ -1032,6 +1038,7 @@ export async function getDestinationsForCategory(categorySlug: string): Promise<
     .select('destination_id')
     .eq('status', 'published')
     .gte('end_date', today)
+    .gt('start_date', today)
     .in('id', retreatIds);
   if (!retreats?.length) return [];
 
