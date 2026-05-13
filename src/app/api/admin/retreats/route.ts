@@ -2,7 +2,11 @@
 // GET  /api/admin/retreats — Listar retiros con filtros (solo admin)
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
-import { sendRetreatApprovedEmail, sendRetreatRejectedEmail } from '@/lib/email';
+import {
+  sendRetreatApprovedEmail,
+  sendRetreatRejectedEmail,
+  type RetreatReviewEmailNotification,
+} from '@/lib/email';
 import { assignRole } from '@/lib/roles';
 import { getCommissionTier } from '@/lib/utils';
 
@@ -98,7 +102,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: updateErr.message }, { status: 500 });
     }
 
-    // Enviar email al organizador
+    let emailNotification: RetreatReviewEmailNotification = { sent: false, reason: 'no_org_profile' };
+
     try {
       const { data: orgProfile } = await admin
         .from('organizer_profiles')
@@ -106,7 +111,9 @@ export async function POST(request: NextRequest) {
         .eq('id', retreat.organizer_id)
         .single();
 
-      if (orgProfile?.user_id) {
+      if (!orgProfile?.user_id) {
+        emailNotification = { sent: false, reason: 'no_org_profile' };
+      } else {
         if (action === 'approve') {
           await assignRole(admin, orgProfile.user_id, 'organizer');
         }
@@ -117,27 +124,36 @@ export async function POST(request: NextRequest) {
           .eq('id', orgProfile.user_id)
           .single();
 
-        if (orgUser?.email) {
-          const locale = (orgUser.preferred_locale || 'es') as 'es' | 'en';
+        const emailTrim = orgUser?.email?.trim();
+        if (!emailTrim) {
+          emailNotification = { sent: false, reason: 'no_organizer_email' };
+        } else {
+          const locale = (orgUser?.preferred_locale || 'es') as 'es' | 'en';
           if (action === 'approve') {
             await sendRetreatApprovedEmail({
-              to: orgUser.email,
+              to: emailTrim,
               locale,
               eventTitle: retreat.title_es || 'Retiro',
               eventSlug: retreat.slug || retreatId,
             });
           } else {
             await sendRetreatRejectedEmail({
-              to: orgUser.email,
+              to: emailTrim,
               locale,
               eventTitle: retreat.title_es || 'Retiro',
               rejectionReason: rejectionReason || undefined,
             });
           }
+          emailNotification = { sent: true };
         }
       }
     } catch (emailErr) {
-      console.error('Failed to send retreat review email:', emailErr);
+      console.error('[admin/retreats POST] retreat review email failed', {
+        retreatId,
+        action,
+        err: emailErr instanceof Error ? emailErr.message : String(emailErr),
+      });
+      emailNotification = { sent: false, reason: 'send_failed' };
     }
 
     return NextResponse.json({
@@ -146,6 +162,7 @@ export async function POST(request: NextRequest) {
       message: action === 'approve'
         ? 'Retiro aprobado y publicado.'
         : 'Retiro rechazado.',
+      emailNotification,
     });
   }
 

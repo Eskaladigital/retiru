@@ -11,6 +11,7 @@ const TinyRetreatDescriptionEditor = dynamic(
 import { Upload, X, Sparkles } from 'lucide-react';
 import { OrganizerPriceBreakdown } from '@/components/organizer/OrganizerPriceBreakdown';
 import { shrinkHeavyHtmlForRetreatPayload, uploadRetreatGalleryImageFromBrowser } from '@/lib/supabase/client';
+import { retreatReviewEmailUserHintEs } from '@/lib/retreat-review-email-notification';
 import { contentLooksLikeHtml } from '@/lib/sanitize-rich-html';
 import { markdownToHtml, plainBlogBodyToMarkdown } from '@/components/ui/markdown-content';
 
@@ -388,9 +389,12 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
       }
 
       if (publish) {
-        setSuccess(data.status === 'published'
-          ? 'Evento publicado directamente.'
-          : 'Evento enviado a revisión. El equipo de Retiru lo revisará pronto.');
+        const baseSuccess =
+          data.status === 'published'
+            ? 'Evento publicado directamente.'
+            : 'Evento enviado a revisión. El equipo de Retiru lo revisará pronto.';
+        const hint = retreatReviewEmailUserHintEs(data.emailNotification);
+        setSuccess(hint ? `${baseSuccess}\n\n${hint}` : baseSuccess);
       } else {
         const imgCount = imagePayload.length;
         setSuccess(imgCount > 0
@@ -409,7 +413,7 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
   return (
     <div className="space-y-6">
       {error && <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">{error}</div>}
-      {success && <div className="px-4 py-3 rounded-xl bg-green-50 border border-green-200 text-sm text-green-700">{success}</div>}
+      {success && <div className="px-4 py-3 rounded-xl bg-green-50 border border-green-200 text-sm text-green-800 whitespace-pre-line">{success}</div>}
 
       <div>
         <label className="block text-sm font-medium text-foreground mb-1.5">Título (ES) *</label>

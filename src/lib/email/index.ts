@@ -6,6 +6,9 @@
 import type { Transporter } from 'nodemailer';
 import { buildTransport, loadSmtpConfig } from '@/lib/mailing/transport';
 
+export type { RetreatReviewEmailNotification } from '@/lib/retreat-review-email-notification';
+export { retreatReviewEmailUserHintEs } from '@/lib/retreat-review-email-notification';
+
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.retiru.com';
 
 /** Copia BCC archivo. `SMTP_INTERNAL_COPY_EMAIL=''` desactiva; sin variable → contacto@retiru.com. */
@@ -61,16 +64,21 @@ export async function sendTransactionalMail(payload: TransactionalMailPayload) {
   }
 
   const from = transactionalFromAddress(payload.from);
-  const info = await getSmtpTransport().sendMail({
-    from,
-    to: payload.to,
-    subject: payload.subject,
-    html: payload.html,
-    bcc: bccList.length === 0 ? undefined : bccList.length === 1 ? bccList[0] : bccList,
-    replyTo: payload.replyTo,
-    text: payload.text,
-  });
-  return { data: { id: info.messageId } };
+  try {
+    const info = await getSmtpTransport().sendMail({
+      from,
+      to: payload.to,
+      subject: payload.subject,
+      html: payload.html,
+      bcc: bccList.length === 0 ? undefined : bccList.length === 1 ? bccList[0] : bccList,
+      replyTo: payload.replyTo,
+      text: payload.text,
+    });
+    return { data: { id: info.messageId } };
+  } catch (err) {
+    cachedTransport = null;
+    throw err;
+  }
 }
 
 /** @deprecated Usar `sendTransactionalMail`; se mantiene por compatibilidad con imports antiguos. */

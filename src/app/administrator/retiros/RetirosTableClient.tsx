@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { ImageOff } from 'lucide-react';
 import { EmailLink } from '@/components/ui/email-link';
+import { retreatReviewEmailUserHintEs } from '@/lib/retreat-review-email-notification';
 
 interface RetreatRow {
   id: string;
@@ -107,6 +108,9 @@ export function RetirosTableClient({
         body: JSON.stringify({ retreatId, action: 'approve' }),
       });
       if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        const hint = retreatReviewEmailUserHintEs(data.emailNotification);
+        if (hint) alert(hint);
         window.location.reload();
       } else {
         const data = await res.json();
@@ -130,6 +134,9 @@ export function RetirosTableClient({
       if (res.ok) {
         setRejectId(null);
         setRejectReason('');
+        const data = await res.json().catch(() => ({}));
+        const hint = retreatReviewEmailUserHintEs(data.emailNotification);
+        if (hint) alert(hint);
         window.location.reload();
       } else {
         const data = await res.json();

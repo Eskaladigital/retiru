@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { retreatReviewEmailUserHintEs } from '@/lib/retreat-review-email-notification';
 
 interface ContentIssue {
   type: string;
@@ -71,6 +72,9 @@ export function AdminRetiroPreviewActions({ retreatId }: { retreatId: string }) 
         body: JSON.stringify({ retreatId, action: 'approve' }),
       });
       if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        const hint = retreatReviewEmailUserHintEs(data.emailNotification);
+        if (hint) alert(hint);
         window.location.href = '/administrator/retiros';
       } else {
         const data = await res.json();
@@ -92,6 +96,9 @@ export function AdminRetiroPreviewActions({ retreatId }: { retreatId: string }) 
         body: JSON.stringify({ retreatId, action: 'reject', rejectionReason: rejectReason || undefined }),
       });
       if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        const hint = retreatReviewEmailUserHintEs(data.emailNotification);
+        if (hint) alert(hint);
         window.location.href = '/administrator/retiros';
       } else {
         const data = await res.json();

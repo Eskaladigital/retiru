@@ -1,7 +1,7 @@
 // PATCH /api/admin/retreats/[id] — Editar retiro (solo admin)
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
-import { sendRetreatApprovedEmail } from '@/lib/email';
+import { sendRetreatApprovedEmail, type RetreatReviewEmailNotification } from '@/lib/email';
 import { assignRole } from '@/lib/roles';
 import { getCommissionTier } from '@/lib/utils';
 
@@ -124,7 +124,10 @@ export async function PATCH(
     }
   }
 
+  let emailNotification: RetreatReviewEmailNotification | undefined;
+
   if (publishingFromPending) {
+    emailNotification = { sent: false, reason: 'no_org_profile' };
     try {
       const { data: orgProfile } = await admin
         .from('organizer_profiles')
@@ -132,7 +135,9 @@ export async function PATCH(
         .eq('id', existing.organizer_id)
         .single();
 
-      if (orgProfile?.user_id) {
+      if (!orgProfile?.user_id) {
+        emailNotification = { sent: false, reason: 'no_org_profile' };
+      } else {
         await assignRole(admin, orgProfile.user_id, 'organizer');
 
         const { data: orgUser } = await admin
@@ -141,20 +146,32 @@ export async function PATCH(
           .eq('id', orgProfile.user_id)
           .single();
 
-        if (orgUser?.email) {
-          const locale = (orgUser.preferred_locale || 'es') as 'es' | 'en';
+        const emailTrim = orgUser?.email?.trim();
+        if (!emailTrim) {
+          emailNotification = { sent: false, reason: 'no_organizer_email' };
+        } else {
+          const locale = (orgUser?.preferred_locale || 'es') as 'es' | 'en';
           await sendRetreatApprovedEmail({
-            to: orgUser.email,
+            to: emailTrim,
             locale,
             eventTitle: (existing.title_es as string) || 'Retiro',
             eventSlug: (existing.slug as string) || id,
           });
+          emailNotification = { sent: true };
         }
       }
     } catch (emailErr) {
-      console.error('Failed to send retreat approved email (PATCH):', emailErr);
+      console.error('[admin/retreats PATCH] retreat approved email failed', {
+        retreatId: id,
+        err: emailErr instanceof Error ? emailErr.message : String(emailErr),
+      });
+      emailNotification = { sent: false, reason: 'send_failed' };
     }
   }
 
-  return NextResponse.json({ success: true });
+  const bodyJson: Record<string, unknown> = { success: true };
+  if (emailNotification !== undefined) {
+    bodyJson.emailNotification = emailNotification;
+  }
+  return NextResponse.json(bodyJson);
 }

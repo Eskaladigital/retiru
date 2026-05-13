@@ -462,6 +462,8 @@ Sistema de comunicación dentro de la plataforma entre usuarios y organizadores,
 
 Sistema de emails automáticos enviados por la plataforma en eventos clave. **Salida única:** nodemailer + las mismas variables `SMTP_*` que el cron de mailing. Todos bilingües (ES/EN) según `preferred_locale` del usuario. Por defecto se añade **BCC** a `contacto@retiru.com` (archivo interno), salvo que el destinatario principal ya sea ese buzón o que `SMTP_INTERNAL_COPY_EMAIL=` esté vacío.
 
+**Vercel (producción):** las rutas servidor que envían estos correos (p. ej. `POST /api/admin/retreats` al aprobar un retiro) necesitan **`SMTP_HOST`**, **`SMTP_USER`**, **`SMTP_PASSWORD`** en el proyecto de producción. Si falta alguna o el SMTP rechaza la conexión, la aprobación **publica el retiro igual** pero la API devuelve **`emailNotification.sent: false`** y el admin muestra un aviso para corregir el entorno o reenviar con `npm run mail:retreat-approved`.
+
 **Archivo central:** `src/lib/email/index.ts`
 
 | Email | Destinatario | Cuándo se envía | Disparado por |
