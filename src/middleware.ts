@@ -24,6 +24,10 @@ const PUBLIC_PATHS = [
   '/en/retreats-retiru',
   '/es/destino-retiros',
   '/en/destination-retreats',
+  '/es/geo-retiros',
+  '/en/geo-retreats',
+  '/es/cat-retiros',
+  '/en/cat-retreats',
   '/es/destinos',
   '/en/destinations',
   '/es/organizador',
@@ -115,24 +119,85 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 301);
   }
 
-  // 0b. Rewrite invisible · landings de retiros por destino.
-  //     Next 14 tiene un comportamiento ambiguo cuando una ruta literal hermana
-  //     comparte prefijo con una ruta dinámica `prefijo-[var]`. La URL pública
-  //     `/es/retiros-retiru/<slug>` colisiona con `/es/retiros-[category]/[destination]`
-  //     y Next acaba renderizando la dinámica con `category=undefined`, provocando 500.
-  //     Para evitarlo servimos esa landing desde una carpeta sin colisión
-  //     (`destino-retiros/[slug]` en ES, `retreats-by-destination/[slug]` en EN)
-  //     manteniendo intacta la URL pública.
+  // 0b. Rewrite invisible · landings `retiros-retiru` / `retreats-retiru`.
+  //     Next 14 enruta de forma ambigua cualquier segmento `prefijo-XXX` cuando
+  //     existe una carpeta literal `prefijo-Y` hermana de una carpeta dinámica
+  //     `prefijo-[var]`. Síntomas observados:
+  //      - /es/retiros-retiru/<slug>  → 500 (entra en la dinámica con category=undefined)
+  //      - /es/retiros-yoga (etc.)    → 404 directo del router (la dinámica entera
+  //                                      queda anulada por la presencia de la literal)
+  //     Solución: las páginas de `retiros-retiru` (raíz y `/[slug]`) están movidas a
+  //     `destino-retiros/` (ES) y `destination-retreats/` (EN), carpetas SIN prefijo
+  //     `retiros-`/`retreats-`. Aquí mantenemos la URL pública con un rewrite invisible.
+  if (pathname === '/es/retiros-retiru' || pathname === '/es/retiros-retiru/') {
+    const url = request.nextUrl.clone();
+    url.pathname = '/es/destino-retiros';
+    return NextResponse.rewrite(url);
+  }
   const esDestMatch = pathname.match(/^\/es\/retiros-retiru\/([^\/]+)\/?$/);
   if (esDestMatch) {
     const url = request.nextUrl.clone();
     url.pathname = `/es/destino-retiros/${esDestMatch[1]}`;
     return NextResponse.rewrite(url);
   }
+  if (pathname === '/en/retreats-retiru' || pathname === '/en/retreats-retiru/') {
+    const url = request.nextUrl.clone();
+    url.pathname = '/en/destination-retreats';
+    return NextResponse.rewrite(url);
+  }
   const enDestMatch = pathname.match(/^\/en\/retreats-retiru\/([^\/]+)\/?$/);
   if (enDestMatch) {
     const url = request.nextUrl.clone();
     url.pathname = `/en/destination-retreats/${enDestMatch[1]}`;
+    return NextResponse.rewrite(url);
+  }
+
+  // 0c. Mismo problema en `retiros-en/[slug]` (landing geográfica país/CCAA/provincia).
+  //     Movida a `geo-retiros/[slug]` (ES) / `geo-retreats/[slug]` (EN) para no
+  //     compartir prefijo `retiros-`/`retreats-` con la dinámica `retiros-[category]`.
+  const esGeoMatch = pathname.match(/^\/es\/retiros-en\/([^\/]+)\/?$/);
+  if (esGeoMatch) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/es/geo-retiros/${esGeoMatch[1]}`;
+    return NextResponse.rewrite(url);
+  }
+  const enGeoMatch = pathname.match(/^\/en\/retreats-in\/([^\/]+)\/?$/);
+  if (enGeoMatch) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/en/geo-retreats/${enGeoMatch[1]}`;
+    return NextResponse.rewrite(url);
+  }
+
+  // 0d. Rewrite invisible · landings de retiros por categoría.
+  //     `/es/retiros-<cat>` y `/es/retiros-<cat>/<dest>` se sirven desde
+  //     `(public)/es/cat-retiros/[category](/[destination])` para evitar el
+  //     bug de Next 14 que no enruta segmentos `prefijo-XXX` cuando la dinámica
+  //     se llama `prefijo-[var]`. Las URLs públicas se mantienen.
+  //     IMPORTANTE: este bloque va después de los rewrites de `retiros-retiru`
+  //     y `retiros-en` para no capturarlos antes (no es el caso por la categoría
+  //     reservada, pero por orden lógico).
+  const esCatDestMatch = pathname.match(/^\/es\/retiros-([^\/]+)\/([^\/]+)\/?$/);
+  if (esCatDestMatch) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/es/cat-retiros/${esCatDestMatch[1]}/${esCatDestMatch[2]}`;
+    return NextResponse.rewrite(url);
+  }
+  const esCatMatch = pathname.match(/^\/es\/retiros-([^\/]+)\/?$/);
+  if (esCatMatch) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/es/cat-retiros/${esCatMatch[1]}`;
+    return NextResponse.rewrite(url);
+  }
+  const enCatDestMatch = pathname.match(/^\/en\/retreats-([^\/]+)\/([^\/]+)\/?$/);
+  if (enCatDestMatch) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/en/cat-retreats/${enCatDestMatch[1]}/${enCatDestMatch[2]}`;
+    return NextResponse.rewrite(url);
+  }
+  const enCatMatch = pathname.match(/^\/en\/retreats-([^\/]+)\/?$/);
+  if (enCatMatch) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/en/cat-retreats/${enCatMatch[1]}`;
     return NextResponse.rewrite(url);
   }
 

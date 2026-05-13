@@ -4,7 +4,7 @@
 // Devuelve ya calculados los slugs hoja (destinos) para que la landing
 // pueda hacer una sola query "IN (...)" sobre retreats.destination_id.
 
-import { createServerSupabase } from '@/lib/supabase/server';
+import { createStaticSupabase } from '@/lib/supabase/server';
 
 export type GeoKind = 'country' | 'region' | 'province' | 'destination';
 
@@ -45,7 +45,7 @@ const COUNTRY_ISO_TO_TEXT: Record<string, string> = {
  * (ese caso ya lo cubre la ruta /es/retiros-retiru/[slug]).
  */
 export async function resolveGeoLanding(slug: string): Promise<GeoNode | null> {
-  const supabase = await createServerSupabase();
+  const supabase = createStaticSupabase();
 
   const { data: row, error } = await supabase
     .from('destinations')
@@ -99,7 +99,7 @@ export async function resolveGeoLanding(slug: string): Promise<GeoNode | null> {
 }
 
 async function collectDestinationDescendants(rootSlug: string): Promise<string[]> {
-  const supabase = await createServerSupabase();
+  const supabase = createStaticSupabase();
   const out: string[] = [];
   let frontier = [rootSlug];
   // Profundidad máxima razonable: país → CCAA → provincia → destino (4)
@@ -124,7 +124,7 @@ async function buildBreadcrumb(
   name: string,
   parentSlug: string | null,
 ): Promise<Array<{ slug: string; name: string; current?: boolean }>> {
-  const supabase = await createServerSupabase();
+  const supabase = createStaticSupabase();
   const crumbs: Array<{ slug: string; name: string; current?: boolean }> = [
     { slug, name, current: true },
   ];

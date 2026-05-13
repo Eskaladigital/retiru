@@ -5,7 +5,6 @@ import { notFound } from 'next/navigation';
 import { MapPin, Star, CalendarDays, Users } from 'lucide-react';
 import EventosSearch from '@/components/home/EventosSearch';
 import {
-  getCategoriesWithRetreats,
   getCategoryBySlug,
   getPublishedRetreats,
   getDestinationsForCategory,
@@ -13,14 +12,11 @@ import {
 import { getOrganizerReviewStats, organizerHasRatingToShow, CATEGORY_SLUG_EN, CENTER_TYPE_URL_ES } from '@/lib/utils';
 import { generatePageMetadata, jsonLdItemList, jsonLdBreadcrumb, jsonLdFAQ, jsonLdScript } from '@/lib/seo';
 
+// Render bajo demanda con cache de 1h. NOTA: NO añadir `generateStaticParams`,
+// Next 14 crea carpetas vacías por cada slug en `.next/server/app/es/retiros-*/`
+// que rompen el routing dinámico (las prefiere sobre `(public)/es/retiros-[category]/`).
 export const revalidate = 3600;
-
-export async function generateStaticParams() {
-  const cats = await getCategoriesWithRetreats();
-  return cats
-    .filter(({ slug }) => slug && slug !== 'retiru')
-    .map(({ slug }) => ({ category: slug }));
-}
+export const dynamicParams = true;
 
 export async function generateMetadata({ params }: { params: Promise<{ category: string }> }): Promise<Metadata> {
   const { category } = await params;

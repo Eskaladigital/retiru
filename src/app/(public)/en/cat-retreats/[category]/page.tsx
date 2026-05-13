@@ -5,7 +5,6 @@ import { notFound } from 'next/navigation';
 import { MapPin, Star, CalendarDays, Users } from 'lucide-react';
 import EventosSearch from '@/components/home/EventosSearch';
 import {
-  getCategoriesWithRetreats,
   getCategoryBySlug,
   getPublishedRetreats,
   getDestinationsForCategory,
@@ -13,14 +12,9 @@ import {
 import { getOrganizerReviewStats, organizerHasRatingToShow, CATEGORY_SLUG_EN, CATEGORY_SLUG_FROM_EN, CENTER_TYPE_URL_ES } from '@/lib/utils';
 import { generatePageMetadata, jsonLdItemList, jsonLdBreadcrumb, jsonLdFAQ, jsonLdScript } from '@/lib/seo';
 
+// Ver nota en `es/retiros-[category]/page.tsx` sobre por qué NO usar generateStaticParams.
 export const revalidate = 3600;
-
-export async function generateStaticParams() {
-  const cats = await getCategoriesWithRetreats();
-  return cats
-    .filter(({ slug }) => slug && slug !== 'retiru')
-    .map(({ slug }) => ({ category: CATEGORY_SLUG_EN[slug] || slug }));
-}
+export const dynamicParams = true;
 
 export async function generateMetadata({ params }: { params: Promise<{ category: string }> }): Promise<Metadata> {
   const { category: enSlug } = await params;

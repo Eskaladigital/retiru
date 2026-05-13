@@ -8,23 +8,14 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { MapPin, Star, CalendarDays, Users } from 'lucide-react';
 import EventosSearch from '@/components/home/EventosSearch';
-import { createServerSupabase, createStaticSupabase } from '@/lib/supabase/server';
+import { createStaticSupabase } from '@/lib/supabase/server';
 import { generatePageMetadata, jsonLdItemList, jsonLdBreadcrumb, jsonLdFAQ, jsonLdScript } from '@/lib/seo';
 import { resolveGeoLanding, type GeoNode } from '@/lib/geo-landing';
 
-export const revalidate = 3600;
-
-export async function generateStaticParams() {
-  // Nota: usamos createStaticSupabase (sin cookies) porque generateStaticParams
-  // se ejecuta fuera del request scope durante el build.
-  const supabase = createStaticSupabase();
-  const { data } = await supabase
-    .from('destinations')
-    .select('slug')
-    .eq('is_active', true)
-    .in('kind', ['country', 'region', 'province']);
-  return (data || []).map((d) => ({ slug: d.slug }));
-}
+// Esta landing depende de jerarquías y se renderiza al vuelo (resolveGeoLanding lee
+// cookies vía layout público). Si pones revalidate + generateStaticParams entrarías en
+// SSG/ISR y Next 14 marca DYNAMIC_SERVER_USAGE → 500. Mejor force-dynamic.
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -58,7 +49,7 @@ export default async function RetirosEnPage({ params }: { params: Promise<{ slug
   const node: GeoNode | null = await resolveGeoLanding(slug);
   if (!node) notFound();
 
-  const supabase = await createServerSupabase();
+  const supabase = createStaticSupabase();
 
   // Retiros con destination.slug en la jerarquía hija (destinos hoja)
   const { data: destHijos } = await supabase
