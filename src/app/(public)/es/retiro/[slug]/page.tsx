@@ -9,10 +9,12 @@ import { notFound } from 'next/navigation';
 import { getRetreatBySlug } from '@/lib/data';
 import { createStaticSupabase } from '@/lib/supabase/server';
 import { generatePageMetadata, jsonLdEvent, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
-import { Star, MapPin, Calendar, Clock, Users, Globe, Shield, Zap, Heart, Share2, Check, X as XIcon } from 'lucide-react';
+import { Star, MapPin, Calendar, Clock, Users, Globe, Shield, Zap, Heart, Check, X as XIcon } from 'lucide-react';
 import AskOrganizerButton from '@/components/messaging/AskOrganizerButton';
 import ReserveButton from '@/components/booking/ReserveButton';
 import { RetreatDescriptionBody, LinkifyText } from '@/components/ui/retreat-description-body';
+import ShareButton from '@/components/ui/share-button';
+import { getSiteUrl } from '@/lib/site-url';
 
 export const revalidate = 3600;
 
@@ -221,7 +223,11 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
               {/* Actions */}
               <div className="mt-4 flex gap-3">
                 <button className="btn-ghost text-sm"><Heart size={16} /> Guardar</button>
-                <button className="btn-ghost text-sm"><Share2 size={16} /> Compartir</button>
+                <ShareButton
+                  url={`${getSiteUrl()}/es/retiro/${r.slug}`}
+                  title={r.title_es}
+                  locale="es"
+                />
               </div>
             </div>
 

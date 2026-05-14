@@ -9,11 +9,13 @@ import { notFound } from 'next/navigation';
 import { getRetreatBySlug } from '@/lib/data';
 import { createStaticSupabase } from '@/lib/supabase/server';
 import { generatePageMetadata, jsonLdEvent, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
-import { Star, MapPin, Calendar, Clock, Users, Globe, Shield, Zap, Heart, Share2, Check, X as XIcon } from 'lucide-react';
+import { Star, MapPin, Calendar, Clock, Users, Globe, Shield, Zap, Heart, Check, X as XIcon } from 'lucide-react';
 import AskOrganizerButton from '@/components/messaging/AskOrganizerButton';
 import ReserveButton from '@/components/booking/ReserveButton';
 import { RetreatDescriptionBody, LinkifyText } from '@/components/ui/retreat-description-body';
+import ShareButton from '@/components/ui/share-button';
 import { CATEGORY_SLUG_EN } from '@/lib/utils';
+import { getSiteUrl } from '@/lib/site-url';
 
 export const revalidate = 3600;
 
@@ -215,7 +217,11 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
               </div>
               <div className="mt-4 flex gap-3">
                 <button className="btn-ghost text-sm"><Heart size={16} /> Save</button>
-                <button className="btn-ghost text-sm"><Share2 size={16} /> Share</button>
+                <ShareButton
+                  url={`${getSiteUrl()}/en/retreat/${r.slug}`}
+                  title={r.title_en ?? r.title_es}
+                  locale="en"
+                />
               </div>
             </div>
 
