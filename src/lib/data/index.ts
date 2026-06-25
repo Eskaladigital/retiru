@@ -363,11 +363,10 @@ export async function getRetreatSlugs(): Promise<string[]> {
 /** Usar solo en generateStaticParams */
 export async function getBlogPostSlugs(locale: 'es' | 'en' = 'es'): Promise<string[]> {
   const supabase = createStaticSupabase();
-  const { data, error } = await supabase
-    .from('blog_articles')
-    .select('slug, slug_en')
-    .eq('is_published', true)
-    .order('slug');
+  const { applyPublicBlogFilters } = await import('@/lib/blog-visible');
+  const { data, error } = await applyPublicBlogFilters(
+    supabase.from('blog_articles').select('slug, slug_en'),
+  ).order('slug');
   if (error) throw error;
   if (locale === 'en') {
     return (data || []).map((r: any) => r.slug_en || r.slug).filter(Boolean);
@@ -1063,15 +1062,17 @@ export async function getBlogArticlesMentioning(
 ): Promise<Pick<import('@/types').BlogArticle, 'id' | 'slug' | 'title_es' | 'title_en' | 'excerpt_es' | 'excerpt_en' | 'cover_image_url' | 'published_at'>[]> {
   if (!term || term.length < 2) return [];
   const supabase = await createServerSupabase();
+  const { applyPublicBlogFilters } = await import('@/lib/blog-visible');
   const needle = `%${term}%`;
   const titleCol = locale === 'en' ? 'title_en' : 'title_es';
   const contentCol = locale === 'en' ? 'content_en' : 'content_es';
   const excerptCol = locale === 'en' ? 'excerpt_en' : 'excerpt_es';
-  const { data } = await supabase
-    .from('blog_articles')
-    .select('id, slug, title_es, title_en, excerpt_es, excerpt_en, cover_image_url, published_at')
-    .eq('is_published', true)
-    .or(`${titleCol}.ilike.${needle},${contentCol}.ilike.${needle},${excerptCol}.ilike.${needle}`)
+  const { data } = await applyPublicBlogFilters(
+    supabase
+      .from('blog_articles')
+      .select('id, slug, title_es, title_en, excerpt_es, excerpt_en, cover_image_url, published_at')
+      .or(`${titleCol}.ilike.${needle},${contentCol}.ilike.${needle},${excerptCol}.ilike.${needle}`),
+  )
     .order('published_at', { ascending: false })
     .limit(limit);
   return (data || []) as any[];

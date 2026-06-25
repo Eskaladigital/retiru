@@ -2,6 +2,8 @@
 
 Documento de referencia sobre la estructura de contenido único de las landings y cómo hacerlas atractivas para SEO.
 
+> **Idiomas:** todo el contenido SEO (intros, FAQ, `sections_es/en`, meta, blog) se crea en **español e inglés** únicamente. El idioma en que alguien coordina el trabajo no cambia el idioma del contenido. Regla completa: `README.md` → **Idiomas del producto**.
+
 ---
 
 ## 1. Estructura actual de landings con slug
@@ -77,6 +79,8 @@ Las listas filtran por BD pero **no tienen contenido editorial único**. Para SE
 
 - Schema Article con author, datePublished, dateModified.
 - OG image por artículo.
+- **Línea editorial:** contenido **informativo** para búsquedas generales (recetas, nutrición, tipos de yoga/meditación, aceites y tratamientos ayurvédicos). **No** artículos tipo «retiros en [destino]» ni guías de reserva — eso compite con landings geográficas y con la propia plataforma. Ver **`docs/BLOG-EDITORIAL.md`** y cola en **`docs/BLOG-TITULOS-PROPUESTOS.md`**.
+- Enlaces internos: menciones naturales a centros/retiros al cierre; autolink geográfico solo cuando el texto lo justifica (`auto-link-geo.ts`).
 
 ---
 
@@ -89,7 +93,7 @@ Las listas filtran por BD pero **no tienen contenido editorial único**. Para SE
 | Intro por ciudad | eventos-retiru/[slug], centros-retiru/[slug] | "Murcia, entre mar y montaña, ofrece retiros de yoga, meditación y naturaleza en entornos poco masificados." |
 | Intro por destino | destinos/[slug] | "Ibiza es el destino estrella para retiros de yoga en España. Calas secretas, villas con vistas y una energía única." |
 | Tips por destino | Cualquier lista | "Consejos: mejor época (abril–octubre), qué llevar, nivel de yoga recomendado." |
-| Comparativas | Blog o secciones | "Retiros en Madrid vs Barcelona: qué elegir según tu estilo." |
+| Comparativas | Blog o secciones | Solo comparativas **de prácticas o alimentación** (p. ej. «Hatha vs Vinyasa»). **No** «retiros en Madrid vs Barcelona» — ver `docs/BLOG-EDITORIAL.md`. |
 
 ### B. Schema.org (JSON-LD)
 
@@ -307,9 +311,20 @@ Orden del array = orden de renderizado. `key` es estable para identificar secci�
 
 Nueva tabla `style_province_seo` paralela para Cap. 4 (mismos campos que `center_type_province_seo` pero con columna `style_slug`).
 
+**Higiene operativa (2026-05-22):** solo deben existir filas para pares **estilo×provincia publicables** — mismo criterio que la ruta (`≥5 centros` activos con ese estilo en la provincia; si no, la app hace `notFound()` → 404). Mantener con:
+
+```bash
+npm run seo:prune-style-province:dry   # simular
+npm run seo:prune-style-province       # borrar huérfanas + verificar HTTP 200
+```
+
+Estado en producción tras la primera limpieza: **20 filas** en BD (todas URLs 200) · **44 pares** publicables en total · **24 URLs** sin fila SEO (página existe; `sections_es` pendiente con `npm run seo:sections -- --layer=4`).
+
+Auditoría HTTP de todo el directorio: `node scripts/check-seo-urls-status.mjs`.
+
 ### 8.8 Flujo de generación con SerpApi + OpenAI
 
-Script unificado `scripts/generate-seo-sections.mjs`:
+Script unificado `scripts/generate-seo-sections.mjs` (`npm run seo:sections`):
 
 1. **Carga dossier de BD** (centros reales, ciudades, estilos, conteos).
 2. **Consulta SerpApi** por la query local canónica de la landing. Captura:
@@ -317,13 +332,17 @@ Script unificado `scripts/generate-seo-sections.mjs`:
    - `related_searches[]` → palabras clave para el prompt.
    - `local_results.places[]` → valida nombres reales de centros.
    - `answer_box` / `featured_snippet` → señala el intent dominante.
-3. **Prompt GPT-4o diferente por capa** (respeta §8.2 §8.3 §8.5).
+3. **Prompt GPT-4o/4.1 diferente por capa** (respeta §8.2 §8.3 §8.5). Motor: `scripts/lib/seo-engine.mjs`.
 4. **Upsert** en la tabla correspondiente.
 5. **Cacheo** del `serp_data` en la fila — si se regenera el texto en < 30 días, se reutiliza sin llamar a SerpApi.
 
-Flags: `--capa=1..5`, `--type=yoga`, `--province=madrid`, `--city=arganzuela`, `--style=vinyasa`, `--force`, `--dry-run`, `--limit=N`, `--concurrency=2`.
+**Capas soportadas:** `--layer=2|3|4|5|all` (Cap. 1 nacional por tipo **no** se genera aquí; vive en `src/lib/center-type-editorial.ts`).
 
-Coste estimado una tanda completa (266 landings): ~$1 SerpApi + ~$24 OpenAI GPT-4o = **~$25**.
+Flags: `--layer=3`, `--type=yoga`, `--province=madrid`, `--city=arganzuela`, `--style=vinyasa`, `--force`, `--dry-run`, `--no-serp`, `--limit=N`, `--concurrency=2`.
+
+**Cobertura `sections_es` (mayo 2026):** Cap. 3 ✅ 91/91 · Cap. 5 ⬜ 0/59 · Cap. 2 ⬜ 0/21 · Cap. 4 ⬜ 0/20 filas (44 URLs publicables).
+
+Inspección puntual: `node scripts/_peek-seo.mjs ayurveda alava` (tipo, provincia; opcional tercer arg ciudad).
 
 ### 8.9 Slugs canónicos para provincias duplicadas
 
@@ -356,9 +375,9 @@ La consolidación se ejecuta con `scripts/consolidate-duplicate-provinces.mjs`:
 - **Landings por categoría**: ✅ `/es/retiros-yoga`, `/es/retiros-meditacion`, etc. con intro, FAQ, destinos, JSON-LD.
 - **Landings categoría+destino**: ✅ `/es/retiros-yoga/ibiza` con contenido combinado, FAQ, JSON-LD.
 - **Landings centros por tipo**: ✅ `/es/centros/yoga`, `/es/centros/meditacion`, `/es/centros/ayurveda` con top provincias, estilos, tips, FAQ ampliada, blog relacionado y JSON-LD `FAQPage + ItemList + BreadcrumbList`. (Redirección 308 desde `/es/centros-*` antiguas.)
-- **Landings tipo+provincia**: ✅ `/es/centros/yoga/madrid` con intro única, listado, FAQ, "otras provincias", "ciudades con centros", JSON-LD.
-- **Landings tipo+provincia+ciudad**: ✅ `/es/centros/yoga/madrid/getafe` (58 páginas generadas en primera ronda; umbral ≥ 2 centros).
-- **Landings tipo+estilo (nacional y provincial)**: ✅ `/es/centros/yoga/estilo/vinyasa`, `/es/centros/yoga/estilo/vinyasa/barcelona`, etc. (Fase 3 #10). **18 nacionales + 44 provinciales** elegibles tras correr `npm run centers:infer-styles --min-confidence=0.7` sobre 496 centros (441 clasificados, 89 % cobertura).
+- **Landings tipo+provincia**: ✅ `/es/centros/yoga/madrid` con intro única, **`sections_es` (4 bloques + FAQ)** en las **91** parejas reales, listado, FAQ, "otras provincias", "ciudades con centros", JSON-LD. Renderer: `SeoSections.tsx`.
+- **Landings tipo+provincia+ciudad**: ✅ `/es/centros/yoga/madrid/getafe` (59 URLs; umbral ≥ 2 centros). **`sections_es` pendiente** de generación masiva.
+- **Landings tipo+estilo (nacional y provincial)**: ✅ `/es/centros/yoga/estilo/vinyasa`, `/es/centros/yoga/estilo/vinyasa/madrid`, etc. (Fase 3 #10). **≥3 centros** nacional · **≥5 provincial** (menos → 404). **44 provinciales** publicables; **18 nacionales** (3 dan 404: `trascendental`, `metta`, `bikram`). Tabla `style_province_seo`: **20 filas** alineadas con URLs 200 (`npm run seo:prune-style-province`).
 - **Hub provincia**: ✅ `/es/provincias/[slug]` (Fase 3 #7) con top centros por tipo, retiros próximos, blog local y `CollectionPage + Place`. Canonical geográfico.
 - **Fichas**: ✅ JSON-LD Event, LocalBusiness enriquecido (YogaStudio/HealthAndBeautyBusiness + geo + sameAs + priceRange + images + areaServed), Product, BlogPosting, BreadcrumbList.
 - **Sitemap**: ✅ Completo y bilingüe, con todas las landings programáticas incluidas (estáticas + provincia + ciudad + estilos nacional/provincial + hub provincia).

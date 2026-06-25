@@ -12,5 +12,7 @@ supabase/.temp/
 SUPERTESTER/.urls-cache.json
 SUPERTESTER/test-results/
 SUPERTESTER/playwright-report/
+scripts/.blog-queue-progress.json
+scripts/blog-publish-queue.log
 
 .vercel

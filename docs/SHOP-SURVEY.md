@@ -2,6 +2,8 @@
 
 Validación de demanda antes de stock: los visitantes puntúan categorías (1–5) y pueden dejar un comentario; el equipo ve agregados en el panel de administración.
 
+> **Idiomas:** textos de tienda y encuesta en **español e inglés** según ruta (`/es/tienda`, `/en/shop`). Ver `README.md` → **Idiomas del producto**.
+
 ## Dónde está en la app
 
 | Quién | Ruta | Código |

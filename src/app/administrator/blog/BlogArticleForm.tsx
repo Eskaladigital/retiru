@@ -13,7 +13,7 @@ const TinyRichTextEditor = dynamic(
   () => import('@/components/editor/TinyRetreatDescriptionEditor').then((m) => m.TinyRichTextEditor),
   { ssr: false }
 );
-import { ArrowLeft, Save, Upload, X, ImageOff } from 'lucide-react';
+import { ArrowLeft, Save, Sparkles, Upload, X, ImageOff } from 'lucide-react';
 import Link from 'next/link';
 
 const schema = z.object({
@@ -61,6 +61,7 @@ export function BlogArticleForm({ categories, article }: BlogArticleFormProps) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [generatingCover, setGeneratingCover] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -128,6 +129,44 @@ export function BlogArticleForm({ categories, article }: BlogArticleFormProps) {
   };
 
   const coverUrl = watch('cover_image_url');
+  const excerptEs = watch('excerpt_es');
+  const contentEs = watch('content_es');
+  const categoryId = watch('category_id');
+
+  async function handleGenerateCoverAi() {
+    if (!titleEs?.trim() || !excerptEs?.trim() || !contentEs?.trim()) {
+      setError('Completa título, extracto y contenido para generar la portada con IA.');
+      return;
+    }
+    setError(null);
+    setGeneratingCover(true);
+    try {
+      const categoryLabel = categories.find((c) => c.id === categoryId)?.name_es;
+      const res = await fetch('/api/admin/blog/generate-cover-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title_es: titleEs,
+          title_en: watch('title_en') || undefined,
+          excerpt_es: excerptEs,
+          excerpt_en: watch('excerpt_en') || undefined,
+          content_es: contentEs,
+          content_en: watch('content_en') || undefined,
+          category_id: categoryId,
+          category_label: categoryLabel,
+          article_id: article?.id,
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string; publicUrl?: string };
+      if (!res.ok) throw new Error(data.error || `Error al generar la imagen (${res.status})`);
+      if (!data.publicUrl) throw new Error('No se obtuvo URL de la imagen generada.');
+      setValue('cover_image_url', data.publicUrl);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error al generar la portada');
+    } finally {
+      setGeneratingCover(false);
+    }
+  }
 
   const convertToWebp = async (file: File): Promise<Blob> => {
     const bitmap = await createImageBitmap(file);
@@ -395,15 +434,35 @@ export function BlogArticleForm({ categories, article }: BlogArticleFormProps) {
                     }}
                   />
 
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                    className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-sand-200 text-sm text-[#7a6b5d] hover:bg-sand-50 disabled:opacity-50 transition-colors"
-                  >
-                    <Upload size={14} />
-                    {uploading ? 'Subiendo...' : 'Subir imagen'}
-                  </button>
+                  <div className="grid grid-cols-1 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading || generatingCover}
+                      className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-sand-200 text-sm text-[#7a6b5d] hover:bg-sand-50 disabled:opacity-50 transition-colors"
+                    >
+                      <Upload size={14} />
+                      {uploading ? 'Subiendo...' : 'Subir imagen'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleGenerateCoverAi}
+                      disabled={
+                        generatingCover ||
+                        uploading ||
+                        !titleEs?.trim() ||
+                        !excerptEs?.trim() ||
+                        !contentEs?.trim()
+                      }
+                      className="w-full inline-flex flex-col items-center justify-center gap-1 px-3 py-2.5 rounded-xl border-2 border-dashed border-terracotta-200 bg-terracotta-50/40 text-sm text-terracotta-800 hover:border-terracotta-400 hover:bg-terracotta-50 disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                    >
+                      <span className="inline-flex items-center gap-2 font-medium">
+                        <Sparkles size={14} className="text-terracotta-600" />
+                        {generatingCover ? 'Generando…' : 'Generar portada con IA'}
+                      </span>
+                      <span className="text-[11px] text-[#7a6b5d]">GPT Image 1.5 · foto tipo editorial</span>
+                    </button>
+                  </div>
 
                   <input
                     {...register('cover_image_url')}

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Clock, Calendar, ArrowLeft, Share2, ChevronRight } from 'lucide-react';
 import { notFound, redirect } from 'next/navigation';
 import { getBlogPostSlugs, getCenterProvinces, getDominantCenterTypeMap } from '@/lib/data';
+import { applyPublicBlogFilters } from '@/lib/blog-visible';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { RichContentBody } from '@/components/ui/retreat-description-body';
 import { contentLooksLikeHtml } from '@/lib/sanitize-rich-html';
@@ -23,12 +24,12 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const supabase = await createServerSupabase();
-  const { data: article } = await supabase
-    .from('blog_articles')
-    .select('title_en, title_es, excerpt_en, excerpt_es, meta_title_en, meta_title_es, meta_description_en, meta_description_es, slug, slug_en, cover_image_url')
-    .or(`slug_en.eq.${slug},slug.eq.${slug}`)
-    .eq('is_published', true)
-    .single();
+  const { data: article } = await applyPublicBlogFilters(
+    supabase
+      .from('blog_articles')
+      .select('title_en, title_es, excerpt_en, excerpt_es, meta_title_en, meta_title_es, meta_description_en, meta_description_es, slug, slug_en, cover_image_url')
+      .or(`slug_en.eq.${slug},slug.eq.${slug}`),
+  ).single();
 
   if (!article) return {};
 
@@ -86,12 +87,12 @@ export default async function BlogPostEN({ params }: { params: Promise<{ slug: s
   const { slug } = await params;
   const supabase = await createServerSupabase();
 
-  const { data: article } = await supabase
-    .from('blog_articles')
-    .select('*, blog_categories(name_en, name_es, slug)')
-    .or(`slug_en.eq.${slug},slug.eq.${slug}`)
-    .eq('is_published', true)
-    .single();
+  const { data: article } = await applyPublicBlogFilters(
+    supabase
+      .from('blog_articles')
+      .select('*, blog_categories(name_en, name_es, slug)')
+      .or(`slug_en.eq.${slug},slug.eq.${slug}`),
+  ).single();
 
   if (!article) notFound();
 
@@ -99,13 +100,16 @@ export default async function BlogPostEN({ params }: { params: Promise<{ slug: s
     redirect(`/en/blog/${article.slug_en}`);
   }
 
-  const { data: related } = await supabase
-    .from('blog_articles')
-    .select('id, title_en, title_es, slug, slug_en, cover_image_url, blog_categories(name_en, name_es)')
-    .eq('is_published', true)
-    .neq('id', article.id)
+  const { data: relatedRaw } = await applyPublicBlogFilters(
+    supabase
+      .from('blog_articles')
+      .select('id, title_en, title_es, slug, slug_en, cover_image_url, blog_categories(name_en, name_es)')
+      .neq('id', article.id),
+  )
     .order('published_at', { ascending: false })
     .limit(3);
+
+  const related = relatedRaw ?? [];
 
   const categoryName = (article.blog_categories as any)?.name_en || (article.blog_categories as any)?.name_es || 'General';
 

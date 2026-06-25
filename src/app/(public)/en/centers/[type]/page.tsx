@@ -7,6 +7,7 @@ import { MapPin, Star } from 'lucide-react';
 import CentrosSearch from '@/components/home/CentrosSearch';
 import { getActiveCenters, getCategoryBySlug, getProvincesForCenterType } from '@/lib/data';
 import { createServerSupabase } from '@/lib/supabase/server';
+import { applyPublicBlogFilters } from '@/lib/blog-visible';
 import { getCenterTypeLabel, CATEGORY_SLUG_EN, stripMarkdownForPreview, isGenericDescription } from '@/lib/utils';
 import { generatePageMetadata, jsonLdItemList, jsonLdBreadcrumb, jsonLdFAQ, jsonLdScript } from '@/lib/seo';
 import {
@@ -59,11 +60,12 @@ export default async function CentersByTypePage({ params }: { params: Promise<{ 
   const extraFaqs = typeKey ? EXTRA_FAQS_BY_TYPE[typeKey] : [];
 
   const supabase = await createServerSupabase();
-  const { data: relatedBlog } = await supabase
-    .from('blog_articles')
-    .select('id, slug, slug_en, title_es, title_en, excerpt_es, excerpt_en, cover_image_url, published_at, blog_categories!inner(slug)')
-    .eq('is_published', true)
-    .eq('blog_categories.slug', catSlug)
+  const { data: relatedBlog } = await applyPublicBlogFilters(
+    supabase
+      .from('blog_articles')
+      .select('id, slug, slug_en, title_es, title_en, excerpt_es, excerpt_en, cover_image_url, published_at, blog_categories!inner(slug)')
+      .eq('blog_categories.slug', catSlug),
+  )
     .order('published_at', { ascending: false })
     .limit(3);
 

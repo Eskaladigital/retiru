@@ -4,6 +4,8 @@ Documento de **trabajo**: contrasta páginas y tipos en `src/types/index.ts` con
 
 **Orden de migraciones en Supabase:** el esquema “oficial” es la carpeta `supabase/migrations/` aplicada en orden numérico. Varios cambios van en **dos archivos seguidos** (enums + uso en la siguiente migración); no ejecutar solo la segunda. Detalle y tabla de pares: `README.md` → sección *Base de datos (Supabase)*.
 
+**Idiomas de contenido:** los campos `*_es` / `*_en` (y rutas `/es` / `/en`) son los únicos idiomas del producto. Quien edite datos o use un agente debe seguir esa convención con independencia del idioma del chat. Ver `README.md` → **Idiomas del producto**.
+
 ---
 
 ## Resumen ejecutivo (abril 2026)

@@ -48,8 +48,8 @@ Equivalente EN exactamente igual:
 | `/es/para-organizadores` | `src/app/(public)/es/para-organizadores/page.tsx` | Para centros y organizadores |
 | `/es/tienda` | `src/app/(public)/es/tienda/page.tsx` | Tienda (`shop_products`); si no hay productos, encuesta `ProductInterestSurvey` → `shop_product_interests` |
 | `/es/tienda/[slug]` | `src/app/(public)/es/tienda/[slug]/page.tsx` | Ficha de producto |
-| `/es/blog` | `src/app/(public)/es/blog/page.tsx` | Blog (`?q=` búsqueda por título/resumen, `?categoria=` slug categoría) |
-| `/es/blog/[slug]` | `src/app/(public)/es/blog/[slug]/page.tsx` | Artículo de blog |
+| `/es/blog` | `src/app/(public)/es/blog/page.tsx` | Blog (`?q=` búsqueda por título/resumen, `?categoria=` slug categoría). **Editorial:** `docs/BLOG-EDITORIAL.md` |
+| `/es/blog/[slug]` | `src/app/(public)/es/blog/[slug]/page.tsx` | Artículo de blog (contenido informativo; cola en `docs/BLOG-TITULOS-PROPUESTOS.md`) |
 | `/es/sobre-nosotros` | `src/app/(public)/es/sobre-nosotros/page.tsx` | Sobre nosotros |
 | `/es/ayuda` | `src/app/(public)/es/ayuda/page.tsx` | Centro de ayuda (FAQs) |
 | `/es/contacto` | `src/app/(public)/es/contacto/page.tsx` | Contacto (CTA «Iniciar chat» abre `SupportChatWidget` vía evento `retiru:open-support-chat`) |
@@ -110,6 +110,14 @@ Equivalente EN exactamente igual:
 | `/en/legal/contrato-centro` | `src/app/(public)/en/legal/contrato-centro/page.tsx` |
 | `/en/legal/privacidad` | `src/app/(public)/en/legal/privacidad/page.tsx` |
 | `/en/legal/cookies` | `src/app/(public)/en/legal/cookies/page.tsx` |
+
+---
+
+## Idiomas del producto
+
+Retiru solo publica contenido en **español** e **inglés**. Ver regla completa en `README.md` → **Idiomas del producto**.
+
+**Importante para quien edita contenido o usa un agente de IA:** el idioma del chat (hebreo, chino, etc.) no determina el idioma del copy. Un artículo de blog, una ficha de retiro o un texto de landing se redactan en **es/en** según la ruta o el campo (`description_es`, `title_en`, …), no en el idioma de quien pide el cambio.
 
 ---
 
@@ -227,6 +235,8 @@ Tipos ES: yoga, meditacion, ayurveda. Tipos EN (= BD): yoga, meditation, ayurved
 La asignación centro↔estilo vive en la tabla puente `center_styles` (many-to-many; trigger `check_center_style_type_match` valida que `styles.center_type = centers.type`). Inferencia automática con GPT-4o-mini vía `npm run centers:infer-styles`.
 
 **Nota técnica:** las 4 páginas de estilo y la landing geográfica `geo-retiros/[slug]` (rewrite de `/es/retiros-en/[slug]`) usan `export const dynamic = 'force-dynamic'` (no ISR): el layout padre `(public)/layout.tsx` llama a `cookies()` vía `getCurrentUserForHeader`, lo que causaba errores `DYNAMIC_SERVER_USAGE` cuando Next 14 intentaba pre-renderizar estas páginas con `revalidate`. SSR puro + caché de Supabase anon es suficiente.
+
+**SEO Cap. 4:** contenido opcional en `style_province_seo` (migración 045). Solo deben existir filas para URLs que responden **200** (≥5 centros); mantener con `npm run seo:prune-style-province`. La ruta provincial renderiza `SeoSections` si hay `sections_es`. URL ES de meditación: segmento **`meditacion`**, no `meditation`.
 
 > Las landings de categoría (`cat-retiros/[category]`, `cat-retreats/[category]`) sí siguen con `revalidate = 3600` + `generateStaticParams` (entran en SSG/ISR sin colisiones porque su carpeta ya no comparte prefijo con las literales `retiros-retiru` / `retiros-en` — ese fue el motivo del rewrite).
 
@@ -347,6 +357,8 @@ Protegido por middleware y comprobación de admin. No indexado en buscadores.
 | GET | `/api/admin/organizers/[id]/doc-url` | URL firmada temporal para documento en `organizer-docs` |
 | POST | `/api/retreats/create` | Crear retiro (auto-crea organizer_profile) |
 | POST | `/api/retreats/generate-cover-image` | Portada IA: cuerpo con **briefing completo** del evento (textos, destino, fechas, categorías, programa, incluidos…); **GPT-4o** genera un único párrafo-prompt en español; **GPT Image 1.5** genera la imagen (`1536x1024`, `high`); usuario autenticado; `OPENAI_API_KEY`; bucket `retreat-images` |
+| POST | `/api/admin/blog/generate-cover-image` | Portada IA de artículo de blog (solo admin): título, extracto, contenido, categoría; mismo agente GPT-4o×2 + GPT Image 1.5; bucket `retreat-images` (`blog/ai-cover-*`) |
+| POST | `/api/centers/generate-cover-image` | Portada IA de centro (propietario reclamado o admin): nombre, descripción, tipo, ubicación, servicios; mismo agente; bucket `centers` (`{centerId}/ai-cover-*`) |
 | PATCH | `/api/retreats/[id]` | Actualizar retiro (solo propietario) |
 | POST | `/api/retreats/[id]` | Cancelar retiro (propietario, action=cancel) |
 | DELETE | `/api/retreats/[id]` | Eliminar retiro (propietario, solo sin reservas confirmadas) |

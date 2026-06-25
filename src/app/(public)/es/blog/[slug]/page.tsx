@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { Clock, Calendar, ArrowLeft, Share2, ChevronRight } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getBlogPostSlugs, getCenterProvinces, getDominantCenterTypeMap } from '@/lib/data';
-import { createServerSupabase } from '@/lib/supabase/server';
+import { applyPublicBlogFilters } from '@/lib/blog-visible';
+import { createStaticSupabase } from '@/lib/supabase/server';
 import { RichContentBody } from '@/components/ui/retreat-description-body';
 import { contentLooksLikeHtml } from '@/lib/sanitize-rich-html';
 import { autoLinkGeoHtml } from '@/lib/auto-link-geo';
@@ -22,13 +23,13 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const supabase = await createServerSupabase();
-  const { data: article } = await supabase
-    .from('blog_articles')
-    .select('title_es, excerpt_es, meta_title_es, meta_description_es, slug, slug_en, cover_image_url')
-    .eq('slug', slug)
-    .eq('is_published', true)
-    .single();
+  const supabase = createStaticSupabase();
+  const { data: article } = await applyPublicBlogFilters(
+    supabase
+      .from('blog_articles')
+      .select('title_es, excerpt_es, meta_title_es, meta_description_es, slug, slug_en, cover_image_url')
+      .eq('slug', slug),
+  ).single();
 
   if (!article) return {};
 
@@ -69,24 +70,27 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function BlogArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const supabase = await createServerSupabase();
+  const supabase = createStaticSupabase();
 
-  const { data: article } = await supabase
-    .from('blog_articles')
-    .select('*, blog_categories(name_es, slug)')
-    .eq('slug', slug)
-    .eq('is_published', true)
-    .single();
+  const { data: article } = await applyPublicBlogFilters(
+    supabase
+      .from('blog_articles')
+      .select('*, blog_categories(name_es, slug)')
+      .eq('slug', slug),
+  ).single();
 
   if (!article) notFound();
 
-  const { data: related } = await supabase
-    .from('blog_articles')
-    .select('id, title_es, slug, cover_image_url, blog_categories(name_es)')
-    .eq('is_published', true)
-    .neq('id', article.id)
+  const { data: relatedRaw } = await applyPublicBlogFilters(
+    supabase
+      .from('blog_articles')
+      .select('id, title_es, slug, cover_image_url, blog_categories(name_es)')
+      .neq('id', article.id),
+  )
     .order('published_at', { ascending: false })
     .limit(3);
+
+  const related = relatedRaw ?? [];
 
   const categoryName = (article.blog_categories as any)?.name_es ?? 'General';
 

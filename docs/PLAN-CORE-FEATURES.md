@@ -4,6 +4,8 @@ Plan de desarrollo para las funcionalidades críticas que generan dependencia (l
 
 > **Principio rector:** Todo gira alrededor del flujo de reserva. Sin reservas funcionando, no hay asistentes, no hay CRM, no hay pagos, no hay comunicación. El Sprint 1 es absolutamente bloqueante.
 
+> **Idiomas del producto:** copy, emails y textos de UI en **español e inglés** únicamente; ver `README.md` → **Idiomas del producto**.
+
 ---
 
 ## Aviso (abril 2026)

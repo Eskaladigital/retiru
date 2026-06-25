@@ -1,10 +1,16 @@
 #!/usr/bin/env node
 /**
- * RETIRU · Generar 10 artículos de blog con IA (OpenAI + SerpAPI)
- * Usa .env.local: SUPABASE_*, OPENAI_API_KEY, SERPAPI_API_KEY
+ * RETIRU · Generar artículos de blog con IA (OpenAI + SerpAPI)
  *
- * Uso: node scripts/generate-blog-articles.mjs
- * No necesitas ejecutar nada en Supabase — todo se inserta automáticamente.
+ * Línea editorial: docs/BLOG-EDITORIAL.md
+ * Cola de títulos: docs/BLOG-TITULOS-PROPUESTOS.md (tabla «Calendario»)
+ *
+ * Uso:
+ *   node scripts/generate-blog-articles.mjs           # primeros 10 de la cola
+ *   node scripts/generate-blog-articles.mjs --limit=5
+ *   node scripts/generate-blog-articles.mjs --offset=10 --limit=3
+ *
+ * Variables .env.local: SUPABASE_*, OPENAI_API_KEY, SERPAPI_API_KEY
  */
 
 import { readFileSync, existsSync } from 'fs';
@@ -69,9 +75,17 @@ async function searchSerp(query, serpKey) {
 
 // ─── OpenAI: generar artículo ───────────────────────────────────────────────
 async function generateArticle(topic, serpContext, openaiKey) {
-  const systemPrompt = `Eres redactor de Retiru (retiru.com), plataforma de retiros y escapadas de bienestar en España.
-Escribe artículos de blog útiles, bien estructurados y optimizados para SEO.
-Tono cercano pero profesional. Incluye menciones naturales a Retiru cuando sea relevante.
+  const systemPrompt = `Eres redactor de Retiru (retiru.com), plataforma de retiros y bienestar en España.
+Escribe artículos de blog INFORMATIVOS: lo que la gente busca antes de conocer Retiru (recetas, nutrición, tipos de yoga/meditación, aceites y tratamientos ayurvédicos, prácticas concretas).
+
+LÍNEA EDITORIAL (obligatoria — docs/BLOG-EDITORIAL.md):
+- El artículo NO vende retiros ni destinos. No escribas «retiros en [ciudad]», maletas, cancelaciones ni «cómo elegir retiro».
+- Aporta datos útiles: pasos, ingredientes, duraciones, precauciones, para quién conviene o no.
+- Menciona Retiru como mucho una vez al final, de forma natural; el texto debe valer solo.
+
+Tono cercano pero profesional, sobrio y creíble — sin misticismo vacío, sin estética "hippie" ni lenguaje new-age.
+NO cubrir ni promover: cacao ceremonial, ayahuasca, psilocibina, rituales con sustancias, chamanismo comercial ni modas esotéricas.
+Sí encaja: yoga, meditación, ayurveda clásica, nutrición práctica, recetas, salud integrativa con base práctica.
 
 FORMATO DEL CONTENIDO (markdown soportado):
 - Encabezados de sección: ### Título (con línea en blanco antes y después)
@@ -151,19 +165,43 @@ const COVER_IMAGES = [
   'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=1200&q=80',   // spa
 ];
 
-// ─── Temas para los 10 artículos ────────────────────────────────────────────
-const TOPICS = [
-  { topic: 'Guía completa: cómo elegir tu primer retiro de yoga en España', categorySlug: 'guias' },
-  { topic: 'Los 10 mejores destinos para retiros de bienestar en España 2026', categorySlug: 'destinos' },
-  { topic: 'Beneficios del retiro detox y ayuno intermitente: qué dice la ciencia', categorySlug: 'bienestar' },
-  { topic: 'Meditación guiada para principiantes: 5 técnicas que funcionan', categorySlug: 'bienestar' },
-  { topic: 'Yoga aéreo: la tendencia que revoluciona los retiros en 2026', categorySlug: 'guias' },
-  { topic: 'Retiros de fin de semana: qué esperar, cómo prepararte y mejores opciones', categorySlug: 'guias' },
-  { topic: 'Retiros de silencio en España: guía completa y mejores destinos', categorySlug: 'destinos' },
-  { topic: 'Retiros de yoga y surf: la combinación perfecta para desconectar', categorySlug: 'destinos' },
-  { topic: 'Cuándo y cómo cancelar un retiro: políticas y consejos prácticos', categorySlug: 'guias' },
-  { topic: 'Tendencias de wellness en España 2026: retiros que marcarán el año', categorySlug: 'bienestar' },
-];
+const QUEUE_PATH = join(root, 'docs', 'BLOG-TITULOS-PROPUESTOS.md');
+
+/** R→bienestar, N→bienestar, Y/M→guias, A→bienestar */
+function categorySlugForLetter(letter) {
+  if (letter === 'Y' || letter === 'M') return 'guias';
+  return 'bienestar';
+}
+
+/** Lee la tabla «Calendario» de docs/BLOG-TITULOS-PROPUESTOS.md */
+function loadTopicsFromQueue() {
+  if (!existsSync(QUEUE_PATH)) {
+    console.warn('⚠ No se encontró docs/BLOG-TITULOS-PROPUESTOS.md');
+    return [];
+  }
+  const text = readFileSync(QUEUE_PATH, 'utf8');
+  const topics = [];
+  const re = /^\|\s*\d+\s*\|\s*([RNMYA])\s*\|\s*(.+?)\s*\|/gm;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    topics.push({
+      topic: m[2].trim(),
+      categorySlug: categorySlugForLetter(m[1]),
+    });
+  }
+  return topics;
+}
+
+function parseArgs() {
+  const args = process.argv.slice(2);
+  let limit = 10;
+  let offset = 0;
+  for (const a of args) {
+    if (a.startsWith('--limit=')) limit = Math.max(1, parseInt(a.slice(8), 10) || 10);
+    if (a.startsWith('--offset=')) offset = Math.max(0, parseInt(a.slice(9), 10) || 0);
+  }
+  return { limit, offset };
+}
 
 async function main() {
   loadEnvLocal();
@@ -189,7 +227,16 @@ async function main() {
   const { createClient } = await import('@supabase/supabase-js');
   const supabase = createClient(url, serviceKey);
 
-  console.log('\n📚 RETIRU · Generando 10 artículos de blog con IA\n');
+  const { limit, offset } = parseArgs();
+  const allTopics = loadTopicsFromQueue();
+  const TOPICS = allTopics.slice(offset, offset + limit);
+
+  if (TOPICS.length === 0) {
+    console.error('❌ Sin temas. Revisa docs/BLOG-TITULOS-PROPUESTOS.md o ajusta --offset/--limit');
+    process.exit(1);
+  }
+
+  console.log(`\n📚 RETIRU · Generando ${TOPICS.length} artículo(s) de blog (offset ${offset})\n`);
 
   // 1. Asegurar categorías
   const categories = [
@@ -231,11 +278,10 @@ async function main() {
       catMap[categorySlug] = catMap.guias;
     }
 
-    console.log(`\n   [${i + 1}/10] ${topic.slice(0, 50)}...`);
+    console.log(`\n   [${i + 1}/${TOPICS.length}] ${topic.slice(0, 50)}...`);
 
     try {
-      // SerpAPI para contexto
-      const serpContext = await searchSerp(`retiros ${topic} España 2026`, serpKey);
+      const serpContext = await searchSerp(`${topic} España`, serpKey);
       if (serpContext) console.log('      🔍 Contexto SerpAPI obtenido');
 
       // OpenAI

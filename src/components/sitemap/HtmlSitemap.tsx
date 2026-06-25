@@ -1,6 +1,7 @@
 // HTML sitemap compartido (ES/EN). Página interna no linkada desde el footer,
 // con noindex para no competir con /sitemap.xml en buscadores.
 import Link from 'next/link';
+import { applyPublicBlogFilters } from '@/lib/blog-visible';
 import { createStaticSupabase } from '@/lib/supabase/server';
 import {
   getCenterProvinces,
@@ -155,7 +156,9 @@ export default async function HtmlSitemap({ locale }: { locale: Locale }) {
       .eq('status', 'published')
       .gte('end_date', new Date().toISOString().slice(0, 10))
       .order('title_es'),
-    supabase.from('blog_articles').select('slug, slug_en, title_es, title_en').eq('is_published', true).order('published_at', { ascending: false }),
+    applyPublicBlogFilters(
+      supabase.from('blog_articles').select('slug, slug_en, title_es, title_en'),
+    ).order('published_at', { ascending: false }),
     supabase.from('destinations').select('slug, name_es, name_en').eq('is_active', true).order('name_es'),
     supabase.from('organizer_profiles').select('slug, name').eq('status', 'verified').order('name'),
     supabase.from('products').select('slug, name_es, name_en').eq('status', 'active').order('name_es'),

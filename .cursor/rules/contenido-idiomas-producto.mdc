@@ -1,0 +1,29 @@
+---
+description: El idioma del chat no determina el idioma del contenido del producto (siempre es/en)
+alwaysApply: true
+---
+
+# Idiomas del producto vs idioma del chat
+
+Regla canónica del proyecto: **`README.md` → Idiomas del producto**. Mantener coherente con `docs/ROUTES.md`, `docs/SEO-LANDINGS.md` y el resto de `.md` del repo.
+
+Retiru publica contenido en **español** (`/es`, campos `*_es`) e **inglés** (`/en`, campos `*_en`). Esos son los únicos idiomas del producto.
+
+## Regla
+
+**El idioma en que alguien escribe en el chat no cambia el idioma del contenido que se crea o edita.**
+
+Da igual si hablan en hebreo, chino, francés, bislama u otro idioma: textos de páginas, retiros, blog, emails, SEO, metadatos, scripts de contenido y UI pública siguen las convenciones **es/en** del proyecto.
+
+## Qué hacer
+
+- Crear o editar contenido de producto en **español e inglés** según corresponda (ruta `/es` vs `/en`, campos `*_es` / `*_en`, plantillas bilingües).
+- Respetar qué partes del producto son solo ES (p. ej. área de cuenta) vs bilingües (p. ej. panel organizador, fichas públicas).
+- Puedes **responder en el chat** en el idioma de quien te escribe para facilitar la comunicación.
+- **No** traducir el producto al idioma del chat salvo petición explícita de añadir un idioma nuevo al sitio.
+
+## Ejemplos
+
+- Chat en hebreo pidiendo un artículo de blog → redactar en español (y en inglés si aplica `slug_en` / campos EN).
+- Chat en chino pidiendo corregir la ficha de un retiro → editar `description_es`, `summary_es`, etc., no generar texto en chino.
+- Chat en inglés pidiendo copy para `/es/ayuda` → el copy va en **español**, aunque la conversación sea en inglés.

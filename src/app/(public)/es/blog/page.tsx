@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Clock, ArrowRight, Search } from 'lucide-react';
+import { applyPublicBlogFilters, filterPublicBlogArticles } from '@/lib/blog-visible';
 import { blogES } from '@/lib/seo/page-metadata';
-import { createServerSupabase } from '@/lib/supabase/server';
+import { createStaticSupabase } from '@/lib/supabase/server';
 
 export const revalidate = 60;
 export const metadata: Metadata = blogES;
@@ -23,23 +24,23 @@ function blogListHrefEs(opts: { q?: string; categoria?: string }): string {
 type SearchParams = { q?: string; categoria?: string };
 
 export default async function BlogPage({ searchParams }: { searchParams?: SearchParams }) {
-  const supabase = await createServerSupabase();
+  const supabase = createStaticSupabase();
 
   const { data: categories } = await supabase
     .from('blog_categories')
     .select('id, name_es, slug')
     .order('sort_order');
 
-  const { data: articles } = await supabase
-    .from('blog_articles')
-    .select('id, title_es, title_en, slug, excerpt_es, cover_image_url, read_time_min, published_at, category_id, blog_categories(name_es)')
-    .eq('is_published', true)
-    .order('published_at', { ascending: false });
+  const { data: articlesRaw } = await applyPublicBlogFilters(
+    supabase
+      .from('blog_articles')
+      .select('id, title_es, title_en, slug, excerpt_es, cover_image_url, read_time_min, published_at, category_id, blog_categories(name_es)'),
+  ).order('published_at', { ascending: false });
 
   const qRaw = (searchParams?.q ?? '').trim();
   const categoriaSlug = (searchParams?.categoria ?? '').trim();
 
-  let list = [...(articles ?? [])];
+  let list = filterPublicBlogArticles(articlesRaw);
   if (categoriaSlug && categories?.length) {
     const cat = categories.find((c) => c.slug === categoriaSlug);
     if (cat) list = list.filter((a) => a.category_id === cat.id);
@@ -56,7 +57,7 @@ export default async function BlogPage({ searchParams }: { searchParams?: Search
   const featured = list[0];
   const rest = list.slice(1);
   const hasActiveFilters = !!(qRaw || categoriaSlug);
-  const poolEmpty = !articles || articles.length === 0;
+  const poolEmpty = !articlesRaw || articlesRaw.length === 0;
   const filteredEmpty = !poolEmpty && list.length === 0;
 
   function formatDate(dateStr: string | null) {

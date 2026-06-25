@@ -1,6 +1,6 @@
 # Tipos de centros (directorio)
 
-**Fase actual:** solo tres valores en BD y en la web: `yoga`, `meditation`, `ayurveda`.
+**Fase actual:** solo tres valores en BD y en la web: `yoga`, `meditation`, `ayurveda`. Etiquetas y copy público siempre en **español e inglés** (`README.md` → **Idiomas del producto**).
 
 | Slug BD     | Etiqueta ES   | Etiqueta EN  |
 |-------------|---------------|--------------|

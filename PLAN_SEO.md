@@ -3,8 +3,8 @@
 > **Documento vivo de roadmap SEO**. Se actualiza según avanzamos: se marcan tareas completadas, se añaden notas y aprendizajes, y se registran cambios en el changelog.
 >
 > - **Fecha de creación**: 2026-04-20
-> - **Última actualización**: 2026-04-22 (apertura **Fase 4 · Contenido editorial rico por capas anti-canibalización**)
-> - **Estado global**: ✅ Fase 1, Fase 2 y Fase 3 técnica completadas. 🟨 Fase 4 en arranque (doctrina + migración + auditoría listas). Pendientes Fase 3 #12 Reviews verificadas y #15 GSC.
+> - **Última actualización**: 2026-05-22 (Cap. 3 sections completa · limpieza `style_province_seo` · scripts de auditoría HTTP)
+> - **Estado global**: ✅ Fase 1, Fase 2 y Fase 3 técnica completadas. 🟨 Fase 4 en curso: migración 045 aplicada, Cap. 3 (91 tipo×prov) con `sections_es` generadas, renderer activo; pendientes tandas Cap. 2/4/5, eliminación `/provincias/` (#20), GSC (#15) y reviews (#12).
 > - **Propietario**: Narciso
 > - **Documento complementario**: `docs/SEO-LANDINGS.md` (estado descriptivo actual de landings y schemas)
 >
@@ -275,54 +275,55 @@
 - **Impacto**: contrato estratégico. Sin esto, la generación masiva canibaliza seguro.
 
 ### 🟨 17. Auditoría y consolidación de provincias duplicadas
-- **Estado**: 🟨 Paso 1 listo (auditoría). Paso 2 (consolidación) pendiente de revisión humana.
+- **Estado**: ✅ Auditoría y consolidación de datos aplicadas en producción (2026-05-22). Redirecciones 301 en middleware pendientes de revisión si quedan URLs legacy enlazadas.
 - **Acción**:
   - 🆕 `scripts/audit-duplicate-provinces.mjs` (+ `npm run seo:audit-provinces`) — reporta pares duplicados sin modificar datos. Sale reporte humano o JSON (`--json`) y opcionalmente lista centros afectados (`--with-centers`).
-  - ⬜ Pendiente: `scripts/consolidate-duplicate-provinces.mjs` (a crear tras revisar la salida del audit). Acciones: `UPDATE centers SET province = canónico`, `DELETE FROM center_type_province_seo` de los slugs alias, redirección 301 en `middleware.ts`.
-- **Comando**: `npm run seo:audit-provinces --with-centers`
-- **Bloqueante para**: #18.
+  - ✅ `scripts/consolidate-duplicate-provinces.mjs` (+ `npm run seo:consolidate-provinces[:dry]`) — `UPDATE centers`, purga filas SEO alias en `center_type_province_seo` y `style_province_seo`. Por defecto dry-run; `--execute` aplica.
+- **Comando**: `npm run seo:audit-provinces -- --with-centers`
+- **Nota operativa (2026-05-22)**: audit en BD enlazada — sin alias pendientes (`lerida`, `tenerife`, `islas-baleares`, etc.).
+
+### 🟨 17b. Higiene `style_province_seo` (solo URLs 200)
+- **Estado**: ✅ Completada (2026-05-22)
+- **Problema**: la tabla tenía **199 filas** para combinaciones estilo×provincia, pero la app devuelve **404** si hay **<5 centros** con ese estilo en la provincia (`MIN_CENTERS_STYLE_PROVINCE`). Filas huérfanas confundían generación y auditorías.
+- **Acción**:
+  - 🆕 `scripts/prune-style-province-seo.mjs` (+ `npm run seo:prune-style-province[:dry]`) — calcula pares válidos con la misma lógica que `getStyleProvincePairs(5)`; borra el resto. `--execute --verify-http` comprueba 200 en producción.
+  - 🆕 `scripts/check-seo-urls-status.mjs` — auditoría HTTP masiva de landings del directorio (~464 URLs).
+- **Resultado**: **20 filas** conservadas (todas verificadas 200). **44 pares** publicables en total; **24** aún sin fila SEO (páginas existen; contenido rico pendiente con `seo:sections --layer=4`).
+- **Re-ejecutar** tras cambios en `center_styles` o umbrales.
 
 ### 🔵 18. Cliente SerpApi + cache por landing
-- **Estado**: ⬜ Pendiente
+- **Estado**: ✅ Completada (2026-04-23)
 - **Acción**:
-  - 🆕 `scripts/lib/serpapi.mjs` — cliente con rate-limit, retries, fallback a caché local (`.cache/serp/*.json`). Devuelve `paa`, `related_searches`, `local_pack`, `featured_snippet`, `answer_box`.
-  - Gating: si `serp_data.fetched_at < 30 días`, se reutiliza. Ahorro ~40% de queries.
-  - Uso de `SERPAPI_API_KEY` ya existente en `.env.local`.
-- **Coste**: ~$1 para 266 landings.
+  - ✅ `scripts/lib/serpapi.mjs` — cliente con caché local (`.cache/serp/*.json`, TTL 30 días). Devuelve `paa`, `related`, `local_pack`, `featured_snippet`.
+  - ✅ `scripts/serp-probe.mjs` (+ `npm run seo:serp-probe`) — prueba manual de queries.
+  - Uso de `SERPAPI_API_KEY` en `.env.local`.
 
 ### 🔵 19. Generador unificado `seo:sections`
-- **Estado**: ⬜ Pendiente
+- **Estado**: 🟨 Implementado; Cap. 3 completada en BD (2026-04-23). Cap. 2, 4 y 5 pendientes de tanda masiva.
 - **Acción**:
-  - 🆕 `scripts/generate-seo-sections.mjs` con flags `--capa=1..5`, `--type=`, `--province=`, `--city=`, `--style=`, `--force`, `--dry-run`, `--limit=N`, `--concurrency=2`.
-  - Un prompt de sistema **distinto por capa** que respeta §8.2 (matriz de prohibiciones) y §8.3 (patrones únicos H1/meta).
-  - Aplicación automática de `suppress_reason` según §8.4 (R1-R5): si R1/R2/R4, genera contenido mínimo + marca `noindex`; si R3, usa ángulo niche.
-  - Dossier combina datos BD + SERP cacheado + catálogo de estilos de Retiru.
-  - Upsert a `sections_es/en` + actualización de `serp_data`.
-- **Coste**: ~$24 OpenAI GPT-4o para la tanda completa.
+  - ✅ `scripts/generate-seo-sections.mjs` (+ `npm run seo:sections[:dry]`) — flags `--layer=2|3|4|5|all`, `--type=`, `--province=`, `--city=`, `--style=`, `--force`, `--dry-run`, `--no-serp`, `--concurrency=2`. Motor en `scripts/lib/seo-engine.mjs`.
+  - ✅ Cap. 1 (nacional por tipo) **excluida**: contenido curado en `src/lib/center-type-editorial.ts`.
+  - 🟨 Cobertura actual `sections_es`: Cap. 3 **91/91** · Cap. 5 **0/59** · Cap. 2 **0/21** · Cap. 4 **0/20** (filas en `style_province_seo` tras prune).
+- **Coste restante estimado**: ~$15–20 OpenAI para capas 2, 4 y 5.
 
 ### 🔵 20. Componente renderer + eliminación de `/provincias/[slug]`
-- **Estado**: ⬜ Pendiente
+- **Estado**: 🟨 Renderer integrado; eliminación hub pendiente
 - **Acción**:
-  - 🆕 `src/components/seo/SeoSections.tsx` — renderiza el array `sections_*` mapeando cada bloque a `<section><h2>{heading}</h2><div dangerouslySetInnerHTML={{__html: sanitized(html)}}/></section>`. Con sanitización server-side (`sanitize-html`).
-  - 🔧 Integración en las 4 rutas activas (Cap. 1, 3, 5, 2, 4): insertar `<SeoSections>` tras el intro y antes de la FAQ.
-  - 🔧 En `generateMetadata`, si `suppress_reason IS NOT NULL` → `noIndex: true` y meta especial.
-  - ❌ **Eliminar**: `src/app/(public)/es/provincias/[slug]/page.tsx` + `src/app/(public)/en/provinces/[slug]/page.tsx`. Quitar del sitemap y del HTML sitemap. Revertir 301 de `centros-retiru/[slug]` hacia `/centros/yoga/{slug}` (disciplina dominante).
-  - 🔧 Actualizar `docs/ROUTES.md` con la desaparición de la capa hub.
+  - ✅ `src/components/seo/SeoSections.tsx` — renderiza `sections_*` con cards visuales + `SeoFaqSection`.
+  - ✅ Integrado en Cap. 3, Cap. 5 y Cap. 4 (ES/EN): tipo×provincia, ciudad, estilo×provincia.
+  - 🔧 En `generateMetadata`, si `suppress_reason IS NOT NULL` → `noIndex: true`.
+  - ⬜ **Eliminar**: `src/app/(public)/es/provincias/[slug]/page.tsx` + EN. Quitar del sitemap. Revertir 301 de `centros-retiru/[slug]` hacia disciplina dominante (#20 original).
 
 ### 🔵 21. Piloto sobre Ayurveda·Álava
-- **Estado**: ⬜ Pendiente
-- **Acción**: ejecutar `npm run seo:sections -- --capa=3 --type=ayurveda --province=alava --dry-run` → revisar salida JSON → si OK, correr sin dry-run → validar visualmente en `https://www.retiru.com/es/centros/ayurveda/alava`. Ajustar prompts si hace falta ANTES de la masiva.
-- **Criterio de éxito**: 4 secciones con H2 diferenciados, FAQ de 8-10 preguntas, ninguna sección solapa contenido con `/es/centros/ayurveda`. Google Search Console detecta la nueva estructura en < 7 días.
+- **Estado**: ✅ Completada (2026-04-23)
+- **Resultado**: `/es/centros/ayurveda/alava` — 4 secciones + 7 FAQ + `serp_data` cacheado. Validado en producción.
 
 ### 🔵 22. Generación masiva (4 tandas)
-- **Estado**: ⬜ Pendiente
-- **Acción**: ejecutar por capas para poder parar si algo va mal:
-  1. Cap. 3 Tipo×Prov (97 landings) — el volumen comercial principal.
-  2. Cap. 5 Tipo×Prov×Ciudad (58).
-  3. Cap. 1 Nacional tipo (3) y Cap. 2 Tipo×Estilo (10).
-  4. Cap. 4 Estilo×Prov (44).
-- Entre tanda y tanda: revisar 3 landings al azar, validar calidad, ajustar prompt si hace falta, commit.
-- **Coste total**: ~$25.
+- **Estado**: 🟨 Tanda 1 (Cap. 3) completada — **91/91** tipo×provincia con `sections_es`. Pendientes:
+  1. ~~Cap. 3 Tipo×Prov (97 landings)~~ → **91** en BD (pares reales con centros).
+  2. Cap. 5 Tipo×Prov×Ciudad (59).
+  3. Cap. 2 Tipo×Estilo (21; 3 URLs dan 404 nacional por <3 centros: `trascendental`, `metta`, `bikram`).
+  4. Cap. 4 Estilo×Prov — solo **20 filas** en `style_province_seo` (44 URLs publicables; ejecutar `seo:sections --layer=4` tras prune).
 
 ### 🔵 23. Monitor GSC post-despliegue
 - **Estado**: ⬜ Pendiente (depende de #15 Fase 3)
@@ -335,6 +336,7 @@
 
 ## Convenciones del plan
 
+- **Idiomas del contenido:** intros, FAQ, `sections_es/en`, meta y copy de landings siempre en **español e inglés**. El idioma del chat (p. ej. hebreo) no cambia el idioma del entregable. Ver `README.md` → **Idiomas del producto**.
 - **Estados**: ⬜ Pendiente · 🟨 En progreso · ✅ Completada · ⛔ Bloqueada · 🚫 Descartada.
 - **Prioridad visual**: 🟢 Fase 1 (ROI inmediato) · 🟡 Fase 2 (estructural) · 🔵 Fase 3 (escala).
 - Al completar una tarea, **no se borra**: se marca ✅, se añade la fecha en el changelog y se enlazan los PRs/commits relevantes.
@@ -345,6 +347,31 @@
 ---
 
 ## Changelog
+
+### 2026-05-22 — Higiene `style_province_seo` + auditoría HTTP landings
+
+#### Contexto
+- Tras desplegar landings estilo×provincia (Fase 3 #10), la tabla `style_province_seo` acumuló **199 filas** generadas de forma anticipada, pero **179 URLs** respondían **404** porque la app exige ≥5 centros (`MIN_CENTERS_STYLE_PROVINCE`). Desalineación BD ↔ rutas publicables.
+
+#### Entregables
+- 🆕 `scripts/prune-style-province-seo.mjs` — purga filas sin par válido; `--execute --verify-http` confirma 200 en `NEXT_PUBLIC_APP_URL`.
+- 🆕 `scripts/check-seo-urls-status.mjs` — comprueba ~464 URLs del directorio (capas 1–5 + EN Cap. 3).
+- 🔧 `npm run seo:prune-style-province` / `:dry` registrados en `package.json`.
+- 📊 Resultado en producción: **179 filas borradas**, **20 conservadas** (todas HTTP 200). **44 pares** publicables; **24** sin fila SEO (páginas OK, contenido rico pendiente).
+- ✅ `npm run seo:audit-provinces` — sin provincias duplicadas pendientes en BD operativa.
+
+#### Cobertura Fase 4 (sections_es) a esta fecha
+| Capa | Estado |
+|------|--------|
+| Cap. 3 tipo×provincia | ✅ 91/91 |
+| Cap. 5 ciudad | ⬜ 0/59 |
+| Cap. 2 estilo nacional | ⬜ 0/21 (Cap. 1 sigue estática en código) |
+| Cap. 4 estilo×provincia | ⬜ 0/20 filas SEO (44 URLs publicables) |
+
+#### Pendiente
+- Tandas `seo:sections` capas 2, 4, 5.
+- Eliminar hub `/provincias/` (#20).
+- Tras inferir estilos o cambiar umbrales: re-ejecutar `seo:prune-style-province`.
 
 ### 2026-04-22 — Apertura Fase 4: Contenido editorial rico por capas anti-canibalización
 

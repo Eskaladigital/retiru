@@ -1,6 +1,7 @@
 // GET /api/blog/alternate-path?path=/es/blog/foo — URLs ES/EN canónicas para un mismo artículo
 import { NextResponse } from 'next/server';
 import { createStaticSupabase } from '@/lib/supabase/server';
+import { applyPublicBlogFilters } from '@/lib/blog-visible';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,12 +19,9 @@ export async function GET(request: Request) {
   }
 
   const supabase = createStaticSupabase();
-  const { data } = await supabase
-    .from('blog_articles')
-    .select('slug, slug_en')
-    .eq('is_published', true)
-    .or(`slug.eq.${slug},slug_en.eq.${slug}`)
-    .maybeSingle();
+  const { data } = await applyPublicBlogFilters(
+    supabase.from('blog_articles').select('slug, slug_en').or(`slug.eq.${slug},slug_en.eq.${slug}`),
+  ).maybeSingle();
 
   if (!data) {
     return NextResponse.json({

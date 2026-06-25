@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
  * Importa artículos de blog desde CSV (Titulo, Articulo, Ingles, …).
+ * Validar títulos contra docs/BLOG-EDITORIAL.md antes de importar.
  * - Orden: barajado (semilla fija), no alfabético.
  * - Fechas: 10 → 11 → 12 → 13 días entre publicaciones sucesivas (hacia atrás).
  *

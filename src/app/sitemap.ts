@@ -104,8 +104,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const destinationsWithRetreats = await getDestinationsWithRetreats();
   destinationsWithRetreats.forEach((d) => pushBilingual(`/es/retiros-retiru/${d.slug}`, `/en/retreats-retiru/${d.slug}`, 'weekly', 0.8));
 
-  // 5) Blog — EN usa slug_en cuando existe (alineado con canonical)
-  const { data: blogRows } = await supabase.from('blog_articles').select('slug, slug_en, updated_at').eq('is_published', true);
+  // 5) Blog — EN usa slug_en cuando existe (solo publicados y ya visibles por fecha)
+  const { applyPublicBlogFilters } = await import('@/lib/blog-visible');
+  const { data: blogRows } = await applyPublicBlogFilters(
+    supabase.from('blog_articles').select('slug, slug_en, updated_at'),
+  );
   (blogRows || []).forEach((b: { slug: string; slug_en: string | null; updated_at?: string }) => {
     const enSlug = b.slug_en || b.slug;
     pushBilingual(`/es/blog/${b.slug}`, `/en/blog/${enSlug}`, 'monthly', 0.6, b.updated_at);

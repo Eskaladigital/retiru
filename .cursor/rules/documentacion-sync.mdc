@@ -15,8 +15,11 @@ Antes de implementar cualquier cambio funcional (nuevas features, cambios de flu
    - `mailing/README.md` — si se tocan emails
    - `docs/SCHEMA-REVIEW.md` — si se tocan tablas/migraciones
    - `docs/SEO-LANDINGS.md` — si se tocan landings o SEO
+   - `docs/BLOG-EDITORIAL.md` + `docs/BLOG-TITULOS-PROPUESTOS.md` — si se tocan artículos del blog o scripts `*blog*`
 
 **Migraciones vs datos:** el contenido de retiros/eventos en BD se documenta en `README.md` (scripts operativos). Las migraciones SQL del repo son solo esquema y permisos; ver regla `supabase-datos-operativos.mdc`.
+
+**Idiomas del producto:** todo contenido de páginas, BD, emails y SEO va en **español e inglés** con independencia del idioma del chat. Regla canónica en `README.md` → **Idiomas del producto**; regla del agente en `contenido-idiomas-producto.mdc`.
 
 ## Después de hacer cambios
 

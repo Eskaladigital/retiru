@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Sparkles } from 'lucide-react';
 import { CENTER_FILTER_OPTIONS_ES } from '@/lib/utils';
 import { contentLooksLikeHtml } from '@/lib/sanitize-rich-html';
 import { markdownToHtml, plainBlogBodyToMarkdown } from '@/components/ui/markdown-content';
@@ -31,6 +32,7 @@ const CENTER_TYPES = CENTER_FILTER_OPTIONS_ES.filter((o) => o.slug).map((o) => (
 export function EditarCentroForm({ center }: Props) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [generatingCover, setGeneratingCover] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -93,6 +95,45 @@ export function EditarCentroForm({ center }: Props) {
   }
   function removeImage(i: number) {
     setImages((imgs) => imgs.filter((_, idx) => idx !== i));
+  }
+
+  async function handleGenerateCoverAi() {
+    if (!form.name.trim() || !form.description_es.trim()) {
+      setError('Completa al menos el nombre y la descripción del centro para generar la portada con IA.');
+      return;
+    }
+    setError('');
+    setGeneratingCover(true);
+    try {
+      const typeLabel = CENTER_TYPES.find((t) => t.value === form.type)?.label;
+      const res = await fetch('/api/centers/generate-cover-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          center_id: center.id,
+          name: form.name,
+          description_es: form.description_es,
+          description_en: form.description_en || undefined,
+          type: form.type,
+          type_label: typeLabel,
+          city: form.city || undefined,
+          province: form.province || undefined,
+          address: form.address || undefined,
+          region: form.region || undefined,
+          country: form.country || undefined,
+          services_es: form.services_es.filter(Boolean),
+          schedule_summary_es: form.schedule_summary_es || undefined,
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string; publicUrl?: string };
+      if (!res.ok) throw new Error(data.error || `Error al generar la imagen (${res.status})`);
+      if (!data.publicUrl) throw new Error('No se obtuvo URL de la imagen generada.');
+      set('cover_url', data.publicUrl);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error al generar la portada');
+    } finally {
+      setGeneratingCover(false);
+    }
   }
 
   async function handleSave() {
@@ -193,13 +234,28 @@ export function EditarCentroForm({ center }: Props) {
         <h2 className="font-serif text-xl mb-4 pb-2 border-b border-sand-200">Imágenes</h2>
         <div className="space-y-4">
           <div>
-            <label className={labelCls}>Imagen de portada (URL)</label>
+            <label className={labelCls}>Imagen de portada</label>
+            <p className="text-xs text-[#a09383] mb-2">
+              Puedes pegar una URL, generar la portada con IA a partir de la descripción del centro o guardar sin imagen.
+            </p>
             <input type="url" value={form.cover_url} onChange={(e) => set('cover_url', e.target.value)} className={inputCls} placeholder="https://..." />
             {form.cover_url && (
               <div className="mt-2 w-full h-40 rounded-xl overflow-hidden bg-sand-100">
                 <img src={form.cover_url} alt="Portada" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
               </div>
             )}
+            <button
+              type="button"
+              onClick={handleGenerateCoverAi}
+              disabled={generatingCover || !form.name.trim() || !form.description_es.trim()}
+              className="mt-3 w-full inline-flex flex-col items-center justify-center gap-1 px-4 py-3 rounded-xl border-2 border-dashed border-terracotta-200 bg-terracotta-50/40 text-sm text-terracotta-800 hover:border-terracotta-400 hover:bg-terracotta-50 disabled:opacity-50 disabled:pointer-events-none transition-colors"
+            >
+              <span className="inline-flex items-center gap-2 font-medium">
+                <Sparkles size={16} className="text-terracotta-600" />
+                {generatingCover ? 'Generando…' : 'Generar portada con IA'}
+              </span>
+              <span className="text-xs text-[#7a6b5d]">GPT Image 1.5 · foto tipo editorial</span>
+            </button>
           </div>
           <div>
             <label className={labelCls}>Galería de imágenes (URLs)</label>

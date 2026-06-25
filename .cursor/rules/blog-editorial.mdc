@@ -1,0 +1,32 @@
+---
+description: Línea editorial del blog — contenido informativo (recetas, nutrición, yoga, meditación, ayurveda), no landings de retiros
+globs: docs/BLOG*.md,scripts/*blog*,src/app/**/blog/**,src/app/administrator/blog/**
+alwaysApply: false
+---
+
+# Blog Retiru — Línea editorial
+
+Antes de **proponer títulos, redactar o generar** artículos del blog, leer **`docs/BLOG-EDITORIAL.md`** y la cola en **`docs/BLOG-TITULOS-PROPUESTOS.md`**.
+
+## Regla principal
+
+El blog habla de **lo que hay detrás de los retiros** (interés del público general), **no** de los retiros como producto.
+
+## Sí escribir
+
+Recetas, nutrición, tipos concretos de yoga/meditación, aceites y tratamientos ayurvédicos, pranayama, rutinas, ciencia aplicada con datos útiles.
+
+## No escribir (error habitual)
+
+- «Retiros en [ciudad/región/playa]»
+- Guías de reserva, maleta, cancelación, seguros, «cómo elegir retiro»
+- Top destinos, comparativas geográficas de retiros
+- Contenido que duplique landings `/es/centros/...` o hubs provinciales
+
+## Tono
+
+Sobrio, informativo, sin esoterismo vacío ni sustancias psicoactivas. ES + EN en campos correspondientes.
+
+## Mención a Retiru
+
+Opcional y breve al cierre; el artículo debe valer por sí solo para quien no reserva.

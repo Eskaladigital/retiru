@@ -6,6 +6,19 @@ Plataforma web bilingüe (ES/EN) donde las personas descubren y reservan retiros
 
 ---
 
+## Idiomas del producto
+
+Retiru publica contenido únicamente en **español** (`/es`, campos `*_es`) e **inglés** (`/en`, campos `*_en`). No hay más idiomas en la web, la base de datos ni los emails transaccionales.
+
+**Regla para colaboradores y agentes de IA:** el idioma en que alguien coordina el trabajo (hebreo, chino, francés, etc.) **no cambia** el idioma del contenido que se crea o edita. Da igual cómo se hable en el chat: páginas, retiros, blog, SEO, metadatos, scripts de contenido y copys de UI van siempre en **es/en** según la convención de cada ruta o campo.
+
+- Puedes **responder en el chat** en el idioma de quien escribe; lo entregable para el producto sigue siendo es/en.
+- **No** traducir el producto al idioma del chat salvo petición explícita de añadir un idioma nuevo al sitio.
+- Partes solo en español (p. ej. área de cuenta `/es/perfil`, `/es/mis-*`) vs bilingües (fichas públicas, panel organizador, landings SEO): ver `docs/ROUTES.md` → *Selector de idioma*.
+- Regla persistente del agente: `.cursor/rules/contenido-idiomas-producto.mdc`.
+
+---
+
 ## Stack tecnológico
 
 | Capa | Tecnología |
@@ -81,7 +94,7 @@ Copia `.env.example` a `.env.local` y rellena los valores:
 | `SMTP_INTERNAL_COPY_EMAIL` | (opcional) BCC archivo en cada transaccional; vacío = desactiva. Sin variable → `contacto@retiru.com`. Alias legado: `RESEND_INTERNAL_COPY_EMAIL` |
 | `NEXT_PUBLIC_APP_URL` | URL base de la app |
 | `NEXT_PUBLIC_APP_NAME` | Nombre de la app (`Retiru`) |
-| `OPENAI_API_KEY` | (opcional) Descripciones IA, blog, centros y **portadas de eventos**: agente **GPT-4o** sintetiza un dossier completo del evento (destino, fechas, categorías, programa, incluidos…) en un prompt en español; **GPT Image 1.5** genera la imagen panorámica (`POST /api/retreats/generate-cover-image`; definir también en Vercel). Objetivo visual: **fotografía editorial hiperrealista**, evitando look ilustrado o “IA” |
+| `OPENAI_API_KEY` | (opcional) Descripciones IA, blog, centros y **portadas con IA** (eventos, artículos de blog y centros): agente **GPT-4o** sintetiza un dossier en un prompt en español; **GPT Image 1.5** genera la imagen panorámica (`POST /api/retreats/generate-cover-image`, `POST /api/admin/blog/generate-cover-image`, `POST /api/centers/generate-cover-image`; definir también en Vercel). Objetivo visual: **fotografía editorial hiperrealista**, evitando look ilustrado o “IA” |
 | `ANTHROPIC_API_KEY` | (opcional) Moderación de contenido de retiros antes de publicar (`POST /api/admin/retreats/moderate`, Claude vía SDK `ai`). Si no está definida, el flujo de aprobación en admin **omite** la revisión automática |
 | `NEXT_PUBLIC_TINYMCE_API_KEY` | (opcional) Clave [Tiny Cloud](https://www.tiny.cloud/) para el editor visual de la **descripción** en crear/editar evento (`/es/mis-eventos/...`) y del **cuerpo del artículo** en `/administrator/blog/...`. Si está vacía se usa `no-api-key` (solo adecuado en desarrollo; en producción conviene clave y dominio aprobados) |
 | `GOOGLE_PLACES_API_KEY` | (opcional) Para obtener reseñas de Google Places |
@@ -108,6 +121,15 @@ npm run verify-shop-survey-db  # Tabla + RPC encuesta tienda y unicidad anónima
 node scripts/generate-seo-content.mjs   # Rellenar intros/FAQ/meta en categories y destinations (opciones: --categories, --destinations, --force)
 npm run seo:type-province                # Genera intro + meta + FAQ bilingüe por par tipo×provincia (tabla center_type_province_seo, migración 042)
 npm run seo:type-province:dry            # Igual en modo dry-run (sin escribir). Flags comunes: --type=yoga --province=madrid --limit=N --concurrency=3 --city --city-min=N --all --force
+npm run seo:sections                     # Contenido rico por capas (045): capas 2–5 → sections_es/en + serp_data. Flags: --layer=3|4|5|all --type= --province= --style= --dry-run --no-serp
+npm run seo:sections:dry
+npm run seo:audit-provinces              # Auditoría provincias duplicadas (§8.9 SEO-LANDINGS). --json · --with-centers
+npm run seo:consolidate-provinces:dry    # Consolidar alias → slug canónico en centers + purgar SEO obsoleto
+npm run seo:consolidate-provinces        # --execute (requiere revisar salida del audit)
+npm run seo:prune-style-province:dry     # Purga filas de style_province_seo sin URL publicable (≥5 centros estilo×prov)
+npm run seo:prune-style-province         # --execute + verificación HTTP 200 en producción
+node scripts/check-seo-urls-status.mjs   # Comprueba status HTTP de landings del directorio (464 URLs típicas)
+node scripts/_peek-seo.mjs ayurveda alava # Inspecciona intro/sections/FAQ de una fila center_type_province_seo
 node scripts/moderate-retreat.mjs       # Probar moderación IA de un retiro por slug (requiere ANTHROPIC_API_KEY en .env.local)
 npm run stripe:listen    # Escuchar webhooks de Stripe en local
 
@@ -121,10 +143,22 @@ npm run centers:translate-en                          # Solo traducir centros co
 npm run centers:vaciar-genericas                       # Vaciar descripciones genéricas
 npm run blog:backfill-slugs-en                        # Rellenar slug_en del blog desde title_en (opcional --dry-run)
 npm run blog:translate-en                             # Traducir posts publicados ES→EN (OpenAI); --force retraduce todo
-npm run blog:import-csv                               # Genera `supabase/seed/016_blog_from_csv.sql` desde `Table 1-Grid view.csv` (orden barajado, fechas escalonadas)
-npm run blog:import-csv:push                          # Igual + inserta/actualiza en Supabase usando `.env.local` (service role)
+npm run blog:import-csv                               # Genera SQL desde CSV (validar títulos vs docs/BLOG-EDITORIAL.md)
+npm run blog:import-csv:push                          # Igual + inserta/actualiza en Supabase (.env.local)
+node scripts/generate-blog-articles.mjs               # Genera artículos con IA (temas: docs/BLOG-TITULOS-PROPUESTOS.md)
+npm run blog:publish-queue                            # Cola completa: texto + portadas + fechas (ver --limit, --resume)
+npm run blog:publish-queue:dry                        # Vista previa del calendario sin escribir
 npm run blog:backfill-covers-ai                       # Portadas blog con el mismo agente que retiros (GPT-4o×2 + gpt-image-1.5); por defecto solo si portada vacía o URL de stock. Flags: `--dry-run`, `--force`, `--regenerate-blog-ai` (vuelve a generar portadas ya en `blog/ai-cover-*`), `--inline`, `--limit=N`, `--concurrency=2`, `--id=uuid`
 npm run organizers:generate-dashboard-mockups        # 12 mockups IA (6 panel organizador + 6 beneficios centro) para las landings de organizadores; guarda en `public/images/` (GPT-4o×2 + gpt-image-1.5, `OPENAI_API_KEY` en `.env.local`)
+
+### Blog — línea editorial
+
+El blog **no promociona retiros por destino**. Publica contenido informativo que la gente busca (recetas, nutrición, tipos de yoga/meditación, aceites y tratamientos ayurvédicos) — la misma lógica que el contenido en redes. Documentación:
+
+- **`docs/BLOG-EDITORIAL.md`** — qué sí / qué no, tono, categorías, scripts
+- **`docs/BLOG-TITULOS-PROPUESTOS.md`** — cola de 100 títulos en orden de publicación
+
+Generación con IA: `node scripts/generate-blog-articles.mjs --limit=10` (lee la cola del markdown).
 
 # Centros — emails
 npm run centers:emails        # Sincronizar emails desde CSV
@@ -267,6 +301,7 @@ Con **Supabase CLI** (`supabase link` + `supabase db push`) se aplican solas en 
 44. `supabase/migrations/042_center_type_province_seo.sql` — **SEO Fase 1 #1/2/3**: tabla `center_type_province_seo` (intro, meta, FAQ bilingüe por par tipo×provincia) + RLS public read. Generada con `npm run seo:type-province`.
 45. `supabase/migrations/043_center_type_province_city_seo.sql` — **SEO Fase 2 #6**: extiende `center_type_province_seo` con `city_slug` + `city_name`; sustituye el UNIQUE por dos índices parciales (provincial vs ciudad). 58 ciudades generadas en la primera pasada.
 46. `supabase/migrations/044_center_styles.sql` — **SEO Fase 3 #10**: catálogo `styles` (24 estilos seed: kundalini, vinyasa, hatha, yin, ashtanga, aereo, prenatal, mindfulness, vipassana, zen, panchakarma, marma, abhyanga, shirodhara, etc.) + tabla puente `center_styles (center_id, style_id, source, confidence)` + trigger `check_center_style_type_match` + RLS public read. 441 centros clasificados con `npm run centers:infer-styles` (89 % cobertura).
+47. `supabase/migrations/045_seo_sections.sql` — **SEO Fase 4**: columnas `sections_es/en`, `serp_data`, `suppress_reason` en `categories`, `destinations`, `center_type_province_seo`, `styles`; tabla `style_province_seo` (Cap. 4 estilo×provincia). Contenido rico con `npm run seo:sections` (capas 2–5; Cap. 1 nacional sigue en `src/lib/center-type-editorial.ts`).
 
 **Seeds** (después de las migraciones):
 
@@ -290,7 +325,7 @@ Las páginas consumen datos a través de `src/lib/data/index.ts`:
 - `getBookingById(bookingId)` — detalle de una reserva con retiro, organizador y destino
 - Slugs para build: `getCenterSlugs()`, `getRetreatSlugs()`, `getBlogPostSlugs()`, `getOrganizerSlugs()`, `getProductSlugs()`, `getDestinationSlugs()`
 - **SEO landings por tipo/provincia/ciudad**: `getCenterTypeProvincePairs()`, `getCenterTypeProvinceCityTriples(min)`, `getCenterTypeProvinceSeo(type, province)`, `getCenterTypeProvinceCitySeo(type, province, city)`, `getCitiesForCenterTypeProvince(type, province)`.
-- **SEO landings por estilo** (Fase 3 #10): `getStylesForType(type)`, `getStyleBySlug(slug)`, `getCentersByStyle(slug, { province, limit })`, `getProvincesForStyle(slug, min)`, `getStyleProvincePairs(min)`, `getStylesForCenter(centerId)`. Interface `Style` exportada. Usan `createStaticSupabase()` (no acceden a cookies).
+- **SEO landings por estilo** (Fase 3 #10): `getStylesForType(type)`, `getStyleBySlug(slug)`, `getCentersByStyle(slug, { province, limit })`, `getProvincesForStyle(slug, min)`, `getStyleProvincePairs(min)`, `getStyleProvinceSeo(type, style, province)`, `getStylesForCenter(centerId)`. Interface `Style` exportada. Usan `createStaticSupabase()` (no acceden a cookies). Umbral provincial: **≥5 centros** con el estilo en la provincia (`notFound()` si no).
 - **Hub geográfico** (Fase 3 #7): `getGeoNodeBySlug(slug, kind)`, `getUpcomingRetreatsForDestinations(ids, limit)`, `getBlogArticlesMentioning(terms, limit)`.
 
 Las APIs `/api/retreats`, `/api/centers` y `/api/catalog` exponen datos para búsqueda y filtros.
@@ -365,7 +400,8 @@ La ruta `/es/mis-eventos/verificacion` **redirige** a `/es/panel/verificacion` (
 - **Retiros por categoría** (URL pública `/es/retiros-yoga`, `/es/retiros-yoga/ibiza`, …): la carpeta App Router se llama **`cat-retiros/[category](/[destination])`** y se sirve via rewrite invisible del middleware. Razón histórica: en Next 14 las literales hermanas `retiros-retiru/`, `retiros-en/` rompían el match del segmento dinámico `retiros-[category]/`. Mismo patrón en EN (`cat-retreats/...`). Detalle en [`docs/ROUTES.md`](docs/ROUTES.md#%EF%B8%8F-patr%C3%B3n-de-rewrites-del-middleware-url-p%C3%BAblica--carpeta-app-router). Solo se generan combinaciones con al menos un retiro publicado.
 - **Centros por tipo** (tres valores BD `yoga` / `meditation` / `ayurveda`; en URL ES `meditation` → `meditacion`): ej. `/es/centros/yoga`, `/es/centros/yoga/madrid`. Índice de tipos siempre; **tipo + provincia** solo si hay centros activos en esa pareja. Las rutas antiguas `/es/centros-*` redirigen **308** a `/es/centros/...`.
 - **Centros por tipo + provincia + ciudad** (Fase 2 SEO #6): ej. `/es/centros/yoga/madrid/getafe`. Umbral ≥ 2 centros; intro y meta únicas por ciudad en `center_type_province_seo` (migración 043).
-- **Centros por tipo + estilo** (Fase 3 SEO #10): ej. `/es/centros/yoga/estilo/vinyasa`, `/es/centros/yoga/estilo/vinyasa/barcelona`. Tabla puente `center_styles` (migración 044). Umbrales: ≥ 3 centros nacional, ≥ 5 provincial. Renderizan con `dynamic = 'force-dynamic'` (no ISR) para evitar conflictos con `cookies()` en el layout padre.
+- **Centros por tipo + estilo** (Fase 3 SEO #10): ej. `/es/centros/yoga/estilo/vinyasa`, `/es/centros/yoga/estilo/vinyasa/barcelona`. Tabla puente `center_styles` (migración 044). Umbrales: ≥ 3 centros nacional, ≥ 5 provincial (menos → **404**). Renderizan con `dynamic = 'force-dynamic'` (no ISR) para evitar conflictos con `cookies()` en el layout padre. Contenido SEO Cap. 4 opcional en `style_province_seo` (migración 045); mantener alineada con URLs publicables vía `npm run seo:prune-style-province`.
+- **Contenido SEO rico por capas** (Fase 4): bloques `sections_es/en` + FAQ ampliada en BD (migración 045). **Cap. 3 tipo×provincia (91 URLs):** generación completa (`npm run seo:sections -- --layer=3`). Renderer `src/components/seo/SeoSections.tsx` integrado en tipo×provincia, ciudad y estilo×provincia. Cap. 5 (ciudades), Cap. 2 (estilo nacional) y Cap. 4 pendientes de tanda masiva.
 - **Hub provincial multi-disciplina** (Fase 3 SEO #7/#14): `/es/provincias/[slug]` (+ EN `/en/provinces/[slug]`). Canonical geográfico; 301 permanente desde `/es/centros-retiru/[slug]` cuando el slug resuelve a una provincia.
 
 Detalle de slugs EN de categorías y del sitemap: [`docs/ROUTES.md`](docs/ROUTES.md), [`docs/SEO-LANDINGS.md`](docs/SEO-LANDINGS.md), [`PLAN_SEO.md`](PLAN_SEO.md) (roadmap completo y changelog).
@@ -389,7 +425,7 @@ El sitemap se genera automáticamente en cada deploy con ISR (revalidate 1h). In
 | Centros tipo + provincia | variable | variable ×2 |
 | Centros tipo + provincia + ciudad | ~58 (umbral ≥ 2) | ~116 |
 | Centros tipo + estilo (nacional) | ~18 (umbral ≥ 3) | ~36 |
-| Centros tipo + estilo + provincia | ~44 (umbral ≥ 5) | ~88 |
+| Centros tipo + estilo + provincia | ~44 publicables (umbral ≥ 5; **404** si menos) | ~88 |
 | Provincias (hub multi-disciplina) | ~50 | ~100 |
 | Blog | ~10 | ~20 |
 | Destinos | ~12 | ~24 |
@@ -859,7 +895,7 @@ El cron `/api/cron/payment-deadlines` (cada hora) gestiona la gracia y cancelaci
 - **Ficha de centro** (`/es/centro/[slug]`, EN `/en/center/[slug]`): galería, breadcrumb, servicios, horarios, contacto — datos desde Supabase
 - **Organizador** (`/es/organizador/[slug]`, EN `/en/organizer/[slug]`): perfil público con retiros publicados (en cada retiro del grid solo se muestra valoración si el organizador tiene reseñas)
 - **Buscador** (`/es/buscar`, EN `/en/search`): búsqueda unificada retiros + centros con filtros (tarjetas de retiro: valoración del organizador cuando aplica)
-- **Blog** (`/es/blog`, `/es/blog/[slug]`; EN `/en/blog/…`): artículos desde Supabase
+- **Blog** (`/es/blog`, `/es/blog/[slug]`; EN `/en/blog/…`): artículos desde Supabase. **Línea editorial:** contenido informativo (recetas, nutrición, yoga, meditación, ayurveda) — no landings de retiros por destino. Ver `docs/BLOG-EDITORIAL.md` y cola `docs/BLOG-TITULOS-PROPUESTOS.md`.
 - **Tienda** (`/es/tienda`, `/es/tienda/[slug]`; EN: `/en/shop`): productos desde `shop_products`; si el listado público está vacío, **encuesta de interés** (cada clic 1–5 se guarda al instante vía `POST /api/shop/product-interest`; comentario opcional con botón propio) → `shop_product_interests`. Admin: `/administrator/tienda` + `docs/SHOP-SURVEY.md`
 - **Para asistentes** (`/para-asistentes`): garantías de pago seguro, organizadores verificados, soporte, comparativa vs contratación directa/redes
 - **Para centros y organizadores** (`/para-organizadores`): secciones centros + organizadores

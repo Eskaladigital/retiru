@@ -9,6 +9,7 @@ import { MapPin, Star } from 'lucide-react';
 import CentrosSearch from '@/components/home/CentrosSearch';
 import { getActiveCenters, getCategoryBySlug, getProvincesForCenterType } from '@/lib/data';
 import { createServerSupabase } from '@/lib/supabase/server';
+import { applyPublicBlogFilters } from '@/lib/blog-visible';
 import {
   getCenterTypeLabel,
   CENTER_TYPE_FROM_URL_ES,
@@ -67,11 +68,12 @@ export default async function CentrosPorTipoPage({ params }: { params: Promise<{
 
   // Blog relacionado: artículos publicados de la categoría que coincide con el tipo.
   const supabase = await createServerSupabase();
-  const { data: relatedBlog } = await supabase
-    .from('blog_articles')
-    .select('id, slug, title_es, excerpt_es, cover_image_url, published_at, blog_categories!inner(slug)')
-    .eq('is_published', true)
-    .eq('blog_categories.slug', urlType === 'meditacion' ? 'meditacion' : urlType)
+  const { data: relatedBlog } = await applyPublicBlogFilters(
+    supabase
+      .from('blog_articles')
+      .select('id, slug, title_es, excerpt_es, cover_image_url, published_at, blog_categories!inner(slug)')
+      .eq('blog_categories.slug', urlType === 'meditacion' ? 'meditacion' : urlType),
+  )
     .order('published_at', { ascending: false })
     .limit(3);
 
