@@ -4,7 +4,7 @@ import { Clock, Calendar, ArrowLeft, Share2, ChevronRight } from 'lucide-react';
 import { notFound, redirect } from 'next/navigation';
 import { getBlogPostSlugs, getCenterProvinces, getDominantCenterTypeMap } from '@/lib/data';
 import { applyPublicBlogFilters } from '@/lib/blog-visible';
-import { createServerSupabase } from '@/lib/supabase/server';
+import { createStaticSupabase } from '@/lib/supabase/server';
 import { RichContentBody } from '@/components/ui/retreat-description-body';
 import { contentLooksLikeHtml } from '@/lib/sanitize-rich-html';
 import { autoLinkGeoHtml } from '@/lib/auto-link-geo';
@@ -23,7 +23,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const supabase = await createServerSupabase();
+  const supabase = createStaticSupabase();
   const { data: article } = await applyPublicBlogFilters(
     supabase
       .from('blog_articles')
@@ -85,7 +85,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function BlogPostEN({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const supabase = await createServerSupabase();
+  const supabase = createStaticSupabase();
 
   const { data: article } = await applyPublicBlogFilters(
     supabase

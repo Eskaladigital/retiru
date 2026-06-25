@@ -36,6 +36,7 @@
     "db:apply-mailing-system": "node scripts/run-sql-migration.mjs supabase/migrations/038_mailing_system.sql",
     "db:apply-mailing-extended": "node scripts/run-sql-migration.mjs supabase/migrations/039_mailing_campaigns_extended.sql",
     "db:apply-blog-scheduled": "node scripts/run-sql-migration.mjs supabase/migrations/046_blog_public_scheduled.sql",
+    "db:apply-blog-adm-fix": "node scripts/run-sql-migration.mjs supabase/migrations/047_blog_adm_no_select.sql",
     "mailing:test": "node scripts/send-mailing-test.mjs",
     "mailing:create": "node scripts/mailing.mjs create",
     "mailing:send": "node scripts/mailing.mjs send",
