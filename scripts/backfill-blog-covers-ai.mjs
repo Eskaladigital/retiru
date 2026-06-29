@@ -210,6 +210,19 @@ function buildFinalImagePrompt(sceneFromGpt) {
   return `${core}${IMAGE_REALISM_TAIL}`.replace(/\s+/g, ' ').trim().slice(0, 4000);
 }
 
+function isSafetyRejection(err) {
+  const msg = err instanceof Error ? err.message : String(err);
+  return /safety|rejected by the safety/i.test(msg);
+}
+
+/** Bodegón editorial sin personas (evita falsos positivos del filtro en temas ayurvédicos de aceites/masaje). */
+function buildSafeFallbackPrompt(row) {
+  const title = String(row.title_es || row.slug || 'bienestar').trim();
+  const cat = row.blog_categories?.name_es || 'Bienestar';
+  const scene = `Fotografía hiperrealista y cinematográfica de bodegón editorial sobre «${title}»: frascos de vidrio ámbar, semillas, especias y materiales naturales de ${cat} dispuestos sobre madera clara o piedra, tela de lino beige, cuenco de cerámica y hierbas secas, luz natural de media mañana lateral, composición horizontal amplia, estilo revista de salud integrativa, sin personas ni partes del cuerpo humano, sin masajes ni contacto piel-aceite, solo objetos inertes y texturas, composición editorial premium, encuadre horizontal amplio, texturas realistas, sin texto ni logos ni ilustración, realismo fotográfico absoluto, portada web de alta conversión.`;
+  return scene;
+}
+
 async function generateCoverPng(apiKey, prompt) {
   const trimmed = buildFinalImagePrompt(prompt);
   const res = await fetch('https://api.openai.com/v1/images/generations', {
@@ -363,8 +376,16 @@ async function processArticle(row) {
 
   if (refreshCover) {
     const dossier = formatBlogCoverDossier(row);
-    const prompt = await buildImagePromptFromBlogDossier(openaiKey, dossier);
-    const { buffer, contentType } = await generateCoverPng(openaiKey, prompt);
+    let buffer;
+    let contentType;
+    try {
+      const prompt = await buildImagePromptFromBlogDossier(openaiKey, dossier);
+      ({ buffer, contentType } = await generateCoverPng(openaiKey, prompt));
+    } catch (e) {
+      if (!isSafetyRejection(e)) throw e;
+      console.warn(`   ⚠ Filtro de seguridad OpenAI; reintento con bodegón editorial sin personas…`);
+      ({ buffer, contentType } = await generateCoverPng(openaiKey, buildSafeFallbackPrompt(row)));
+    }
     publicUrl = await uploadBlogImage(buffer, contentType, `cover-${shortId}`);
     update.cover_image_url = publicUrl;
   }

@@ -16,6 +16,7 @@ const MAX_PENDING_PROPOSALS = 8;
 
 const CENTER_TYPES_ALLOWED = new Set(['yoga', 'meditation', 'ayurveda']);
 const MAX_CENTER_IMAGE_BYTES = 4 * 1024 * 1024;
+const CENTER_IMAGE_ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
 type ImageUploadPayload = {
   filename?: string;
@@ -58,7 +59,10 @@ async function uploadCenterImage(
     throw new Error('Formato de imagen no válido.');
   }
 
-  const contentType = payload.contentType || match[1];
+  const contentType = (payload.contentType || match[1]).toLowerCase();
+  if (!CENTER_IMAGE_ALLOWED_TYPES.has(contentType) || !CENTER_IMAGE_ALLOWED_TYPES.has(match[1].toLowerCase())) {
+    throw new Error('Formato no válido. Usa JPG, PNG o WebP.');
+  }
   const buffer = Buffer.from(match[2], 'base64');
   if (buffer.length > MAX_CENTER_IMAGE_BYTES) {
     throw new Error('La imagen supera 4 MB. Reduce el tamaño o elige otra foto.');

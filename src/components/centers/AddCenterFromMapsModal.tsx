@@ -61,6 +61,8 @@ function priceLevelLabel(level: number | undefined): string {
 }
 
 const MAX_CENTER_IMAGE_BYTES = 4 * 1024 * 1024;
+const CENTER_IMAGE_ACCEPT = ['image/jpeg', 'image/png', 'image/webp'] as const;
+const CENTER_IMAGE_ACCEPT_ATTR = CENTER_IMAGE_ACCEPT.join(',');
 
 function parseActivities(text: string): string[] {
   return text
@@ -71,8 +73,8 @@ function parseActivities(text: string): string[] {
 }
 
 function readImageFile(file: File): Promise<ImageUploadPayload> {
-  if (!file.type.startsWith('image/')) {
-    return Promise.reject(new Error('Solo se permiten archivos de imagen.'));
+  if (!(CENTER_IMAGE_ACCEPT as readonly string[]).includes(file.type)) {
+    return Promise.reject(new Error('Formato no válido. Usa JPG, PNG o WebP.'));
   }
   if (file.size > MAX_CENTER_IMAGE_BYTES) {
     return Promise.reject(new Error('La imagen supera 4 MB. Reduce el tamaño o elige otra foto.'));
@@ -505,7 +507,7 @@ export function AddCenterFromMapsModal({
                     <span className="block text-xs font-medium text-gray-600 mb-1.5">Foto de portada *</span>
                     <input
                       type="file"
-                      accept="image/*"
+                      accept={CENTER_IMAGE_ACCEPT_ATTR}
                       onChange={(e) => handleImageFile(e.target.files?.[0], 'cover')}
                       className="block w-full text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-terracotta-100 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-terracotta-800 hover:file:bg-terracotta-200"
                     />
@@ -517,7 +519,7 @@ export function AddCenterFromMapsModal({
                     <span className="block text-xs font-medium text-gray-600 mb-1.5">Otra foto del centro (opcional)</span>
                     <input
                       type="file"
-                      accept="image/*"
+                      accept={CENTER_IMAGE_ACCEPT_ATTR}
                       onChange={(e) => handleImageFile(e.target.files?.[0], 'gallery')}
                       className="block w-full text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-sand-100 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[#7a6b5d] hover:file:bg-sand-200"
                     />

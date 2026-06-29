@@ -27,6 +27,8 @@ const inputCls = 'w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px]
 const textareaCls = `${inputCls} resize-none`;
 const labelCls = 'block text-sm font-medium text-foreground mb-1.5';
 const MAX_CENTER_IMAGE_BYTES = 4 * 1024 * 1024;
+const CENTER_IMAGE_ACCEPT = ['image/jpeg', 'image/png', 'image/webp'] as const;
+const CENTER_IMAGE_ACCEPT_ATTR = CENTER_IMAGE_ACCEPT.join(',');
 
 const CENTER_TYPES = CENTER_FILTER_OPTIONS_ES.filter((o) => o.slug).map((o) => ({ value: o.slug!, label: o.label }));
 
@@ -37,8 +39,8 @@ type ImageUploadPayload = {
 };
 
 function readImageFile(file: File): Promise<ImageUploadPayload> {
-  if (!file.type.startsWith('image/')) {
-    return Promise.reject(new Error('Solo se permiten archivos de imagen.'));
+  if (!(CENTER_IMAGE_ACCEPT as readonly string[]).includes(file.type)) {
+    return Promise.reject(new Error('Formato no válido. Usa JPG, PNG o WebP.'));
   }
   if (file.size > MAX_CENTER_IMAGE_BYTES) {
     return Promise.reject(new Error('La imagen supera 4 MB. Reduce el tamaño o elige otra foto.'));
@@ -333,7 +335,7 @@ export function EditarCentroForm({ center }: Props) {
               <span className="text-xs text-[#a09383]">JPG, PNG o WebP · máximo 4 MB</span>
               <input
                 type="file"
-                accept="image/*"
+                accept={CENTER_IMAGE_ACCEPT_ATTR}
                 className="sr-only"
                 onChange={(e) => handleImageFile(e.target.files?.[0], 'cover')}
               />
@@ -371,7 +373,7 @@ export function EditarCentroForm({ center }: Props) {
               </span>
               <input
                 type="file"
-                accept="image/*"
+                accept={CENTER_IMAGE_ACCEPT_ATTR}
                 className="sr-only"
                 onChange={(e) => handleImageFile(e.target.files?.[0], 'gallery')}
               />
