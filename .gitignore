@@ -15,4 +15,7 @@ SUPERTESTER/playwright-report/
 scripts/.blog-queue-progress.json
 scripts/blog-publish-queue.log
 
+# Binario/symlink local de Cursor agent (no versionar)
+/agent
+
 .vercel
