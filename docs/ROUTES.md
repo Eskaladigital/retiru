@@ -153,7 +153,7 @@ Parámetros opcionales en registro: `?redirect=/ruta&claim=true` (redirige tras 
 | `/es/mensajes` | `src/app/(public)/es/(dashboard)/mensajes/page.tsx` | Bandeja de mensajes (+ botón soporte) |
 | `/es/mensajes/[id]` | `src/app/(public)/es/(dashboard)/mensajes/[id]/page.tsx` | Conversación individual (chat / soporte) |
 | `/es/perfil` | `src/app/(public)/es/(dashboard)/perfil/page.tsx` | Datos personales desde `profiles` (Supabase); guardar vía `PATCH /api/profile` |
-| `/es/mis-centros` | `src/app/(public)/es/(dashboard)/mis-centros/page.tsx` | Centros reclamados, propuestas pendientes, reclamar / proponer nuevo |
+| `/es/mis-centros` | `src/app/(public)/es/(dashboard)/mis-centros/page.tsx` | Centros reclamados, propuestas pendientes, reclamar / proponer nuevo. Al proponer centro, el modal exige descripción, actividades/servicios y portada manual desde dispositivo o portada generada con IA. |
 | `/es/mis-eventos` | `src/app/(public)/es/(dashboard)/mis-eventos/page.tsx` | Eventos/retiros creados (contrato + banner de verificación si aplica) |
 | `/es/mis-eventos/nuevo` | `src/app/(public)/es/(dashboard)/mis-eventos/nuevo/page.tsx` | Wizard crear evento (TinyMCE descripción, portada + hasta 8 fotos, RLS `retreat-images`) |
 | `/es/mis-eventos/[id]` | `src/app/(public)/es/(dashboard)/mis-eventos/[id]/page.tsx` | Editar evento |
@@ -346,7 +346,7 @@ Protegido por middleware y comprobación de admin. No indexado en buscadores.
 | Método | Ruta | Descripción |
 |--------|------|-------------|
 | POST | `/api/centers/claim` | Reclamar un centro (auto-aprueba si email coincide) |
-| POST | `/api/centers/propose` | Proponer centro nuevo desde Google Maps (queda `pending_review`; usuario autenticado) |
+| POST | `/api/centers/propose` | Proponer centro nuevo desde Google Maps (queda `pending_review`; usuario autenticado). Requiere descripción, `services_es` e imagen: `cover_url` generada con IA o `cover_upload` manual; puede añadir `images_uploads`. |
 | GET | `/api/admin/center-claims` | Listar claims (admin) |
 | POST | `/api/admin/center-claims` | Aprobar/rechazar claim (admin) |
 | POST | `/api/admin/retreats` | Aprobar, rechazar, cancelar, archivar o eliminar retiro (admin) |
@@ -358,7 +358,7 @@ Protegido por middleware y comprobación de admin. No indexado en buscadores.
 | POST | `/api/retreats/create` | Crear retiro (auto-crea organizer_profile) |
 | POST | `/api/retreats/generate-cover-image` | Portada IA: cuerpo con **briefing completo** del evento (textos, destino, fechas, categorías, programa, incluidos…); **GPT-4o** genera un único párrafo-prompt en español; **GPT Image 1.5** genera la imagen (`1536x1024`, `high`); usuario autenticado; `OPENAI_API_KEY`; bucket `retreat-images` |
 | POST | `/api/admin/blog/generate-cover-image` | Portada IA de artículo de blog (solo admin): título, extracto, contenido, categoría; mismo agente GPT-4o×2 + GPT Image 1.5; bucket `retreat-images` (`blog/ai-cover-*`) |
-| POST | `/api/centers/generate-cover-image` | Portada IA de centro (propietario reclamado o admin): nombre, descripción, tipo, ubicación, servicios; mismo agente; bucket `centers` (`{centerId}/ai-cover-*`) |
+| POST | `/api/centers/generate-cover-image` | Portada IA de centro (propietario reclamado o admin; también prealta sin `center_id`): nombre, descripción, tipo, ubicación, servicios; mismo agente; bucket `centers` (`{centerId}/ai-cover-*` o `generated/ai-cover-*`) |
 | PATCH | `/api/retreats/[id]` | Actualizar retiro (solo propietario) |
 | POST | `/api/retreats/[id]` | Cancelar retiro (propietario, action=cancel) |
 | DELETE | `/api/retreats/[id]` | Eliminar retiro (propietario, solo sin reservas confirmadas) |

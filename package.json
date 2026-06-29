@@ -24,6 +24,8 @@
     "blog:generate": "node scripts/generate-blog-articles.mjs",
     "blog:publish-queue": "node scripts/publish-blog-queue.mjs",
     "blog:publish-queue:dry": "node scripts/publish-blog-queue.mjs --dry-run",
+    "blog:regenerate-queue": "node scripts/publish-blog-queue.mjs --regenerate --from=1 --to=34 --skip-covers",
+    "blog:analyze-quality": "node scripts/analyze-blog-quality.mjs",
     "centers:images": "node scripts/assign-center-images.mjs",
     "centers:vaciar-genericas": "node scripts/count-generic-descriptions.mjs --vaciar",
     "centers:emails": "node scripts/sync-and-fetch-emails.mjs",

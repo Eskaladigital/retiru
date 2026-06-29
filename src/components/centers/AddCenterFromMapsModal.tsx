@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { X, MapPin, Globe, Phone, Star, Loader2, Search, Check, ExternalLink } from 'lucide-react';
+import { X, MapPin, Globe, Phone, Star, Loader2, Search, Check, ExternalLink, Upload, Sparkles } from 'lucide-react';
 import type { CenterType } from '@/types';
 
 declare global {
@@ -30,6 +30,12 @@ type PlaceData = {
   type: CenterType;
 };
 
+type ImageUploadPayload = {
+  filename: string;
+  contentType: string;
+  dataUrl: string;
+};
+
 const CENTER_TYPES: { value: CenterType; label: string }[] = [
   { value: 'yoga', label: 'Yoga' },
   { value: 'meditation', label: 'Meditación' },
@@ -54,6 +60,43 @@ function priceLevelLabel(level: number | undefined): string {
   return ['Gratis', '$', '$$', '$$$', '$$$$'][level] || '—';
 }
 
+const MAX_CENTER_IMAGE_BYTES = 4 * 1024 * 1024;
+
+function parseActivities(text: string): string[] {
+  return text
+    .split(/\n|,/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 12);
+}
+
+function readImageFile(file: File): Promise<ImageUploadPayload> {
+  if (!file.type.startsWith('image/')) {
+    return Promise.reject(new Error('Solo se permiten archivos de imagen.'));
+  }
+  if (file.size > MAX_CENTER_IMAGE_BYTES) {
+    return Promise.reject(new Error('La imagen supera 4 MB. Reduce el tamaño o elige otra foto.'));
+  }
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('No se pudo leer la imagen.'));
+    reader.onload = () => {
+      const dataUrl = typeof reader.result === 'string' ? reader.result : '';
+      if (!dataUrl) {
+        reject(new Error('No se pudo preparar la imagen.'));
+        return;
+      }
+      resolve({
+        filename: file.name,
+        contentType: file.type,
+        dataUrl,
+      });
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 export type AddCenterFromMapsVariant = 'admin' | 'user';
 
 export function AddCenterFromMapsModal({
@@ -70,8 +113,15 @@ export function AddCenterFromMapsModal({
   const [step, setStep] = useState<'search' | 'preview'>('search');
   const [place, setPlace] = useState<PlaceData | null>(null);
   const [saving, setSaving] = useState(false);
+  const [generatingImage, setGeneratingImage] = useState(false);
   const [error, setError] = useState('');
   const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [imageMode, setImageMode] = useState<'manual' | 'ai' | null>(null);
+  const [descriptionEs, setDescriptionEs] = useState('');
+  const [activitiesText, setActivitiesText] = useState('');
+  const [coverUpload, setCoverUpload] = useState<ImageUploadPayload | null>(null);
+  const [galleryUpload, setGalleryUpload] = useState<ImageUploadPayload | null>(null);
+  const [generatedCoverUrl, setGeneratedCoverUrl] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const attrRef = useRef<HTMLDivElement>(null);
@@ -165,12 +215,85 @@ export function AddCenterFromMapsModal({
       setPlace(null);
       setError('');
       setSaving(false);
+      setGeneratingImage(false);
+      setImageMode(null);
+      setDescriptionEs('');
+      setActivitiesText('');
+      setCoverUpload(null);
+      setGalleryUpload(null);
+      setGeneratedCoverUrl('');
       autocompleteRef.current = null;
     }
   }, [open]);
 
+  const activities = parseActivities(activitiesText);
+  const hasRequiredProfileContent = descriptionEs.trim().length >= 80 && activities.length > 0;
+  const hasRequiredImage = Boolean(
+    (imageMode === 'manual' && coverUpload) ||
+    (imageMode === 'ai' && generatedCoverUrl),
+  );
+
+  async function handleImageFile(file: File | undefined, target: 'cover' | 'gallery') {
+    if (!file) return;
+    setError('');
+    try {
+      const payload = await readImageFile(file);
+      if (target === 'cover') {
+        setCoverUpload(payload);
+      } else {
+        setGalleryUpload(payload);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo preparar la imagen.');
+    }
+  }
+
+  async function handleGenerateCoverAi() {
+    if (!place) return;
+    if (!hasRequiredProfileContent) {
+      setError('Añade una descripción de al menos 80 caracteres y una actividad o servicio para generar una imagen con IA.');
+      return;
+    }
+    setError('');
+    setGeneratingImage(true);
+    try {
+      const typeLabel = CENTER_TYPES.find((t) => t.value === place.type)?.label;
+      const res = await fetch('/api/centers/generate-cover-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: place.name,
+          description_es: descriptionEs,
+          type: place.type,
+          type_label: typeLabel,
+          city: place.city || undefined,
+          province: place.province || undefined,
+          address: place.address || undefined,
+          country: place.country || undefined,
+          services_es: activities,
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string; publicUrl?: string };
+      if (!res.ok) throw new Error(data.error || `Error al generar la imagen (${res.status})`);
+      if (!data.publicUrl) throw new Error('No se obtuvo URL de la imagen generada.');
+      setGeneratedCoverUrl(data.publicUrl);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error al generar la imagen con IA.');
+    } finally {
+      setGeneratingImage(false);
+    }
+  }
+
   const handleSave = async () => {
     if (!place) return;
+    if (!hasRequiredProfileContent) {
+      setError('Antes de enviar el centro, añade una descripción de al menos 80 caracteres y una actividad o servicio.');
+      return;
+    }
+    if (!hasRequiredImage) {
+      setError('Antes de enviar el centro, sube una portada desde tu dispositivo o genera una imagen con IA.');
+      return;
+    }
     setSaving(true);
     setError('');
     try {
@@ -178,7 +301,14 @@ export function AddCenterFromMapsModal({
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(place),
+        body: JSON.stringify({
+          ...place,
+          description_es: descriptionEs.trim(),
+          services_es: activities,
+          cover_url: generatedCoverUrl || undefined,
+          cover_upload: coverUpload || undefined,
+          images_uploads: galleryUpload ? [galleryUpload] : [],
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -312,6 +442,110 @@ export function AddCenterFromMapsModal({
               </select>
             </div>
 
+            <div className="space-y-3 rounded-2xl border border-terracotta-100 bg-terracotta-50/40 p-4">
+              <div>
+                <p className="text-sm font-semibold text-gray-900">Contenido y fotos obligatorias del perfil</p>
+                <p className="mt-1 text-xs text-[#7a6b5d]">
+                  El perfil no puede enviarse sin descripción, actividades e imagen. Así la ficha sale completa y atractiva.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs text-gray-500 mb-1.5">Descripción del centro *</label>
+                <textarea
+                  rows={3}
+                  value={descriptionEs}
+                  onChange={(e) => setDescriptionEs(e.target.value)}
+                  placeholder="Ej: estudio de yoga con clases de hatha, meditación y talleres en un espacio luminoso..."
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-terracotta-500/30 focus:border-terracotta-500"
+                />
+                <p className="mt-1 text-[11px] text-[#a09383]">Mínimo 80 caracteres. También se usa como guía para la imagen IA.</p>
+              </div>
+
+              <div>
+                <label className="block text-xs text-gray-500 mb-1.5">Actividades o servicios que ofrecéis *</label>
+                <textarea
+                  rows={2}
+                  value={activitiesText}
+                  onChange={(e) => setActivitiesText(e.target.value)}
+                  placeholder="Yoga Hatha, meditación, ayurveda, talleres, masajes..."
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-terracotta-500/30 focus:border-terracotta-500"
+                />
+                <p className="mt-1 text-[11px] text-[#a09383]">Separa cada actividad con comas o saltos de línea.</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setImageMode('manual')}
+                  className={`rounded-xl border px-3 py-3 text-left transition ${imageMode === 'manual' ? 'border-terracotta-500 bg-white shadow-sm' : 'border-gray-200 bg-white/70 hover:border-terracotta-200'}`}
+                >
+                  <span className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                    <Upload className="h-4 w-4 text-terracotta-600" />
+                    Subir desde mi dispositivo
+                  </span>
+                  <span className="mt-1 block text-xs text-[#7a6b5d]">Portada obligatoria y una foto adicional opcional.</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setImageMode('ai')}
+                  className={`rounded-xl border px-3 py-3 text-left transition ${imageMode === 'ai' ? 'border-terracotta-500 bg-white shadow-sm' : 'border-gray-200 bg-white/70 hover:border-terracotta-200'}`}
+                >
+                  <span className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                    <Sparkles className="h-4 w-4 text-terracotta-600" />
+                    Generar imagen con IA
+                  </span>
+                  <span className="mt-1 block text-xs text-[#7a6b5d]">Creamos una portada editorial a partir del centro.</span>
+                </button>
+              </div>
+
+              {imageMode === 'manual' && (
+                <div className="space-y-3">
+                  <label className="block">
+                    <span className="block text-xs font-medium text-gray-600 mb-1.5">Foto de portada *</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleImageFile(e.target.files?.[0], 'cover')}
+                      className="block w-full text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-terracotta-100 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-terracotta-800 hover:file:bg-terracotta-200"
+                    />
+                  </label>
+                  {coverUpload && (
+                    <img src={coverUpload.dataUrl} alt="Vista previa de portada" className="h-32 w-full rounded-xl object-cover" />
+                  )}
+                  <label className="block">
+                    <span className="block text-xs font-medium text-gray-600 mb-1.5">Otra foto del centro (opcional)</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleImageFile(e.target.files?.[0], 'gallery')}
+                      className="block w-full text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-sand-100 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[#7a6b5d] hover:file:bg-sand-200"
+                    />
+                  </label>
+                  {galleryUpload && (
+                    <img src={galleryUpload.dataUrl} alt="Vista previa de foto adicional" className="h-24 w-full rounded-xl object-cover" />
+                  )}
+                </div>
+              )}
+
+              {imageMode === 'ai' && (
+                <div className="space-y-3">
+                  <button
+                    type="button"
+                    onClick={handleGenerateCoverAi}
+                    disabled={generatingImage || !hasRequiredProfileContent}
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-terracotta-600 px-4 py-3 text-sm font-semibold text-white hover:bg-terracotta-700 disabled:opacity-50 disabled:pointer-events-none"
+                  >
+                    {generatingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                    {generatingImage ? 'Generando imagen...' : 'Generar portada con IA'}
+                  </button>
+                  {generatedCoverUrl && (
+                    <img src={generatedCoverUrl} alt="Portada generada con IA" className="h-32 w-full rounded-xl object-cover" />
+                  )}
+                </div>
+              )}
+            </div>
+
             <details className="text-xs text-gray-400">
               <summary className="cursor-pointer hover:text-gray-600">Datos de Google</summary>
               <div className="mt-2 space-y-1 bg-gray-50 rounded-lg p-3">
@@ -339,7 +573,7 @@ export function AddCenterFromMapsModal({
               <button
                 type="button"
                 onClick={handleSave}
-                disabled={saving}
+                disabled={saving || !hasRequiredImage || !hasRequiredProfileContent}
                 className="flex-1 py-2.5 bg-terracotta-600 text-white rounded-xl text-sm font-semibold hover:bg-terracotta-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}

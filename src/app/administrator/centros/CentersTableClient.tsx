@@ -18,6 +18,7 @@ export type CenterRow = {
   type?: string;
   price_monthly?: number;
   description_es?: string | null;
+  services_es?: string[] | null;
   cover_url?: string | null;
   email?: string | null;
   submitted_by?: string | null;
@@ -46,6 +47,10 @@ function getMRR(c: CenterRow): number {
 
 function hasDesc(c: CenterRow): boolean {
   return !!(c.description_es?.trim() && c.description_es.trim().length >= 80);
+}
+
+function hasServices(c: CenterRow): boolean {
+  return Array.isArray(c.services_es) && c.services_es.some((item) => item.trim().length > 0);
 }
 
 type SortKey = 'name' | 'city' | 'province' | 'plan' | 'type' | 'status' | 'mrr' | 'desc';
@@ -143,6 +148,14 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
 
   const handleToggleStatus = async (c: CenterRow) => {
     if (c.status === 'pending_review') {
+      if (!c.cover_url) {
+        alert('No se puede aprobar esta propuesta sin foto de portada. Edita el centro y añade una imagen antes de publicarlo.');
+        return;
+      }
+      if (!hasDesc(c) || !hasServices(c)) {
+        alert('No se puede aprobar esta propuesta sin descripción y actividades. Edita el centro y completa esos campos antes de publicarlo.');
+        return;
+      }
       if (!window.confirm(
         `¿Aprobar la propuesta "${c.name}"?\n\nSe publicará el centro y se asignará al usuario que la envió como titular.`,
       )) return;
@@ -170,6 +183,14 @@ export function CentersTableClient({ list }: { list: CenterRow[] }) {
 
     const isActive = c.status === 'active';
     const action = isActive ? 'despublicar' : 'publicar';
+    if (!isActive && !c.cover_url) {
+      alert('No se puede publicar un centro sin foto de portada. Edita el centro y añade una imagen antes de publicarlo.');
+      return;
+    }
+    if (!isActive && (!hasDesc(c) || !hasServices(c))) {
+      alert('No se puede publicar un centro sin descripción y actividades. Edita el centro y completa esos campos antes de publicarlo.');
+      return;
+    }
     if (!window.confirm(`¿${isActive ? 'Despublicar' : 'Publicar'} "${c.name}"?`)) return;
     setToggling(c.id);
     try {

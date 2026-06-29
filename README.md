@@ -704,7 +704,7 @@ El dueño de un centro puede vincularse como propietario verificado mediante:
 1. **Link mágico (email):** el email de bienvenida contiene un token único que auto-aprueba el claim.
 2. **Email match:** si el email del usuario registrado coincide con el del centro, se auto-aprueba.
 3. **Solicitud manual:** el botón "Reclamar este centro" en la ficha pública crea un claim **pending** que un admin revisa. Si los emails no coinciden, **no** hay rechazo automático: solo pasa a revisión humana. Un claim **rejected** solo lo marca un admin (o se reabre a pending si el usuario vuelve a reclamar desde la ficha).
-4. **Proponer centro nuevo:** desde `/es/mis-centros`, el usuario busca el establecimiento en Google Maps (mismo flujo que el admin al crear centro). Se crea un registro en `centers` con `status = pending_review` y `submitted_by = user_id`. El admin aprueba en `/administrator/centros` (icono publicar): pasa a `active` y se asigna `claimed_by` al proponente.
+4. **Proponer centro nuevo:** desde `/es/mis-centros`, el usuario busca el establecimiento en Google Maps (mismo flujo que el admin al crear centro). Antes de enviar debe completar descripción, actividades/servicios y una imagen de portada: subirla desde su dispositivo o generarla con IA (`POST /api/centers/generate-cover-image`). Se crea un registro en `centers` con `status = pending_review`, `submitted_by = user_id`, `description_es`, `services_es`, `cover_url` obligatorio y, si procede, `images[]`. El admin aprueba en `/administrator/centros` (icono publicar): pasa a `active` y se asigna `claimed_by` al proponente.
 
 **Tablas:** `center_claims` (claim con estado pending/approved/rejected) + `claim_tokens` (tokens para links mágicos). Propuestas: filas en `centers` con `status = pending_review` y `submitted_by`.
 
@@ -851,7 +851,7 @@ Cualquier usuario logueado (incluido el admin) tiene acceso a:
 
 1. **Mis reservas** — reservas como asistente
 2. **Mi perfil** — datos personales, avatar, contraseña
-3. **Mis centros** — centros reclamados, propuestas en revisión, CTA para reclamar en el directorio o proponer centro nuevo (Google Maps)
+3. **Mis centros** — centros reclamados, propuestas en revisión, CTA para reclamar en el directorio o proponer centro nuevo (Google Maps). Las propuestas y la edición de ficha exigen descripción, actividades/servicios e imagen: portada manual desde dispositivo o portada generada con IA, de modo que no haya perfiles públicos vacíos o sin foto.
 4. **Mis eventos** — retiros/eventos creados; wizard para crear/editar con **plazas máximas** (`max_attendees`) y **mínimo viable** (`min_attendees`): umbral de inscritos a partir del cual el organizador se compromete a celebrar el retiro; en ficha pública se muestra progreso de reservas si el mínimo es mayor que 1. **Imágenes:** hasta **8** fotos por retiro (subida al bucket `retreat-images` desde el cliente + registro en `retreat_images` vía API); una es la **portada** (listados y cabecera de ficha), el resto forman la **galería** visible en la ficha pública; portada opcional con **IA** (dossier del evento → GPT-4o → GPT Image 1.5; `POST /api/retreats/generate-cover-image`) o generada al guardar si no hay ninguna foto
 
 El admin tiene además acceso a `/administrator` desde el menú.
@@ -909,7 +909,7 @@ El cron `/api/cron/payment-deadlines` (cada hora) gestiona la gracia y cancelaci
 - **Mis reservas**: reservas como asistente con estados visuales; reservas `reserved_no_payment` con botón para pagar cuando corresponda (datos desde BD)
 - **Mensajes**: bandeja de conversaciones con organizadores + botón "Contactar soporte" para chat con admin
 - **Mi perfil**: datos personales, avatar, contraseña
-- **Mis centros**: centros reclamados y propuestas pendientes; reclamar desde el directorio o proponer centro nuevo
+- **Mis centros**: centros reclamados y propuestas pendientes; reclamar desde el directorio o proponer centro nuevo. Al proponer o editar un centro, la ficha debe conservar descripción, actividades/servicios y al menos una foto (`cover_url` o `images[]`), con opciones de subida manual y generación IA para portada.
 - **Mis eventos**: lista de retiros/eventos creados con imagen, estado, ocupación
   - Wizard de creación en 5 pasos (Información —incluye portada y galería—, Detalles, Programa, Incluye, Precio)
   - Edición de eventos existentes con publicación desde borrador; mismas opciones de **portada + galería** (hasta 8 imágenes)
@@ -921,7 +921,7 @@ El cron `/api/cron/payment-deadlines` (cada hora) gestiona la gracia y cancelaci
 - **Usuarios** — tabla con todos los perfiles (buscador, filtro por rol)
 - **Organizadores** — gestión de organizadores verificados (datos desde `organizer_profiles`)
 - **Retiros** — gestión de retiros (aprobar/rechazar los `pending_review`, ver todos; moderación de contenido opcional con `ANTHROPIC_API_KEY` vía `POST /api/admin/retreats/moderate`)
-- **Centros** — gestión de centros (buscador, filtros, exportar CSV/Excel, generar descripciones IA, editar, ver ficha pública, despublicar/publicar, aprobar propuestas de usuario `pending_review` → `active` + titular, eliminar)
+- **Centros** — gestión de centros (buscador, filtros, exportar CSV/Excel, generar descripciones IA, editar, ver ficha pública, despublicar/publicar, aprobar propuestas de usuario `pending_review` → `active` + titular, eliminar). Las altas nuevas desde admin también requieren portada manual o IA.
 - **Claims** — gestión de reclamaciones de centros (aprobar/rechazar)
 - **Mensajes** — moderación de conversaciones usuario-organizador + lectura y respuesta en chats de soporte (como "Andrea")
 - Gestión de tienda (productos, categorías, pedidos) y **resultados de la encuesta** de interés de productos

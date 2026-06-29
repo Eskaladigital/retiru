@@ -10,12 +10,13 @@
  *   node scripts/generate-blog-articles.mjs --limit=5
  *   node scripts/generate-blog-articles.mjs --offset=10 --limit=3
  *
- * Variables .env.local: SUPABASE_*, OPENAI_API_KEY, SERPAPI_API_KEY
+ * Variables .env.local: SUPABASE_*, OPENAI_API_KEY, SERPAPI_API_KEY, BLOG_OPENAI_MODEL (default gpt-5.5)
  */
 
 import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { buildSerpResearch, generateBlogArticle } from './lib/blog-writer.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
@@ -53,104 +54,6 @@ function slugify(text) {
     .replace(/^-|-$/g, '');
 }
 
-// ─── SerpAPI: búsqueda para contexto ────────────────────────────────────────
-async function searchSerp(query, serpKey) {
-  try {
-    const res = await fetch(
-      `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(query)}&api_key=${serpKey}&hl=es&num=5`
-    );
-    const data = res.ok ? await res.json() : null;
-    if (data?.organic_results?.length) {
-      return data.organic_results
-        .map((r) => r.snippet || r.title)
-        .filter(Boolean)
-        .slice(0, 5)
-        .join('\n');
-    }
-  } catch (e) {
-    console.warn('  ⚠ SerpAPI:', e.message);
-  }
-  return '';
-}
-
-// ─── OpenAI: generar artículo ───────────────────────────────────────────────
-async function generateArticle(topic, serpContext, openaiKey) {
-  const systemPrompt = `Eres redactor de Retiru (retiru.com), plataforma de retiros y bienestar en España.
-Escribe artículos de blog INFORMATIVOS: lo que la gente busca antes de conocer Retiru (recetas, nutrición, tipos de yoga/meditación, aceites y tratamientos ayurvédicos, prácticas concretas).
-
-LÍNEA EDITORIAL (obligatoria — docs/BLOG-EDITORIAL.md):
-- El artículo NO vende retiros ni destinos. No escribas «retiros en [ciudad]», maletas, cancelaciones ni «cómo elegir retiro».
-- Aporta datos útiles: pasos, ingredientes, duraciones, precauciones, para quién conviene o no.
-- Menciona Retiru como mucho una vez al final, de forma natural; el texto debe valer solo.
-
-Tono cercano pero profesional, sobrio y creíble — sin misticismo vacío, sin estética "hippie" ni lenguaje new-age.
-NO cubrir ni promover: cacao ceremonial, ayahuasca, psilocibina, rituales con sustancias, chamanismo comercial ni modas esotéricas.
-Sí encaja: yoga, meditación, ayurveda clásica, nutrición práctica, recetas, salud integrativa con base práctica.
-
-FORMATO DEL CONTENIDO (markdown soportado):
-- Encabezados de sección: ### Título (con línea en blanco antes y después)
-- Sub-encabezados: #### Subtítulo
-- Listas con viñeta: - elemento (cada uno en su propia línea)
-- Listas numeradas: 1. elemento (cada uno en su propia línea)
-- Negrita: **texto**
-- Cursiva: *texto*
-- Párrafos separados por doble salto de línea
-- NO uses tablas, imágenes ni HTML
-- Asegúrate de que cada elemento de lista esté en una línea independiente
-
-Responde SOLO con un JSON válido, sin markdown ni texto extra.`;
-
-  const userPrompt = `Genera un artículo de blog sobre: "${topic}"
-
-${serpContext ? `Contexto actual de búsqueda (usa para enriquecer, no copies literal):\n${serpContext}\n\n` : ''}
-
-Devuelve un JSON con estas claves exactas:
-{
-  "title_es": "título en español",
-  "title_en": "título en inglés",
-  "slug": "slug-url-unico",
-  "excerpt_es": "resumen 1-2 frases en español",
-  "excerpt_en": "resumen 1-2 frases en inglés",
-  "content_es": "contenido completo en español, 800-1200 palabras, usa ### para secciones, - para listas, **negrita**, párrafos con doble salto",
-  "content_en": "contenido completo en inglés, 600-900 palabras, mismo formato markdown que content_es",
-  "read_time_min": número estimado de minutos de lectura,
-  "meta_title_es": "título SEO 50-60 caracteres",
-  "meta_description_es": "meta descripción 150-160 caracteres"
-}`;
-
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${openaiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      temperature: 0.7,
-    }),
-  });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || res.statusText);
-  }
-
-  const data = await res.json();
-  const raw = data.choices?.[0]?.message?.content?.trim();
-  if (!raw) throw new Error('OpenAI no devolvió contenido');
-
-  // Extraer JSON (puede venir envuelto en ```json ... ```)
-  let jsonStr = raw;
-  const match = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (match) jsonStr = match[1].trim();
-
-  return JSON.parse(jsonStr);
-}
-
 // ─── Imágenes Unsplash por tema ─────────────────────────────────────────────
 const COVER_IMAGES = [
   'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1200&q=80', // yoga
@@ -185,6 +88,7 @@ function loadTopicsFromQueue() {
   let m;
   while ((m = re.exec(text)) !== null) {
     topics.push({
+      letter: m[1],
       topic: m[2].trim(),
       categorySlug: categorySlugForLetter(m[1]),
     });
@@ -271,7 +175,7 @@ async function main() {
   let skipped = 0;
 
   for (let i = 0; i < TOPICS.length; i++) {
-    const { topic, categorySlug } = TOPICS[i];
+    const { topic, categorySlug, letter } = TOPICS[i];
     const catId = catMap[categorySlug];
     if (!catId) {
       console.warn(`   ⚠ Categoría "${categorySlug}" no encontrada, usando guias`);
@@ -281,11 +185,10 @@ async function main() {
     console.log(`\n   [${i + 1}/${TOPICS.length}] ${topic.slice(0, 50)}...`);
 
     try {
-      const serpContext = await searchSerp(`${topic} España`, serpKey);
-      if (serpContext) console.log('      🔍 Contexto SerpAPI obtenido');
+      console.log('      🔍 Investigación web…');
+      const serpContext = await buildSerpResearch(topic, letter, serpKey);
 
-      // OpenAI
-      const article = await generateArticle(topic, serpContext, openaiKey);
+      const article = await generateBlogArticle(topic, letter, serpContext, openaiKey);
       console.log('      ✨ Artículo generado');
 
       const slug = article.slug || slugify(article.title_es);

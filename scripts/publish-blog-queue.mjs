@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * RETIRU · Publicar cola de 100 artículos (texto OpenAI + portada IA + fechas programadas)
+ * RETIRU · Publicar cola de 100 artículos (SerpAPI + OpenAI GPT-5.5 + portada IA + fechas programadas)
  *
  * Lee docs/BLOG-TITULOS-PROPUESTOS.md. Calendario: 2/semana (~3 y 4 días) desde el 21-may-2026
  * (3 días después del último post existente, 18-may-2026). Los futuros no se ven en web hasta su fecha.
@@ -11,15 +11,18 @@
  *   node scripts/publish-blog-queue.mjs --offset=10 --limit=10
  *   node scripts/publish-blog-queue.mjs --skip-covers
  *   node scripts/publish-blog-queue.mjs --resume
+ *   node scripts/publish-blog-queue.mjs --regenerate --limit=34
+ *   node scripts/publish-blog-queue.mjs --regenerate --from=5 --to=10
  *
- * Requiere .env.local: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, OPENAI_API_KEY
- * Opcional: SERPAPI_API_KEY
+ * Requiere .env.local: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, OPENAI_API_KEY, SERPAPI_API_KEY
+ * Opcional: BLOG_OPENAI_MODEL (default gpt-5.5)
  */
 
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { spawnSync } from 'child_process';
+import { buildSerpResearch, generateBlogArticle } from './lib/blog-writer.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
@@ -120,100 +123,40 @@ function parseArgs() {
   const args = process.argv.slice(2);
   let limit = null;
   let offset = 0;
+  let fromIndex = null;
+  let toIndex = null;
   const flags = {
     dryRun: args.includes('--dry-run'),
     skipCovers: args.includes('--skip-covers'),
     resume: args.includes('--resume'),
+    regenerate: args.includes('--regenerate'),
+    regenerateCovers: args.includes('--regenerate-covers'),
   };
   for (const a of args) {
     if (a.startsWith('--limit=')) limit = Math.max(1, parseInt(a.slice(8), 10) || 1);
     if (a.startsWith('--offset=')) offset = Math.max(0, parseInt(a.slice(9), 10) || 0);
+    if (a.startsWith('--from=')) fromIndex = Math.max(1, parseInt(a.slice(7), 10) || 1);
+    if (a.startsWith('--to=')) toIndex = Math.max(1, parseInt(a.slice(5), 10) || 1);
   }
-  return { limit, offset, ...flags };
+  return { limit, offset, fromIndex, toIndex, ...flags };
 }
 
-async function searchSerp(query, serpKey) {
-  if (!serpKey) return '';
-  try {
-    const res = await fetch(
-      `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(query)}&api_key=${serpKey}&hl=es&num=5`,
-    );
-    const data = res.ok ? await res.json() : null;
-    if (data?.organic_results?.length) {
-      return data.organic_results
-        .map((r) => r.snippet || r.title)
-        .filter(Boolean)
-        .slice(0, 5)
-        .join('\n');
-    }
-  } catch (e) {
-    console.warn('  ⚠ SerpAPI:', e.message);
-  }
-  return '';
-}
+async function findExistingArticle(supabase, item) {
+  const publishedAt = publishedAtForQueueIndex(item.index);
+  const { data: byDate } = await supabase
+    .from('blog_articles')
+    .select('id, slug, slug_en, cover_image_url, published_at')
+    .eq('published_at', publishedAt)
+    .maybeSingle();
+  if (byDate) return byDate;
 
-async function generateArticle(topic, serpContext, openaiKey) {
-  const systemPrompt = `Eres redactor de Retiru (retiru.com), plataforma de retiros y bienestar en España.
-Escribe artículos de blog INFORMATIVOS: recetas, nutrición, tipos de yoga/meditación, aceites y tratamientos ayurvédicos, prácticas concretas.
-
-LÍNEA EDITORIAL (docs/BLOG-EDITORIAL.md):
-- NO vendas retiros ni destinos. No «retiros en [ciudad]», maletas, cancelaciones.
-- Datos útiles: pasos, ingredientes, duraciones, precauciones.
-- Menciona Retiru como mucho una vez al final, breve.
-
-Tono profesional y sobrio. Sin esoterismo vacío ni sustancias psicoactivas.
-FORMATO markdown: ### secciones, - listas, **negrita**, párrafos con doble salto. Sin tablas ni HTML.
-Responde SOLO JSON válido.`;
-
-  const userPrompt = `Genera un artículo sobre: "${topic}"
-
-${serpContext ? `Contexto búsqueda (no copies literal):\n${serpContext}\n\n` : ''}
-
-JSON exacto:
-{
-  "title_es": "título en español (usa el tema dado o variante SEO)",
-  "title_en": "título en inglés",
-  "slug": "slug-url-unico-en-es",
-  "excerpt_es": "resumen 1-2 frases ES",
-  "excerpt_en": "resumen 1-2 frases EN",
-  "content_es": "800-1200 palabras ES, markdown",
-  "content_en": "600-900 palabras EN, markdown",
-  "read_time_min": número,
-  "meta_title_es": "SEO 50-60 chars",
-  "meta_title_en": "SEO EN 50-60 chars",
-  "meta_description_es": "150-160 chars",
-  "meta_description_en": "150-160 chars EN"
-}`;
-
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${openaiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      temperature: 0.7,
-    }),
-  });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || res.statusText);
-  }
-
-  const data = await res.json();
-  const raw = data.choices?.[0]?.message?.content?.trim();
-  if (!raw) throw new Error('OpenAI no devolvió contenido');
-
-  let jsonStr = raw;
-  const match = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (match) jsonStr = match[1].trim();
-  return JSON.parse(jsonStr);
+  const baseSlug = slugify(item.topic);
+  const { data: bySlug } = await supabase
+    .from('blog_articles')
+    .select('id, slug, slug_en, cover_image_url, published_at')
+    .eq('slug', baseSlug)
+    .maybeSingle();
+  return bySlug;
 }
 
 function runCoverBackfill(articleId) {
@@ -227,7 +170,7 @@ function runCoverBackfill(articleId) {
 
 async function main() {
   loadEnvLocal();
-  const { limit, offset, dryRun, skipCovers, resume } = parseArgs();
+  const { limit, offset, fromIndex, toIndex, dryRun, skipCovers, resume, regenerate, regenerateCovers } = parseArgs();
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -241,16 +184,19 @@ async function main() {
 
   const allItems = loadQueueItems();
   let slice = allItems.slice(offset);
+  if (fromIndex != null) slice = slice.filter((item) => item.index >= fromIndex);
+  if (toIndex != null) slice = slice.filter((item) => item.index <= toIndex);
   if (limit != null) slice = slice.slice(0, limit);
 
   const progress = loadProgress();
   const doneSet = new Set(progress.done || []);
 
-  if (resume) {
+  if (resume && !regenerate) {
     slice = slice.filter((item) => !doneSet.has(item.index));
   }
 
-  console.log(`\n📚 RETIRU · Cola blog: ${slice.length} artículo(s) (offset ${offset}, dry-run=${dryRun})\n`);
+  const modeLabel = regenerate ? 'REGENERAR texto' : resume ? 'continuar cola' : 'cola';
+  console.log(`\n📚 RETIRU · ${modeLabel}: ${slice.length} artículo(s) (offset ${offset}, dry-run=${dryRun})\n`);
 
   if (slice.length === 0) {
     console.log('Nada que procesar.');
@@ -303,13 +249,9 @@ async function main() {
 
     try {
       const baseSlug = slugify(item.topic);
-      const { data: existing } = await supabase
-        .from('blog_articles')
-        .select('id, slug, cover_image_url')
-        .eq('slug', baseSlug)
-        .maybeSingle();
+      const existing = await findExistingArticle(supabase, item);
 
-      if (existing?.id) {
+      if (existing?.id && !regenerate) {
         console.log(`   ↷ Ya existe (${existing.slug}), actualizo fecha y salto generación texto`);
         await supabase
           .from('blog_articles')
@@ -326,27 +268,31 @@ async function main() {
         continue;
       }
 
-      const serpContext = await searchSerp(`${item.topic} receta guía`, serpKey);
-      console.log('   ✍️  Generando texto…');
-      const article = await generateArticle(item.topic, serpContext, openaiKey);
+      if (regenerate && !existing?.id) {
+        console.log(`   ⚠ No encontrado en BD (fecha ${publishedAt.slice(0, 10)}), se insertará como nuevo`);
+      }
 
-      const slug = article.slug || baseSlug;
+      console.log('   🔍 Investigación web (SerpAPI)…');
+      const serpContext = await buildSerpResearch(item.topic, item.letter, serpKey);
+      console.log('   ✍️  Generando texto (prompt docs/BLOG-PROMPT-REDACTOR.md)…');
+      const article = await generateBlogArticle(item.topic, item.letter, serpContext, openaiKey);
+
+      const slug = existing?.slug || article.slug || baseSlug;
       const titleEn = article.title_en || article.title_es;
-      const slugEn = slugify(titleEn);
+      const slugEn = existing?.slug_en || (slugify(titleEn) !== slug ? slugify(titleEn) : null);
       const nowIso = new Date().toISOString();
 
       const row = {
         title_es: article.title_es || item.topic,
         title_en: titleEn,
         slug,
-        slug_en: slugEn !== slug ? slugEn : null,
+        slug_en: slugEn,
         excerpt_es: article.excerpt_es,
         excerpt_en: article.excerpt_en || article.excerpt_es,
         content_es: article.content_es,
         content_en: article.content_en || article.content_es,
         category_id: catMap[item.categorySlug] || catMap.bienestar,
         author_id: authorId,
-        cover_image_url: null,
         read_time_min: article.read_time_min || 8,
         is_published: true,
         published_at: publishedAt,
@@ -354,19 +300,28 @@ async function main() {
         meta_title_en: article.meta_title_en || titleEn,
         meta_description_es: article.meta_description_es || article.excerpt_es,
         meta_description_en: article.meta_description_en || article.excerpt_en,
-        view_count: 0,
-        created_at: nowIso,
         updated_at: nowIso,
       };
 
-      const { data: inserted, error } = await supabase.from('blog_articles').insert(row).select('id').single();
-      if (error) throw new Error(error.message);
-
-      console.log(`   ✅ Insertado: ${slug} (${inserted.id.slice(0, 8)}…)`);
-
-      if (!skipCovers) {
-        console.log('   🖼 Portada IA…');
-        runCoverBackfill(inserted.id);
+      if (existing?.id) {
+        const { error } = await supabase.from('blog_articles').update(row).eq('id', existing.id);
+        if (error) throw new Error(error.message);
+        console.log(`   ♻️  Regenerado: ${slug} (${existing.id.slice(0, 8)}…)`);
+        if (regenerateCovers && !skipCovers) {
+          console.log('   🖼 Portada…');
+          runCoverBackfill(existing.id);
+        }
+      } else {
+        row.cover_image_url = null;
+        row.view_count = 0;
+        row.created_at = nowIso;
+        const { data: inserted, error } = await supabase.from('blog_articles').insert(row).select('id').single();
+        if (error) throw new Error(error.message);
+        console.log(`   ✅ Insertado: ${slug} (${inserted.id.slice(0, 8)}…)`);
+        if (!skipCovers) {
+          console.log('   🖼 Portada IA…');
+          runCoverBackfill(inserted.id);
+        }
       }
 
       doneSet.add(item.index);

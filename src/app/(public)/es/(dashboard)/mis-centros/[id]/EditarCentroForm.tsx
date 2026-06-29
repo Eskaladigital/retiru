@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Upload } from 'lucide-react';
 import { CENTER_FILTER_OPTIONS_ES } from '@/lib/utils';
 import { contentLooksLikeHtml } from '@/lib/sanitize-rich-html';
 import { markdownToHtml, plainBlogBodyToMarkdown } from '@/components/ui/markdown-content';
@@ -26,13 +26,60 @@ interface Props {
 const inputCls = 'w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all';
 const textareaCls = `${inputCls} resize-none`;
 const labelCls = 'block text-sm font-medium text-foreground mb-1.5';
+const MAX_CENTER_IMAGE_BYTES = 4 * 1024 * 1024;
 
 const CENTER_TYPES = CENTER_FILTER_OPTIONS_ES.filter((o) => o.slug).map((o) => ({ value: o.slug!, label: o.label }));
+
+type ImageUploadPayload = {
+  filename: string;
+  contentType: string;
+  dataUrl: string;
+};
+
+function readImageFile(file: File): Promise<ImageUploadPayload> {
+  if (!file.type.startsWith('image/')) {
+    return Promise.reject(new Error('Solo se permiten archivos de imagen.'));
+  }
+  if (file.size > MAX_CENTER_IMAGE_BYTES) {
+    return Promise.reject(new Error('La imagen supera 4 MB. Reduce el tamaño o elige otra foto.'));
+  }
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('No se pudo leer la imagen.'));
+    reader.onload = () => {
+      const dataUrl = typeof reader.result === 'string' ? reader.result : '';
+      if (!dataUrl) {
+        reject(new Error('No se pudo preparar la imagen.'));
+        return;
+      }
+      resolve({
+        filename: file.name,
+        contentType: file.type,
+        dataUrl,
+      });
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function textLengthWithoutHtml(value: string): number {
+  return value
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .length;
+}
 
 export function EditarCentroForm({ center }: Props) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [generatingCover, setGeneratingCover] = useState(false);
+  const [coverUpload, setCoverUpload] = useState<ImageUploadPayload | null>(null);
+  const [galleryUpload, setGalleryUpload] = useState<ImageUploadPayload | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -97,6 +144,21 @@ export function EditarCentroForm({ center }: Props) {
     setImages((imgs) => imgs.filter((_, idx) => idx !== i));
   }
 
+  async function handleImageFile(file: File | undefined, target: 'cover' | 'gallery') {
+    if (!file) return;
+    setError('');
+    try {
+      const payload = await readImageFile(file);
+      if (target === 'cover') {
+        setCoverUpload(payload);
+      } else {
+        setGalleryUpload(payload);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo preparar la imagen.');
+    }
+  }
+
   async function handleGenerateCoverAi() {
     if (!form.name.trim() || !form.description_es.trim()) {
       setError('Completa al menos el nombre y la descripción del centro para generar la portada con IA.');
@@ -142,10 +204,27 @@ export function EditarCentroForm({ center }: Props) {
     setSuccess('');
 
     try {
+      const cleanImages = images.filter(Boolean);
+      const cleanServices = form.services_es.filter(Boolean);
+      if (textLengthWithoutHtml(form.description_es) < 80) {
+        setError('La descripción del centro es obligatoria y debe tener al menos 80 caracteres.');
+        return;
+      }
+      if (cleanServices.length === 0) {
+        setError('Añade al menos una actividad o servicio que ofrece el centro.');
+        return;
+      }
+      if (!form.cover_url && cleanImages.length === 0 && !coverUpload && !galleryUpload) {
+        setError('El perfil del centro debe tener al menos una foto. Sube una portada o genera una con IA antes de guardar.');
+        return;
+      }
+
       const payload: Record<string, any> = {
         ...form,
-        services_es: form.services_es.filter(Boolean),
-        images: images.filter(Boolean),
+        services_es: cleanServices,
+        images: cleanImages,
+        cover_upload: coverUpload || undefined,
+        images_uploads: galleryUpload ? [galleryUpload] : [],
         google_place_id: form.google_place_id || null,
         google_types: form.google_types || null,
         google_maps_url: form.google_maps_url || null,
@@ -176,6 +255,8 @@ export function EditarCentroForm({ center }: Props) {
       }
 
       setSuccess('Cambios guardados correctamente.');
+      setCoverUpload(null);
+      setGalleryUpload(null);
       router.refresh();
     } catch {
       setError('Error de conexión');
@@ -236,14 +317,27 @@ export function EditarCentroForm({ center }: Props) {
           <div>
             <label className={labelCls}>Imagen de portada</label>
             <p className="text-xs text-[#a09383] mb-2">
-              Puedes pegar una URL, generar la portada con IA a partir de la descripción del centro o guardar sin imagen.
+              Obligatoria para publicar una ficha cuidada. Puedes pegar una URL, subir una foto desde tu dispositivo o generar una portada con IA.
             </p>
             <input type="url" value={form.cover_url} onChange={(e) => set('cover_url', e.target.value)} className={inputCls} placeholder="https://..." />
-            {form.cover_url && (
+            {(coverUpload?.dataUrl || form.cover_url) && (
               <div className="mt-2 w-full h-40 rounded-xl overflow-hidden bg-sand-100">
-                <img src={form.cover_url} alt="Portada" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                <img src={coverUpload?.dataUrl || form.cover_url} alt="Portada" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
               </div>
             )}
+            <label className="mt-3 flex flex-col items-center justify-center gap-1 px-4 py-3 rounded-xl border-2 border-dashed border-sand-300 bg-white text-sm text-[#7a6b5d] hover:border-terracotta-300 hover:bg-terracotta-50/30 cursor-pointer transition-colors">
+              <span className="inline-flex items-center gap-2 font-medium">
+                <Upload size={16} className="text-terracotta-600" />
+                Subir portada desde mi dispositivo
+              </span>
+              <span className="text-xs text-[#a09383]">JPG, PNG o WebP · máximo 4 MB</span>
+              <input
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={(e) => handleImageFile(e.target.files?.[0], 'cover')}
+              />
+            </label>
             <button
               type="button"
               onClick={handleGenerateCoverAi}
@@ -270,6 +364,23 @@ export function EditarCentroForm({ center }: Props) {
               ))}
             </div>
             <button type="button" onClick={addImage} className="mt-2 text-sm font-medium text-terracotta-600 hover:underline">+ Añadir imagen</button>
+            <label className="mt-3 flex flex-col items-center justify-center gap-1 px-4 py-3 rounded-xl border border-dashed border-sand-300 bg-sand-50/60 text-sm text-[#7a6b5d] hover:border-terracotta-300 hover:bg-terracotta-50/30 cursor-pointer transition-colors">
+              <span className="inline-flex items-center gap-2 font-medium">
+                <Upload size={16} className="text-terracotta-600" />
+                Subir foto adicional desde mi dispositivo
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={(e) => handleImageFile(e.target.files?.[0], 'gallery')}
+              />
+            </label>
+            {galleryUpload && (
+              <div className="mt-2 w-full h-28 rounded-xl overflow-hidden bg-sand-100">
+                <img src={galleryUpload.dataUrl} alt="Foto adicional" className="w-full h-full object-cover" />
+              </div>
+            )}
           </div>
           <div>
             <label className={labelCls}>Logo (URL)</label>

@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Blog Retiru — Línea editorial
 
-Antes de **proponer títulos, redactar o generar** artículos del blog, leer **`docs/BLOG-EDITORIAL.md`** y la cola en **`docs/BLOG-TITULOS-PROPUESTOS.md`**.
+Antes de **proponer títulos, redactar o generar** artículos del blog, leer **`docs/BLOG-EDITORIAL.md`**, el prompt en **`docs/BLOG-PROMPT-REDACTOR.md`** y la cola en **`docs/BLOG-TITULOS-PROPUESTOS.md`**.
 
 ## Regla principal
 

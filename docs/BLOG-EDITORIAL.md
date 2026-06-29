@@ -46,10 +46,11 @@ Al crear artículos nuevos, preferir **`bienestar`** o **`guias`** según el tem
 
 ## Formato del artículo
 
-- **800–1200 palabras** (ES); EN algo más corto si se traduce.
-- Markdown: `###` secciones, listas con `-`, negrita con `**`.
+- **1.200–1.800 palabras** (ES); EN **900–1.200** (no resumen comprimido).
+- Objetivo de calidad: **igualar el corpus original** (~1.500 palabras medias). Ver diagnóstico en [`BLOG-PROMPT-REDACTOR.md`](BLOG-PROMPT-REDACTOR.md).
+- Markdown: `###` secciones, listas con `-`, negrita con `**`, separador `---` opcional entre bloques largos.
 - Sin tablas HTML ni imágenes embebidas en el cuerpo (portada aparte).
-- Incluir **datos concretos**: ingredientes, pasos, duraciones, precauciones, «para quién no conviene».
+- Incluir **datos concretos**: ingredientes con gramajes, pasos con tiempos/°C, duraciones de práctica, precauciones, «para quién no conviene», variaciones y **FAQ breve** (3–4 preguntas).
 - Un artículo = **un ángulo**. No duplicar otro post del blog ni una landing.
 
 ---
@@ -66,7 +67,9 @@ Al crear artículos nuevos, preferir **`bienestar`** o **`guias`** según el tem
 
 | Script | Notas |
 |--------|--------|
-| `scripts/publish-blog-queue.mjs` | Cola de 100 títulos: texto (GPT-4o-mini) + portada IA + `published_at` cada 3–4 días desde 21-may-2026. Flags: `--limit`, `--offset`, `--resume`, `--skip-covers`, `--dry-run`. Progreso: `scripts/.blog-queue-progress.json`. |
+| `scripts/publish-blog-queue.mjs` | Cola de 100 títulos: SerpAPI (4 búsquedas) + texto (`gpt-5.5` por defecto, ver `BLOG_OPENAI_MODEL`) + portada IA + `published_at` cada 3–4 días. Prompt: [`BLOG-PROMPT-REDACTOR.md`](BLOG-PROMPT-REDACTOR.md). |
+| `scripts/lib/blog-writer.mjs` | Prompt compartido, investigación SerpAPI y generación con reintento si &lt; 1.100 palabras. |
+| `scripts/analyze-blog-quality.mjs` | Compara longitud/estructura artículos antiguos vs cola nueva. |
 | `scripts/import-blog-csv.mjs` | Importación masiva; validar títulos contra esta línea editorial. |
 | `npm run blog:translate-en` | Traduce ES→EN respetando tono. |
 | `npm run blog:backfill-covers-ai` | Portadas fotorrealistas acordes al tema (receta → bodegón, yoga → práctica, etc.). |
@@ -76,7 +79,7 @@ Al crear artículos nuevos, preferir **`bienestar`** o **`guias`** según el tem
 ### Artículos programados (published_at futuro)
 
 - En BD: `is_published = true` y `published_at` en el futuro.
-- En web pública: **no visibles** hasta que `published_at <= NOW()` (filtro en app + política RLS `blog_pub`, migración `046_blog_public_scheduled.sql`).
+- En web pública: **no visibles** hasta que `published_at <= NOW()` (filtro en app `src/lib/blog-visible.ts`, cliente anónimo en páginas `/es/blog`, política RLS `blog_pub` en `046`, y `047` para que `blog_adm` no incluya SELECT).
 - Admin (`/administrator/blog`) sigue viendo todos.
 
 
