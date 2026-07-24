@@ -40,6 +40,10 @@ export async function POST(request: NextRequest) {
     if (end_date < start_date) {
       return NextResponse.json({ error: 'La fecha de fin no puede ser anterior a la de inicio' }, { status: 400 });
     }
+    const today = new Date().toISOString().slice(0, 10);
+    if (start_date < today) {
+      return NextResponse.json({ error: 'La fecha de inicio no puede ser anterior a hoy' }, { status: 400 });
+    }
 
     const priceN = parseFloat(String(total_price));
     if (Number.isNaN(priceN) || priceN <= 0) {

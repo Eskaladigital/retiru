@@ -139,15 +139,17 @@ export async function PATCH(
     if (start_date !== undefined) updateData.start_date = start_date;
     if (end_date !== undefined) updateData.end_date = end_date;
     if (start_date !== undefined || end_date !== undefined) {
-      let s: string | undefined = start_date;
-      let e: string | undefined = end_date;
-      if (s === undefined || e === undefined) {
-        const { data: cur } = await admin.from('retreats').select('start_date, end_date').eq('id', id).single();
-        s = s ?? (cur?.start_date as string | undefined);
-        e = e ?? (cur?.end_date as string | undefined);
-      }
+      const { data: cur } = await admin.from('retreats').select('start_date, end_date').eq('id', id).single();
+      const s: string | undefined = start_date ?? (cur?.start_date as string | undefined);
+      const e: string | undefined = end_date ?? (cur?.end_date as string | undefined);
       if (s && e && e < s) {
         return NextResponse.json({ error: 'La fecha de fin no puede ser anterior a la de inicio' }, { status: 400 });
+      }
+      // Solo si la fecha de inicio cambia se exige que no sea pasada
+      // (así se pueden seguir editando eventos ya celebrados).
+      const today = new Date().toISOString().slice(0, 10);
+      if (start_date !== undefined && start_date !== cur?.start_date && start_date < today) {
+        return NextResponse.json({ error: 'La fecha de inicio no puede ser anterior a hoy' }, { status: 400 });
       }
     }
     if (total_price !== undefined) {

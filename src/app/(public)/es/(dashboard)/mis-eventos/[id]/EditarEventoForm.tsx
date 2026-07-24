@@ -516,7 +516,7 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-foreground mb-1.5">Fecha inicio *</label>
-          <input type="date" value={form.start_date} onChange={(e) => set('start_date', e.target.value)} className={inputCls} />
+          <input type="date" min={new Date().toISOString().slice(0, 10)} value={form.start_date} onChange={(e) => set('start_date', e.target.value)} className={inputCls} />
         </div>
         <div>
           <label className="block text-sm font-medium text-foreground mb-1.5">Fecha fin *</label>
