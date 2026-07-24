@@ -17,18 +17,18 @@ export function isBlogArticlePubliclyVisible(
 /**
  * Filtros Supabase para lecturas públicas del blog.
  * Usar en listados, fichas, sitemap y APIs públicas.
+ *
+ * Tipado laxo a propósito: el genérico recursivo sobre PostgrestFilterBuilder
+ * dispara "Type instantiation is excessively deep" en el build de Next/Vercel.
  */
-export function applyPublicBlogFilters<
-  Q extends {
-    eq: (column: string, value: unknown) => Q;
-    not: (column: string, operator: string, value: unknown) => Q;
-    lte: (column: string, value: string) => Q;
-  },
->(query: Q, now: Date = new Date()): Q {
-  return query
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function applyPublicBlogFilters<Q = any>(query: Q, now: Date = new Date()): Q {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const q = query as any;
+  return q
     .eq('is_published', true)
     .not('published_at', 'is', null)
-    .lte('published_at', blogVisibleBeforeIso(now));
+    .lte('published_at', blogVisibleBeforeIso(now)) as Q;
 }
 
 /** Red de seguridad tras fetch (p. ej. caché o filas sin filtrar). */
