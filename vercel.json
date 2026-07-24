@@ -19,6 +19,10 @@
     {
       "path": "/api/cron/mailing-tick",
       "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/series-occurrences",
+      "schedule": "0 5 * * *"
     }
   ]
 }

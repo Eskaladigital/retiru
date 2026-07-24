@@ -309,7 +309,9 @@ export default async function HomePage() {
                 const img = r.images?.find(i => i.is_cover)?.url || r.images?.[0]?.url || DEFAULT_RETREAT_IMG;
                 const category = r.categories?.[0]?.name_es || 'Retiro';
                 const location = r.destination?.name_es || '';
-                const dates = `${dateFmt.format(new Date(r.start_date))}–${dateFmt.format(new Date(r.end_date))} · ${r.duration_days} días`;
+                const dates = r.start_date === r.end_date
+                  ? `${dateFmt.format(new Date(r.start_date))} · 1 día`
+                  : `${dateFmt.format(new Date(r.start_date))}–${dateFmt.format(new Date(r.end_date))} · ${r.duration_days} días`;
                 const spotsLow = r.available_spots <= 5;
                 const instant = r.confirmation_type === 'automatic';
                 const { avg_rating: orgAvg, review_count: orgReviews } = getOrganizerReviewStats(r);

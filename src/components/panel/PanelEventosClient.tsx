@@ -18,6 +18,7 @@ interface Retreat {
   reserved_bookings: number;
   total_price: number;
   cover: string | null;
+  series_id?: string | null;
 }
 
 const STATUS_LABELS: Record<Locale, Record<string, string>> = {
@@ -223,7 +224,14 @@ export function PanelEventosClient({ retreats: initial, baseHref, locale = 'es' 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <h3 className="font-serif text-base leading-tight">{r.title_es}</h3>
-                    <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${s.color}`}>{s.label}</span>
+                    <span className="flex items-center gap-1.5 shrink-0">
+                      {r.series_id && (
+                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap bg-terracotta-50 text-terracotta-700 border border-terracotta-200">
+                          {locale === 'es' ? 'Periódico' : 'Recurring'}
+                        </span>
+                      )}
+                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${s.color}`}>{s.label}</span>
+                    </span>
                   </div>
                   <p className="text-sm text-[#7a6b5d] mb-2">{dateStr} · {r.total_price}{t.perPerson}</p>
                   <div className="flex items-center gap-4">

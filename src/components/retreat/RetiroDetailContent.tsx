@@ -13,8 +13,8 @@ function formatDate(iso: string) {
   return dateFmt.format(new Date(iso));
 }
 
-function durationLabel(days: number) {
-  if (days <= 1) return '1 día';
+function durationLabel(days: number, hours?: number | null) {
+  if (days <= 1) return hours ? `${hours} ${hours === 1 ? 'hora' : 'horas'}` : '1 día';
   return `${days} días · ${days - 1} noches`;
 }
 
@@ -102,7 +102,7 @@ export function RetiroDetailContent({ retreat, isPreview }: Props) {
             <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
               {location && <span className="flex items-center gap-1"><MapPin size={15} /> {location}</span>}
               <span className="flex items-center gap-1"><Calendar size={15} /> {formatDate(r.start_date)} — {formatDate(r.end_date)}</span>
-              <span className="flex items-center gap-1"><Clock size={15} /> {durationLabel(r.duration_days)}</span>
+              <span className="flex items-center gap-1"><Clock size={15} /> {durationLabel(r.duration_days, r.duration_hours)}</span>
               {r.review_count > 0 && (
                 <span className="flex items-center gap-1">
                   <Star size={15} className="fill-terracotta-500 text-terracotta-500" />
@@ -225,7 +225,7 @@ export function RetiroDetailContent({ retreat, isPreview }: Props) {
                   <Calendar size={16} /> {formatDate(r.start_date)} — {formatDate(r.end_date)}
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
-                  <Clock size={16} /> {durationLabel(r.duration_days)}
+                  <Clock size={16} /> {durationLabel(r.duration_days, r.duration_hours)}
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Users size={16} /> {r.available_spots} plazas disponibles

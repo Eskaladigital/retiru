@@ -132,7 +132,7 @@ export default async function RetreatsByDestinationPageEN({ params }: { params: 
                     {r.duration_days && (
                       <>
                         <span className="text-[#a09383]">·</span>
-                        <span>{r.duration_days} days</span>
+                        <span>{r.duration_days} day{r.duration_days !== 1 ? 's' : ''}</span>
                       </>
                     )}
                   </div>

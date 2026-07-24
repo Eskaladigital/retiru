@@ -431,6 +431,16 @@ created_at          timestamptz DEFAULT now()
 | `center_claims` | CenterClaim | ✅ Definido (migración 006) |
 | `claim_tokens` | ClaimToken | ✅ Definido (migración 006) |
 
+**Eventos periódicos (migración 051):**
+
+| Elemento | Uso |
+|----------|-----|
+| Tabla `retreat_series` | Serie de evento periódico: `interval_days` (1–90), `occurrences_ahead` (1–8, default 4), `series_end_date` opcional, `skip_dates DATE[]` (fechas cerradas por vacaciones), `is_active`, `master_retreat_id` (plantilla que se clona) |
+| `retreats.series_id` | FK a `retreat_series`; cada fecha (ocurrencia) es una fila normal de `retreats` con su aforo y reservas |
+| `retreats.is_series_next` | `true` en la próxima ocurrencia de cada serie (y en eventos no periódicos); los listados públicos filtran por esta columna |
+
+**Otras ampliaciones en `retreats`:** `duration_hours` (migración 050) para eventos de un día (`start_date = end_date`); el CHECK de precio pasó de `>= 50` a `> 0` (migración 049).
+
 **Ampliaciones recientes en `bookings` (migraciones 022–023):**
 
 | Campo / valor | Uso |

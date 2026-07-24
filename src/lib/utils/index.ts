@@ -44,11 +44,25 @@ export function formatDateRange(start: string, end: string, locale: 'es' | 'en' 
   const e = new Date(end);
   const fmt = locale === 'es' ? 'es-ES' : 'en-GB';
 
+  if (start === end) {
+    return new Intl.DateTimeFormat(fmt, { day: 'numeric', month: 'long', year: 'numeric' }).format(s);
+  }
+
   if (s.getMonth() === e.getMonth() && s.getFullYear() === e.getFullYear()) {
     return `${s.getDate()} - ${new Intl.DateTimeFormat(fmt, { day: 'numeric', month: 'long', year: 'numeric' }).format(e)}`;
   }
 
   return `${formatShortDate(start, locale)} - ${formatShortDate(end, locale)} ${e.getFullYear()}`;
+}
+
+/** Duración con singular/plural correcto. Si es de un día y hay horas, las muestra («3 horas»). */
+export function formatDurationDays(days: number, locale: 'es' | 'en' = 'es', hours?: number | null): string {
+  if (days <= 1 && hours) {
+    if (locale === 'es') return `${hours} ${hours === 1 ? 'hora' : 'horas'}`;
+    return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
+  }
+  if (locale === 'es') return `${days} ${days === 1 ? 'día' : 'días'}`;
+  return `${days} ${days === 1 ? 'day' : 'days'}`;
 }
 
 /** Calculate platform fee based on commission percent (default 20%) */

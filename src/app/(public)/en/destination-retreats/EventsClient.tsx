@@ -114,6 +114,9 @@ export default function EventsClientEN({ retreats, categories, destinations }: E
     const s = new Date(start);
     const e = new Date(end);
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    if (start === end) {
+      return `${s.getDate()} ${monthNames[s.getMonth()]} ${s.getFullYear()}`;
+    }
     if (s.getMonth() === e.getMonth() && s.getFullYear() === e.getFullYear()) {
       return `${s.getDate()}–${e.getDate()} ${monthNames[s.getMonth()]} ${s.getFullYear()}`;
     }

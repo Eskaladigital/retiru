@@ -113,7 +113,7 @@ async function getLeafDestinationIdsForRetreatFilter(slug: string): Promise<stri
 const RETREAT_SELECT = `
   id, organizer_id, title_es, title_en, slug, summary_es, summary_en,
   description_es, description_en, includes_es, includes_en, excludes_es, excludes_en,
-  destination_id, address, latitude, longitude, start_date, end_date, duration_days,
+  destination_id, address, latitude, longitude, start_date, end_date, duration_days, duration_hours, series_id, is_series_next,
   max_attendees, min_attendees, total_price, platform_fee, organizer_amount, currency,
   confirmation_type, sla_hours, languages, cancellation_policy, post_booking_form, schedule,
   status, confirmed_bookings, available_spots, view_count, avg_rating, review_count,
@@ -134,6 +134,7 @@ export async function getPublishedRetreats(filters?: {
     .from('retreats')
     .select(RETREAT_SELECT, { count: 'exact' })
     .eq('status', 'published')
+    .eq('is_series_next', true)
     .gte('end_date', today)
     .gt('start_date', today)
     .order('start_date', { ascending: true });
@@ -420,6 +421,7 @@ export async function getRetreatSlugs(): Promise<string[]> {
     .from('retreats')
     .select('slug')
     .eq('status', 'published')
+    .eq('is_series_next', true)
     .gte('end_date', new Date().toISOString().slice(0, 10))
     .order('slug');
   if (error) throw error;
@@ -514,6 +516,7 @@ export async function getDestinationsWithRetreats(): Promise<{ slug: string; nam
     .from('retreats')
     .select('destination_id')
     .eq('status', 'published')
+    .eq('is_series_next', true)
     .gte('end_date', today)
     .gt('start_date', today);
   if (rErr) {
@@ -802,8 +805,9 @@ export async function getCategoriesWithRetreats(): Promise<{ slug: string; name_
 
   const { data: links, error: lErr } = await supabase
     .from('retreat_categories')
-    .select('category_id, retreats!inner(status, end_date, start_date)')
+    .select('category_id, retreats!inner(status, end_date, start_date, is_series_next)')
     .eq('retreats.status', 'published')
+    .eq('retreats.is_series_next', true)
     .gte('retreats.end_date', today)
     .gt('retreats.start_date', today);
   if (lErr) throw lErr;
@@ -830,6 +834,7 @@ export async function getCategoryDestinationPairs(): Promise<{ category: string;
     .from('retreats')
     .select('id, destination_id')
     .eq('status', 'published')
+    .eq('is_series_next', true)
     .gte('end_date', today)
     .gt('start_date', today);
   if (rErr) throw rErr;
@@ -1143,6 +1148,7 @@ export async function getUpcomingRetreatsForDestinations(
     .from('retreats')
     .select(RETREAT_SELECT)
     .eq('status', 'published')
+    .eq('is_series_next', true)
     .in('destination_id', destIds)
     .gte('end_date', new Date().toISOString().slice(0, 10))
     .gt('start_date', new Date().toISOString().slice(0, 10))
@@ -1245,6 +1251,7 @@ export async function getDestinationsForCategory(categorySlug: string): Promise<
     .from('retreats')
     .select('destination_id')
     .eq('status', 'published')
+    .eq('is_series_next', true)
     .gte('end_date', today)
     .gt('start_date', today)
     .in('id', retreatIds);

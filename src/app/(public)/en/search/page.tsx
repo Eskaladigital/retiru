@@ -226,7 +226,7 @@ function RetreatCard({ item }: { item: any }) {
           )}
         </div>
         <h3 className="font-serif text-lg leading-[1.3] mb-1 line-clamp-2">{title}</h3>
-        {item.duration_days && <p className="text-xs text-[#a09383] mb-3">{item.duration_days} days</p>}
+        {item.duration_days && <p className="text-xs text-[#a09383] mb-3">{item.duration_days} day{item.duration_days !== 1 ? 's' : ''}</p>}
         <div className="flex items-end justify-between pt-3 border-t border-sand-200">
           {item.total_price != null && (
             <div><span className="text-xs text-[#a09383] uppercase tracking-wider font-semibold">From</span><br /><span className="text-xl font-bold">{item.total_price}€</span> <span className="text-xs text-[#7a6b5d]">/person</span></div>

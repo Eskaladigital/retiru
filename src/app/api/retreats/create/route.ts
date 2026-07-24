@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
 import { getCommissionTier } from '@/lib/utils';
+import { countPaidRetreatUnits } from '@/lib/series';
 
 function slugify(text: string): string {
   return text
@@ -27,10 +28,11 @@ export async function POST(request: NextRequest) {
       includes_es, includes_en,
       excludes_es, excludes_en,
       start_date, end_date,
-      total_price, max_attendees, min_attendees,
+      total_price, max_attendees, min_attendees, duration_hours,
       destination_id, address,
       categories, confirmation_type, languages,
       images, schedule, cancellation_policy,
+      is_recurring, recurrence_interval_days, recurrence_occurrences_ahead, recurrence_end_date,
     } = body;
 
     if (!title_es || !summary_es || !description_es || !start_date || !end_date || !total_price || !max_attendees) {
@@ -43,6 +45,41 @@ export async function POST(request: NextRequest) {
     const today = new Date().toISOString().slice(0, 10);
     if (start_date < today) {
       return NextResponse.json({ error: 'La fecha de inicio no puede ser anterior a hoy' }, { status: 400 });
+    }
+
+    // Eventos de un día: se pide la duración en horas
+    const isSameDay = start_date === end_date;
+    let durationHours: number | null = null;
+    if (isSameDay) {
+      durationHours = parseFloat(String(duration_hours));
+      if (Number.isNaN(durationHours) || durationHours <= 0 || durationHours > 24) {
+        return NextResponse.json({ error: 'Indica la duración en horas del evento (entre 1 y 24)' }, { status: 400 });
+      }
+    }
+
+    // Evento periódico: validar recurrencia
+    const spanDays = Math.round(
+      (new Date(`${end_date}T00:00:00Z`).getTime() - new Date(`${start_date}T00:00:00Z`).getTime()) / 86400000,
+    );
+    let intervalDays = 0;
+    let occurrencesAhead = 4;
+    let seriesEndDate: string | null = null;
+    if (is_recurring) {
+      intervalDays = parseInt(String(recurrence_interval_days), 10);
+      if (Number.isNaN(intervalDays) || intervalDays < 1 || intervalDays > 90) {
+        return NextResponse.json({ error: 'La repetición debe ser entre cada 1 y cada 90 días' }, { status: 400 });
+      }
+      if (intervalDays <= spanDays) {
+        return NextResponse.json({ error: 'La repetición debe ser mayor que la duración del evento para que las fechas no se solapen' }, { status: 400 });
+      }
+      const ahead = parseInt(String(recurrence_occurrences_ahead), 10);
+      if (!Number.isNaN(ahead) && ahead >= 1 && ahead <= 8) occurrencesAhead = ahead;
+      if (recurrence_end_date) {
+        if (String(recurrence_end_date) <= start_date) {
+          return NextResponse.json({ error: 'El fin de la serie debe ser posterior a la primera fecha' }, { status: 400 });
+        }
+        seriesEndDate = String(recurrence_end_date);
+      }
     }
 
     const priceN = parseFloat(String(total_price));
@@ -89,15 +126,9 @@ export async function POST(request: NextRequest) {
 
     const isVerifiedOrganizer = (publishedCount ?? 0) > 0;
 
-    // Tiered commission: count retreats with paid bookings to determine tier
-    const { count: paidRetreatsCount } = await admin
-      .from('retreats')
-      .select('id', { count: 'exact', head: true })
-      .eq('organizer_id', orgProfile!.id)
-      .in('status', ['published', 'archived', 'cancelled'])
-      .gt('confirmed_bookings', 0);
-
-    const commissionPercent = getCommissionTier(paidRetreatsCount ?? 0);
+    // Tiered commission: cada serie de evento periódico cuenta como 1 retiro
+    const paidRetreatsCount = await countPaidRetreatUnits(admin, orgProfile!.id);
+    const commissionPercent = getCommissionTier(paidRetreatsCount);
 
     const insertData: Record<string, unknown> = {
       organizer_id: orgProfile!.id,
@@ -114,6 +145,7 @@ export async function POST(request: NextRequest) {
       excludes_en: excludes_en || [],
       start_date,
       end_date,
+      duration_hours: durationHours,
       total_price: priceN,
       commission_percent: commissionPercent,
       max_attendees: maxN,
@@ -141,6 +173,28 @@ export async function POST(request: NextRequest) {
 
     if (retErr) {
       return NextResponse.json({ error: `Error creando retiro: ${retErr.message}` }, { status: 500 });
+    }
+
+    // Evento periódico: crear la serie y vincular el master.
+    // Las ocurrencias se generan cuando el master se publica.
+    if (is_recurring && intervalDays > 0) {
+      const { data: series, error: serErr } = await admin
+        .from('retreat_series')
+        .insert({
+          organizer_id: orgProfile!.id,
+          master_retreat_id: retreat!.id,
+          interval_days: intervalDays,
+          occurrences_ahead: occurrencesAhead,
+          series_end_date: seriesEndDate,
+        })
+        .select('id')
+        .single();
+
+      if (serErr || !series) {
+        console.error('[retreats/create] error creando serie', serErr?.message);
+      } else {
+        await admin.from('retreats').update({ series_id: series.id }).eq('id', retreat!.id);
+      }
     }
 
     // Asociar categorías si se proporcionaron

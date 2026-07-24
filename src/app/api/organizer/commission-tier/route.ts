@@ -4,6 +4,7 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
 import { getCommissionTier } from '@/lib/utils';
+import { countPaidRetreatUnits } from '@/lib/series';
 
 export async function GET() {
   const supabase = await createServerSupabase();
@@ -24,14 +25,8 @@ export async function GET() {
     return NextResponse.json({ commissionPercent: 0, paidRetreatsCount: 0 });
   }
 
-  const { count } = await admin
-    .from('retreats')
-    .select('id', { count: 'exact', head: true })
-    .eq('organizer_id', orgProfile.id)
-    .in('status', ['published', 'archived', 'cancelled'])
-    .gt('confirmed_bookings', 0);
-
-  const paidRetreatsCount = count ?? 0;
+  // Cada serie de evento periódico cuenta como 1 retiro para el tier
+  const paidRetreatsCount = await countPaidRetreatUnits(admin, orgProfile.id);
   const commissionPercent = getCommissionTier(paidRetreatsCount);
 
   return NextResponse.json({ commissionPercent, paidRetreatsCount });

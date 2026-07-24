@@ -362,6 +362,7 @@ Protegido por middleware y comprobación de admin. No indexado en buscadores.
 | PATCH | `/api/retreats/[id]` | Actualizar retiro (solo propietario) |
 | POST | `/api/retreats/[id]` | Cancelar retiro (propietario, action=cancel) |
 | DELETE | `/api/retreats/[id]` | Eliminar retiro (propietario, solo sin reservas confirmadas) |
+| POST | `/api/retreats/series/[id]` | Gestión de serie de evento periódico (propietario): `close_date` cierra una fecha sin reservas (vacaciones, se añade a `skip_dates`) y `stop` detiene la serie |
 | POST | `/api/storage/retreat-images` | Subir imagen al bucket `retreat-images` con service role (legacy/integraciones; el wizard del organizador usa subida directa desde el cliente para evitar límite de tamaño del body en serverless) |
 | PATCH | `/api/profile` | Actualizar perfil propio (`full_name`, `phone` obligatorio con ≥9 dígitos, `bio`) |
 | POST | `/api/shop/product-interest` | Encuesta tienda «próximamente»: guardar valoración por categoría (`action: rating`) o comentario en filas existentes (`action: comment`); sesión anónima vía `sessionId` en body; service role en servidor |
@@ -395,6 +396,7 @@ Protegido por middleware y comprobación de admin. No indexado en buscadores.
 | POST | `/api/cron/event-reminders` | Cron: recordatorios pre-evento (7d y 2d) |
 | POST | `/api/cron/review-requests` | Cron: solicitar reseñas post-evento |
 | GET / POST | `/api/cron/mailing-tick` | Cron (cada minuto): envía un micro-lote (`batch_size_per_tick`) de cada campaña en `sending`, respetando `max_per_hour`; pausa automática si OVH devuelve rate-limit; auth con `CRON_SECRET` |
+| GET / POST | `/api/cron/series-occurrences` | Cron (diario 05:00 en `vercel.json`): eventos periódicos — genera las ocurrencias que falten hasta el horizonte de cada serie activa (`retreat_series`) y recoloca `is_series_next`; `CRON_SECRET` |
 | GET / POST | `/api/unsubscribe` | Baja de marketing. Con `?t=<marketing_opt_out_token>` hace one-click unsubscribe (`List-Unsubscribe-Post` compatible). Sin token, muestra un formulario bilingüe (ES/EN vía `?lang=` o `Accept-Language`) donde el usuario introduce su email; al enviarlo, marca los `centers` con ese email como opt-out e inserta en `email_suppressions` para bloquear futuros envíos. Respuesta genérica siempre (no revela si el email existía) |
 | GET / POST | `/api/admin/mailing/campaigns` | Listar campañas (vista `mailing_campaigns_stats`) o crear borrador |
 | GET / PATCH / DELETE | `/api/admin/mailing/campaigns/[slug]` | Detalle/edición/borrado (solo `draft`) |

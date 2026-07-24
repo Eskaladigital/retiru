@@ -53,6 +53,7 @@ export default async function RetreatsInPage({ params }: { params: Promise<{ slu
         'id, slug, title_en, total_price, start_date, end_date, duration_days, available_spots, destinations!destination_id(name_en), retreat_images(url, is_cover)',
       )
       .eq('status', 'published')
+      .eq('is_series_next', true)
       .gte('end_date', today)
       .gt('start_date', today)
       .in('destination_id', destHijoIds)
@@ -189,7 +190,7 @@ export default async function RetreatsInPage({ params }: { params: Promise<{ slu
                           {r.end_date && ` – ${new Date(r.end_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`}
                         </span>
                       )}
-                      {r.duration_days && (<><span className="text-[#a09383]">·</span><span>{r.duration_days} days</span></>)}
+                      {r.duration_days && (<><span className="text-[#a09383]">·</span><span>{r.duration_days} day{r.duration_days !== 1 ? 's' : ''}</span></>)}
                     </div>
                     <div className="flex items-end justify-between pt-4 border-t border-sand-200">
                       <div className="flex flex-col">

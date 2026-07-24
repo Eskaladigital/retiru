@@ -215,6 +215,12 @@ export interface Retreat {
   start_date: string;
   end_date: string;
   duration_days: number;
+  /** Duración en horas para eventos de un día (start_date = end_date); null en multi-día */
+  duration_hours: number | null;
+  /** Serie de evento periódico a la que pertenece (null si no es periódico) */
+  series_id: string | null;
+  /** true en la próxima ocurrencia de cada serie y en eventos no periódicos */
+  is_series_next: boolean;
   max_attendees: number;
   min_attendees: number | null;
   total_price: number;

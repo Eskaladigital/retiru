@@ -8,7 +8,7 @@ import { Calendar, MapPin, Star, Zap, Users } from 'lucide-react';
 import type { Retreat } from '@/types';
 import type { Locale } from '@/i18n/config';
 import { getLocalized, getDictionary } from '@/i18n';
-import { formatPrice, formatDateRange, getOrganizerReviewStats, organizerHasRatingToShow } from '@/lib/utils';
+import { formatPrice, formatDateRange, formatDurationDays, getOrganizerReviewStats, organizerHasRatingToShow } from '@/lib/utils';
 
 interface EventCardProps {
   event: Retreat;
@@ -123,7 +123,7 @@ export default function EventCard({ event, locale }: EventCardProps) {
               <span className="text-xs text-muted-foreground"> {t.eventCard.perPerson}</span>
             </div>
             <span className="text-xs font-medium text-muted-foreground">
-              {event.duration_days} {locale === 'es' ? 'días' : 'days'}
+              {formatDurationDays(event.duration_days, locale, event.duration_hours)}
               {nights > 0 && ` · ${nights} ${locale === 'es' ? 'noches' : 'nights'}`}
             </span>
           </div>

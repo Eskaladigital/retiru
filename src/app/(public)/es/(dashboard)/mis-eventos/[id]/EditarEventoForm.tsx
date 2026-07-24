@@ -107,6 +107,14 @@ async function fetchGeneratedCoverUrl(payload: Record<string, unknown>): Promise
   return data.publicUrl;
 }
 
+export interface SeriesInfo {
+  id: string;
+  interval_days: number;
+  is_active: boolean;
+  series_end_date: string | null;
+  occurrences: { id: string; start_date: string; status: string; active_bookings: number }[];
+}
+
 interface Props {
   retreat: any;
   categories: Option[];
@@ -119,6 +127,8 @@ interface Props {
   isAdmin?: boolean;
   /** Tras eliminar evento, redirigir aquí (p. ej. /es/panel/eventos). Por defecto /es/mis-eventos. */
   eventsHubPath?: string;
+  /** Serie de evento periódico a la que pertenece este evento (gestión de fechas) */
+  series?: SeriesInfo | null;
 }
 
 const inputCls = 'w-full px-4 py-3 rounded-xl border border-sand-300 text-[15px] outline-none focus:border-terracotta-500 focus:ring-2 focus:ring-terracotta-500/20 transition-all';
@@ -132,7 +142,7 @@ function sortRetreatImages(rows: ImgRow[] | undefined) {
 
 type LocalImage = { file?: File; url: string; preview: string; is_cover: boolean };
 
-export function EditarEventoForm({ retreat, categories, destinations, apiPath, hideActions, isAdmin, eventsHubPath = '/es/mis-eventos' }: Props) {
+export function EditarEventoForm({ retreat, categories, destinations, apiPath, hideActions, isAdmin, eventsHubPath = '/es/mis-eventos', series }: Props) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [saving, setSaving] = useState(false);
@@ -193,6 +203,52 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
     finally { setActing(false); }
   }
 
+  async function handleCloseDate(occurrenceId: string, dateLabel: string) {
+    if (!confirm(`¿Cerrar la fecha del ${dateLabel}? No se volverá a generar (vacaciones).`)) return;
+    setActing(true);
+    setError('');
+    try {
+      const res = await fetch(`/api/retreats/series/${series!.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'close_date', occurrenceId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        if (occurrenceId === retreat.id) {
+          router.push(eventsHubPath);
+        } else {
+          setSuccess(data.message || 'Fecha cerrada.');
+          router.refresh();
+        }
+      } else {
+        setError(data.error || 'Error al cerrar la fecha');
+      }
+    } catch { setError('Error de conexión'); }
+    finally { setActing(false); }
+  }
+
+  async function handleStopSeries() {
+    if (!confirm('¿Detener la serie? No se generarán más fechas. Las ya publicadas siguen su curso.')) return;
+    setActing(true);
+    setError('');
+    try {
+      const res = await fetch(`/api/retreats/series/${series!.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'stop' }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setSuccess(data.message || 'Serie detenida.');
+        router.refresh();
+      } else {
+        setError(data.error || 'Error al detener la serie');
+      }
+    } catch { setError('Error de conexión'); }
+    finally { setActing(false); }
+  }
+
   async function handleDelete() {
     if (!confirm(`¿Eliminar definitivamente "${retreat.title_es}"? Esta acción no se puede deshacer.`)) return;
     setActing(true);
@@ -220,6 +276,7 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
     description_en: ensureHtmlForEditor(retreat.description_en || ''),
     start_date: retreat.start_date || '',
     end_date: retreat.end_date || '',
+    duration_hours: retreat.duration_hours?.toString() || '',
     total_price: retreat.total_price?.toString() || '',
     max_attendees: retreat.max_attendees?.toString() || '',
     min_attendees: (retreat.min_attendees ?? 1).toString(),
@@ -523,6 +580,13 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
           <input type="date" min={form.start_date || undefined} value={form.end_date} onChange={(e) => set('end_date', e.target.value)} className={inputCls} />
         </div>
       </div>
+      {form.start_date && form.start_date === form.end_date && (
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-1.5">Duración (horas) *</label>
+          <input type="number" min="1" max="24" step="0.5" value={form.duration_hours} onChange={(e) => set('duration_hours', e.target.value)} placeholder="3" className={`${inputCls} max-w-xs`} />
+          <p className="text-xs text-[#7a6b5d] mt-1.5">Tu evento empieza y termina el mismo día: indica cuántas horas dura (p. ej. 3 para una clase al atardecer).</p>
+        </div>
+      )}
 
       <div>
         <label className="block text-sm font-medium text-foreground mb-1.5">Destino</label>
@@ -595,6 +659,60 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
         </div>
         <button type="button" onClick={addInclude} className="mt-2 text-sm font-medium text-terracotta-600 hover:underline">+ Añadir otro</button>
       </div>
+
+      {/* Evento periódico: fechas programadas */}
+      {series && (
+        <div className="border border-sand-200 rounded-xl p-5">
+          <h3 className="font-serif text-lg font-semibold text-foreground mb-1">Evento periódico · fechas programadas</h3>
+          <p className="text-sm text-[#7a6b5d] mb-4">
+            Se repite cada {series.interval_days} {series.interval_days === 1 ? 'día' : 'días'}.{' '}
+            {series.is_active
+              ? 'Las nuevas fechas se publican automáticamente al pasar las anteriores.'
+              : 'Serie detenida: no se generarán más fechas.'}
+            {series.series_end_date && ` Fin de la serie: ${new Date(series.series_end_date).toLocaleDateString('es-ES')}.`}
+          </p>
+          <ul className="space-y-2 mb-4">
+            {series.occurrences.map((o) => {
+              const dateLabel = new Date(`${o.start_date}T00:00:00`).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+              return (
+                <li key={o.id} className="flex flex-wrap items-center justify-between gap-3 border border-sand-100 rounded-lg px-3 py-2 text-sm">
+                  <span className="text-foreground">
+                    {dateLabel}
+                    {o.id === retreat.id && <span className="text-[#a09383]"> · esta ficha</span>}
+                  </span>
+                  <span className="flex items-center gap-3">
+                    <span className="text-xs text-[#7a6b5d]">{o.active_bookings} {o.active_bookings === 1 ? 'reserva' : 'reservas'}</span>
+                    {o.active_bookings === 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => handleCloseDate(o.id, dateLabel)}
+                        disabled={saving || acting}
+                        className="text-xs font-medium text-amber-700 border border-amber-300 rounded-lg px-3 py-1.5 hover:bg-amber-50 transition-colors disabled:opacity-50"
+                      >
+                        Cerrar fecha
+                      </button>
+                    ) : (
+                      <span className="text-xs text-[#a09383]" title="Con reservas no se puede cerrar: gestiona los cambios con tus asistentes o celébrala.">
+                        No se puede cerrar
+                      </span>
+                    )}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          {series.is_active && (
+            <button
+              type="button"
+              onClick={handleStopSeries}
+              disabled={saving || acting}
+              className="text-sm font-medium text-red-700 border border-red-300 rounded-xl px-4 py-2 hover:bg-red-50 transition-colors disabled:opacity-50"
+            >
+              Detener serie
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Status banner */}
       {retreat.status === 'pending_review' && (

@@ -97,7 +97,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   //    Las provincias ya quedan representadas en el bloque 12 (type×province).
 
   // 3) Retiros individuales
-  const { data: retreatSlugs } = await supabase.from('retreats').select('slug, updated_at').eq('status', 'published').gte('end_date', today);
+  const { data: retreatSlugs } = await supabase.from('retreats').select('slug, updated_at').eq('status', 'published').eq('is_series_next', true).gte('end_date', today);
   (retreatSlugs || []).forEach((r) => pushBilingual(`/es/retiro/${r.slug}`, `/en/retreat/${r.slug}`, 'weekly', 0.8, r.updated_at));
 
   // 4) Retiros por destino — solo destinos con >= 1 retiro

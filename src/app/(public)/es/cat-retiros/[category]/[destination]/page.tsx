@@ -173,7 +173,7 @@ export default async function RetirosCategoriaDestinoPage({ params }: { params: 
                       {r.duration_days && (
                         <>
                           <span className="text-[#a09383]">·</span>
-                          <span>{r.duration_days} días</span>
+                          <span>{r.duration_days} día{r.duration_days !== 1 ? 's' : ''}</span>
                         </>
                       )}
                     </div>

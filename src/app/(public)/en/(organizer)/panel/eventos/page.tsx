@@ -44,6 +44,7 @@ export default async function PanelEventosPageEn() {
       .select(`
         id, slug, title_es, status, start_date, end_date,
         max_attendees, min_attendees, confirmed_bookings, total_price,
+        series_id, is_series_next,
         retreat_images(url, is_cover)
       `)
       .eq('organizer_id', orgProfile.id)
@@ -51,7 +52,11 @@ export default async function PanelEventosPageEn() {
     if (retreatsErr) {
       console.error('[panel/eventos en] Error loading retreats:', retreatsErr.message);
     }
-    retreats = data || [];
+    // Recurring events: show only the next date of each series
+    const today = new Date().toISOString().slice(0, 10);
+    retreats = (data || []).filter(
+      (r: any) => !r.series_id || r.is_series_next || (r.start_date && r.start_date < today),
+    );
   }
 
   const retreatIds = retreats.map((r: any) => r.id);
@@ -80,6 +85,7 @@ export default async function PanelEventosPageEn() {
     reserved_bookings: reservedMap[r.id] || 0,
     total_price: r.total_price,
     cover: r.retreat_images?.find((i: any) => i.is_cover)?.url || r.retreat_images?.[0]?.url || null,
+    series_id: r.series_id ?? null,
   }));
 
   return (

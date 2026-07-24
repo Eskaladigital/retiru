@@ -553,6 +553,7 @@ Plantillas HTML de referencia: carpeta `mailing/` (`mailing/README.md`). Envío 
 - `0 10 * * *` — `event-reminders` (recordatorio pre-evento 7 d / 2 d)
 - `0 11 * * *` — `review-requests` (solicitud de reseña +2 d)
 - `* * * * *` — `mailing-tick` (cron del módulo de campañas SMTP del panel)
+- `0 5 * * *` — `series-occurrences` (eventos periódicos: genera las próximas fechas de cada serie activa y recoloca `is_series_next`)
 
 > Las rutas legacy `/api/cron/payment-reminders` (modelo 80 % del organizador) se mantienen como no-op para retrocompatibilidad: ya no están programadas en `vercel.json`.
 
@@ -864,6 +865,16 @@ El admin tiene además acceso a `/administrator` desde el menú.
 ### Precio público (PVP) y reparto (organizador / Retiru)
 
 En el wizard de **Mis eventos** el organizador indica el **PVP por persona** (precio público final que ve el asistente en la ficha). **No hay recargo extra** al asistente: paga exactamente ese importe (o reserva sin pago en el flujo de mínimo viable). La comisión de Retiru es **escalonada**: 0 % en el primer retiro con reservas pagadas, 10 % en el segundo, 20 % a partir del tercero. Cada retiro mantiene su nivel permanentemente. El formulario muestra el desglose en tiempo real (`OrganizerPriceBreakdown`) según el tier del organizador, obtenido de `GET /api/organizer/commission-tier`.
+
+### Eventos periódicos (series con ocurrencias)
+
+Un evento puede marcarse como **periódico** en el wizard («se repite cada N días»; 7 = semanal, 14 = quincenal), pensado sobre todo para eventos de un día (p. ej. clase de yoga al atardecer). Los eventos de un día (`start_date = end_date`) indican además su **duración en horas** (`retreats.duration_hours`). Funcionamiento:
+
+- La recurrencia se guarda en la tabla **`retreat_series`** (migración 051): `interval_days`, `occurrences_ahead` (cuántas fechas futuras se mantienen publicadas, por defecto 4, máx. 8), `series_end_date` opcional y `skip_dates` (fechas cerradas por vacaciones).
+- Cada fecha es una **fila normal de `retreats`** (ocurrencia) clonada del master al publicarse este, con su propio slug (`slug-master-AAAAMMDD`), aforo y reservas: checkout, SLA, recordatorios y reseñas funcionan sin cambios. **No se generan infinitas filas**: horizonte rodante repuesto por el cron diario `series-occurrences` (`src/lib/series.ts` → `ensureSeriesOccurrences`).
+- **Listados públicos** (home, buscador, categorías, destinos, geo-landings, sitemap): solo aparece la próxima fecha de cada serie (columna `retreats.is_series_next`). La **ficha pública** muestra chips de «próximas fechas» que enlazan a las fichas hermanas.
+- **Panel organizador**: badge «Periódico», y en la edición una sección «Fechas programadas» para **cerrar fechas sin reservas** (vacaciones; se añaden a `skip_dates` y no se regeneran) o **detener la serie** (`is_active = false`; las fechas ya publicadas siguen su curso). Una fecha con reservas activas **no puede cerrarse**: el organizador la gestiona con sus asistentes o la celebra. Gestión vía `POST /api/retreats/series/[id]` (`close_date` / `stop`).
+- **Comisión escalonada**: una serie completa cuenta como **1 retiro** para el tier (las ocurrencias heredan el `commission_percent` del master); ver `countPaidRetreatUnits` en `src/lib/series.ts`.
 
 ### Flujo de reserva con mínimo viable ("crowdfunding de plazas")
 

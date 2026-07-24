@@ -154,6 +154,11 @@ export function NuevoEventoForm({ categories, destinations, eventsHubPath = '/es
     description_en: '',
     start_date: '',
     end_date: '',
+    duration_hours: '',
+    is_recurring: false,
+    recurrence_interval_days: '7',
+    recurrence_occurrences_ahead: '4',
+    recurrence_end_date: '',
     total_price: '',
     max_attendees: '',
     min_attendees: '1',
@@ -267,7 +272,11 @@ export function NuevoEventoForm({ categories, destinations, eventsHubPath = '/es
 
   function canNext() {
     if (step === 0) return form.title_es && form.summary_es && form.description_es;
-    if (step === 1) return form.start_date && form.end_date;
+    if (step === 1) {
+      return form.start_date && form.end_date
+        && (form.start_date !== form.end_date || form.duration_hours)
+        && (!form.is_recurring || (parseInt(form.recurrence_interval_days, 10) >= 1 && parseInt(form.recurrence_interval_days, 10) <= 90));
+    }
     return true;
   }
 
@@ -279,6 +288,7 @@ export function NuevoEventoForm({ categories, destinations, eventsHubPath = '/es
       && form.description_es
       && form.start_date
       && form.end_date
+      && (form.start_date !== form.end_date || form.duration_hours)
       && form.total_price
       && form.max_attendees,
     );
@@ -756,6 +766,50 @@ export function NuevoEventoForm({ categories, destinations, eventsHubPath = '/es
                 <input type="date" min={form.start_date || undefined} value={form.end_date} onChange={(e) => set('end_date', e.target.value)} className={inputCls} />
               </div>
             </div>
+            {form.start_date && form.start_date === form.end_date && (
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Duración (horas) *</label>
+                <input type="number" min="1" max="24" step="0.5" value={form.duration_hours} onChange={(e) => set('duration_hours', e.target.value)} placeholder="3" className={`${inputCls} max-w-xs`} />
+                <p className="text-xs text-[#7a6b5d] mt-1.5">Tu evento empieza y termina el mismo día: indica cuántas horas dura (p. ej. 3 para una clase al atardecer).</p>
+              </div>
+            )}
+            {form.start_date && form.end_date && (
+              <div className="border border-sand-200 rounded-xl p-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.is_recurring}
+                    onChange={(e) => set('is_recurring', e.target.checked)}
+                    className="w-4 h-4 accent-terracotta-600"
+                  />
+                  <span className="text-sm font-medium text-foreground">Evento periódico (se repite)</span>
+                </label>
+                <p className="text-xs text-[#7a6b5d] mt-1.5">
+                  Crea el evento una vez y Retiru publicará automáticamente las próximas fechas. En los listados solo aparece la fecha más próxima.
+                </p>
+                {form.is_recurring && (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-1.5">Se repite cada (días) *</label>
+                      <input type="number" min="1" max="90" value={form.recurrence_interval_days} onChange={(e) => set('recurrence_interval_days', e.target.value)} className={inputCls} />
+                      <p className="text-xs text-[#7a6b5d] mt-1">7 = semanal (mismo día de la semana), 14 = quincenal.</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-1.5">Fechas abiertas a la vez</label>
+                      <select value={form.recurrence_occurrences_ahead} onChange={(e) => set('recurrence_occurrences_ahead', e.target.value)} className={inputCls}>
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => <option key={n} value={String(n)}>{n}</option>)}
+                      </select>
+                      <p className="text-xs text-[#7a6b5d] mt-1">Siempre habrá estas fechas futuras reservables; al pasar una, se abre la siguiente.</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-1.5">Fin de la serie (opcional)</label>
+                      <input type="date" min={form.start_date || undefined} value={form.recurrence_end_date} onChange={(e) => set('recurrence_end_date', e.target.value)} className={inputCls} />
+                      <p className="text-xs text-[#7a6b5d] mt-1">Si lo dejas vacío, la serie sigue hasta que la detengas desde tu panel.</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">Destino</label>
               <select value={form.destination_id} onChange={(e) => set('destination_id', e.target.value)} className={inputCls}>

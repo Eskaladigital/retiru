@@ -50,6 +50,10 @@ const SECTIONS = [
         a: 'We review retreat content for quality. Your organizer profile must also be documentally validated before we can approve and publish any retreat. Once you have at least one published retreat, new ones may go live directly without the review queue (progressive trust).',
       },
       {
+        q: 'Can I publish a recurring event (e.g. every Tuesday)?',
+        a: 'Yes. When creating the event, check "Recurring event" and set how often it repeats (7 = weekly). Retiru automatically publishes the upcoming dates and opens a new one as each date passes; listings only show the nearest date. From your panel you can close dates with no bookings (holidays) or stop the series at any time, and the whole series counts as a single retreat for your commission tier.',
+      },
+      {
         q: 'Can I generate the cover image with AI?',
         a: 'Yes. When creating or editing an event you can upload up to eight photos: one is the cover (listings and hero on the retreat page) and the rest show in the public gallery. You can use "Generate cover with AI" for a photorealistic image with GPT Image 1.5 from your title and copy. If you upload no images, saving generates a cover automatically when OpenAI is configured on the server.',
       },

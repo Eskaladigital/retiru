@@ -68,6 +68,7 @@ export default async function RetirosEnPage({ params }: { params: Promise<{ slug
         'id, slug, title_es, total_price, start_date, end_date, duration_days, available_spots, destinations!destination_id(name_es), retreat_images(url, is_cover)',
       )
       .eq('status', 'published')
+      .eq('is_series_next', true)
       .gte('end_date', today)
       .gt('start_date', today)
       .in('destination_id', destHijoIds)
@@ -221,7 +222,7 @@ export default async function RetirosEnPage({ params }: { params: Promise<{ slug
                         {r.duration_days && (
                           <>
                             <span className="text-[#a09383]">·</span>
-                            <span>{r.duration_days} días</span>
+                            <span>{r.duration_days} día{r.duration_days !== 1 ? 's' : ''}</span>
                           </>
                         )}
                       </div>

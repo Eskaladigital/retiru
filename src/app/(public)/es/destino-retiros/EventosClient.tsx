@@ -113,6 +113,9 @@ export default function EventosClient({ retreats, categories, destinations }: Ev
     const s = new Date(start);
     const e = new Date(end);
     const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    if (start === end) {
+      return `${s.getDate()} ${monthNames[s.getMonth()]} ${s.getFullYear()}`;
+    }
     if (s.getMonth() === e.getMonth() && s.getFullYear() === e.getFullYear()) {
       return `${s.getDate()}–${e.getDate()} ${monthNames[s.getMonth()]} ${s.getFullYear()}`;
     }

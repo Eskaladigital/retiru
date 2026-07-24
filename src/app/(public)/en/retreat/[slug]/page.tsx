@@ -9,7 +9,7 @@ import { notFound } from 'next/navigation';
 import { getRetreatBySlug } from '@/lib/data';
 import { createStaticSupabase } from '@/lib/supabase/server';
 import { generatePageMetadata, jsonLdEvent, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
-import { Star, MapPin, Calendar, Clock, Users, Globe, Shield, Zap, Heart, Check, X as XIcon } from 'lucide-react';
+import { Star, MapPin, Calendar, Clock, Users, Globe, Shield, Zap, Heart, Check, X as XIcon, Repeat } from 'lucide-react';
 import AskOrganizerButton from '@/components/messaging/AskOrganizerButton';
 import ReserveButton from '@/components/booking/ReserveButton';
 import { RetreatDescriptionBody, LinkifyText } from '@/components/ui/retreat-description-body';
@@ -20,14 +20,15 @@ import { getSiteUrl } from '@/lib/site-url';
 export const revalidate = 3600;
 
 const dateFmt = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+const chipDateFmt = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
 const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1200&q=80';
 
 function formatDate(iso: string) {
   return dateFmt.format(new Date(iso));
 }
 
-function durationLabel(days: number) {
-  if (days <= 1) return '1 day';
+function durationLabel(days: number, hours?: number | null) {
+  if (days <= 1) return hours ? `${hours} ${hours === 1 ? 'hour' : 'hours'}` : '1 day';
   return `${days} days · ${days - 1} nights`;
 }
 
@@ -103,6 +104,21 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
     reservedCount = count ?? 0;
   }
   const minReached = (confirmedCount + reservedCount) >= minViable;
+
+  // Recurring event: upcoming dates in the same series
+  let seriesDates: { slug: string; start_date: string }[] = [];
+  if (r.series_id) {
+    const sb = createStaticSupabase();
+    const { data: siblings } = await sb
+      .from('retreats')
+      .select('slug, start_date')
+      .eq('series_id', r.series_id)
+      .eq('status', 'published')
+      .gte('start_date', new Date().toISOString().slice(0, 10))
+      .order('start_date', { ascending: true })
+      .limit(8);
+    seriesDates = siblings || [];
+  }
 
   const eventLd = jsonLdEvent({
     name: r.title_en || r.title_es,
@@ -207,7 +223,7 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
               <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                 {location && <span className="flex items-center gap-1"><MapPin size={15} /> {location}</span>}
                 <span className="flex items-center gap-1"><Calendar size={15} /> {formatDate(r.start_date)} — {formatDate(r.end_date)}</span>
-                <span className="flex items-center gap-1"><Clock size={15} /> {durationLabel(r.duration_days)}</span>
+                <span className="flex items-center gap-1"><Clock size={15} /> {durationLabel(r.duration_days, r.duration_hours)}</span>
                 {r.review_count > 0 && (
                   <span className="flex items-center gap-1">
                     <Star size={15} className="fill-terracotta-500 text-terracotta-500" />
@@ -215,6 +231,25 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
                   </span>
                 )}
               </div>
+              {/* Recurring event: upcoming dates */}
+              {seriesDates.length > 1 && (
+                <div className="mt-4">
+                  <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#7a6b5d]">
+                    <Repeat size={13} /> Recurring event · upcoming dates
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {seriesDates.map((d) => (
+                      d.slug === r.slug ? (
+                        <span key={d.slug} className="badge bg-terracotta-600 text-white">{chipDateFmt.format(new Date(d.start_date))}</span>
+                      ) : (
+                        <Link key={d.slug} href={`/en/retreat/${d.slug}`} className="badge-sand hover:bg-sand-200 transition-colors">
+                          {chipDateFmt.format(new Date(d.start_date))}
+                        </Link>
+                      )
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="mt-4 flex gap-3">
                 <button className="btn-ghost text-sm"><Heart size={16} /> Save</button>
                 <ShareButton
@@ -383,7 +418,7 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
                     <Calendar size={16} /> {formatDate(r.start_date)} — {formatDate(r.end_date)}
                   </div>
                   <div className="flex items-center gap-2 text-muted-foreground">
-                    <Clock size={16} /> {durationLabel(r.duration_days)}
+                    <Clock size={16} /> {durationLabel(r.duration_days, r.duration_hours)}
                   </div>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Users size={16} />

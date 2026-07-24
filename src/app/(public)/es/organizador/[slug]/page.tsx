@@ -49,6 +49,7 @@ export default async function OrganizadorPage({ params }: { params: Promise<{ sl
     .select('id, title_es, slug, total_price, start_date, end_date, duration_days, avg_rating, review_count, retreat_images(url, is_cover)')
     .eq('organizer_id', organizer.id)
     .eq('status', 'published')
+    .eq('is_series_next', true)
     .order('start_date');
 
   const retreatList = retreats || [];
@@ -132,7 +133,7 @@ export default async function OrganizadorPage({ params }: { params: Promise<{ sl
                   <div className="p-5">
                     <h3 className="font-serif text-lg leading-[1.3] mb-2">{r.title_es as string}</h3>
                     <p className="text-sm text-[#7a6b5d] mb-3">
-                      📅 {fmt(r.start_date as string)}–{fmt(r.end_date as string)} · {r.duration_days as number} días
+                      📅 {r.start_date === r.end_date ? fmt(r.start_date as string) : `${fmt(r.start_date as string)}–${fmt(r.end_date as string)}`} · {r.duration_days as number} día{(r.duration_days as number) !== 1 ? 's' : ''}
                       {(organizer.review_count ?? 0) > 0 && (
                         <> · ⭐ {organizer.avg_rating?.toFixed(1)} ({organizer.review_count})</>
                       )}

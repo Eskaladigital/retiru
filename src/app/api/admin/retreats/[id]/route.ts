@@ -4,6 +4,7 @@ import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server
 import { sendRetreatApprovedEmail, type RetreatReviewEmailNotification } from '@/lib/email';
 import { assignRole } from '@/lib/roles';
 import { getCommissionTier } from '@/lib/utils';
+import { ensureSeriesOccurrences, countPaidRetreatUnits } from '@/lib/series';
 
 async function requireAdmin(supabase: Awaited<ReturnType<typeof createServerSupabase>>) {
   const { data: { user } } = await supabase.auth.getUser();
@@ -39,7 +40,7 @@ export async function PATCH(
     title_es, title_en, summary_es, summary_en,
     description_es, description_en,
     includes_es, includes_en, excludes_es, excludes_en,
-    start_date, end_date,
+    start_date, end_date, duration_hours,
     total_price, max_attendees,
     destination_id, address,
     categories, confirmation_type, languages,
@@ -59,6 +60,11 @@ export async function PATCH(
   if (excludes_en !== undefined) updateData.excludes_en = excludes_en;
   if (start_date !== undefined) updateData.start_date = start_date;
   if (end_date !== undefined) updateData.end_date = end_date;
+  if (start_date !== undefined && end_date !== undefined) {
+    // Evento de un día: guarda la duración en horas; multi-día: la limpia
+    const dh = parseFloat(String(duration_hours));
+    updateData.duration_hours = start_date === end_date && !Number.isNaN(dh) && dh > 0 ? dh : null;
+  }
   if (total_price !== undefined) updateData.total_price = parseFloat(total_price);
   if (max_attendees !== undefined) updateData.max_attendees = parseInt(max_attendees, 10);
   if (destination_id !== undefined) updateData.destination_id = destination_id || null;
@@ -80,13 +86,8 @@ export async function PATCH(
     if (publishingFromPending) {
       updateData.reviewed_by = user.id;
       updateData.reviewed_at = new Date().toISOString();
-      const { count: paidCount } = await admin
-        .from('retreats')
-        .select('id', { count: 'exact', head: true })
-        .eq('organizer_id', existing.organizer_id)
-        .in('status', ['published', 'archived', 'cancelled'])
-        .gt('confirmed_bookings', 0);
-      updateData.commission_percent = getCommissionTier(paidCount ?? 0);
+      const paidCount = await countPaidRetreatUnits(admin, existing.organizer_id as string);
+      updateData.commission_percent = getCommissionTier(paidCount);
     }
   }
 
@@ -121,6 +122,22 @@ export async function PATCH(
           sort_order: i,
         })),
       );
+    }
+  }
+
+  // Evento periódico: al publicarse el master, generar las ocurrencias
+  if (updateData.status === 'published') {
+    const { data: series } = await admin
+      .from('retreat_series')
+      .select('id')
+      .eq('master_retreat_id', id)
+      .maybeSingle();
+    if (series) {
+      try {
+        await ensureSeriesOccurrences(admin, series.id);
+      } catch (serErr) {
+        console.error('[admin/retreats PATCH] error generando ocurrencias de serie', serErr);
+      }
     }
   }
 

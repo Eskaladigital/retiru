@@ -43,7 +43,9 @@ function formatDates(start: string, end: string, days: number): string {
   const d1 = new Date(start);
   const d2 = new Date(end);
   const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
-  return `${d1.toLocaleDateString('en-GB', opts)} – ${d2.toLocaleDateString('en-GB', opts)} · ${days} days`;
+  const dur = `${days} ${days === 1 ? 'day' : 'days'}`;
+  if (start === end) return `${d1.toLocaleDateString('en-GB', opts)} · ${dur}`;
+  return `${d1.toLocaleDateString('en-GB', opts)} – ${d2.toLocaleDateString('en-GB', opts)} · ${dur}`;
 }
 
 export default async function DestinationDetailEN({ params }: { params: Promise<{ slug: string }> }) {

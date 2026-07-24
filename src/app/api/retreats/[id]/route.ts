@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
 import { sendRetreatPendingReviewEmail, sendRetreatCancelledToAttendeeEmail } from '@/lib/email';
 import { getCommissionTier } from '@/lib/utils';
+import { ensureSeriesOccurrences, countPaidRetreatUnits } from '@/lib/series';
 
 async function getOwnership(id: string) {
   const supabase = await createServerSupabase();
@@ -121,7 +122,7 @@ export async function PATCH(
       description_es, description_en,
       includes_es, includes_en,
       start_date, end_date,
-      total_price, max_attendees, min_attendees,
+      total_price, max_attendees, min_attendees, duration_hours,
       destination_id, address,
       categories, confirmation_type, languages, status,
       images,
@@ -150,6 +151,16 @@ export async function PATCH(
       const today = new Date().toISOString().slice(0, 10);
       if (start_date !== undefined && start_date !== cur?.start_date && start_date < today) {
         return NextResponse.json({ error: 'La fecha de inicio no puede ser anterior a hoy' }, { status: 400 });
+      }
+      // Evento de un día: exige duración en horas; multi-día: la limpia
+      if (s && e && s === e) {
+        const dh = parseFloat(String(duration_hours));
+        if (Number.isNaN(dh) || dh <= 0 || dh > 24) {
+          return NextResponse.json({ error: 'Indica la duración en horas del evento (entre 1 y 24)' }, { status: 400 });
+        }
+        updateData.duration_hours = dh;
+      } else {
+        updateData.duration_hours = null;
       }
     }
     if (total_price !== undefined) {
@@ -195,13 +206,8 @@ export async function PATCH(
     }
     // Recalculate commission when total_price changes (trigger handles fee derivation)
     if (total_price !== undefined) {
-      const { count: paidRetreatsCount } = await admin
-        .from('retreats')
-        .select('id', { count: 'exact', head: true })
-        .eq('organizer_id', orgProfile.id)
-        .in('status', ['published', 'archived', 'cancelled'])
-        .gt('confirmed_bookings', 0);
-      updateData.commission_percent = getCommissionTier(paidRetreatsCount ?? 0);
+      const paidRetreatsCount = await countPaidRetreatUnits(admin, orgProfile.id);
+      updateData.commission_percent = getCommissionTier(paidRetreatsCount);
     }
 
     if (destination_id !== undefined) updateData.destination_id = destination_id || null;
@@ -266,6 +272,22 @@ export async function PATCH(
             { error: `No se pudieron guardar las imágenes: ${insImgErr.message}` },
             { status: 500 },
           );
+        }
+      }
+    }
+
+    // Evento periódico: al publicarse el master, generar las ocurrencias
+    if (updateData.status === 'published') {
+      const { data: series } = await admin
+        .from('retreat_series')
+        .select('id')
+        .eq('master_retreat_id', id)
+        .maybeSingle();
+      if (series) {
+        try {
+          await ensureSeriesOccurrences(admin, series.id);
+        } catch (serErr) {
+          console.error('[retreats PATCH] error generando ocurrencias de serie', serErr);
         }
       }
     }
