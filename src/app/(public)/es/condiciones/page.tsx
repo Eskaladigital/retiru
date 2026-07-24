@@ -31,7 +31,7 @@ export default function CondicionesPage() {
             Cómo se cobra
           </h2>
           <p className="text-[15px] leading-relaxed text-foreground mb-4">
-            El organizador fija el <strong>PVP</strong> (precio público final por persona, mínimo 50€): es el importe que ves en la ficha. Ese precio <strong>no lleva recargos extra</strong> para el asistente. En la mayoría de retiros, al reservar <strong>pagas el 100% del PVP con tarjeta</strong> en un solo paso (Stripe). Si el retiro tiene un mínimo de plazas y aún no se ha alcanzado, puedes reservar plaza sin pagar hasta que se cumpla el mínimo; entonces recibirás un enlace para pagar dentro del plazo indicado.
+            El organizador fija el <strong>PVP</strong> (precio público final por persona): es el importe que ves en la ficha, tanto en retiros de varios días como en eventos de un día (clases, talleres, sesiones). Ese precio <strong>no lleva recargos extra</strong> para el asistente. En la mayoría de retiros, al reservar <strong>pagas el 100% del PVP con tarjeta</strong> en un solo paso (Stripe). Si el retiro tiene un mínimo de plazas y aún no se ha alcanzado, puedes reservar plaza sin pagar hasta que se cumpla el mínimo; entonces recibirás un enlace para pagar dentro del plazo indicado.
           </p>
 
           <div className="bg-sand-100 rounded-2xl p-6 md:p-8">
@@ -93,6 +93,10 @@ export default function CondicionesPage() {
               <li className="flex gap-3">
                 <span className="text-terracotta-600 font-bold">•</span>
                 <span><strong>Cada retiro mantiene su nivel</strong> de comisión de forma permanente. El 1.er retiro siempre será al 0&nbsp;%, el 2.º al 10&nbsp;%, independientemente de cuántos publiques después.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-terracotta-600 font-bold">•</span>
+                <span><strong>Los eventos periódicos cuentan como un solo retiro:</strong> si publicas una clase o taller que se repite (p. ej. cada semana), toda la serie ocupa un único nivel de comisión, por muchas fechas que se celebren.</span>
               </li>
             </ul>
           </div>

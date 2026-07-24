@@ -137,14 +137,24 @@ Prioridad: **impresiones altas + intent alineado con el negocio**, no solo la ma
 - [ ] Elegir las **provincias objetivo** y la lista de 30–50 centros para la ronda de llamadas conserje.
 - [ ] Decidir calendario de lanzamiento de la campaña de claims (#1 → #2 → #3).
 - [ ] Definir el ritmo mínimo de publicación en Instagram (p. ej. 2–3 piezas/semana de contenido real).
-- [ ] **Separación clases vs retiros en UX/SEO:** cuando haya volumen de eventos de un día, decidir si los listados necesitan facetas/etiquetas («Clase», «Taller», «Retiro»), landings propias tipo «clases de yoga en [ciudad]» (ataca `yoga classes near me`, 644 imp. pos. 10) y cómo evitar que un buscador de «retiro yoga» aterrice en una página dominada por clases de 2 h.
-- [ ] **Naming/posicionamiento:** ¿Retiru sigue siendo «marketplace de retiros y escapadas» o pasa a «retiros, clases y experiencias de bienestar»? Afecta a home, metas y pitch de captación.
+- [ ] **Separación clases vs retiros en UX/SEO** *(aplazada a propósito — ver decisión 2026-07-24 nocheV)*: solo cuando haya volumen real de eventos de un día, decidir facetas/etiquetas («Clase», «Taller», «Retiro»), landings propias tipo «clases de yoga en [ciudad]» (ataca `yoga classes near me`, 644 imp. pos. 10) y cómo evitar que un buscador de «retiro yoga» aterrice en una página dominada por clases de 2 h.
+- [ ] **Naming/posicionamiento** *(aplazada igual que la anterior)*: ¿Retiru sigue siendo «marketplace de retiros y escapadas» o pasa a «retiros, clases y experiencias de bienestar»? Afecta a home, metas y pitch de captación.
 
 ---
 
 ## 8. Diario de sesiones
 
 > Añadir cada sesión **arriba** (orden cronológico inverso). Formato: fecha, reflexiones planteadas, análisis/correcciones del agente, decisiones, trabajo ejecutado.
+
+### 2026-07-24 (nocheV) — Decisión: ahora prima el volumen; la dilución se gestiona cuando exista
+
+**Reflexión del equipo:** respecto a los riesgos de dilución y nicho señalados en la sesión anterior — «ahora queremos tráfico, movimiento; es mejor que no tener eventos».
+
+**Análisis del agente:** de acuerdo sin matices en esta fase. Con 0 eventos futuros publicados, la dilución es un problema imaginario: no se puede diluir un listado vacío. Una landing con 3 clases y 1 taller gana a una landing en blanco ante Google (frescura, fechas futuras), ante el visitante (web viva, reseñas recientes) y ante el siguiente organizador que evalúe publicar. La dilución es un *good problem to have*: si llega, se resuelve con facetas/etiquetas (trabajo menor, ya definido en backlog). Freno estructural ya incorporado: cada serie muestra solo su próxima fecha en listados.
+
+**Decisión tomada:** ✅ prioridad a corto plazo = **volumen y movimiento de eventos, del tipo que sea** (clases, sesiones, talleres, gastronómicos…). Las dos entradas del backlog §7 sobre separación UX/SEO y naming quedan **aplazadas conscientemente** hasta que el volumen de eventos de un día sea real; no son requisito para captar.
+
+**Consecuencia operativa:** el frente 6 de captación (§4) es ejecutable ya, sin esperar a nada de producto. Lo único que sigue frenando ese perfil es el KYC de 5 documentos (§5, verificación progresiva) — próxima decisión de producto sobre la mesa.
 
 ### 2026-07-24 (noche++++) — Eventos de un día y periódicos: de marketplace de retiros a plataforma de actividades de bienestar
 

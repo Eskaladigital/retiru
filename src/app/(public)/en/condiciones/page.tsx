@@ -30,7 +30,7 @@ export default function CondicionesPageEn() {
             How charges work
           </h2>
           <p className="text-[15px] leading-relaxed text-foreground mb-4">
-            The organizer sets the <strong>PVP</strong> (listed price per person, minimum €50): that is what you see on the page, with <strong>no extra surcharges</strong>. For most retreats, when booking <strong>you pay 100% of the PVP by card</strong> via Stripe in one step. If the retreat has a minimum group size that is not yet met, you may reserve a spot without paying until the minimum is reached; you will then receive a link to pay within the stated deadline.
+            The organizer sets the <strong>PVP</strong> (listed price per person): that is what you see on the page — for multi-day retreats and one-day events (classes, workshops, sessions) alike — with <strong>no extra surcharges</strong>. For most retreats, when booking <strong>you pay 100% of the PVP by card</strong> via Stripe in one step. If the retreat has a minimum group size that is not yet met, you may reserve a spot without paying until the minimum is reached; you will then receive a link to pay within the stated deadline.
           </p>
 
           <div className="bg-sand-100 rounded-2xl p-6 md:p-8">
@@ -91,6 +91,10 @@ export default function CondicionesPageEn() {
               <li className="flex gap-3">
                 <span className="text-terracotta-600 font-bold">•</span>
                 <span><strong>Each retreat permanently keeps its tier.</strong> Your 1st retreat is always at 0%, the 2nd at 10%, regardless of how many you publish later.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-terracotta-600 font-bold">•</span>
+                <span><strong>Recurring events count as a single retreat:</strong> if you publish a class or workshop that repeats (e.g. weekly), the whole series occupies one commission tier, no matter how many dates take place.</span>
               </li>
             </ul>
           </div>
