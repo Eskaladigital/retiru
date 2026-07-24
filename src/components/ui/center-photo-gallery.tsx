@@ -6,18 +6,16 @@ import Image from 'next/image';
 type Props = {
   name: string;
   images: string[];
-  /** Etiqueta accesible del botón miniatura (ES/EN). */
-  thumbLabel?: (index: number) => string;
+  locale?: 'es' | 'en';
 };
 
-export function CenterPhotoGallery({ name, images, thumbLabel }: Props) {
+export function CenterPhotoGallery({ name, images, locale = 'es' }: Props) {
   const urls = images.filter((u, i, arr) => !!u && arr.indexOf(u) === i);
   const [active, setActive] = useState(0);
 
   if (!urls.length) return null;
 
   const hero = urls[Math.min(active, urls.length - 1)];
-  const label = thumbLabel ?? ((i: number) => `Ver foto ${i + 1}`);
 
   return (
     <div className="mb-4 space-y-3">
@@ -36,13 +34,17 @@ export function CenterPhotoGallery({ name, images, thumbLabel }: Props) {
         <div className="flex gap-3 overflow-x-auto pb-1" role="list">
           {urls.map((img, i) => {
             const selected = i === active;
+            const aria =
+              locale === 'en'
+                ? `View photo ${i + 1} of ${name}`
+                : `Ver foto ${i + 1} de ${name}`;
             return (
               <button
                 key={img}
                 type="button"
                 role="listitem"
                 onClick={() => setActive(i)}
-                aria-label={label(i)}
+                aria-label={aria}
                 aria-pressed={selected}
                 className={`relative w-32 h-24 rounded-xl overflow-hidden shrink-0 bg-sand-100 transition ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta-500 ${
                   selected ? 'ring-2 ring-terracotta-500 opacity-100' : 'opacity-80 hover:opacity-100'

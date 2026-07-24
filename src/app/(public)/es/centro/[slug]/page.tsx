@@ -76,11 +76,7 @@ export default async function CentroDetailPage({ params }: Props) {
   return (
     <div className="container-wide py-12">
       {galleryAll.length > 0 && (
-        <CenterPhotoGallery
-          name={C.name}
-          images={galleryAll}
-          thumbLabel={(i) => `Ver foto ${i + 1} de ${C.name}`}
-        />
+        <CenterPhotoGallery name={C.name} images={galleryAll} locale="es" />
       )}
 
       <nav className="mb-6 flex items-center gap-1 text-xs text-muted-foreground flex-wrap">
