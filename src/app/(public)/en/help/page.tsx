@@ -51,7 +51,7 @@ const SECTIONS = [
       },
       {
         q: 'Can I publish a recurring event (e.g. every Tuesday)?',
-        a: 'Yes. When creating the event, check "Recurring event" and set how often it repeats (7 = weekly). Retiru automatically publishes the upcoming dates and opens a new one as each date passes; listings only show the nearest date. From your panel you can close dates with no bookings (holidays) or stop the series at any time, and the whole series counts as a single retreat for your commission tier.',
+        a: 'Yes. When creating the event, check "Recurring event" and set how often it repeats (7 = weekly); you can also make an existing event recurring from its edit page. Retiru automatically publishes the upcoming dates and opens a new one as each date passes; listings only show the nearest date. From your panel you can close dates with no bookings (holidays) or stop the series at any time, and the whole series counts as a single retreat for your commission tier.',
       },
       {
         q: 'Can I generate the cover image with AI?',

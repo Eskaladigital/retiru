@@ -172,6 +172,63 @@ export async function ensureSeriesOccurrences(admin: Admin, seriesId: string): P
   return { created };
 }
 
+export interface SeriesInfo {
+  id: string;
+  interval_days: number;
+  is_active: boolean;
+  series_end_date: string | null;
+  occurrences: { id: string; start_date: string; status: string; active_bookings: number }[];
+}
+
+/**
+ * Datos de la serie para el panel del organizador: recurrencia y fechas
+ * futuras publicadas con su nº de reservas activas (para saber cuáles se
+ * pueden cerrar por vacaciones).
+ */
+export async function getSeriesInfoForRetreat(admin: Admin, seriesId: string): Promise<SeriesInfo | null> {
+  const { data: series } = await admin
+    .from('retreat_series')
+    .select('id, interval_days, is_active, series_end_date')
+    .eq('id', seriesId)
+    .maybeSingle();
+  if (!series) return null;
+
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: occurrences } = await admin
+    .from('retreats')
+    .select('id, start_date, status')
+    .eq('series_id', series.id)
+    .eq('status', 'published')
+    .gte('start_date', today)
+    .order('start_date', { ascending: true });
+
+  const occIds = (occurrences || []).map((o) => o.id as string);
+  const bookingCounts = new Map<string, number>();
+  if (occIds.length > 0) {
+    const { data: bookings } = await admin
+      .from('bookings')
+      .select('retreat_id')
+      .in('retreat_id', occIds)
+      .in('status', ['reserved_no_payment', 'pending_payment', 'pending_confirmation', 'confirmed']);
+    for (const b of bookings || []) {
+      bookingCounts.set(b.retreat_id as string, (bookingCounts.get(b.retreat_id as string) || 0) + 1);
+    }
+  }
+
+  return {
+    id: series.id as string,
+    interval_days: series.interval_days as number,
+    is_active: Boolean(series.is_active),
+    series_end_date: (series.series_end_date as string | null) ?? null,
+    occurrences: (occurrences || []).map((o) => ({
+      id: o.id as string,
+      start_date: o.start_date as string,
+      status: o.status as string,
+      active_bookings: bookingCounts.get(o.id as string) || 0,
+    })),
+  };
+}
+
 /**
  * Nº de «retiros con reservas pagadas» para el tier de comisión, contando cada
  * serie una sola vez (si no, un evento semanal llegaría al 20 % en dos semanas).

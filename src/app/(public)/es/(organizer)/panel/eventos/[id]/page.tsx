@@ -1,6 +1,7 @@
 import { redirect, notFound } from 'next/navigation';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
 import { EditarEventoForm } from '@/app/(public)/es/(dashboard)/mis-eventos/[id]/EditarEventoForm';
+import { getSeriesInfoForRetreat } from '@/lib/series';
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -39,51 +40,7 @@ export default async function PanelEditarEventoPage({ params }: Props) {
   if (!retreat) notFound();
 
   // Evento periódico: serie y fechas programadas
-  let seriesInfo = null;
-  if (retreat.series_id) {
-    const { data: series } = await admin
-      .from('retreat_series')
-      .select('id, interval_days, is_active, series_end_date')
-      .eq('id', retreat.series_id)
-      .maybeSingle();
-
-    if (series) {
-      const today = new Date().toISOString().slice(0, 10);
-      const { data: occurrences } = await admin
-        .from('retreats')
-        .select('id, start_date, status')
-        .eq('series_id', series.id)
-        .eq('status', 'published')
-        .gte('start_date', today)
-        .order('start_date', { ascending: true });
-
-      const occIds = (occurrences || []).map((o: any) => o.id);
-      const bookingCounts = new Map<string, number>();
-      if (occIds.length > 0) {
-        const { data: bookings } = await admin
-          .from('bookings')
-          .select('retreat_id')
-          .in('retreat_id', occIds)
-          .in('status', ['reserved_no_payment', 'pending_payment', 'pending_confirmation', 'confirmed']);
-        for (const b of bookings || []) {
-          bookingCounts.set(b.retreat_id, (bookingCounts.get(b.retreat_id) || 0) + 1);
-        }
-      }
-
-      seriesInfo = {
-        id: series.id as string,
-        interval_days: series.interval_days as number,
-        is_active: Boolean(series.is_active),
-        series_end_date: (series.series_end_date as string | null) ?? null,
-        occurrences: (occurrences || []).map((o: any) => ({
-          id: o.id as string,
-          start_date: o.start_date as string,
-          status: o.status as string,
-          active_bookings: bookingCounts.get(o.id) || 0,
-        })),
-      };
-    }
-  }
+  const seriesInfo = retreat.series_id ? await getSeriesInfoForRetreat(admin, retreat.series_id) : null;
 
   const { data: categories } = await admin
     .from('categories')

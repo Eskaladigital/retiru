@@ -203,6 +203,38 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
     finally { setActing(false); }
   }
 
+  // Convertir un evento normal en periódico desde la edición
+  const [convertOpen, setConvertOpen] = useState(false);
+  const [convInterval, setConvInterval] = useState('7');
+  const [convAhead, setConvAhead] = useState('4');
+  const [convEnd, setConvEnd] = useState('');
+
+  async function handleConvertToSeries() {
+    setActing(true);
+    setError('');
+    try {
+      const res = await fetch('/api/retreats/series', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          retreatId: retreat.id,
+          interval_days: convInterval,
+          occurrences_ahead: convAhead,
+          series_end_date: convEnd || null,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setSuccess(data.message || 'Evento convertido en periódico.');
+        setConvertOpen(false);
+        router.refresh();
+      } else {
+        setError(data.error || 'Error al convertir en periódico');
+      }
+    } catch { setError('Error de conexión'); }
+    finally { setActing(false); }
+  }
+
   async function handleCloseDate(occurrenceId: string, dateLabel: string) {
     if (!confirm(`¿Cerrar la fecha del ${dateLabel}? No se volverá a generar (vacaciones).`)) return;
     setActing(true);
@@ -710,6 +742,55 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
             >
               Detener serie
             </button>
+          )}
+        </div>
+      )}
+
+      {/* Evento normal: convertir en periódico */}
+      {!series && !isAdmin && !['cancelled', 'archived'].includes(retreat.status) && (
+        <div className="border border-sand-200 rounded-xl p-5">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={convertOpen}
+              onChange={(e) => setConvertOpen(e.target.checked)}
+              className="w-4 h-4 accent-terracotta-600"
+            />
+            <span className="text-sm font-medium text-foreground">Convertir en evento periódico (se repite)</span>
+          </label>
+          <p className="text-xs text-[#7a6b5d] mt-1.5">
+            Retiru publicará automáticamente las próximas fechas con esta misma ficha. En los listados solo aparece la fecha más próxima.
+          </p>
+          {convertOpen && (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">Se repite cada (días) *</label>
+                  <input type="number" min="1" max="90" value={convInterval} onChange={(e) => setConvInterval(e.target.value)} className={inputCls} />
+                  <p className="text-xs text-[#7a6b5d] mt-1">7 = semanal (mismo día de la semana), 14 = quincenal.</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">Fechas abiertas a la vez</label>
+                  <select value={convAhead} onChange={(e) => setConvAhead(e.target.value)} className={inputCls}>
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => <option key={n} value={String(n)}>{n}</option>)}
+                  </select>
+                  <p className="text-xs text-[#7a6b5d] mt-1">Siempre habrá estas fechas futuras reservables; al pasar una, se abre la siguiente.</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">Fin de la serie (opcional)</label>
+                  <input type="date" value={convEnd} onChange={(e) => setConvEnd(e.target.value)} className={inputCls} />
+                  <p className="text-xs text-[#7a6b5d] mt-1">Si lo dejas vacío, la serie sigue hasta que la detengas.</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleConvertToSeries}
+                disabled={saving || acting || !(parseInt(convInterval, 10) >= 1 && parseInt(convInterval, 10) <= 90)}
+                className="mt-4 bg-terracotta-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-terracotta-700 transition-colors disabled:opacity-50"
+              >
+                {acting ? 'Convirtiendo…' : 'Activar recurrencia'}
+              </button>
+            </>
           )}
         </div>
       )}

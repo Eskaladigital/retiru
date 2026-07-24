@@ -1,8 +1,10 @@
 # RETIRU — Marketplace de Retiros y Escapadas
 
-Plataforma web bilingüe (ES/EN) donde las personas descubren y reservan retiros y eventos centrados en **yoga, meditación y ayurveda**, y los organizadores publican y gestionan sus retiros sin cuota de suscripción (comisión escalonada por retiro).
+Plataforma web bilingüe (ES/EN) donde las personas descubren y reservan retiros y eventos centrados en **yoga, meditación y ayurveda**, y los organizadores publican y gestionan sus eventos sin cuota de suscripción (comisión escalonada por retiro).
 
 > "Airbnb de los retiros" — pensado para España y el mercado hispanohablante. Los **retiros se organizan desde España** pero pueden **celebrarse también en Marruecos y Portugal** (destinos internacionales habilitados en la tabla `destinations`).
+
+**Amplitud de la oferta (desde 2026-07-24):** además de retiros de varios días, la plataforma soporta **eventos de un día** con duración en horas (clases de yoga, sesiones de terapia, talleres, experiencias de bienestar…) y **eventos periódicos** (una clase semanal se publica una vez y Retiru mantiene vivas las próximas fechas automáticamente). Sin precio mínimo (PVP > 0 €). Ver secciones «Eventos periódicos» y «Precio público».
 
 ---
 
@@ -868,7 +870,7 @@ En el wizard de **Mis eventos** el organizador indica el **PVP por persona** (pr
 
 ### Eventos periódicos (series con ocurrencias)
 
-Un evento puede marcarse como **periódico** en el wizard («se repite cada N días»; 7 = semanal, 14 = quincenal), pensado sobre todo para eventos de un día (p. ej. clase de yoga al atardecer). Los eventos de un día (`start_date = end_date`) indican además su **duración en horas** (`retreats.duration_hours`). Funcionamiento:
+Un evento puede marcarse como **periódico** en el wizard al crearlo («se repite cada N días»; 7 = semanal, 14 = quincenal) **o convertirse después** desde la edición en el panel («Convertir en evento periódico», `POST /api/retreats/series`). Pensado sobre todo para eventos de un día (p. ej. clase de yoga al atardecer). Los eventos de un día (`start_date = end_date`) indican además su **duración en horas** (`retreats.duration_hours`). Funcionamiento:
 
 - La recurrencia se guarda en la tabla **`retreat_series`** (migración 051): `interval_days`, `occurrences_ahead` (cuántas fechas futuras se mantienen publicadas, por defecto 4, máx. 8), `series_end_date` opcional y `skip_dates` (fechas cerradas por vacaciones).
 - Cada fecha es una **fila normal de `retreats`** (ocurrencia) clonada del master al publicarse este, con su propio slug (`slug-master-AAAAMMDD`), aforo y reservas: checkout, SLA, recordatorios y reseñas funcionan sin cambios. **No se generan infinitas filas**: horizonte rodante repuesto por el cron diario `series-occurrences` (`src/lib/series.ts` → `ensureSeriesOccurrences`).

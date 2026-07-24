@@ -362,6 +362,7 @@ Protegido por middleware y comprobación de admin. No indexado en buscadores.
 | PATCH | `/api/retreats/[id]` | Actualizar retiro (solo propietario) |
 | POST | `/api/retreats/[id]` | Cancelar retiro (propietario, action=cancel) |
 | DELETE | `/api/retreats/[id]` | Eliminar retiro (propietario, solo sin reservas confirmadas) |
+| POST | `/api/retreats/series` | Convertir un evento existente en periódico (propietario): crea la serie con el evento como master; si ya está publicado genera las ocurrencias al momento |
 | POST | `/api/retreats/series/[id]` | Gestión de serie de evento periódico (propietario): `close_date` cierra una fecha sin reservas (vacaciones, se añade a `skip_dates`) y `stop` detiene la serie |
 | POST | `/api/storage/retreat-images` | Subir imagen al bucket `retreat-images` con service role (legacy/integraciones; el wizard del organizador usa subida directa desde el cliente para evitar límite de tamaño del body en serverless) |
 | PATCH | `/api/profile` | Actualizar perfil propio (`full_name`, `phone` obligatorio con ≥9 dígitos, `bio`) |

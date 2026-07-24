@@ -85,6 +85,7 @@ Prioridad: **impresiones altas + intent alineado con el negocio**, no solo la ma
 | 3 | **Llamadas conserje a 30–50 centros top** | No a los 592: elegir los mejor valorados en provincias con buenas landings. Oferta concreta: *«tu primer retiro publica con 0 % de comisión y te montamos nosotros la ficha con tus fotos y textos»*. Onboarding tipo conserje. | 🔴 Pendiente |
 | 4 | **Organizadores con audiencia propia** | Profesores con Instagram activo que ya llenan retiros por WhatsApp. Pitch: «usa Retiru como herramienta de reservas y cobro, primer retiro al 0 %». Traen sus propios asistentes → eventos, reseñas y tráfico. | 🔴 Pendiente |
 | 5 | **Instagram con contenido real** | Ir sustituyendo fotos IA por vídeos/fotos/contenido propio. Ritmo constante y sencillo; es mantenimiento de credibilidad, no canal principal. | 🟡 En curso (compromiso del equipo) |
+| 6 | **Captar profesores/terapeutas para clases y sesiones periódicas** | Nuevo desde 2026-07-24: el producto soporta eventos de un día (horas) y periódicos (serie semanal = inventario futuro que **no caduca**, el cron repone fechas solo). Pitch: *«publica tu clase semanal una vez y olvídate: cobras online, la serie entera cuenta como un solo retiro para la comisión (0 % la primera)»*. Mismo perfil que el frente 4 pero con barrera de entrada mucho menor que un retiro. | 🔴 Pendiente (producto listo, falta outreach) |
 
 **Leyenda de estados:** 🔴 Pendiente · 🟡 En curso · 🟢 Hecho · ⚪ Descartado.
 
@@ -113,6 +114,8 @@ Prioridad: **impresiones altas + intent alineado con el negocio**, no solo la ma
 
 **Estado:** 🔴 Propuesta pendiente de decisión e implementación. Si se aprueba, toca: wizard de eventos, `/es/panel/verificacion`, contrato del organizador (`src/lib/legal/organizer-contract.tsx`), páginas públicas (`/es/para-organizadores`, `/es/ayuda`, `/es/condiciones`) y README (regla `documentacion-sync.mdc`).
 
+**Actualización 2026-07-24:** la mitad «producto» de los dos niveles de evento **ya existe**: eventos de un día con duración en horas, PVP sin mínimo (> 0 €) y eventos periódicos (series). Lo que sigue pendiente es la mitad «verificación»: hoy la profesora de la clase de 15 € pasa por el mismo KYC de 5 documentos que el retiro de 900 €. Con el producto listo, esta propuesta pasa de «mejora deseable» a **cuello de botella directo** del frente 6 de captación.
+
 ---
 
 ## 6. Mejoras de producto propuestas
@@ -122,22 +125,48 @@ Prioridad: **impresiones altas + intent alineado con el negocio**, no solo la ma
 | **Landings de retiros nunca vacías** | Cuando un listado se queda sin retiros futuros: mostrar ediciones pasadas marcadas «celebrado» + CTA a organizadores / listado general. Helper `getPastPublishedRetreats` + `PastRetreatsFallback` en las 6 landings cat/destino ES+EN. | 🟢 Hecho (2026-07-24) |
 | **Aviso «habla con nosotros» en verificación** | Ver §5. Independiente del resto de la verificación progresiva; se puede hacer primero. | 🔴 Pendiente |
 | **Verificación progresiva completa** | Ver §5. | 🔴 Pendiente de decisión |
+| **Eventos de un día (duración en horas) + PVP sin mínimo** | Abre la plataforma a clases, sesiones de terapia, talleres y experiencias (gastronómicas, de bienestar…). Migraciones 049–050. | 🟢 Hecho (2026-07-24) |
+| **Eventos periódicos (series con ocurrencias)** | Una clase semanal se publica una vez; el cron mantiene 1–8 fechas futuras vivas (horizonte rodante), cierre de fechas por vacaciones, detener serie, conversión de evento existente en periódico. En listados solo la próxima fecha; la serie cuenta como 1 retiro para la comisión. Migración 051. | 🟢 Hecho (2026-07-24) |
 
 ---
 
 ## 7. Backlog de decisiones pendientes
 
-- [ ] Aprobar (o no) el modelo de **verificación progresiva** y los **dos niveles de evento** (§5).
+- [ ] Aprobar (o no) el modelo de **verificación progresiva** (§5) — la mitad «producto» de los dos niveles de evento ya está hecha (2026-07-24); falta la mitad «requisitos por tipo de evento».
 - [ ] Definir el **N** exacto del objetivo de inventario (propuesto: 5 retiros futuros).
 - [ ] Elegir las **provincias objetivo** y la lista de 30–50 centros para la ronda de llamadas conserje.
 - [ ] Decidir calendario de lanzamiento de la campaña de claims (#1 → #2 → #3).
 - [ ] Definir el ritmo mínimo de publicación en Instagram (p. ej. 2–3 piezas/semana de contenido real).
+- [ ] **Separación clases vs retiros en UX/SEO:** cuando haya volumen de eventos de un día, decidir si los listados necesitan facetas/etiquetas («Clase», «Taller», «Retiro»), landings propias tipo «clases de yoga en [ciudad]» (ataca `yoga classes near me`, 644 imp. pos. 10) y cómo evitar que un buscador de «retiro yoga» aterrice en una página dominada por clases de 2 h.
+- [ ] **Naming/posicionamiento:** ¿Retiru sigue siendo «marketplace de retiros y escapadas» o pasa a «retiros, clases y experiencias de bienestar»? Afecta a home, metas y pitch de captación.
 
 ---
 
 ## 8. Diario de sesiones
 
 > Añadir cada sesión **arriba** (orden cronológico inverso). Formato: fecha, reflexiones planteadas, análisis/correcciones del agente, decisiones, trabajo ejecutado.
+
+### 2026-07-24 (noche++++) — Eventos de un día y periódicos: de marketplace de retiros a plataforma de actividades de bienestar
+
+**Reflexión del equipo:** con los eventos de un día (duración en horas), el precio sin mínimo y los eventos periódicos, cualquiera puede publicar una clase de yoga, una sesión de terapia o incluso un evento gastronómico. ¿Es el gran cambio que amplía el espectro de oferta de la web?
+
+**Análisis del agente (pros):**
+1. **Ataca directamente el cuello de botella del §1 (oferta) y lo hace de forma estructural:** una clase semanal es inventario futuro que *no caduca* — el cron repone fechas solo. El problema de «el inventario se seca» (8 retiros pasados, 0 vigentes) no existe para las series.
+2. **La demanda ya estaba medida:** la consulta nº 1 del sitio en GSC es `yoga classes near me` (644 imp., pos. 10), por delante de cualquier término de retiro. Hasta ahora no había producto que ofrecerle; ahora sí.
+3. **Baja la barrera de captación:** pedir a una profesora que publique su clase de los martes es una venta mucho más fácil que pedirle un retiro de 3 días. Y es el **embudo** ya descrito en §5: quien publica clases hoy organiza su primer retiro en un año, ya dentro de la plataforma. Nuevo frente 6 en §4.
+4. **Efectos compuestos:** más eventos → más reseñas y más rotación de fechas → más señales de vida para Google y más confianza para el comprador de retiros (ticket alto).
+5. **Coste de oportunidad casi nulo:** la infraestructura (checkout, SLA, reseñas, recordatorios) se reutiliza entera; una serie cuenta como 1 retiro en la comisión, así que no rompe el modelo.
+
+**Análisis del agente (contras / riesgos):**
+1. **Economics por reserva:** 20 % de una clase de 15 € son 3 €, y Stripe se lleva parte. Las clases no son negocio por sí mismas: son **tráfico, hábito y embudo**. No desviar esfuerzo comercial del producto que paga las facturas (retiros).
+2. **Dilución de marca/UX:** «Retiru — retiros y escapadas» con listados dominados por clases de 2 h puede confundir al buscador de retiros. Mitigación en backlog §7: facetas/etiquetas por tipo de evento y, más adelante, landings propias de clases.
+3. **Competencia distinta:** en clases se compite con Google Maps, gimnasios y el WhatsApp del profesor (gratis). El valor diferencial de Retiru ahí es cobro online + página reservable + reseñas, no el descubrimiento.
+4. **El KYC es ahora el cuello de botella (§5):** exigir 5 documentos para publicar una clase de 15 € anula la ventaja de la barrera baja. La verificación progresiva sube de prioridad.
+5. **Moderación:** más eventos pequeños = más cola de revisión (las ocurrencias clonadas no pasan por revisión, eso ya está resuelto; los eventos nuevos sí).
+
+**Decisiones:** ninguna formal; añadidas dos al backlog §7 (separación clases vs retiros en UX/SEO; naming/posicionamiento). El frente 6 de captación queda definido y listo para ejecutar.
+
+**Trabajo ejecutado (producto, 2 commits previos + este):** migraciones 049 (PVP > 0), 050 (`duration_hours`), 051 (`retreat_series` + `series_id`/`is_series_next`); generador de ocurrencias (`src/lib/series.ts`); cron diario `series-occurrences`; toggle de recurrencia en el wizard + conversión de evento existente en periódico desde la edición (`POST /api/retreats/series`); listados/sitemap con solo la próxima fecha; chips «próximas fechas» en ficha ES/EN; panel con fechas programadas, cierre por vacaciones y detener serie; serie = 1 retiro para comisión. Documentación: README (posicionamiento y sección nueva), ROUTES, SCHEMA-REVIEW, FAQ de para-organizadores y ayuda ES+EN, y este cuaderno.
 
 ### 2026-07-24 (noche+++) — Deploy verificado + landing ayurveda creada
 
