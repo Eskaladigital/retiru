@@ -139,6 +139,14 @@ Prioridad: **impresiones altas + intent alineado con el negocio**, no solo la ma
 
 > Añadir cada sesión **arriba** (orden cronológico inverso). Formato: fecha, reflexiones planteadas, análisis/correcciones del agente, decisiones, trabajo ejecutado.
 
+### 2026-07-24 (noche+++) — Deploy verificado + landing ayurveda creada
+
+**Deploy:** commits `3a35b1a` + `cdd0141` (fix typecheck) + `ce7d7e6` (fix galería: no pasar funciones a client components) en producción. Barrido de **1.010 URLs** (todas las fichas de centro ES+EN + páginas clave): **1.009 OK**.
+
+**Hallazgo importante:** el único 404 era `/es/retiros-ayurveda` — la categoría `ayurveda` **no existía en la tabla `categories`** (el §3bis asumía que la landing existía). `retiro ayurveda` (279 imp., pos. 61) apuntaba a un 404: imposible posicionar.
+
+**Fix:** insertada categoría `ayurveda` por script (intro ES/EN, meta ES/EN, FAQ formato `{question, answer}`, icono, sort_order 3). `/es/retiros-ayurveda` y `/en/retreats-ayurveda` ya responden **200**.
+
 ### 2026-07-24 (noche++) — Prohibido Place Photo (coste)
 
 **Decisión:** no usar Google Places Photo API. Las imágenes las aportan los centros o se buscan fuera de Google API.
