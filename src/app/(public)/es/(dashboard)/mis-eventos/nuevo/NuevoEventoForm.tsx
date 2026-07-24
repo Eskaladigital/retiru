@@ -753,7 +753,7 @@ export function NuevoEventoForm({ categories, destinations, eventsHubPath = '/es
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">Fecha fin *</label>
-                <input type="date" value={form.end_date} onChange={(e) => set('end_date', e.target.value)} className={inputCls} />
+                <input type="date" min={form.start_date || undefined} value={form.end_date} onChange={(e) => set('end_date', e.target.value)} className={inputCls} />
               </div>
             </div>
             <div>
@@ -918,7 +918,7 @@ export function NuevoEventoForm({ categories, destinations, eventsHubPath = '/es
           <>
             <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">PVP por persona (€) *</label>
-              <input type="number" min="50" value={form.total_price} onChange={(e) => set('total_price', e.target.value)} placeholder="790" className={`${inputCls} max-w-xs`} />
+              <input type="number" min="1" step="0.01" value={form.total_price} onChange={(e) => set('total_price', e.target.value)} placeholder="790" className={`${inputCls} max-w-xs`} />
               <p className="text-xs text-[#7a6b5d] mt-1.5 leading-relaxed max-w-2xl">
                 <strong className="text-foreground">PVP</strong> = precio de venta público: lo que paga cada asistente en Retiru (no se suma nada más en el pago).
                 La comisión de Retiru depende de tu nivel: <strong className="text-foreground">0&nbsp;%</strong> en tu primer retiro, <strong className="text-foreground">10&nbsp;%</strong> en el segundo, <strong className="text-foreground">20&nbsp;%</strong> a partir del tercero. El desglose lo detalla.

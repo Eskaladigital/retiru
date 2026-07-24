@@ -37,6 +37,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Faltan campos obligatorios' }, { status: 400 });
     }
 
+    if (end_date < start_date) {
+      return NextResponse.json({ error: 'La fecha de fin no puede ser anterior a la de inicio' }, { status: 400 });
+    }
+
+    const priceN = parseFloat(String(total_price));
+    if (Number.isNaN(priceN) || priceN <= 0) {
+      return NextResponse.json({ error: 'El PVP por persona debe ser mayor que 0 €' }, { status: 400 });
+    }
+
     const maxN = parseInt(String(max_attendees), 10);
     if (Number.isNaN(maxN) || maxN < 1) {
       return NextResponse.json({ error: 'Plazas máximas no válidas' }, { status: 400 });
@@ -101,7 +110,7 @@ export async function POST(request: NextRequest) {
       excludes_en: excludes_en || [],
       start_date,
       end_date,
-      total_price: parseFloat(total_price),
+      total_price: priceN,
       commission_percent: commissionPercent,
       max_attendees: maxN,
       min_attendees: minN,

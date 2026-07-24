@@ -138,7 +138,25 @@ export async function PATCH(
     if (includes_en !== undefined) updateData.includes_en = includes_en;
     if (start_date !== undefined) updateData.start_date = start_date;
     if (end_date !== undefined) updateData.end_date = end_date;
-    if (total_price !== undefined) updateData.total_price = parseFloat(total_price);
+    if (start_date !== undefined || end_date !== undefined) {
+      let s: string | undefined = start_date;
+      let e: string | undefined = end_date;
+      if (s === undefined || e === undefined) {
+        const { data: cur } = await admin.from('retreats').select('start_date, end_date').eq('id', id).single();
+        s = s ?? (cur?.start_date as string | undefined);
+        e = e ?? (cur?.end_date as string | undefined);
+      }
+      if (s && e && e < s) {
+        return NextResponse.json({ error: 'La fecha de fin no puede ser anterior a la de inicio' }, { status: 400 });
+      }
+    }
+    if (total_price !== undefined) {
+      const priceN = parseFloat(String(total_price));
+      if (Number.isNaN(priceN) || priceN <= 0) {
+        return NextResponse.json({ error: 'El PVP por persona debe ser mayor que 0 €' }, { status: 400 });
+      }
+      updateData.total_price = priceN;
+    }
     if (max_attendees !== undefined) {
       const m = parseInt(String(max_attendees), 10);
       if (Number.isNaN(m) || m < 1) {
