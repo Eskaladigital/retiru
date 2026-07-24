@@ -360,7 +360,7 @@ Protegido por middleware y comprobación de admin. No indexado en buscadores.
 | POST | `/api/admin/blog/generate-cover-image` | Portada IA de artículo de blog (solo admin): título, extracto, contenido, categoría; mismo agente GPT-4o×2 + GPT Image 1.5; bucket `retreat-images` (`blog/ai-cover-*`) |
 | POST | `/api/centers/generate-cover-image` | Portada IA de centro (propietario reclamado o admin; también prealta sin `center_id`): nombre, descripción, tipo, ubicación, servicios; mismo agente; bucket `centers` (`{centerId}/ai-cover-*` o `generated/ai-cover-*`) |
 | PATCH | `/api/retreats/[id]` | Actualizar retiro (solo propietario) |
-| POST | `/api/retreats/[id]` | Cancelar retiro (propietario, action=cancel) |
+| POST | `/api/retreats/[id]` | Cancelar retiro (propietario, action=cancel): marca las reservas activas como `cancelled_by_organizer`, reembolsa el 100 % vía Stripe a las pagadas y notifica a los asistentes |
 | DELETE | `/api/retreats/[id]` | Eliminar retiro (propietario, solo sin reservas confirmadas) |
 | POST | `/api/retreats/series` | Convertir un evento existente en periódico (propietario): crea la serie con el evento como master; si ya está publicado genera las ocurrencias al momento |
 | POST | `/api/retreats/series/[id]` | Gestión de serie de evento periódico (propietario): `close_date` cierra una fecha sin reservas (vacaciones, se añade a `skip_dates`) y `stop` detiene la serie |
@@ -378,6 +378,7 @@ Protegido por middleware y comprobación de admin. No indexado en buscadores.
 | POST | `/api/checkout` | Reserva/pago: con `{ retreatId }` crea Stripe Checkout **o** reserva sin pago (`reserved_no_payment`) si el retiro tiene `min_attendees > 1` y aún no se alcanzó el mínimo; respuesta puede incluir `{ reserved: true, bookingId }`. Con `{ bookingId }` (reserva existente) crea sesión Stripe para pagar antes del deadline |
 | POST | `/api/webhooks/stripe` | Webhook Stripe (checkout.session.completed, charge.refunded) |
 | PATCH | `/api/bookings/[id]` | Organizador confirma/rechaza reserva |
+| POST | `/api/bookings/[id]` | Asistente cancela su reserva (action=cancel): aplica la garantía Retiru de 48 h y los tramos de la política del evento, reembolsa vía Stripe (total o parcial) y avisa por email a ambas partes |
 | GET | `/api/bookings/[id]/form` | Obtener formulario post-reserva del asistente |
 | POST | `/api/bookings/[id]/form` | Guardar respuestas del formulario post-reserva |
 | GET | `/api/organizer/commission-tier` | Nivel de comisión escalonada del organizador autenticado (para formulario PVP) |

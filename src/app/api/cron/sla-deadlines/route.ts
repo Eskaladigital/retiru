@@ -3,6 +3,9 @@
 // (organizadores con `confirmation_type: 'manual'` que no han confirmado a
 // tiempo) y notifica al asistente con `sendBookingExpiredEmail`. Si hubo pago,
 // emite reembolso completo del PaymentIntent.
+// También expira solicitudes sin pago (`reserved_no_payment` con sla_deadline
+// y sin organizer_approved_at, flujo de confirmación manual sin pago por
+// adelantado): no hay nada que reembolsar.
 //
 // Programación recomendada (vercel.json): cada hora; el coste es bajo porque la
 // query filtra por `sla_deadline < now`. Se puede mantener junto a payment-deadlines.
@@ -28,7 +31,7 @@ export async function POST(request: NextRequest) {
   let refundFailed = 0;
 
   try {
-    const { data: expired } = await admin
+    const { data: expiredPaid } = await admin
       .from('bookings')
       .select(`
         id, booking_number, retreat_id, attendee_id, total_price,
@@ -39,6 +42,22 @@ export async function POST(request: NextRequest) {
       .eq('status', 'pending_confirmation')
       .not('sla_deadline', 'is', null)
       .lt('sla_deadline', now);
+
+    // Solicitudes sin pago que el organizador no ha respondido a tiempo
+    const { data: expiredRequests } = await admin
+      .from('bookings')
+      .select(`
+        id, booking_number, retreat_id, attendee_id, total_price,
+        stripe_payment_intent_id, status, sla_deadline,
+        retreats!retreat_id(title_es, title_en),
+        profiles!attendee_id(email, preferred_locale)
+      `)
+      .eq('status', 'reserved_no_payment')
+      .is('organizer_approved_at', null)
+      .not('sla_deadline', 'is', null)
+      .lt('sla_deadline', now);
+
+    const expired = [...(expiredPaid || []), ...(expiredRequests || [])];
 
     for (const bk of expired || []) {
       await admin
@@ -78,6 +97,7 @@ export async function POST(request: NextRequest) {
             locale,
             eventTitle,
             bookingNumber: bk.booking_number,
+            wasPaid: !!bk.stripe_payment_intent_id,
           });
           emailed++;
         } catch (e) {

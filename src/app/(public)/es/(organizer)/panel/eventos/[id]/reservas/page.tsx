@@ -20,6 +20,9 @@ interface BookingRow {
   organizer_notes: string | null;
   created_at: string;
   confirmed_at: string | null;
+  organizer_approved_at: string | null;
+  sla_deadline: string | null;
+  payment_deadline: string | null;
   profiles: { id: string; full_name: string; email: string; phone: string | null; avatar_url: string | null } | null;
 }
 
@@ -27,10 +30,12 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   confirmed: { label: 'Confirmada', color: 'bg-sage-100 text-sage-700' },
   pending_confirmation: { label: 'Pendiente', color: 'bg-amber-100 text-amber-700' },
   pending_payment: { label: 'Pago pendiente', color: 'bg-amber-100 text-amber-700' },
+  reserved_no_payment: { label: 'Reserva sin pago', color: 'bg-blue-100 text-blue-700' },
   completed: { label: 'Completada', color: 'bg-sand-200 text-foreground' },
   cancelled_by_attendee: { label: 'Cancelada', color: 'bg-red-100 text-red-700' },
   cancelled_by_organizer: { label: 'Cancelada', color: 'bg-red-100 text-red-700' },
   rejected: { label: 'Rechazada', color: 'bg-red-100 text-red-700' },
+  sla_expired: { label: 'Expirada', color: 'bg-sand-200 text-foreground' },
 };
 
 export default function ReservasEventoPage() {
@@ -39,6 +44,7 @@ export default function ReservasEventoPage() {
   const eventsBase = organizerEventsBase(organizerLocaleFromPathname(pathname));
   const retreatId = params.id as string;
   const [bookings, setBookings] = useState<BookingRow[]>([]);
+  const [confirmationType, setConfirmationType] = useState<string>('automatic');
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
@@ -46,7 +52,10 @@ export default function ReservasEventoPage() {
     try {
       const res = await fetch(`/api/organizer/events/${retreatId}/bookings`);
       const data = await res.json();
-      if (res.ok) setBookings(data.bookings || []);
+      if (res.ok) {
+        setBookings(data.bookings || []);
+        if (data.confirmationType) setConfirmationType(data.confirmationType);
+      }
     } catch {
       // ignore
     } finally {
@@ -145,9 +154,15 @@ export default function ReservasEventoPage() {
             </thead>
             <tbody>
               {bookings.map((b) => {
-                const s = STATUS_LABELS[b.status] || { label: b.status, color: 'bg-sand-200 text-foreground' };
+                const isRequest = b.status === 'reserved_no_payment' && confirmationType === 'manual' && !b.organizer_approved_at;
+                const isApprovedAwaitingPay = b.status === 'reserved_no_payment' && !!b.organizer_approved_at;
+                const s = isRequest
+                  ? { label: 'Solicitud pendiente', color: 'bg-amber-100 text-amber-700' }
+                  : isApprovedAwaitingPay
+                    ? { label: 'Aceptada · pago pendiente', color: 'bg-blue-100 text-blue-700' }
+                    : STATUS_LABELS[b.status] || { label: b.status, color: 'bg-sand-200 text-foreground' };
                 const profile = b.profiles;
-                const isPending = b.status === 'pending_confirmation';
+                const isPending = b.status === 'pending_confirmation' || isRequest;
 
                 return (
                   <tr key={b.id} className="border-b border-sand-100">
@@ -190,7 +205,7 @@ export default function ReservasEventoPage() {
                               disabled={actionLoading === b.id}
                               className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-sage-100 text-sage-700 hover:bg-sage-200 disabled:opacity-50"
                             >
-                              Confirmar
+                              {isRequest ? 'Aceptar' : 'Confirmar'}
                             </button>
                             <button
                               onClick={() => rejectBooking(b.id)}

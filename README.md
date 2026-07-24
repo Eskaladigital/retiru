@@ -119,6 +119,7 @@ npm run lint             # Linter (ESLint)
 npm run supertester      # Playwright: URLs del sitemap + login/registro (SEO, tiempo de carga, trazas). Servidor en marcha; primera vez: `npx playwright install chromium`
 npm run db:types         # Generar tipos TypeScript desde el esquema de Supabase
 npm run db:verify-schema       # Comprueba esquema vía .env.local (031a/031b, user_roles, bucket organizer-docs, pasos por org)
+npm run db:verify-migrations   # Contrasta TODAS las migraciones (tablas+columnas, vistas, buckets, enums y RPCs clave) contra la BD real vía PostgREST; funciones trigger/RLS/índices no son verificables por esta vía
 npm run verify-shop-survey-db  # Tabla + RPC encuesta tienda y unicidad anónima (migraciones 030 + 032)
 node scripts/generate-seo-content.mjs   # Rellenar intros/FAQ/meta en categories y destinations (opciones: --categories, --destinations, --force)
 npm run seo:type-province                # Genera intro + meta + FAQ bilingüe por par tipo×provincia (tabla center_type_province_seo, migración 042)
@@ -307,6 +308,11 @@ Con **Supabase CLI** (`supabase link` + `supabase db push`) se aplican solas en 
 46. `supabase/migrations/044_center_styles.sql` — **SEO Fase 3 #10**: catálogo `styles` (24 estilos seed: kundalini, vinyasa, hatha, yin, ashtanga, aereo, prenatal, mindfulness, vipassana, zen, panchakarma, marma, abhyanga, shirodhara, etc.) + tabla puente `center_styles (center_id, style_id, source, confidence)` + trigger `check_center_style_type_match` + RLS public read. 441 centros clasificados con `npm run centers:infer-styles` (89 % cobertura).
 47. `supabase/migrations/045_seo_sections.sql` — **SEO Fase 4**: columnas `sections_es/en`, `serp_data`, `suppress_reason` en `categories`, `destinations`, `center_type_province_seo`, `styles`; tabla `style_province_seo` (Cap. 4 estilo×provincia). Contenido rico con `npm run seo:sections` (capas 2–5; Cap. 1 nacional sigue en `src/lib/center-type-editorial.ts`).
 48. `supabase/migrations/048_centers_google_places_data.sql` — **SEO fichas centro**: `google_reviews`, `google_opening_hours`, `google_data_synced_at` (aplicada en prod). Rellenar con `npm run centers:places-sync` (`GOOGLE_PLACES_API_KEY`) — solo reseñas/horario/rating; **nunca** descarga Place Photo (caro). Imágenes: las sube el centro o se buscan fuera de la API de Google. Si faltan columnas, fallback en Storage (`centers/{id}/places-meta.json`).
+49. `supabase/migrations/049_relax_retreats_total_price_check.sql` — PVP sin mínimo (solo `> 0`), abre la plataforma a clases y eventos de ticket bajo.
+50. `supabase/migrations/050_retreats_duration_hours.sql` — `duration_hours` para eventos de un día.
+51. `supabase/migrations/051_retreat_series.sql` — eventos periódicos: tabla `retreat_series` + `series_id`/`is_series_next` en `retreats`.
+52. `supabase/migrations/052_flexible_cancellation_default.sql` — default de política de cancelación al preset flexible de lanzamiento.
+53. `supabase/migrations/053_manual_confirmation_no_prepay.sql` — `bookings.organizer_approved_at`: confirmación manual sin pago por adelantado (solicitud → aprobación → enlace de pago).
 
 **Seeds** (después de las migraciones):
 
@@ -511,7 +517,9 @@ Sistema de emails automáticos enviados por la plataforma en eventos clave. **Sa
 |-------|-------------|----------------|---------------|
 | `sendBookingConfirmedEmail` | Asistente | Tras pagar el 100% (reserva confirmada) | Webhook Stripe / Organizador confirma |
 | `sendReservationConfirmedEmail` | Asistente | Plaza reservada sin pago (`reserved_no_payment`, mínimo viable no alcanzado) | `POST /api/checkout` (flujo reserva sin Stripe) |
-| `sendNewBookingToOrganizerEmail` | Organizador | Cuando recibe una nueva reserva | Webhook Stripe |
+| `sendBookingRequestReceivedEmail` | Asistente | Solicitud enviada en retiro de **confirmación manual** (sin pago; el organizador tiene el SLA para responder) | `POST /api/checkout` |
+| `sendBookingRequestApprovedEmail` | Asistente | El organizador acepta su solicitud: enlace de pago con deadline (o aviso de que falta el mínimo) | `PATCH /api/bookings/[id]` (`confirm` sobre solicitud) |
+| `sendNewBookingToOrganizerEmail` | Organizador | Cuando recibe una nueva reserva pagada o una solicitud sin pago (confirmación manual) | Webhook Stripe · `POST /api/checkout` |
 | `sendMinViableReachedEmail` | Asistente | Mínimo de plazas alcanzado: enlace para pagar antes del deadline | Lógica tras nueva reserva en `POST /api/checkout` |
 | `sendMinViableReachedToOrganizerEmail` | Organizador | Mínimo alcanzado: el evento se confirma en cuanto paguen los inscritos | Misma ruta |
 | `sendPaymentDeadlineReminderEmail` | Asistente | Recordatorio tras vencer el primer deadline (+24 h de gracia) | `POST /api/cron/payment-deadlines` |
@@ -524,13 +532,13 @@ Sistema de emails automáticos enviados por la plataforma en eventos clave. **Sa
 | `sendOrganizerRejectedEmail` | Organizador | Admin rechaza el perfil de organizador | `POST /api/admin/organizers/[id]` (`reject`) |
 | `sendNewMessageEmail` | Usuario / Organizador | Nuevo mensaje en conversación o soporte | `/api/messages/conversations/[id]` |
 | `sendBookingRejectedEmail` | Asistente | Organizador rechaza su reserva | `/api/bookings/[id]` |
-| `sendBookingCancelledEmail` | Asistente + Organizador | Reserva cancelada / reembolso | Webhook Stripe (charge.refunded) |
+| `sendBookingCancelledEmail` | Asistente + Organizador | Reserva cancelada / reembolso | `POST /api/bookings/[id]` (cancelación por el asistente) + Webhook Stripe (charge.refunded, si el reembolso no lo inició un flujo de cancelación propio) |
 | Recordatorio pre-evento | Asistente | 7 y 2 días antes del retiro | Cron diario (10:00) |
 | Solicitud de reseña | Asistente | 2 días después del retiro | Cron diario (11:00) |
 | Broadcast del organizador | Asistentes del evento | Organizador envía mensaje masivo (opcional email) | `/api/organizer/events/[id]/broadcast` |
 | `sendWelcomeEmail` | Usuario | Primera vez que verifica email (signup) | `/api/auth/callback` |
 | `sendRetreatPendingReviewEmail` | Admin | Organizador envía retiro a revisión | `/api/retreats/[id]` (PATCH → `pending_review`) |
-| `sendBookingExpiredEmail` | Asistente | Reserva expirada porque el organizador no confirmó dentro del SLA (`pending_confirmation` con `sla_deadline` vencido). Reembolso completo automático si hubo pago. | `POST /api/cron/sla-deadlines` (horario) |
+| `sendBookingExpiredEmail` | Asistente | Reserva o solicitud expirada porque el organizador no respondió dentro del SLA (`pending_confirmation` pagada — reembolso automático — o `reserved_no_payment` sin aprobar — sin nada que reembolsar). | `POST /api/cron/sla-deadlines` (horario) |
 | `sendRetreatCancelledToAttendeeEmail` | Asistentes del evento | Organizador cancela un retiro | `/api/retreats/[id]` (POST → cancel) |
 | `sendNewClaimPendingEmail` | Admin | Usuario solicita reclamar un centro (manual) | `/api/centers/claim` |
 | `sendNewCenterProposalEmail` | Admin | Usuario propone un centro nuevo (pendiente revisión) | `/api/centers/propose` |
@@ -550,7 +558,7 @@ Plantillas HTML de referencia: carpeta `mailing/` (`mailing/README.md`). Envío 
 **Total: 24 emails activos** (2 desactivados del modelo histórico 80 % fuera de plataforma).
 
 **Cron jobs (Vercel):** configurados en `vercel.json` (proteger con `Authorization: Bearer CRON_SECRET` si `CRON_SECRET` está definido):
-- `0 * * * *` — `sla-deadlines` (cancela `pending_confirmation` con `sla_deadline` vencido, reembolsa Stripe y notifica al asistente con `sendBookingExpiredEmail`)
+- `0 * * * *` — `sla-deadlines` (cancela `pending_confirmation` con `sla_deadline` vencido —con reembolso Stripe— y solicitudes `reserved_no_payment` sin aprobar con SLA vencido —sin reembolso—; notifica al asistente con `sendBookingExpiredEmail`)
 - `0 * * * *` — `payment-deadlines` (gracia +24 h y cancelación de reservas `reserved_no_payment` vencidas)
 - `0 10 * * *` — `event-reminders` (recordatorio pre-evento 7 d / 2 d)
 - `0 11 * * *` — `review-requests` (solicitud de reseña +2 d)
@@ -653,8 +661,12 @@ src/
 - Cada retiro **mantiene de forma permanente** su nivel de comisión asignado al crearlo.
 - Ejemplo (comisión estándar): retiro de 500 € → el asistente paga 500 € → Retiru retiene 100 € (20 %) y transfiere 400 € (80 %) al organizador.
 - **Ventajas**: un solo pago para el asistente, mayor conversión, control total del flujo financiero, sin pagos pendientes.
-- **Cancelaciones**: el organizador define políticas flexibles (porcentajes y plazos sobre el importe pagado). Si al asistente le corresponde reembolso según esa política, recibe ese importe íntegro en su método de pago. La compensación de la comisión de Retiru en supuestos de cancelación se regula en el **acuerdo comercial con el organizador**, no como retención adicional sobre el reembolso del asistente.
-- **Confirmación manual de reservas:** en retiros con confirmación manual (`confirmation_type: 'manual'`), el organizador debe aceptar o rechazar cada reserva dentro del plazo SLA (`sla_deadline`, configurable en horas en la ficha). Si el plazo vence sin decisión, el cron `POST /api/cron/sla-deadlines` (horario) cancela la reserva, reembolsa el pago íntegro al asistente vía Stripe si hubo cobro y envía el email `sendBookingExpiredEmail`.
+- **Métodos de pago (desde 2026-07-24)**: el checkout usa los **métodos automáticos de Stripe** — se ofrecen los que estén activados en el dashboard (tarjeta, **Bizum**, Apple/Google Pay, Klarna…) según importe, divisa y país del cliente. **Prohibido el pago fuera de la plataforma** (efectivo o transferencia directa al organizador): todo cobro pasa por Stripe para que quede registrado y Retiru capture su comisión.
+- **Cancelaciones**: el organizador elige entre 4 presets al crear el evento (flexible —default: 100 % >7 d / 50 % >3 d—, estándar, estricta, clase/taller —100 % hasta 1 día antes—; `CANCELLATION_PRESETS` en `NuevoEventoForm`, default en BD por migración 052). Si al asistente le corresponde reembolso según esa política, recibe ese importe íntegro en su método de pago. La compensación de la comisión de Retiru en supuestos de cancelación se regula en el **acuerdo comercial con el organizador**, no como retención adicional sobre el reembolso del asistente.
+- **Garantía Retiru de 48 h**: todo asistente puede cancelar con reembolso del 100 % durante las 48 horas siguientes a reservar, si faltan más de 7 días para el inicio. Aplica por encima de la política del evento (cláusula 8 del contrato, `/condiciones`, ayuda y para-asistentes ES+EN).
+- **Motor de cancelación**: el asistente cancela desde `/es/mis-reservas/[id]` (botón con preview del reembolso) → `POST /api/bookings/[id]` calcula el tramo (`getCancellationRefund` en `src/lib/utils`), marca `cancelled_by_attendee`, reembolsa vía Stripe (total o parcial) y avisa por email a ambas partes. Si el **organizador cancela el retiro** (`POST /api/retreats/[id]`), todas las reservas activas pasan a `cancelled_by_organizer` con **reembolso íntegro automático**. El webhook `charge.refunded` solo registra el importe (sin machacar estado ni duplicar emails) cuando el reembolso lo inició uno de estos flujos.
+- **Visibilidad**: las cards (`EventCard`) y las fichas ES/EN muestran el badge «Cancelación gratuita hasta X días antes» cuando la política tiene un tramo al 100 %.
+- **Confirmación manual de reservas — solicitud sin pago (desde 2026-07-24):** en retiros con confirmación manual (`confirmation_type: 'manual'`), el asistente **no paga al reservar**: su solicitud entra como `reserved_no_payment` con `sla_deadline` para que el organizador responda. El organizador la **acepta** (`PATCH /api/bookings/[id]`, marca `organizer_approved_at`) o la **rechaza** desde su panel. Al aceptar —y con el mínimo de participantes cubierto— el asistente recibe `sendBookingRequestApprovedEmail` con enlace de pago y deadline (misma maquinaria que el mínimo viable); al pagar, el webhook confirma la plaza directamente (`confirmed`, sin pasar por `pending_confirmation`). Si el SLA vence sin decisión, el cron `POST /api/cron/sla-deadlines` (horario) anula la solicitud (`sla_expired`) y avisa con `sendBookingExpiredEmail`; no hay nada que reembolsar porque no hubo pago. Las reservas antiguas ya pagadas en `pending_confirmation` conservan el flujo anterior (confirmar/rechazar con reembolso).
 
 ### Directorio de centros (suscripción)
 
@@ -801,7 +813,7 @@ Un usuario puede combinar roles: por ejemplo, `attendee` + `organizer` + `center
 
 Antes de poder publicar eventos, el organizador debe completar un proceso de verificación:
 
-1. **Aceptar contrato**: al acceder a `/es/mis-eventos` (redirige a `/es/panel/eventos`) por primera vez, el usuario ve una pantalla bloqueante con el **contrato del organizador** completo, dividido en 12 cláusulas que reflejan la operativa real (objeto del servicio, comisiones escalonadas 0/10/20 %, KYC obligatorio, calidad y veracidad del contenido, prohibición de canales externos para eludir comisión, plazos operativos —48 h confirmación—, mínimo viable, política de cancelación, payouts, RGPD, suspensión y aceptación electrónica con valor probatorio). Componente bilingüe en `src/components/panel/ContratoOrganizador.tsx` (versión `1.0 · 2026-04`). El usuario debe marcar la casilla final «He leído íntegramente el contrato y acepto todas sus cláusulas» y pulsar **«Aceptar contrato y continuar a verificación»**. Esto crea el `organizer_profile` con `contract_accepted_at` y `status: 'pending'`, y redirige automáticamente a `/es/panel/verificacion` (paso 2).
+1. **Aceptar contrato**: al acceder a `/es/mis-eventos` (redirige a `/es/panel/eventos`) por primera vez, el usuario ve una pantalla bloqueante con el **contrato del organizador** completo, dividido en 12 cláusulas que reflejan la operativa real (objeto del servicio, comisiones escalonadas 0/10/20 %, KYC obligatorio, calidad y veracidad del contenido, prohibición de canales externos para eludir comisión, plazos operativos —48 h confirmación—, mínimo viable, política de cancelación, payouts, RGPD, suspensión y aceptación electrónica con valor probatorio). Componente bilingüe en `src/components/panel/ContratoOrganizador.tsx` (versión `1.1 · 2026-07`, añade la garantía Retiru de 48 h a la cláusula 8). El usuario debe marcar la casilla final «He leído íntegramente el contrato y acepto todas sus cláusulas» y pulsar **«Aceptar contrato y continuar a verificación»**. Esto crea el `organizer_profile` con `contract_accepted_at` y `status: 'pending'`, y redirige automáticamente a `/es/panel/verificacion` (paso 2).
 
    Las cláusulas viven en una **fuente única** (`src/lib/legal/organizer-contract.tsx`: `CONTRACT_VERSION`, `getOrganizerContractClauses(locale)`, componente `<OrganizerContractClauses>`) y se consumen tanto desde el contrato del panel como desde la página pública dedicada `/es/legal/contrato-organizador` (+ `/en/legal/contrato-organizador`), accesible para cualquier asistente, centro u organizador sin estar logueado. Cualquier cambio en las cláusulas se refleja automáticamente en los dos puntos.
 
@@ -887,9 +899,11 @@ Cuando un retiro tiene `min_attendees > 1`:
    - Se calcula un deadline de pago: `min(ahora + 72h, start_date - 24h)`.
    - Se envía email a todos los inscritos con enlace de pago y plazo.
    - Se notifica al organizador que el mínimo se ha cumplido y se compromete a celebrar el evento.
-3. **Pago por los inscritos** — Cada inscrito paga vía Stripe antes del deadline (`POST /api/checkout` con `bookingId` de su reserva). Si paga, su booking pasa a `pending_payment` → Stripe webhook → `confirmed`/`pending_confirmation` (flujo normal).
+3. **Pago por los inscritos** — Cada inscrito paga vía Stripe antes del deadline (`POST /api/checkout` con `bookingId` de su reserva). Si paga, su booking pasa a `pending_payment` → Stripe webhook → `confirmed` (o directamente `confirmed` si era una solicitud de confirmación manual ya aprobada).
 4. **Gracia si no paga** — Si vence el deadline sin pagar, se da +24h extra con un recordatorio por email. Si aún no paga, la reserva se cancela automáticamente (`cancelled_by_attendee`).
-5. **Nuevos asistentes tras el mínimo** — Pagan al instante vía Stripe (flujo estándar).
+5. **Nuevos asistentes tras el mínimo** — Pagan al instante vía Stripe (flujo estándar) si el retiro es de confirmación automática; con confirmación manual siguen entrando como solicitud sin pago hasta que el organizador las apruebe.
+
+**Cruce con confirmación manual:** si el retiro es manual y con mínimo > 1, el enlace de pago del «mínimo alcanzado» solo se envía a las solicitudes **ya aprobadas** por el organizador (`organizer_approved_at`); las demás lo reciben al ser aprobadas.
 
 El cron `/api/cron/payment-deadlines` (cada hora) gestiona la gracia y cancelación automática.
 

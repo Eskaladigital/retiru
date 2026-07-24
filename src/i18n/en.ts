@@ -91,6 +91,8 @@ const en: TranslationKeys = {
     lastSpots: 'Only {n} spots left!',
     soldOut: 'Sold out',
     instantConfirm: 'Instant confirmation',
+    freeCancellation: 'Free cancellation until {n} days before',
+    freeCancellationOneDay: 'Free cancellation until 1 day before',
     reviews: '{n} reviews',
   },
 

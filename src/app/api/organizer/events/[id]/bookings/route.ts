@@ -25,7 +25,7 @@ export async function GET(
 
     const { data: retreat } = await admin
       .from('retreats')
-      .select('id')
+      .select('id, confirmation_type')
       .eq('id', retreatId)
       .eq('organizer_id', orgProfile.id)
       .single();
@@ -38,6 +38,7 @@ export async function GET(
         id, booking_number, status, total_price, platform_fee, organizer_amount,
         platform_payment_status, remaining_payment_status, remaining_payment_due_date,
         form_responses, organizer_notes, created_at, confirmed_at,
+        organizer_approved_at, sla_deadline, payment_deadline,
         profiles!attendee_id(id, full_name, email, phone, avatar_url)
       `)
       .eq('retreat_id', retreatId)
@@ -45,7 +46,10 @@ export async function GET(
 
     if (error) throw error;
 
-    return NextResponse.json({ bookings: bookings || [] });
+    return NextResponse.json({
+      bookings: bookings || [],
+      confirmationType: retreat.confirmation_type,
+    });
   } catch (error) {
     console.error('Error fetching bookings:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

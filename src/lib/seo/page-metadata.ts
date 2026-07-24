@@ -27,11 +27,11 @@ export const searchES: Metadata = generatePageMetadata({
 
 export const categoriesES: Metadata = generatePageMetadata({
   title: 'Retiros y eventos — Yoga, meditación y ayurveda',
-  description: 'Explora retiros y eventos de yoga, meditación y ayurveda en España. Encuentra tu experiencia ideal.',
+  description: 'Explora retiros, clases, talleres y experiencias de yoga, meditación y ayurveda en España. Encuentra tu experiencia ideal.',
   locale: 'es',
   path: '/es/retiros-retiru',
   altPath: '/en/retreats-retiru',
-  keywords: ['retiros yoga', 'retiros meditación', 'retiros ayurveda', 'eventos yoga españa'],
+  keywords: ['retiros yoga', 'retiros meditación', 'retiros ayurveda', 'eventos yoga españa', 'clases yoga españa', 'talleres bienestar'],
 });
 
 export const destinationsES: Metadata = generatePageMetadata({
@@ -220,11 +220,11 @@ export const searchEN: Metadata = generatePageMetadata({
 
 export const categoriesEN: Metadata = generatePageMetadata({
   title: 'Retreats & events — Yoga, meditation & ayurveda',
-  description: 'Explore yoga, meditation and ayurveda retreats and events in Spain. Find your ideal experience.',
+  description: 'Explore yoga, meditation and ayurveda retreats, classes, workshops and experiences in Spain. Find your ideal experience.',
   locale: 'en',
   path: '/en/retreats-retiru',
   altPath: '/es/retiros-retiru',
-  keywords: ['yoga retreats', 'meditation retreats', 'ayurveda retreats', 'yoga events spain'],
+  keywords: ['yoga retreats', 'meditation retreats', 'ayurveda retreats', 'yoga events spain', 'yoga classes spain', 'wellness workshops'],
 });
 
 export const destinationsEN: Metadata = generatePageMetadata({

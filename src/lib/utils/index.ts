@@ -4,7 +4,7 @@
 
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import type { Category, Retreat } from '@/types';
+import type { Category, Retreat, CancellationPolicy } from '@/types';
 
 /** Merge Tailwind classes without conflicts */
 export function cn(...inputs: ClassValue[]) {
@@ -324,6 +324,60 @@ export const CENTER_TYPE_URL_ES: Record<string, string> = {
 export const CENTER_TYPE_FROM_URL_ES: Record<string, string> = Object.fromEntries(
   Object.entries(CENTER_TYPE_URL_ES).map(([type, urlEs]) => [urlEs, type]),
 );
+
+// ─── Cancelación y reembolsos ───────────────────────────────────────────────
+
+/** Garantía Retiru de arrepentimiento: reembolso 100 % durante las primeras horas tras reservar. */
+export const CANCELLATION_GRACE_HOURS = 48;
+/** La garantía solo aplica si faltan más de estos días para el inicio del evento. */
+export const CANCELLATION_GRACE_MIN_DAYS = 7;
+
+/**
+ * Porcentaje de reembolso que corresponde al asistente al cancelar su reserva.
+ * Aplica primero la garantía de arrepentimiento (48 h tras reservar, si faltan
+ * más de 7 días para el inicio) y después los tramos de la política del evento.
+ */
+export function getCancellationRefund(
+  policy: CancellationPolicy | null | undefined,
+  startDate: string,
+  bookedAt?: string | null,
+  now: Date = new Date(),
+): { percent: number; graceApplies: boolean; daysUntilStart: number } {
+  const daysUntilStart = Math.floor((new Date(startDate).getTime() - now.getTime()) / 86_400_000);
+
+  const graceApplies =
+    !!bookedAt &&
+    now.getTime() - new Date(bookedAt).getTime() <= CANCELLATION_GRACE_HOURS * 3_600_000 &&
+    daysUntilStart > CANCELLATION_GRACE_MIN_DAYS;
+  if (graceApplies) return { percent: 100, graceApplies, daysUntilStart };
+
+  const tiers = [...(policy?.refund_tiers ?? [])].sort((a, b) => b.days_before - a.days_before);
+  for (const tier of tiers) {
+    if (daysUntilStart >= tier.days_before) {
+      return { percent: tier.refund_percent, graceApplies: false, daysUntilStart };
+    }
+  }
+  return { percent: 0, graceApplies: false, daysUntilStart };
+}
+
+/** Días de «cancelación gratuita» (mayor days_before con reembolso 100 %), o null si la política no lo ofrece. */
+export function getFreeCancellationDays(policy: CancellationPolicy | null | undefined): number | null {
+  const full = (policy?.refund_tiers ?? []).filter((t) => t.refund_percent === 100);
+  if (full.length === 0) return null;
+  return Math.max(...full.map((t) => t.days_before));
+}
+
+/** Etiqueta legible del tipo de política de cancelación. */
+export function getCancellationTypeLabel(type: string, locale: 'es' | 'en' = 'es'): string {
+  const labels: Record<string, { es: string; en: string }> = {
+    flexible: { es: 'flexible', en: 'flexible' },
+    standard: { es: 'estándar', en: 'standard' },
+    strict: { es: 'estricta', en: 'strict' },
+    class: { es: 'de clase / taller', en: 'class / workshop' },
+    custom: { es: 'personalizada', en: 'custom' },
+  };
+  return labels[type]?.[locale] ?? type;
+}
 
 /** Booking status colors */
 export function getBookingStatusColor(status: string): string {

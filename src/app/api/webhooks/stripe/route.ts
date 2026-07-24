@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
           .from('bookings')
           .select(`
             id, booking_number, retreat_id, attendee_id, organizer_id,
-            total_price, platform_fee, organizer_amount,
+            total_price, platform_fee, organizer_amount, organizer_approved_at,
             retreats!retreat_id(title_es, title_en, start_date, confirmation_type, sla_hours, slug),
             profiles!attendee_id(email, full_name, preferred_locale),
             organizer_profiles!organizer_id(user_id)
@@ -56,10 +56,14 @@ export async function POST(request: NextRequest) {
         const attendee = booking.profiles as any;
         const orgProfile = booking.organizer_profiles as any;
         const isAutomatic = retreat?.confirmation_type === 'automatic';
+        // Confirmación manual sin pago por adelantado: si el organizador ya
+        // aprobó la solicitud, el pago confirma directamente la plaza.
+        const alreadyApproved = !!booking.organizer_approved_at;
+        const confirmsNow = isAutomatic || alreadyApproved;
         const locale = (attendee?.preferred_locale || 'es') as 'es' | 'en';
 
-        const newStatus = isAutomatic ? 'confirmed' : 'pending_confirmation';
-        const slaDeadline = !isAutomatic
+        const newStatus = confirmsNow ? 'confirmed' : 'pending_confirmation';
+        const slaDeadline = !confirmsNow
           ? new Date(Date.now() + (retreat?.sla_hours || 48) * 60 * 60 * 1000).toISOString()
           : null;
 
@@ -72,7 +76,7 @@ export async function POST(request: NextRequest) {
           updated_at: new Date().toISOString(),
         };
 
-        if (isAutomatic) {
+        if (confirmsNow) {
           updateData.confirmed_at = new Date().toISOString();
         } else {
           updateData.sla_deadline = slaDeadline;
@@ -80,7 +84,7 @@ export async function POST(request: NextRequest) {
 
         await admin.from('bookings').update(updateData).eq('id', bookingId);
 
-        if (isAutomatic) {
+        if (confirmsNow) {
           await admin.rpc('increment_confirmed_bookings', { retreat_id_param: booking.retreat_id });
         }
 
@@ -118,7 +122,7 @@ export async function POST(request: NextRequest) {
                 bookingNumber: booking.booking_number,
                 eventTitle: retreat?.title_es || 'Retiro',
                 attendeeName: attendee?.full_name || 'Asistente',
-                requiresConfirmation: !isAutomatic,
+                requiresConfirmation: !confirmsNow,
                 slaHours: retreat?.sla_hours,
               });
             } catch (emailErr) {
@@ -167,16 +171,22 @@ export async function POST(request: NextRequest) {
 
           if (booking) {
             const refundAmount = (charge.amount_refunded || 0) / 100;
+            // Si la cancelación la inició nuestro propio flujo (asistente u organizador),
+            // el estado y los emails ya se gestionaron allí: solo registrar el reembolso.
+            const initiatedByCancelFlow = ['cancelled_by_attendee', 'cancelled_by_organizer'].includes(booking.status);
+
             await admin
               .from('bookings')
               .update({
-                status: 'refunded',
-                platform_payment_status: 'refunded',
+                ...(initiatedByCancelFlow ? {} : { status: 'refunded' }),
+                platform_payment_status: charge.amount_refunded < charge.amount ? 'partially_refunded' : 'refunded',
                 refund_amount: refundAmount,
                 refunded_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
               })
               .eq('id', booking.id);
+
+            if (initiatedByCancelFlow) break;
 
             if (booking.status === 'confirmed') {
               await admin.rpc('decrement_confirmed_bookings', { retreat_id_param: booking.retreat_id });

@@ -24,18 +24,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Generar booking_number único
-CREATE OR REPLACE FUNCTION generate_booking_number()
-RETURNS TEXT AS $$
-DECLARE
-  result TEXT;
-  exists BOOLEAN;
-BEGIN
-  LOOP
-    result := 'RT-' || TO_CHAR(NOW(), 'YYMM') || '-' || UPPER(SUBSTRING(MD5(RANDOM()::TEXT) FROM 1 FOR 6));
-    SELECT EXISTS(SELECT 1 FROM bookings WHERE booking_number = result) INTO exists;
-    EXIT WHEN NOT exists;
-  END LOOP;
-  RETURN result;
-END;
-$$ LANGUAGE plpgsql;
+-- NOTA (2026-07-24): esta migración incluía una redefinición de
+-- generate_booking_number() como RETURNS TEXT, que chocaba con la función de
+-- trigger del mismo nombre creada en 001 (RETURNS TRIGGER, usada por tr_bk_num).
+-- Postgres rechazaba el cambio de tipo de retorno y la transacción entera se
+-- revertía, dejando también sin crear las dos funciones de arriba.
+-- La versión TEXT no la usa ningún código (el booking_number se genera en la
+-- app y el trigger de 001 sigue vigente), así que se elimina de la migración.

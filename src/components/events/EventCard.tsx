@@ -4,11 +4,11 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Calendar, MapPin, Star, Zap, Users } from 'lucide-react';
+import { Calendar, MapPin, Star, Zap, Users, RefreshCcw } from 'lucide-react';
 import type { Retreat } from '@/types';
 import type { Locale } from '@/i18n/config';
 import { getLocalized, getDictionary } from '@/i18n';
-import { formatPrice, formatDateRange, formatDurationDays, getOrganizerReviewStats, organizerHasRatingToShow } from '@/lib/utils';
+import { formatPrice, formatDateRange, formatDurationDays, getOrganizerReviewStats, organizerHasRatingToShow, getFreeCancellationDays } from '@/lib/utils';
 
 interface EventCardProps {
   event: Retreat;
@@ -31,6 +31,7 @@ export default function EventCard({ event, locale }: EventCardProps) {
   const isSoldOut = spotsLeft <= 0;
   const { avg_rating: orgAvg, review_count: orgReviews } = getOrganizerReviewStats(event);
   const showOrgRating = organizerHasRatingToShow(event);
+  const freeCancelDays = getFreeCancellationDays(event.cancellation_policy);
 
   return (
     <Link href={link} className="group">
@@ -49,6 +50,14 @@ export default function EventCard({ event, locale }: EventCardProps) {
             {event.confirmation_type === 'automatic' && (
               <span className="badge bg-white/90 text-sage-700 backdrop-blur-sm">
                 <Zap size={12} /> {t.eventCard.instantConfirm}
+              </span>
+            )}
+            {freeCancelDays !== null && freeCancelDays > 0 && (
+              <span className="badge bg-white/90 text-sage-700 backdrop-blur-sm">
+                <RefreshCcw size={12} />{' '}
+                {freeCancelDays === 1
+                  ? t.eventCard.freeCancellationOneDay
+                  : t.eventCard.freeCancellation.replace('{n}', String(freeCancelDays))}
               </span>
             )}
             {isLastSpots && (

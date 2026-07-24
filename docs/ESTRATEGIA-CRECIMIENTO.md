@@ -127,6 +127,11 @@ Prioridad: **impresiones altas + intent alineado con el negocio**, no solo la ma
 | **Verificación progresiva completa** | Ver §5. | 🔴 Pendiente de decisión |
 | **Eventos de un día (duración en horas) + PVP sin mínimo** | Abre la plataforma a clases, sesiones de terapia, talleres y experiencias (gastronómicas, de bienestar…). Migraciones 049–050. | 🟢 Hecho (2026-07-24) |
 | **Eventos periódicos (series con ocurrencias)** | Una clase semanal se publica una vez; el cron mantiene 1–8 fechas futuras vivas (horizonte rodante), cierre de fechas por vacaciones, detener serie, conversión de evento existente en periódico. En listados solo la próxima fecha; la serie cuenta como 1 retiro para la comisión. Migración 051. | 🟢 Hecho (2026-07-24) |
+| **Motor de cancelación y reembolsos** | Hallazgo (revisión 2026-07-24): la cancelación del asistente no estaba implementada (botón sin acción, `refund_tiers` sin aplicar) y la cancelación de retiro por el organizador no reembolsaba. Implementado como parte del paquete «cancelación flexible de lanzamiento»: `POST /api/bookings/[id]` (asistente, tramos + garantía 48 h + Stripe), reembolso íntegro automático en `POST /api/retreats/[id]` (organizador), webhook sin duplicados. | 🟢 Hecho (2026-07-24) |
+| **Paquete «cancelación flexible de lanzamiento»** | Presets recentrados (default flexible 100 % >7 d / 50 % >3 d; nuevo preset clase/taller 100 % hasta 1 día antes), garantía Retiru 48 h, badge «Cancelación gratuita» en cards y fichas ES/EN, contrato v1.1, condiciones/ayuda/para-asistentes ES+EN, migración 052. | 🟢 Hecho (2026-07-24) |
+| **Copy honesto en reserva sin pago** | Bajo el botón «Reservar plaza (sin pago)» se anunciaba «Visa, Mastercard y más», dando a entender que se pedía tarjeta cuando no se pide ninguna (confundió al propio equipo). Ahora en modo sin pago dice «Sin tarjeta ahora · Te avisaremos por email para completar el pago si se confirma» (ES+EN). | 🟢 Hecho (2026-07-24) |
+| **Confirmación manual: solicitar plaza sin pago** | En retiros de confirmación manual el asistente ya **no paga antes** de que el organizador apruebe: la solicitud entra como `reserved_no_payment` (con SLA para el organizador), al aprobar se envía el enlace de pago con plazo (reutiliza la maquinaria de «mínimo alcanzado») y el pago confirma la plaza directamente. Si el SLA vence sin respuesta, la solicitud se anula sin coste. Migración 053 (`organizer_approved_at`). | 🟢 Hecho (2026-07-24) — falta aplicar migración 053 en prod |
+| **Más métodos de pago vía Stripe (Bizum, wallets, plazos)** | El checkout ya usa **métodos automáticos de Stripe** (eliminado `payment_method_types: ['card']`). Falta activar en el dashboard de Stripe **Bizum**, Apple Pay / Google Pay y Klarna. Guardarraíl decidido: **nada de pago fuera de la plataforma** (efectivo/transferencia al organizador) — todo debe quedar registrado y cobrado vía Stripe para que Retiru capture su comisión. Prerrequisito: claves Stripe reales en producción (hoy hay un placeholder; el checkout de pago no ha funcionado nunca). | 🟡 Código hecho (2026-07-24) — falta activar métodos en el dashboard |
 
 ---
 
@@ -139,12 +144,64 @@ Prioridad: **impresiones altas + intent alineado con el negocio**, no solo la ma
 - [ ] Definir el ritmo mínimo de publicación en Instagram (p. ej. 2–3 piezas/semana de contenido real).
 - [ ] **Separación clases vs retiros en UX/SEO** *(aplazada a propósito — ver decisión 2026-07-24 nocheV)*: solo cuando haya volumen real de eventos de un día, decidir facetas/etiquetas («Clase», «Taller», «Retiro»), landings propias tipo «clases de yoga en [ciudad]» (ataca `yoga classes near me`, 644 imp. pos. 10) y cómo evitar que un buscador de «retiro yoga» aterrice en una página dominada por clases de 2 h.
 - [ ] **Naming/posicionamiento** *(aplazada igual que la anterior)*: ¿Retiru sigue siendo «marketplace de retiros y escapadas» o pasa a «retiros, clases y experiencias de bienestar»? Afecta a home, metas y pitch de captación.
+- [x] **Paquete «cancelación flexible de lanzamiento»** (sesión 2026-07-24 nocheVI): ✅ aprobado por el equipo (paquete completo, garantía 48 h incluida) e implementado en la misma sesión. Ver §6 y diario.
+- [x] **Confirmación manual sin pago por adelantado** — ✅ aprobado e implementado en la sesión 2026-07-24 nocheVII (ver §6 y diario). Pendiente operativo: aplicar migración 053 en prod.
+- [x] **Pago fuera de la plataforma: NO** — ✅ decidido (2026-07-24 nocheVII): todo cobro debe quedar registrado y pasar por Stripe para que Retiru capture su comisión. Nada de efectivo ni transferencias directas al organizador.
+- [ ] **Activar Bizum / wallets / Klarna en el dashboard de Stripe** — el código ya usa métodos automáticos (nocheVII); queda activar los métodos en el dashboard cuando estén las claves reales en producción.
 
 ---
 
 ## 8. Diario de sesiones
 
 > Añadir cada sesión **arriba** (orden cronológico inverso). Formato: fecha, reflexiones planteadas, análisis/correcciones del agente, decisiones, trabajo ejecutado.
+
+### 2026-07-24 (nocheVIII) — `/es/retiros-retiru` habla solo de retiros, ¿y las clases?
+
+**Reflexión del equipo:** la página madre de eventos dice «Retiros y escapadas» pero no menciona lo nuevo (clases, talleres…). ¿Está optimizada para SEO o para UX?
+
+**Análisis del agente:** para SEO está bien **a propósito**: el `<title>` ya dice «Retiros y eventos» y el H1 se queda en «Retiros y escapadas» porque las consultas core son `retiro yoga` / `retiro ayurveda` (§3bis); diluir el H1 con «clases» debilitaría esa relevancia, y las búsquedas de clases se atacan por directorio de centros y futuras landings propias (decisión nocheV, sigue vigente). Para UX sí había hueco: el único evento vivo es una clase de 10 € bajo un hero que solo promete retiros, y el contador decía «+1 retiros» (mal concordado).
+
+**Trabajo ejecutado (copy, sin reabrir la decisión aplazada):** subtítulo del hero ES/EN ampliado a «retiros, clases, talleres y experiencias…», contador «+N evento(s)» con concordancia, meta description y keywords de `categoriesES/EN` ensanchadas (clases/talleres). H1 y title intactos.
+
+### 2026-07-24 (nocheVII) — ¿Pedir datos de pago antes de confirmar el retiro es una barrera?
+
+**Reflexión del equipo:** que quien se inscribe tenga que meter sus datos de pago antes de que el retiro se confirme y nazca la obligación de pagar, ¿no echa a la gente para atrás? ¿No es mejor que paguen cuando se apruebe, o incluso pagar de otra forma?
+
+**Análisis del agente (corrección de premisa):** el caso principal ya funciona como se propone. En retiros grupales con mínimo > 1, la reserva es **sin tarjeta** (`reserved_no_payment`); solo al alcanzarse el mínimo llega el email con enlace de pago y 72 h de plazo. La confusión venía de dos sitios reales:
+
+1. **Copy engañoso:** bajo el botón «Reservar plaza (sin pago)» se mostraba siempre «Visa, Mastercard y más…», anunciando tarjetas justo donde no se pide ninguna. Si confundió al fundador, confunde al usuario.
+2. **Confirmación manual:** ahí sí se paga **antes** de que el organizador apruebe (reembolso si rechaza), y el motor de reembolsos no existe todavía (nocheVI) — pagar por adelantado, a marca desconocida, para algo no aprobado y sin reembolso automático es la barrera real.
+
+En mínimo = 1 con confirmación inmediata no hay nada que cambiar: reservar es confirmar y el pago inmediato es lo esperable (diferirlo solo genera no-shows).
+
+**Propuestas (en §6):** (1) copy honesto en modo sin pago — hecho en la sesión; (2) confirmación manual → solicitud sin pago y enlace de pago tras aprobación, reutilizando la maquinaria de «mínimo alcanzado» (descartada la retención de tarjeta con *manual capture*: misma fricción y menos métodos de pago); (3) más métodos vía Stripe: Bizum (clave en España), Apple/Google Pay, Klarna a plazos. **Guardarraíl:** nada de pago fuera de la plataforma — la comisión de Retiru se captura en el cobro y el pago offline invita a la desintermediación que ya se cuida en las fichas (sin teléfonos ni emails).
+
+**Contexto técnico de la misma noche:** al intentar una reserva real de prueba se descubrió que el checkout de pago **no ha funcionado nunca en producción** — `STRIPE_SECRET_KEY` es un placeholder y ninguna reserva de la BD tiene sesión de Stripe. Arreglado en código: cálculo de `minReached` con mínimo = 1 (el botón decía «sin pago» y la API cobraba), `/api/checkout` ya no deja reservas huérfanas si Stripe falla, y limpiada la reserva bloqueante `RTR-A93440`. **Pendiente del equipo: poner las claves reales de Stripe en Vercel y desplegar.**
+
+**Decisiones (segunda parte de la sesión):** ✅ aprobadas las tres propuestas — (1) confirmación manual sin pago por adelantado, (2) más métodos de pago dentro de Stripe, (3) **prohibido el pago fuera de la plataforma**: «todo debe quedar registrado y pagado antes para que Retiru cobre su comisión».
+
+**Trabajo ejecutado (misma noche):**
+- **Flujo de solicitud sin pago en confirmación manual** (migración 053, `bookings.organizer_approved_at`): el asistente «Solicita plaza (sin pago)» → el organizador acepta/rechaza desde su panel dentro del SLA → al aceptar (con mínimo cubierto) el asistente recibe email con enlace de pago y plazo (`sendBookingRequestApprovedEmail`) → al pagar, el webhook confirma la plaza directamente. Si el SLA vence sin respuesta, el cron anula la solicitud sin coste. Cruce con mínimo viable resuelto: los enlaces de «mínimo alcanzado» solo van a solicitudes aprobadas. Tocados: `/api/checkout`, `/api/bookings/[id]`, webhook Stripe, cron `sla-deadlines`, panel organizador, mis-reservas (lista+detalle, con cancelación de solicitudes), `ReserveButton` y fichas ES/EN, 2 emails nuevos + 1 adaptado.
+- **Métodos de pago**: checkout con métodos automáticos de Stripe (tarjeta, Bizum, wallets, Klarna según lo activado en el dashboard).
+- **Docs sincronizadas**: README (flujos, emails, crons, migraciones 049–053), ayuda/help, condiciones ES+EN, para-organizadores/for-organizers, contrato del organizador (cláusula SLA).
+
+**Pendiente del equipo:** (1) claves Stripe reales en Vercel + desplegar; (2) aplicar migración 053 en el SQL Editor (o añadir `DATABASE_URL` a `.env.local` y correr `node scripts/run-sql-migration.mjs supabase/migrations/053_manual_confirmation_no_prepay.sql`); (3) activar Bizum/wallets/Klarna en el dashboard de Stripe; (4) reserva de prueba end-to-end.
+
+### 2026-07-24 (nocheVI) — Cancelación mucho más flexible como palanca de lanzamiento (propuesta)
+
+**Reflexión del equipo:** como app en pleno lanzamiento debemos ser mucho más flexibles en la política de cancelación.
+
+**Análisis del agente:** de acuerdo, con matiz. El riesgo es asimétrico a favor: con ~0 reservas futuras, el coste esperado de una política generosa es casi nulo y el beneficio (que alguien pague ticket alto a meses vista en una marca desconocida) es máximo — «cancelación gratuita hasta X días» es la palanca de conversión estilo Booking. Matiz del lado oferta: el cuello de botella son los organizadores (§1), así que la flexibilidad se empuja vía **defaults, presets y visibilidad**, no imponiéndola (un retiro tiene costes fijos reales). Hallazgo técnico previo de la misma sesión: el motor de cancelación no existe (botón del asistente sin acción, `refund_tiers` sin aplicar en código, cancelación de retiro por organizador sin reembolso automático) — cambiar la política ahora no rompe nada, pero sin motor cualquier promesa es papel mojado.
+
+**Propuesta (paquete «cancelación flexible de lanzamiento»):** (1) recentrar presets un escalón y default = flexible (100 % >7 d / 50 % >3 d / 0 % después; estándar = flexible actual; estricta = estándar actual; desaparece la estricta actual de máx. 50 %); (2) garantía Retiru de arrepentimiento: 100 % en las 48 h tras reservar si faltan >7 d; (3) badge «Cancelación gratuita hasta X días antes» en cards y ficha; (4) preset 24–48 h para clases/eventos de un día (frente 6); (5) motor de reembolsos real (asistente + cancelación de retiro), ver §6; (6) docs coherentes (condiciones, ayuda, para-asistentes, contrato cláusula 8, README).
+
+**Decisión tomada:** ✅ el equipo aprueba el **paquete completo con garantía de 48 h incluida**.
+
+**Trabajo ejecutado (misma sesión):**
+- Presets recentrados en el wizard (`CANCELLATION_PRESETS`): flexible (nuevo default, 100 % >7 d / 50 % >3 d), estándar (antiguo flexible), estricta (antiguo estándar; el estricta de máx. 50 % desaparece) y nuevo preset **clase/taller** (100 % hasta 1 día antes). Migración 052 cambia el default en BD.
+- Motor de reembolsos: `POST /api/bookings/[id]` (cancelación del asistente: `getCancellationRefund` en `src/lib/utils` aplica garantía 48 h + tramos, reembolso Stripe total/parcial, emails a ambas partes); botón funcional con preview del importe en `/es/mis-reservas/[id]`; `POST /api/retreats/[id]` ahora marca reservas `cancelled_by_organizer` y reembolsa el 100 % automáticamente; webhook `charge.refunded` ya no machaca estados ni duplica emails de los flujos propios.
+- Visibilidad: badge «Cancelación gratuita hasta X días antes» en `EventCard` y en las fichas ES/EN (cabecera de la política + sidebar de reserva), con nota de la garantía 48 h en la sección de política.
+- Coherencia documental: contrato del organizador **v1.1 · 2026-07** (garantía en cláusula 8, ES+EN), `/es|/en/condiciones`, ayuda ES+EN, para-asistentes ES+EN, README y ROUTES.
 
 ### 2026-07-24 (nocheV) — Decisión: ahora prima el volumen; la dilución se gestiona cuando exista
 

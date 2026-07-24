@@ -112,19 +112,24 @@ const textareaCls = `${inputCls} resize-none`;
 
 const CANCELLATION_PRESETS = {
   flexible: {
-    label: 'Flexible',
-    desc: '100% si cancela >14 días, 50% si >7 días, 0% si <3 días',
-    tiers: [{ days_before: 14, refund_percent: 100 }, { days_before: 7, refund_percent: 50 }, { days_before: 3, refund_percent: 0 }],
+    label: 'Flexible (recomendada)',
+    desc: '100% si cancela >7 días antes, 50% si >3 días, 0% después',
+    tiers: [{ days_before: 7, refund_percent: 100 }, { days_before: 3, refund_percent: 50 }, { days_before: 0, refund_percent: 0 }],
   },
   standard: {
     label: 'Estándar',
-    desc: '100% si cancela >30 días, 50% si >14 días, 0% si <7 días',
-    tiers: [{ days_before: 30, refund_percent: 100 }, { days_before: 14, refund_percent: 50 }, { days_before: 7, refund_percent: 0 }],
+    desc: '100% si cancela >14 días antes, 50% si >7 días, 0% después',
+    tiers: [{ days_before: 14, refund_percent: 100 }, { days_before: 7, refund_percent: 50 }, { days_before: 0, refund_percent: 0 }],
   },
   strict: {
     label: 'Estricta',
-    desc: '50% si cancela >30 días, 0% después',
-    tiers: [{ days_before: 30, refund_percent: 50 }, { days_before: 0, refund_percent: 0 }],
+    desc: '100% si cancela >30 días antes, 50% si >14 días, 0% después. Solo para eventos con costes anticipados altos.',
+    tiers: [{ days_before: 30, refund_percent: 100 }, { days_before: 14, refund_percent: 50 }, { days_before: 0, refund_percent: 0 }],
+  },
+  class: {
+    label: 'Clase / taller',
+    desc: '100% si cancela hasta 1 día antes, 0% el mismo día. Ideal para eventos de un día o series.',
+    tiers: [{ days_before: 1, refund_percent: 100 }, { days_before: 0, refund_percent: 0 }],
   },
 };
 
@@ -169,7 +174,7 @@ export function NuevoEventoForm({ categories, destinations, eventsHubPath = '/es
     categories: [] as string[],
     includes_es: [''],
     excludes_es: [''],
-    cancellation_type: 'standard' as 'flexible' | 'standard' | 'strict',
+    cancellation_type: 'flexible' as 'flexible' | 'standard' | 'strict' | 'class',
   });
 
   const [images, setImages] = useState<{ file?: File; url: string; preview: string; is_cover: boolean }[]>([]);
@@ -1031,7 +1036,7 @@ export function NuevoEventoForm({ categories, destinations, eventsHubPath = '/es
                 ))}
               </div>
               <p className="text-xs text-[#a09383] mt-2">
-                Los porcentajes muestran el reparto del precio publicado (comisión Retiru / neto para ti). Si un asistente cancela y le corresponde reembolso según estos tramos, ese importe se devuelve por completo al asistente. La compensación de la comisión de Retiru en cancelaciones se regula en el acuerdo comercial con Retiru (no se descuenta del reembolso del asistente).
+                Si un asistente cancela y le corresponde reembolso según estos tramos, ese importe se devuelve por completo al asistente. Además, con independencia de la política elegida, todo asistente puede cancelar gratis durante las 48 horas siguientes a reservar si faltan más de 7 días para el inicio (garantía Retiru). La compensación de la comisión de Retiru en cancelaciones se regula en el acuerdo comercial con Retiru (no se descuenta del reembolso del asistente).
               </p>
             </div>
           </>

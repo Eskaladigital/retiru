@@ -10,6 +10,8 @@ interface ReserveButtonProps {
   totalPrice: number;
   availableSpots: number;
   minReached: boolean;
+  /** Confirmación manual: la reserva entra como solicitud sin pago */
+  manualConfirmation?: boolean;
   locale?: 'es' | 'en';
   className?: string;
   compact?: boolean;
@@ -21,6 +23,7 @@ export default function ReserveButton({
   totalPrice,
   availableSpots,
   minReached,
+  manualConfirmation = false,
   locale = 'es',
   className = '',
   compact = false,
@@ -32,6 +35,11 @@ export default function ReserveButton({
 
   function getLabel() {
     if (soldOut) return locale === 'es' ? 'Agotado' : 'Sold out';
+    if (manualConfirmation) {
+      return compact
+        ? (locale === 'es' ? 'Solicitar plaza' : 'Request spot')
+        : (locale === 'es' ? 'Solicitar plaza (sin pago)' : 'Request spot (no payment)');
+    }
     if (!minReached) {
       return compact
         ? (locale === 'es' ? 'Reservar plaza' : 'Reserve spot')
@@ -91,9 +99,13 @@ export default function ReserveButton({
     return (
       <div className={`text-center rounded-xl bg-sage-50 border border-sage-200 p-4 ${className}`}>
         <p className="text-sage-700 font-semibold text-sm">
-          {locale === 'es'
-            ? 'Plaza reservada. Te avisaremos cuando se alcance el mínimo para confirmar con el pago.'
-            : 'Spot reserved. We\u2019ll notify you when the minimum is reached so you can confirm with payment.'}
+          {manualConfirmation
+            ? (locale === 'es'
+                ? 'Solicitud enviada. El organizador la revisará y, si la acepta, te enviaremos el enlace para completar el pago.'
+                : 'Request sent. The organizer will review it and, if accepted, we\u2019ll send you the link to complete the payment.')
+            : (locale === 'es'
+                ? 'Plaza reservada. Te avisaremos cuando se alcance el mínimo para confirmar con el pago.'
+                : 'Spot reserved. We\u2019ll notify you when the minimum is reached so you can confirm with payment.')}
         </p>
       </div>
     );

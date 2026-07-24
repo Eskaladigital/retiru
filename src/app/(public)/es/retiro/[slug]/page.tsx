@@ -15,6 +15,7 @@ import ReserveButton from '@/components/booking/ReserveButton';
 import { RetreatDescriptionBody, LinkifyText } from '@/components/ui/retreat-description-body';
 import ShareButton from '@/components/ui/share-button';
 import { getSiteUrl } from '@/lib/site-url';
+import { getCancellationTypeLabel, getFreeCancellationDays } from '@/lib/utils';
 
 export const revalidate = 3600;
 
@@ -108,7 +109,11 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
       .eq('status', 'reserved_no_payment');
     reservedCount = count ?? 0;
   }
-  const minReached = (confirmedCount + reservedCount) >= minViable;
+  // Con mínimo 1 la API cobra siempre (checkout directo), igual que cuando el mínimo ya está cubierto
+  const minReached = minViable <= 1 || (confirmedCount + reservedCount) >= minViable;
+  // Confirmación manual: siempre solicitud sin pago (se paga tras la aprobación del organizador)
+  const isManualConfirmation = r.confirmation_type === 'manual';
+  const payNow = minReached && !isManualConfirmation;
 
   // Evento periódico: próximas fechas de la misma serie
   let seriesDates: { slug: string; start_date: string }[] = [];
@@ -360,7 +365,17 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
               <section className="mb-10">
                 <h2 className="mb-4 font-serif text-2xl font-semibold">Política de cancelación</h2>
                 <div className="rounded-xl bg-cream-100 p-5">
-                  <p className="mb-3 text-sm font-medium text-foreground">Cancelación {r.cancellation_policy.type}</p>
+                  <div className="mb-3 flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-medium text-foreground">Cancelación {getCancellationTypeLabel(r.cancellation_policy.type, 'es')}</p>
+                    {(() => {
+                      const d = getFreeCancellationDays(r.cancellation_policy);
+                      return d ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-sage-100 px-2.5 py-0.5 text-xs font-semibold text-sage-700">
+                          ✓ Cancelación gratuita hasta {d} día{d === 1 ? '' : 's'} antes
+                        </span>
+                      ) : null;
+                    })()}
+                  </div>
                   <ul className="space-y-2">
                     {r.cancellation_policy.refund_tiers.map((tier, i) => (
                       <li key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -369,7 +384,10 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
                       </li>
                     ))}
                   </ul>
-                  <p className="mt-3 text-xs text-muted-foreground">
+                  <p className="mt-3 text-xs font-medium text-foreground">
+                    Garantía Retiru: puedes cancelar gratis (reembolso del 100 %) durante las 48 horas siguientes a tu reserva, siempre que falten más de 7 días para el inicio, sea cual sea la política del evento.
+                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground">
                     El porcentaje se aplica sobre el importe total que pagaste. Si te corresponde reembolso, recibes ese importe íntegro en tu método de pago. La retribución de Retiru en supuestos de cancelación se canaliza según el acuerdo comercial con el organizador y no supone una retención adicional sobre tu reembolso.
                   </p>
                 </div>
@@ -413,8 +431,20 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
                 <div className="mb-6 text-center">
                   <p className="text-3xl font-bold text-foreground">{r.total_price}€ <span className="text-base font-normal text-muted-foreground">/ persona</span></p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {minReached ? 'Pago único · Todo incluido' : 'Reserva sin pago · Pago al alcanzar el mínimo'}
+                    {payNow
+                      ? 'Pago único · Todo incluido'
+                      : isManualConfirmation
+                        ? 'Solicitud sin pago · Pagas cuando el organizador acepte'
+                        : 'Reserva sin pago · Pago al alcanzar el mínimo'}
                   </p>
+                  {(() => {
+                    const d = getFreeCancellationDays(r.cancellation_policy);
+                    return d ? (
+                      <p className="mt-1.5 text-xs font-semibold text-sage-700">
+                        ✓ Cancelación gratuita hasta {d} día{d === 1 ? '' : 's'} antes
+                      </p>
+                    ) : null;
+                  })()}
                 </div>
 
                 {/* Info */}
@@ -445,6 +475,12 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
                       <Zap size={16} /> Confirmación inmediata
                     </div>
                   )}
+                  {isManualConfirmation && (
+                    <div className="rounded-lg bg-sand-50 border border-sand-200/80 p-3 text-xs text-muted-foreground leading-relaxed">
+                      <strong className="text-foreground">El organizador confirma cada plaza.</strong>
+                      <span className="block mt-1">Envías tu solicitud sin pagar nada. Si el organizador la acepta (tiene {r.sla_hours || 48} h), te enviaremos el enlace para completar el pago.</span>
+                    </div>
+                  )}
                   {minViable > 1 && (
                     <div className="rounded-lg bg-sand-50 border border-sand-200/80 p-3 text-xs text-muted-foreground leading-relaxed">
                       <strong className="text-foreground">Mínimo de participantes:</strong> {minViable}.
@@ -467,6 +503,7 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
                   totalPrice={r.total_price}
                   availableSpots={r.available_spots}
                   minReached={minReached}
+                  manualConfirmation={isManualConfirmation}
                   locale="es"
                   className="w-full py-4 text-base"
                 />
@@ -474,12 +511,16 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
                 <div className="mt-4 rounded-lg bg-sage-50/60 border border-sage-200/60 p-3 text-center">
                   <p className="text-xs text-muted-foreground">
                     <Shield size={12} className="inline mr-1 text-sage-600" />
-                    {minReached
+                    {payNow
                       ? 'Pago 100 % seguro con Stripe · Reembolso según política de cancelación'
-                      : 'Reserva gratuita · Solo pagas cuando se confirme el retiro'}
+                      : isManualConfirmation
+                        ? 'Solicitud gratuita · Solo pagas si el organizador acepta'
+                        : 'Reserva gratuita · Solo pagas cuando se confirme el retiro'}
                   </p>
                   <p className="text-[11px] text-muted-foreground/70 mt-1.5">
-                    Visa, Mastercard y más · Tus datos nunca pasan por nuestros servidores
+                    {payNow
+                      ? 'Visa, Mastercard, Bizum y más · Tus datos nunca pasan por nuestros servidores'
+                      : 'Sin tarjeta ahora · Te avisaremos por email para completar el pago si se confirma'}
                   </p>
                 </div>
 
@@ -507,6 +548,7 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
               totalPrice={r.total_price}
               availableSpots={r.available_spots}
               minReached={minReached}
+              manualConfirmation={isManualConfirmation}
               locale="es"
               className="px-6 py-3 whitespace-nowrap"
               compact

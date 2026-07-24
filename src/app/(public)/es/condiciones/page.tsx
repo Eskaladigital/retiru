@@ -219,10 +219,13 @@ export default function CondicionesPage() {
           </h2>
           <div className="space-y-4 text-[15px] leading-relaxed text-muted-foreground">
             <p>
-              <strong className="text-foreground">Reserva:</strong> Tu plaza queda bloqueada tras el pago completo. Si el retiro tiene confirmación inmediata, la plaza se confirma al instante. Si requiere confirmación manual, el organizador tiene un plazo (por defecto 48h) para confirmar o rechazar.
+              <strong className="text-foreground">Reserva:</strong> Si el retiro tiene confirmación inmediata, tu plaza se confirma al instante tras el pago completo. Si requiere confirmación manual, envías tu solicitud sin pagar nada: el organizador tiene un plazo (por defecto 48h) para aceptarla o rechazarla y, si la acepta, recibes un enlace de pago con fecha límite; tu plaza queda confirmada al completar el pago.
             </p>
             <p>
-              <strong className="text-foreground">Cancelación por el asistente:</strong> El reembolso depende de la política de cancelación que configure cada organizador (porcentajes y plazos sobre el importe total abonado). Consúltala en la ficha antes de reservar. Si según esa política te corresponde un reembolso, recibirás ese importe íntegro en tu método de pago. La retribución de Retiru en estos supuestos se regula en el acuerdo con el organizador y no implica retener parte de tu reembolso como cuota adicional.
+              <strong className="text-foreground">Garantía Retiru de 48 horas:</strong> Puedes cancelar cualquier reserva con reembolso del 100 % durante las 48 horas siguientes a realizarla, siempre que falten más de 7 días para el inicio del evento. Esta garantía aplica por encima de la política de cancelación del organizador.
+            </p>
+            <p>
+              <strong className="text-foreground">Cancelación por el asistente:</strong> Pasada la garantía de 48 horas, el reembolso depende de la política de cancelación que configure cada organizador (porcentajes y plazos sobre el importe total abonado), visible en la ficha antes de reservar. La mayoría de eventos usan la política flexible: reembolso del 100 % hasta 7 días antes y del 50 % hasta 3 días antes. Si según esa política te corresponde un reembolso, recibirás ese importe íntegro en tu método de pago. La retribución de Retiru en estos supuestos se regula en el acuerdo con el organizador y no implica retener parte de tu reembolso como cuota adicional.
             </p>
             <p>
               <strong className="text-foreground">Cancelación por el organizador:</strong> Recibirás el reembolso completo de forma automática.

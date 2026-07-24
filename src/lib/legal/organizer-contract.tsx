@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import type { Locale } from '@/i18n/config';
 
-export const CONTRACT_VERSION = '1.0 · 2026-04';
+export const CONTRACT_VERSION = '1.1 · 2026-07';
 
 export type Clause = {
   icon: LucideIcon;
@@ -96,7 +96,7 @@ const CLAUSES_ES: Clause[] = [
       'El Organizador se compromete a operar con diligencia razonable en los siguientes plazos:',
     ],
     bullets: [
-      'Confirmación o rechazo de reservas que requieran aprobación manual: 48 horas como máximo desde la solicitud. Pasado ese plazo, Retiru puede cancelar la reserva y reembolsar al asistente.',
+      'Confirmación o rechazo de solicitudes de reserva que requieran aprobación manual: 48 horas como máximo desde la solicitud. Las solicitudes llegan sin pago del asistente; pasado ese plazo sin decisión, Retiru puede anular la solicitud (sin cargo para el asistente y, si existiera algún pago, con reembolso íntegro).',
       'Respuesta a mensajes de asistentes en mensajería interna: en un plazo razonable, idealmente dentro de las 48 horas hábiles.',
       'Comunicación clara y oportuna ante incidencias (cambios de programa, ubicación, climatología o cualquier modificación relevante respecto a la ficha publicada).',
       'Celebración del evento en la fecha y lugar publicados, salvo causa justificada notificada con la antelación adecuada.',
@@ -119,9 +119,10 @@ const CLAUSES_ES: Clause[] = [
       'Reglas comunes:',
     ],
     bullets: [
+      'Garantía Retiru de arrepentimiento: todo asistente puede cancelar con reembolso del 100 % durante las 48 horas siguientes a su reserva, siempre que falten más de 7 días para el inicio del evento. Esta garantía aplica por encima de la política definida por el Organizador.',
       'Cancelación por el Organizador: el asistente recibe siempre el reembolso íntegro de forma automática.',
       'No confirmación en plazo por el Organizador: el asistente recibe siempre el reembolso íntegro de forma automática.',
-      'Cancelación por el asistente: se aplica la política definida por el Organizador. El reembolso se transfiere íntegro al asistente; la compensación de la comisión que correspondería a Retiru se rige por este acuerdo y no se descuenta del reembolso del asistente.',
+      'Cancelación por el asistente (fuera de la garantía anterior): se aplica la política definida por el Organizador. El reembolso se transfiere íntegro al asistente; la compensación de la comisión que correspondería a Retiru se rige por este acuerdo y no se descuenta del reembolso del asistente.',
       'Cancelaciones reiteradas, masivas o sin causa justificada por parte del Organizador constituyen incumplimiento grave.',
     ],
   },
@@ -226,7 +227,7 @@ const CLAUSES_EN: Clause[] = [
       'The Organizer commits to operate with reasonable diligence within these timeframes:',
     ],
     bullets: [
-      'Confirmation or rejection of bookings that require manual approval: 48 hours maximum from the request. After that, Retiru may cancel the booking and refund the attendee.',
+      'Confirmation or rejection of booking requests that require manual approval: 48 hours maximum from the request. Requests arrive without any payment from the attendee; after that window with no decision, Retiru may cancel the request (at no cost to the attendee and, if any payment existed, with a full refund).',
       'Reply to attendee messages in internal messaging: within a reasonable timeframe, ideally within 48 working hours.',
       'Clear and timely communication on incidents (changes to programme, location, weather or any relevant change versus the published listing).',
       'Holding the event on the published date and location, except for justified causes notified with appropriate advance notice.',
@@ -249,9 +250,10 @@ const CLAUSES_EN: Clause[] = [
       'Common rules:',
     ],
     bullets: [
+      "Retiru cooling-off guarantee: every attendee may cancel with a 100% refund within 48 hours of booking, provided the event starts in more than 7 days. This guarantee applies on top of the Organizer's policy.",
       'Cancellation by the Organizer: the attendee always receives a full automatic refund.',
       'Failure to confirm in time by the Organizer: the attendee always receives a full automatic refund.',
-      "Cancellation by the attendee: the Organizer's policy applies. The refund is transferred to the attendee; any compensation owed to Retiru for its commission is governed by this agreement and is not deducted from the attendee's refund.",
+      "Cancellation by the attendee (outside the above guarantee): the Organizer's policy applies. The refund is transferred to the attendee; any compensation owed to Retiru for its commission is governed by this agreement and is not deducted from the attendee's refund.",
       'Repeated, mass or unjustified cancellations by the Organizer are a serious breach.',
     ],
   },

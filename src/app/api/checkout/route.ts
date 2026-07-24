@@ -8,6 +8,8 @@ import {
   sendReservationConfirmedEmail,
   sendMinViableReachedEmail,
   sendMinViableReachedToOrganizerEmail,
+  sendBookingRequestReceivedEmail,
+  sendNewBookingToOrganizerEmail,
 } from '@/lib/email';
 
 function generateBookingNumber(): string {
@@ -99,10 +101,16 @@ export async function POST(request: NextRequest) {
 
     const totalEnrolled = confirmedCount + (reservedCount ?? 0);
     const minAlreadyReached = totalEnrolled >= minAttendees;
+    const isManual = retreat.confirmation_type === 'manual';
 
-    // ─── Min NOT reached: reserve without payment ────────────────────
-    if (!minAlreadyReached && minAttendees > 1) {
+    // ─── Reserve/request without payment ─────────────────────────────
+    // Sin pago por adelantado cuando: (a) falta el mínimo de participantes,
+    // o (b) el retiro es de confirmación manual (el organizador aprueba antes
+    // de que exista pago; el enlace de pago llega tras la aprobación).
+    if ((!minAlreadyReached && minAttendees > 1) || isManual) {
       const bookingNumber = generateBookingNumber();
+      const eventTitle = locale === 'es' ? retreat.title_es : (retreat.title_en || retreat.title_es);
+      const slaHours = retreat.sla_hours || 48;
 
       const { data: booking, error: bookingError } = await admin
         .from('bookings')
@@ -118,6 +126,10 @@ export async function POST(request: NextRequest) {
           status: 'reserved_no_payment',
           platform_payment_status: 'pending',
           remaining_payment_status: 'not_applicable',
+          // Plazo del organizador para responder a la solicitud (solo manual)
+          sla_deadline: isManual
+            ? new Date(Date.now() + slaHours * 60 * 60 * 1000).toISOString()
+            : null,
         })
         .select('id')
         .single();
@@ -129,32 +141,71 @@ export async function POST(request: NextRequest) {
 
       const newTotalEnrolled = totalEnrolled + 1;
 
-      // Email de confirmación de reserva al asistente
+      // Email al asistente
       try {
-        await sendReservationConfirmedEmail({
-          to: user.email!,
-          locale,
-          eventTitle: locale === 'es' ? retreat.title_es : (retreat.title_en || retreat.title_es),
-          bookingNumber,
-          minAttendees,
-          currentReserved: newTotalEnrolled,
-        });
-      } catch (e) { console.error('sendReservationConfirmedEmail failed:', e); }
+        if (isManual) {
+          await sendBookingRequestReceivedEmail({
+            to: user.email!,
+            locale,
+            eventTitle,
+            bookingNumber,
+            slaHours,
+          });
+        } else {
+          await sendReservationConfirmedEmail({
+            to: user.email!,
+            locale,
+            eventTitle,
+            bookingNumber,
+            minAttendees,
+            currentReserved: newTotalEnrolled,
+          });
+        }
+      } catch (e) { console.error('reservation email failed:', e); }
 
-      // Check if THIS booking triggers the minimum
-      if (newTotalEnrolled >= minAttendees) {
-        await triggerMinViableReached(admin, retreat, locale);
+      // Notificar al organizador la nueva solicitud (solo manual)
+      if (isManual) {
+        try {
+          const { data: orgProfile } = await admin
+            .from('organizer_profiles')
+            .select('user_id, profiles!user_id(email, full_name, preferred_locale)')
+            .eq('id', retreat.organizer_id)
+            .single();
+          const orgUser = orgProfile?.profiles as any;
+          const { data: attendeeProfile } = await admin
+            .from('profiles')
+            .select('full_name')
+            .eq('id', user.id)
+            .single();
+          if (orgUser?.email) {
+            await sendNewBookingToOrganizerEmail({
+              to: orgUser.email,
+              locale: (orgUser.preferred_locale || 'es') as 'es' | 'en',
+              bookingNumber,
+              eventTitle: retreat.title_es,
+              attendeeName: attendeeProfile?.full_name || 'Asistente',
+              requiresConfirmation: true,
+              slaHours,
+            });
+          }
+        } catch (e) { console.error('sendNewBookingToOrganizerEmail failed:', e); }
       }
 
-      return NextResponse.json({ reserved: true, bookingId: booking.id });
+      // Check if THIS booking triggers the minimum
+      if (minAttendees > 1 && !minAlreadyReached && newTotalEnrolled >= minAttendees) {
+        try {
+          await triggerMinViableReached(admin, retreat, locale);
+        } catch (e) {
+          // La reserva ya está creada: no devolver 500 al usuario por un fallo de notificación
+          console.error('triggerMinViableReached failed:', e);
+        }
+      }
+
+      return NextResponse.json({ reserved: true, requested: isManual, bookingId: booking.id });
     }
 
-    // ─── Min reached (or min=1): normal Stripe checkout ──────────────
+    // ─── Min reached (or min=1) + automatic: normal Stripe checkout ──
     const bookingNumber = generateBookingNumber();
-
-    const slaDeadline = retreat.confirmation_type === 'manual'
-      ? new Date(Date.now() + (retreat.sla_hours || 48) * 60 * 60 * 1000).toISOString()
-      : null;
 
     const { data: booking, error: bookingError } = await admin
       .from('bookings')
@@ -170,7 +221,6 @@ export async function POST(request: NextRequest) {
         status: 'pending_payment',
         platform_payment_status: 'pending',
         remaining_payment_status: 'not_applicable',
-        sla_deadline: slaDeadline,
       })
       .select('id')
       .single();
@@ -183,16 +233,28 @@ export async function POST(request: NextRequest) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const eventTitle = locale === 'es' ? retreat.title_es : (retreat.title_en || retreat.title_es);
 
-    const session = await createCheckoutSession({
-      bookingId: booking.id,
-      eventTitle,
-      totalPrice: retreat.total_price,
-      currency: retreat.currency,
-      customerEmail: user.email!,
-      locale,
-      successUrl: `${appUrl}/${locale}/${locale === 'es' ? 'mis-reservas' : 'my-bookings'}?booking=${booking.id}&success=true`,
-      cancelUrl: `${appUrl}/${locale}/${locale === 'es' ? 'retiro' : 'retreat'}/${retreat.slug}?cancelled=true`,
-    });
+    let session;
+    try {
+      session = await createCheckoutSession({
+        bookingId: booking.id,
+        eventTitle,
+        totalPrice: retreat.total_price,
+        currency: retreat.currency,
+        customerEmail: user.email!,
+        locale,
+        successUrl: `${appUrl}/${locale}/${locale === 'es' ? 'mis-reservas' : 'my-bookings'}?booking=${booking.id}&success=true`,
+        cancelUrl: `${appUrl}/${locale}/${locale === 'es' ? 'retiro' : 'retreat'}/${retreat.slug}?cancelled=true`,
+      });
+    } catch (stripeError) {
+      console.error('Stripe checkout session error:', stripeError);
+      // No dejar la reserva huérfana en pending_payment: bloquearía reintentos
+      await admin.from('bookings').delete().eq('id', booking.id);
+      return NextResponse.json({
+        error: locale === 'es'
+          ? 'No se pudo iniciar el pago. Inténtalo de nuevo en unos minutos.'
+          : 'Could not start the payment. Please try again in a few minutes.',
+      }, { status: 502 });
+    }
 
     await admin
       .from('bookings')
@@ -219,7 +281,7 @@ async function handlePayExistingBooking(
     .from('bookings')
     .select(`
       id, booking_number, retreat_id, attendee_id, total_price, platform_fee,
-      organizer_amount, currency, payment_deadline, status,
+      organizer_amount, currency, payment_deadline, status, organizer_approved_at,
       retreats!retreat_id(title_es, title_en, slug, confirmation_type, sla_hours)
     `)
     .eq('id', bookingId)
@@ -235,6 +297,17 @@ async function handlePayExistingBooking(
     }, { status: 404 });
   }
 
+  const retreat = booking.retreats as any;
+
+  // Confirmación manual: no se puede pagar hasta que el organizador apruebe
+  if (retreat?.confirmation_type === 'manual' && !booking.organizer_approved_at) {
+    return NextResponse.json({
+      error: locale === 'es'
+        ? 'Tu solicitud aún está pendiente de aprobación del organizador'
+        : 'Your request is still awaiting the organizer\u2019s approval',
+    }, { status: 403 });
+  }
+
   if (booking.payment_deadline && new Date(booking.payment_deadline) < new Date()) {
     return NextResponse.json({
       error: locale === 'es'
@@ -243,16 +316,10 @@ async function handlePayExistingBooking(
     }, { status: 410 });
   }
 
-  const retreat = booking.retreats as any;
-  const slaDeadline = retreat?.confirmation_type === 'manual'
-    ? new Date(Date.now() + (retreat.sla_hours || 48) * 60 * 60 * 1000).toISOString()
-    : null;
-
   await admin
     .from('bookings')
     .update({
       status: 'pending_payment',
-      sla_deadline: slaDeadline,
       updated_at: new Date().toISOString(),
     })
     .eq('id', bookingId);
@@ -260,16 +327,31 @@ async function handlePayExistingBooking(
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   const eventTitle = locale === 'es' ? retreat?.title_es : (retreat?.title_en || retreat?.title_es);
 
-  const session = await createCheckoutSession({
-    bookingId: booking.id,
-    eventTitle: eventTitle || 'Retiro',
-    totalPrice: booking.total_price,
-    currency: booking.currency,
-    customerEmail: user.email!,
-    locale,
-    successUrl: `${appUrl}/${locale}/${locale === 'es' ? 'mis-reservas' : 'my-bookings'}?booking=${booking.id}&success=true`,
-    cancelUrl: `${appUrl}/${locale}/${locale === 'es' ? 'retiro' : 'retreat'}/${retreat?.slug || ''}?cancelled=true`,
-  });
+  let session;
+  try {
+    session = await createCheckoutSession({
+      bookingId: booking.id,
+      eventTitle: eventTitle || 'Retiro',
+      totalPrice: booking.total_price,
+      currency: booking.currency,
+      customerEmail: user.email!,
+      locale,
+      successUrl: `${appUrl}/${locale}/${locale === 'es' ? 'mis-reservas' : 'my-bookings'}?booking=${booking.id}&success=true`,
+      cancelUrl: `${appUrl}/${locale}/${locale === 'es' ? 'retiro' : 'retreat'}/${retreat?.slug || ''}?cancelled=true`,
+    });
+  } catch (stripeError) {
+    console.error('Stripe checkout session error (pay existing):', stripeError);
+    // Devolver la reserva a su estado anterior para que pueda reintentar
+    await admin
+      .from('bookings')
+      .update({ status: 'reserved_no_payment', sla_deadline: null, updated_at: new Date().toISOString() })
+      .eq('id', bookingId);
+    return NextResponse.json({
+      error: locale === 'es'
+        ? 'No se pudo iniciar el pago. Inténtalo de nuevo en unos minutos.'
+        : 'Could not start the payment. Please try again in a few minutes.',
+    }, { status: 502 });
+  }
 
   await admin
     .from('bookings')
@@ -290,20 +372,27 @@ async function triggerMinViableReached(
   const deadlineISO = deadline.toISOString();
   const deadlineStr = formatDeadlineForEmail(deadline, locale);
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const isManual = retreat.confirmation_type === 'manual';
 
-  // Set payment_deadline on all reserved_no_payment bookings for this retreat
-  await admin
+  // Set payment_deadline on reserved_no_payment bookings for this retreat.
+  // En confirmación manual solo pagan las solicitudes ya aprobadas por el
+  // organizador; el resto recibirá su enlace al ser aprobadas.
+  let updateQuery = admin
     .from('bookings')
     .update({ payment_deadline: deadlineISO, updated_at: new Date().toISOString() })
     .eq('retreat_id', retreat.id)
     .eq('status', 'reserved_no_payment');
+  if (isManual) updateQuery = updateQuery.not('organizer_approved_at', 'is', null);
+  await updateQuery;
 
   // Fetch those bookings to send emails
-  const { data: reservedBookings } = await admin
+  let fetchQuery = admin
     .from('bookings')
     .select('id, booking_number, attendee_id, total_price, profiles!attendee_id(email, preferred_locale)')
     .eq('retreat_id', retreat.id)
     .eq('status', 'reserved_no_payment');
+  if (isManual) fetchQuery = fetchQuery.not('organizer_approved_at', 'is', null);
+  const { data: reservedBookings } = await fetchQuery;
 
   const eventTitleEs = retreat.title_es;
   const eventTitleEn = retreat.title_en || retreat.title_es;

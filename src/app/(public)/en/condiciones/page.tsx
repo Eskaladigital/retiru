@@ -211,10 +211,13 @@ export default function CondicionesPageEn() {
           </h2>
           <div className="space-y-4 text-[15px] leading-relaxed text-muted-foreground">
             <p>
-              <strong className="text-foreground">Booking:</strong> Your spot is secured after paying the full amount. If the retreat has instant confirmation, your spot is confirmed immediately. If it requires manual confirmation, the organizer has a deadline (default 48h) to confirm or reject.
+              <strong className="text-foreground">Booking:</strong> If the retreat has instant confirmation, your spot is confirmed immediately after paying the full amount. If it requires manual confirmation, you send your request without paying anything: the organizer has a deadline (default 48h) to accept or decline it and, if accepted, you receive a payment link with a deadline; your spot is confirmed once you complete the payment.
             </p>
             <p>
-              <strong className="text-foreground">Cancellation by attendee:</strong> Refunds follow each organizer&apos;s cancellation policy (percentages and deadlines applied to the total amount you paid). Check the retreat page before booking. If a refund applies, you receive that amount in full to your original payment method. Retiru&apos;s remuneration in these cases is governed by our agreement with the organizer and does not mean an extra deduction from your refund.
+              <strong className="text-foreground">Retiru 48-hour guarantee:</strong> You can cancel any booking with a 100% refund within 48 hours of making it, as long as the event starts in more than 7 days. This guarantee applies on top of the organizer&apos;s cancellation policy.
+            </p>
+            <p>
+              <strong className="text-foreground">Cancellation by attendee:</strong> After the 48-hour guarantee, refunds follow each organizer&apos;s cancellation policy (percentages and deadlines applied to the total amount you paid), visible on the retreat page before booking. Most events use the flexible policy: 100% refund until 7 days before and 50% until 3 days before. If a refund applies, you receive that amount in full to your original payment method. Retiru&apos;s remuneration in these cases is governed by our agreement with the organizer and does not mean an extra deduction from your refund.
             </p>
             <p>
               <strong className="text-foreground">Cancellation by organizer:</strong> You will receive a full refund automatically.

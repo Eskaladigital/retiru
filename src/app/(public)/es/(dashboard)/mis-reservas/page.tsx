@@ -43,11 +43,16 @@ export default async function MisReservasPage() {
             const title = r?.title_es || r?.title_en || 'Retiro';
             const dates = r ? formatDateRange(r.start_date, r.end_date, 'es') : '';
             const coverImg = r?.retreat_images?.find((i) => i.is_cover)?.url || r?.retreat_images?.[0]?.url || PLACEHOLDER_IMG;
-            const s = STATUS[b.status] || { label: b.status, color: 'bg-sand-200 text-foreground' };
+            const isRequestPendingApproval = b.status === 'reserved_no_payment' && r?.confirmation_type === 'manual' && !b.organizer_approved_at;
+            const s = isRequestPendingApproval
+              ? { label: 'Solicitud enviada', color: 'bg-amber-100 text-amber-700' }
+              : STATUS[b.status] || { label: b.status, color: 'bg-sand-200 text-foreground' };
 
             const isReservedNoPay = b.status === 'reserved_no_payment';
-            const canPay = isReservedNoPay && b.payment_deadline && new Date(b.payment_deadline) > new Date();
-            const waitingForMin = isReservedNoPay && !b.payment_deadline;
+            const isManual = r?.confirmation_type === 'manual';
+            const waitingForApproval = isReservedNoPay && isManual && !b.organizer_approved_at;
+            const canPay = isReservedNoPay && !waitingForApproval && b.payment_deadline && new Date(b.payment_deadline) > new Date();
+            const waitingForMin = isReservedNoPay && !waitingForApproval && !b.payment_deadline;
 
             return (
               <div
@@ -68,6 +73,12 @@ export default async function MisReservasPage() {
                   <div className="flex flex-wrap gap-4 text-sm">
                     <div><span className="text-[#a09383]">Importe:</span> <span className="font-bold">{Number(b.total_price).toFixed(0)}€</span></div>
                   </div>
+
+                  {waitingForApproval && (
+                    <p className="mt-2 text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2">
+                      El organizador está revisando tu solicitud. Si la acepta, te enviaremos el enlace para completar el pago. No se te ha cobrado nada.
+                    </p>
+                  )}
 
                   {waitingForMin && (
                     <p className="mt-2 text-xs text-blue-600 bg-blue-50 rounded-lg px-3 py-2">

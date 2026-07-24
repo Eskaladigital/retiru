@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { Star, MapPin, Calendar, Clock, Users, Globe, Shield, Zap, ChevronRight, Check, X as XIcon } from 'lucide-react';
 import AskOrganizerButton from '@/components/messaging/AskOrganizerButton';
 import { RetreatDescriptionBody, LinkifyText } from '@/components/ui/retreat-description-body';
+import { getCancellationTypeLabel, getFreeCancellationDays } from '@/lib/utils';
 import type { Retreat } from '@/types';
 
 const dateFmt = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -196,7 +197,17 @@ export function RetiroDetailContent({ retreat, isPreview }: Props) {
             <section className="mb-10">
               <h2 className="mb-4 font-serif text-2xl font-semibold">Política de cancelación</h2>
               <div className="rounded-xl bg-cream-100 p-5">
-                <p className="mb-3 text-sm font-medium text-foreground">Cancelación {r.cancellation_policy.type}</p>
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-medium text-foreground">Cancelación {getCancellationTypeLabel(r.cancellation_policy.type, 'es')}</p>
+                  {(() => {
+                    const d = getFreeCancellationDays(r.cancellation_policy);
+                    return d ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-sage-100 px-2.5 py-0.5 text-xs font-semibold text-sage-700">
+                        ✓ Cancelación gratuita hasta {d} día{d === 1 ? '' : 's'} antes
+                      </span>
+                    ) : null;
+                  })()}
+                </div>
                 <ul className="space-y-2">
                   {r.cancellation_policy.refund_tiers.map((tier, i) => (
                     <li key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -205,7 +216,10 @@ export function RetiroDetailContent({ retreat, isPreview }: Props) {
                     </li>
                   ))}
                 </ul>
-                <p className="mt-3 text-xs text-muted-foreground">
+                <p className="mt-3 text-xs font-medium text-foreground">
+                  Garantía Retiru: el asistente puede cancelar gratis (reembolso del 100 %) durante las 48 horas siguientes a su reserva, siempre que falten más de 7 días para el inicio, sea cual sea la política del evento.
+                </p>
+                <p className="mt-2 text-xs text-muted-foreground">
                   El porcentaje se aplica sobre el importe total pagado. Si corresponde reembolso, se devuelve íntegro al asistente; la comisión de Retiru en cancelaciones se regula con el organizador y no se resta del reembolso del asistente.
                 </p>
               </div>

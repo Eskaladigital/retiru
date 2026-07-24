@@ -161,7 +161,7 @@ export interface CancellationTier {
 }
 
 export interface CancellationPolicy {
-  type: 'flexible' | 'standard' | 'strict' | 'custom';
+  type: 'flexible' | 'standard' | 'strict' | 'class' | 'custom';
   refund_tiers: CancellationTier[];
   platform_fee_refundable: boolean;
 }

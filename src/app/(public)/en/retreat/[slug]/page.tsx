@@ -14,7 +14,7 @@ import AskOrganizerButton from '@/components/messaging/AskOrganizerButton';
 import ReserveButton from '@/components/booking/ReserveButton';
 import { RetreatDescriptionBody, LinkifyText } from '@/components/ui/retreat-description-body';
 import ShareButton from '@/components/ui/share-button';
-import { CATEGORY_SLUG_EN } from '@/lib/utils';
+import { CATEGORY_SLUG_EN, getCancellationTypeLabel, getFreeCancellationDays } from '@/lib/utils';
 import { getSiteUrl } from '@/lib/site-url';
 
 export const revalidate = 3600;
@@ -103,7 +103,11 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
       .eq('status', 'reserved_no_payment');
     reservedCount = count ?? 0;
   }
-  const minReached = (confirmedCount + reservedCount) >= minViable;
+  // With a minimum of 1 the API always charges (direct checkout), same as when the minimum is covered
+  const minReached = minViable <= 1 || (confirmedCount + reservedCount) >= minViable;
+  // Manual confirmation: always a no-payment request (payment after organizer approval)
+  const isManualConfirmation = r.confirmation_type === 'manual';
+  const payNow = minReached && !isManualConfirmation;
 
   // Recurring event: upcoming dates in the same series
   let seriesDates: { slug: string; start_date: string }[] = [];
@@ -358,7 +362,17 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
               <section className="mb-10">
                 <h2 className="mb-4 font-serif text-2xl font-semibold">Cancellation policy</h2>
                 <div className="rounded-xl bg-cream-100 p-5">
-                  <p className="mb-3 text-sm font-medium text-foreground">{r.cancellation_policy.type} cancellation</p>
+                  <div className="mb-3 flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-medium text-foreground capitalize">{getCancellationTypeLabel(r.cancellation_policy.type, 'en')} cancellation</p>
+                    {(() => {
+                      const d = getFreeCancellationDays(r.cancellation_policy);
+                      return d ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-sage-100 px-2.5 py-0.5 text-xs font-semibold text-sage-700">
+                          ✓ Free cancellation until {d} day{d === 1 ? '' : 's'} before
+                        </span>
+                      ) : null;
+                    })()}
+                  </div>
                   <ul className="space-y-2">
                     {r.cancellation_policy.refund_tiers.map((tier, i) => (
                       <li key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -367,7 +381,10 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
                       </li>
                     ))}
                   </ul>
-                  <p className="mt-3 text-xs text-muted-foreground">
+                  <p className="mt-3 text-xs font-medium text-foreground">
+                    Retiru guarantee: you can cancel for free (100% refund) within 48 hours of booking, as long as the event starts in more than 7 days, regardless of the event&apos;s policy.
+                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground">
                     The percentage applies to the total amount you paid. If a refund applies, you receive that amount in full to your original payment method. Retiru&apos;s remuneration in cancellation cases is handled under our agreement with the organizer and is not an extra deduction from your refund.
                   </p>
                 </div>
@@ -409,8 +426,20 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
                 <div className="mb-6 text-center">
                   <p className="text-3xl font-bold text-foreground">{r.total_price}€ <span className="text-base font-normal text-muted-foreground">/ person</span></p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {minReached ? 'Single payment · All inclusive' : 'Reserve without payment · Pay when minimum is reached'}
+                    {payNow
+                      ? 'Single payment · All inclusive'
+                      : isManualConfirmation
+                        ? 'Request without payment · Pay once the organizer accepts'
+                        : 'Reserve without payment · Pay when minimum is reached'}
                   </p>
+                  {(() => {
+                    const d = getFreeCancellationDays(r.cancellation_policy);
+                    return d ? (
+                      <p className="mt-1.5 text-xs font-semibold text-sage-700">
+                        ✓ Free cancellation until {d} day{d === 1 ? '' : 's'} before
+                      </p>
+                    ) : null;
+                  })()}
                 </div>
 
                 <div className="mb-6 space-y-3 text-sm">
@@ -440,6 +469,12 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
                       <Zap size={16} /> Instant confirmation
                     </div>
                   )}
+                  {isManualConfirmation && (
+                    <div className="rounded-lg bg-sand-50 border border-sand-200/80 p-3 text-xs text-muted-foreground leading-relaxed">
+                      <strong className="text-foreground">The organizer confirms each spot.</strong>
+                      <span className="block mt-1">Send your request without paying anything. If the organizer accepts (within {r.sla_hours || 48} h), we&rsquo;ll email you the link to complete the payment.</span>
+                    </div>
+                  )}
                   {minViable > 1 && (
                     <div className="rounded-lg bg-sand-50 border border-sand-200/80 p-3 text-xs text-muted-foreground leading-relaxed">
                       <strong className="text-foreground">Minimum participants:</strong> {minViable}.
@@ -461,6 +496,7 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
                   totalPrice={r.total_price}
                   availableSpots={r.available_spots}
                   minReached={minReached}
+                  manualConfirmation={isManualConfirmation}
                   locale="en"
                   className="w-full py-4 text-base"
                 />
@@ -468,12 +504,16 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
                 <div className="mt-4 rounded-lg bg-sage-50/60 border border-sage-200/60 p-3 text-center">
                   <p className="text-xs text-muted-foreground">
                     <Shield size={12} className="inline mr-1 text-sage-600" />
-                    {minReached
+                    {payNow
                       ? '100% secure payment with Stripe · Refund per cancellation policy'
-                      : 'Free reservation · You only pay when the retreat is confirmed'}
+                      : isManualConfirmation
+                        ? 'Free request · You only pay if the organizer accepts'
+                        : 'Free reservation · You only pay when the retreat is confirmed'}
                   </p>
                   <p className="text-[11px] text-muted-foreground/70 mt-1.5">
-                    Visa, Mastercard & more · Your data never touches our servers
+                    {payNow
+                      ? 'Visa, Mastercard, Bizum & more · Your data never touches our servers'
+                      : 'No card needed now · We\u2019ll email you to complete the payment once confirmed'}
                   </p>
                 </div>
 
@@ -501,6 +541,7 @@ export default async function RetreatDetailPageEN({ params }: { params: Promise<
               totalPrice={r.total_price}
               availableSpots={r.available_spots}
               minReached={minReached}
+              manualConfirmation={isManualConfirmation}
               locale="en"
               className="px-6 py-3 whitespace-nowrap"
               compact

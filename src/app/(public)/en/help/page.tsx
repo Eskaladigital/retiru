@@ -14,11 +14,11 @@ const SECTIONS = [
       },
       {
         q: 'What if the organizer must confirm my booking and does not respond in time?',
-        a: 'When a retreat uses manual confirmation, the organizer has a maximum window to accept or decline. If it expires with no response, the booking is cancelled. If you already paid, you receive a full refund to the same payment method and a notification email.',
+        a: 'When a retreat uses manual confirmation, you send your request without paying anything: the organizer has a maximum window to accept or decline it. If accepted, we email you the link to complete the payment (with its own deadline). If the window expires with no response, the request is automatically cancelled at no cost, since you had not paid anything.',
       },
       {
         q: 'Can I cancel my booking?',
-        a: 'Yes. Each retreat has its cancellation policy (deadlines and percentages based on what you paid). If a refund applies, you receive that amount in full—we do not keep an extra non-refundable "platform fee" from your refund.',
+        a: 'Yes, from "My bookings" in your dashboard. Within 48 hours of booking you have a guaranteed 100% refund (if the event starts in more than 7 days). After that, the event\'s cancellation policy applies (deadlines and percentages based on what you paid), visible on the retreat page; most events use the flexible policy: 100% until 7 days before and 50% until 3 days before. If a refund applies, you receive that amount in full—we do not keep an extra non-refundable "platform fee" from your refund.',
       },
       {
         q: 'How do I contact the organizer?',

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
 import { sendRetreatPendingReviewEmail, sendRetreatCancelledToAttendeeEmail } from '@/lib/email';
 import { getCommissionTier } from '@/lib/utils';
+import { issueRefund } from '@/lib/stripe';
 import { ensureSeriesOccurrences, countPaidRetreatUnits } from '@/lib/series';
 
 async function getOwnership(id: string) {
@@ -53,13 +54,40 @@ export async function POST(
 
     const { data: bookings } = await admin
       .from('bookings')
-      .select('profiles!attendee_id(email, preferred_locale)')
+      .select('id, status, total_price, platform_payment_status, stripe_payment_intent_id, profiles!attendee_id(email, preferred_locale)')
       .eq('retreat_id', id)
       .in('status', ['confirmed', 'pending_payment', 'pending_confirmation']);
 
     const orgName = (retreatDetail?.organizer_profiles as any)?.business_name || 'Organizador';
 
     for (const b of bookings || []) {
+      // Reembolso íntegro automático a cada reserva pagada (promesa de /condiciones y cláusula 8)
+      const hasPaid = b.platform_payment_status === 'paid' && !!b.stripe_payment_intent_id;
+      const refundAmount = hasPaid ? Number(b.total_price) : 0;
+
+      await admin
+        .from('bookings')
+        .update({
+          status: 'cancelled_by_organizer',
+          cancelled_at: new Date().toISOString(),
+          cancellation_reason: 'Evento cancelado por el organizador',
+          refund_amount: refundAmount,
+          refund_reason: 'cancelled_by_organizer',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', b.id);
+
+      if (hasPaid) {
+        try {
+          await issueRefund({
+            paymentIntentId: b.stripe_payment_intent_id,
+            reason: 'Retreat cancelled by organizer',
+          });
+        } catch (refundErr) {
+          console.error(`Refund failed for booking ${b.id}:`, refundErr);
+        }
+      }
+
       const attendee = b.profiles as any;
       if (!attendee?.email) continue;
       const loc = (attendee.preferred_locale || 'es') as 'es' | 'en';
@@ -75,7 +103,7 @@ export async function POST(
       }
     }
   } catch (emailErr) {
-    console.error('Failed to send retreat cancellation emails:', emailErr);
+    console.error('Failed to process retreat cancellation bookings:', emailErr);
   }
 
   return NextResponse.json({ success: true, status: 'cancelled' });

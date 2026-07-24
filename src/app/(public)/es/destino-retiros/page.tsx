@@ -33,13 +33,13 @@ export default async function EventosPage() {
           <div className="max-w-[620px]">
             <div className="inline-flex items-center gap-2 bg-sage-50 border border-sage-200 text-sage-700 text-[13px] font-semibold px-4 py-1.5 rounded-full mb-6">
               <span className="w-1.5 h-1.5 bg-sage-400 rounded-full" />
-              +{retreats.length} retiros en España
+              +{retreats.length} evento{retreats.length !== 1 ? 's' : ''} en España
             </div>
             <h1 className="font-serif text-[clamp(36px,6vw,56px)] leading-[1.2] tracking-[-0.01em] text-foreground mb-5">
               Retiros y escapadas
             </h1>
             <p className="text-lg text-[#7a6b5d] leading-[1.7] mb-9 max-w-[480px]">
-              Descubre retiros y eventos de yoga, meditación y ayurveda en toda España.
+              Descubre retiros, clases, talleres y experiencias de yoga, meditación y bienestar en toda España.
             </p>
           </div>
           <div className="bg-white border border-sand-300 rounded-2xl p-2 shadow-elevated max-w-[620px] md:max-w-none">

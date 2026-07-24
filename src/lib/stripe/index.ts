@@ -31,9 +31,10 @@ export async function createCheckoutSession({
   successUrl: string;
   cancelUrl: string;
 }) {
+  // Sin payment_method_types: Stripe ofrece los métodos activados en el
+  // dashboard (tarjeta, Bizum, Apple/Google Pay, Klarna…) según importe y país.
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
-    payment_method_types: ['card'],
     customer_email: customerEmail,
     locale: locale === 'es' ? 'es' : 'en',
     line_items: [

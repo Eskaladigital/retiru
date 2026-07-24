@@ -94,6 +94,8 @@ const es = {
     lastSpots: '¡Últimas {n} plazas!',
     soldOut: 'Completo',
     instantConfirm: 'Confirmación inmediata',
+    freeCancellation: 'Cancelación gratis hasta {n} días antes',
+    freeCancellationOneDay: 'Cancelación gratis hasta 1 día antes',
     reviews: '{n} reseñas',
   },
 

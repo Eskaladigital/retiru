@@ -954,9 +954,9 @@ export async function sendRetreatPendingReviewEmail(
 // ─── Booking Expired (SLA / session) → attendee ─────────────────────────────
 
 export async function sendBookingExpiredEmail(
-  options: EmailOptions & { eventTitle: string; bookingNumber: string }
+  options: EmailOptions & { eventTitle: string; bookingNumber: string; wasPaid?: boolean }
 ) {
-  const { to, locale, eventTitle, bookingNumber } = options;
+  const { to, locale, eventTitle, bookingNumber, wasPaid = true } = options;
 
   const subject = t(locale,
     `Reserva expirada — ${eventTitle}`,
@@ -969,8 +969,12 @@ export async function sendBookingExpiredEmail(
       `Your booking <strong>#${bookingNumber}</strong> for <strong>${eventTitle}</strong> has expired because the organizer did not confirm it in time.`
     )),
     paragraph(t(locale,
-      'Se ha procesado el reembolso completo autom&aacute;ticamente. Recibir&aacute;s el importe en 5-10 d&iacute;as h&aacute;biles.',
-      'A full refund has been processed automatically. You will receive the amount within 5-10 business days.'
+      wasPaid
+        ? 'Se ha procesado el reembolso completo autom&aacute;ticamente. Recibir&aacute;s el importe en 5-10 d&iacute;as h&aacute;biles.'
+        : 'No se hab&iacute;a realizado ning&uacute;n pago, as&iacute; que no hay nada que reembolsar.',
+      wasPaid
+        ? 'A full refund has been processed automatically. You will receive the amount within 5-10 business days.'
+        : 'No payment had been made, so there is nothing to refund.'
     )),
     paragraph(t(locale,
       'Si a&uacute;n quieres asistir, puedes volver a reservar mientras haya plazas disponibles.',
@@ -1297,6 +1301,103 @@ export async function sendReservationConfirmedEmail(
       href: `${APP_URL}/${t(locale, 'es/mis-reservas', 'en/my-bookings')}`,
       label: t(locale, 'Ver mi reserva', 'View my booking'),
     },
+  });
+
+  return sendTransactionalMail({ to, subject, html });
+}
+
+// ─── Booking Request Received (manual confirmation, no payment) → attendee ──
+
+export async function sendBookingRequestReceivedEmail(
+  options: EmailOptions & {
+    eventTitle: string;
+    bookingNumber: string;
+    slaHours: number;
+  }
+) {
+  const { to, locale, eventTitle, bookingNumber, slaHours } = options;
+
+  const subject = t(locale,
+    `Solicitud enviada — ${eventTitle}`,
+    `Request sent — ${eventTitle}`
+  );
+
+  const body = [
+    paragraph(t(locale,
+      `Tu solicitud de plaza en <strong>${eventTitle}</strong> se ha enviado al organizador. A&uacute;n no se requiere pago.`,
+      `Your request for a spot at <strong>${eventTitle}</strong> has been sent to the organizer. No payment required yet.`
+    )),
+    infoBox(infoLine(t(locale, 'N&ordm; de reserva', 'Booking number'), bookingNumber)),
+    paragraph(t(locale,
+      `El organizador tiene <strong>${slaHours} horas</strong> para aceptar o rechazar tu solicitud. Si la acepta, te enviaremos un enlace para completar el pago y confirmar tu plaza. Si no responde a tiempo, la solicitud se anular&aacute; autom&aacute;ticamente sin coste.`,
+      `The organizer has <strong>${slaHours} hours</strong> to accept or decline your request. If accepted, we will send you a link to complete the payment and confirm your spot. If they do not respond in time, the request will be automatically cancelled at no cost.`
+    )),
+  ].join('');
+
+  const html = emailLayout({
+    locale, preheader: subject,
+    title: t(locale, 'Solicitud enviada (sin pago)', 'Request sent (no payment)'),
+    body,
+    cta: {
+      href: `${APP_URL}/${t(locale, 'es/mis-reservas', 'en/my-bookings')}`,
+      label: t(locale, 'Ver mi solicitud', 'View my request'),
+    },
+  });
+
+  return sendTransactionalMail({ to, subject, html });
+}
+
+// ─── Booking Request Approved (manual confirmation) → attendee ──────────────
+
+export async function sendBookingRequestApprovedEmail(
+  options: EmailOptions & {
+    eventTitle: string;
+    bookingNumber: string;
+    totalPrice: number;
+    /** Si hay enlace de pago (mínimo cubierto): pagar antes del deadline */
+    payUrl?: string;
+    deadline?: string;
+  }
+) {
+  const { to, locale, eventTitle, bookingNumber, totalPrice, payUrl, deadline } = options;
+
+  const subject = t(locale,
+    `¡Solicitud aceptada! — ${eventTitle}`,
+    `Request accepted! — ${eventTitle}`
+  );
+
+  const canPay = !!payUrl && !!deadline;
+
+  const body = [
+    paragraph(t(locale,
+      `El organizador ha aceptado tu solicitud de plaza en <strong>${eventTitle}</strong>.`,
+      `The organizer has accepted your request for a spot at <strong>${eventTitle}</strong>.`
+    )),
+    infoBox([
+      infoLine(t(locale, 'N&ordm; de reserva', 'Booking number'), bookingNumber),
+      infoLine(t(locale, 'Importe', 'Amount'), `${totalPrice}&euro;`),
+      ...(canPay ? [infoLine(t(locale, 'Fecha l&iacute;mite de pago', 'Payment deadline'), deadline!)] : []),
+    ].join('')),
+    paragraph(t(locale,
+      canPay
+        ? `Para confirmar tu plaza, completa el pago antes del <strong>${deadline}</strong>. Si no pagas antes de la fecha l&iacute;mite, tu plaza se liberar&aacute; autom&aacute;ticamente.`
+        : 'A&uacute;n falta alcanzar el m&iacute;nimo de participantes del evento. Cuando se alcance, te enviaremos el enlace de pago para confirmar tu plaza.',
+      canPay
+        ? `To confirm your spot, complete the payment before <strong>${deadline}</strong>. If you do not pay before the deadline, your spot will be released automatically.`
+        : 'The event has not yet reached its minimum number of participants. Once it does, we will send you the payment link to confirm your spot.'
+    )),
+  ].join('');
+
+  const html = emailLayout({
+    locale, preheader: subject,
+    title: t(locale, '&iexcl;Solicitud aceptada!', 'Request accepted!'),
+    body,
+    cta: canPay
+      ? { href: payUrl!, label: t(locale, 'Pagar ahora', 'Pay now') }
+      : {
+          href: `${APP_URL}/${t(locale, 'es/mis-reservas', 'en/my-bookings')}`,
+          label: t(locale, 'Ver mi reserva', 'View my booking'),
+        },
   });
 
   return sendTransactionalMail({ to, subject, html });

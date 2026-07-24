@@ -3,11 +3,13 @@ import Link from 'next/link';
 import { redirect, notFound } from 'next/navigation';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { getBookingById } from '@/lib/data';
-import { formatDateRange, formatDate } from '@/lib/utils';
+import { formatDateRange, formatDate, getCancellationRefund } from '@/lib/utils';
+import { CancelarReservaButton } from './CancelarReservaButton';
 
 type Props = { params: Promise<{ id: string }> };
 
 const STATUS: Record<string, string> = {
+  reserved_no_payment: 'Reserva sin pago',
   confirmed: 'Confirmada',
   pending_confirmation: 'Pendiente confirmación',
   pending_payment: 'Pendiente pago',
@@ -20,6 +22,7 @@ const STATUS: Record<string, string> = {
 };
 
 const STATUS_COLOR: Record<string, string> = {
+  reserved_no_payment: 'bg-blue-100 text-blue-700',
   confirmed: 'bg-sage-100 text-sage-700',
   pending_confirmation: 'bg-amber-100 text-amber-700',
   pending_payment: 'bg-amber-100 text-amber-700',
@@ -163,11 +166,24 @@ export default async function ReservaDetailPage({ params }: Props) {
           </div>
 
           {/* Cancelar (solo si aplica) */}
-          {!['cancelled', 'cancelled_by_attendee', 'cancelled_by_organizer', 'rejected', 'completed'].includes((booking as any).status) && (
-            <button className="w-full text-sm text-red-500 font-medium border border-red-200 rounded-xl py-3 hover:bg-red-50 transition-colors">
-              Cancelar reserva
-            </button>
-          )}
+          {['reserved_no_payment', 'pending_payment', 'pending_confirmation', 'confirmed'].includes((booking as any).status)
+            && r?.start_date && new Date(r.start_date).getTime() > Date.now() && (() => {
+              const { percent, graceApplies } = getCancellationRefund(
+                r.cancellation_policy,
+                r.start_date,
+                (booking as any).created_at,
+              );
+              const refundAmount = feePaid ? Math.round(Number((booking as any).total_price) * percent) / 100 : 0;
+              return (
+                <CancelarReservaButton
+                  bookingId={id}
+                  refundPercent={percent}
+                  refundAmount={refundAmount}
+                  graceApplies={graceApplies}
+                  paid={feePaid}
+                />
+              );
+            })()}
         </div>
       </div>
     </div>
