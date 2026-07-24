@@ -7,8 +7,10 @@ import EventosSearch from '@/components/home/EventosSearch';
 import {
   getCategoryBySlug,
   getPublishedRetreats,
+  getPastPublishedRetreats,
   getDestinationsForCategory,
 } from '@/lib/data';
+import { PastRetreatsFallback } from '@/components/retreats/PastRetreatsFallback';
 import { getOrganizerReviewStats, organizerHasRatingToShow, CATEGORY_SLUG_EN, CATEGORY_SLUG_FROM_EN, CENTER_TYPE_URL_ES } from '@/lib/utils';
 import { generatePageMetadata, jsonLdItemList, jsonLdBreadcrumb, jsonLdFAQ, jsonLdScript } from '@/lib/seo';
 
@@ -51,6 +53,11 @@ export default async function RetreatsByCategoryPage({ params }: { params: Promi
     getPublishedRetreats({ categorySlug: dbSlug, limit: 50 }),
     getDestinationsForCategory(dbSlug),
   ]);
+
+  const pastRetreats =
+    retreats.length === 0
+      ? (await getPastPublishedRetreats({ categorySlug: dbSlug, limit: 12 })).retreats
+      : [];
 
   return (
     <>
@@ -117,12 +124,16 @@ export default async function RetreatsByCategoryPage({ params }: { params: Promi
         )}
 
         {retreats.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-4xl mb-4">🔍</p>
-            <p className="font-serif text-xl text-foreground mb-2">No {cat.name_en.toLowerCase()} retreats available</p>
-            <p className="text-sm text-[#7a6b5d] mb-6">Try another category or browse all retreats</p>
-            <Link href="/en/retreats-retiru" className="text-sm font-semibold text-terracotta-600 hover:text-terracotta-700">View all retreats</Link>
-          </div>
+          <PastRetreatsFallback
+            locale="en"
+            pastRetreats={pastRetreats}
+            heading={`No ${cat.name_en.toLowerCase()} retreats with open dates`}
+            subheading="While we prepare new editions, you can browse past retreats or explore the directory."
+            ctaHref="/en/retreats-retiru"
+            ctaLabel="View all retreats"
+            organizeHref="/en/for-organizers"
+            organizeLabel="Organizing a retreat? List it on Retiru"
+          />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {retreats.map(r => {

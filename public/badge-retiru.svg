@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="170" height="48" viewBox="0 0 170 48" role="img" aria-label="Estamos en Retiru">
+  <rect x="0.5" y="0.5" width="169" height="47" rx="10" fill="#FFFDF9" stroke="#E5D9C9"/>
+  <circle cx="24" cy="24" r="12" fill="#C0573B"/>
+  <path d="M24 17c-2.6 2.1-3.9 4.5-3.9 7 0 2.6 1.3 4.9 3.9 7 2.6-2.1 3.9-4.4 3.9-7 0-2.5-1.3-4.9-3.9-7z" fill="#FFFDF9"/>
+  <text x="44" y="21" font-family="Georgia, 'Times New Roman', serif" font-size="11" fill="#7A6B5D">Estamos en</text>
+  <text x="44" y="37" font-family="Georgia, 'Times New Roman', serif" font-size="16" font-weight="bold" fill="#C0573B">RETIRU</text>
+</svg>

@@ -149,8 +149,11 @@ Las listas filtran por BD pero **no tienen contenido editorial único**. Para SE
 8. ~~**Medio**: Crear landings por tipo+ciudad (centros-yoga/[slug], retiros-yoga/[slug], etc.)~~ ✅ Implementado.
 9. ~~**Medio**: JSON-LD ItemList en listas por ciudad~~ ✅ Implementado.
 10. ~~**Medio**: FAQ por destino + schema FAQPage~~ ✅ Implementado.
-11. **Medio**: OG images dinámicas por centro (retiro ya tiene).
+11. ~~**Medio**: OG images dinámicas por centro (retiro ya tiene)~~ ✅ Hecho (`cover_url` / primera imagen en `generateMetadata`).
 12. ~~**Bajo**: JSON-LD Article en blog~~ ✅ Hecho.
+13. ~~**Alto**: Reseñas + horario Google Places en ficha centro~~ ✅ Código listo; datos vía `npm run centers:places-sync` (migración 048 o fallback Storage `places-meta.json`). **Sin fotos** de Place Photo (coste); imágenes las aportan centros u otras fuentes.
+14. ~~**Alto**: FAQ por ficha de centro + schema FAQPage~~ ✅ `src/lib/center-faq.ts`.
+15. ~~**Alto**: Landings de retiros nunca vacías (ediciones pasadas)~~ ✅ `getPastPublishedRetreats` + `PastRetreatsFallback`.
 
 ---
 
@@ -340,7 +343,7 @@ Script unificado `scripts/generate-seo-sections.mjs` (`npm run seo:sections`):
 
 Flags: `--layer=3`, `--type=yoga`, `--province=madrid`, `--city=arganzuela`, `--style=vinyasa`, `--force`, `--dry-run`, `--no-serp`, `--limit=N`, `--concurrency=2`.
 
-**Cobertura `sections_es` (mayo 2026):** Cap. 3 ✅ 91/91 · Cap. 5 ⬜ 0/59 · Cap. 2 ⬜ 0/21 · Cap. 4 ⬜ 0/20 filas (44 URLs publicables).
+**Cobertura `sections_es` (2026-07-24):** Cap. 3 ✅ 91/91 · Cap. 5 ✅ 52/59 con sections (4 suppress + 3 sin intro) · Cap. 2 ✅ 21/21 · Cap. 4 ✅ 49 con sections (resto thin_content / suppress). Si una generación deja `sections_*` vacías con intro rellena: `npm run seo:backfill-sections`.
 
 Inspección puntual: `node scripts/_peek-seo.mjs ayurveda alava` (tipo, provincia; opcional tercer arg ciudad).
 

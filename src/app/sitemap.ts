@@ -114,9 +114,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     pushBilingual(`/es/blog/${b.slug}`, `/en/blog/${enSlug}`, 'monthly', 0.6, b.updated_at);
   });
 
-  // 6) Destinos
-  const { data: destSlugs } = await supabase.from('destinations').select('slug, updated_at').eq('is_active', true);
-  (destSlugs || []).forEach((d) => pushBilingual(`/es/destinos/${d.slug}`, `/en/destinations/${d.slug}`, 'monthly', 0.7, d.updated_at));
+  // 6) Destinos — la tabla no tiene updated_at; usar created_at (si se pide
+  //    una columna inexistente PostgREST devuelve error y el bloque queda vacío)
+  const { data: destSlugs } = await supabase.from('destinations').select('slug, created_at').eq('is_active', true);
+  (destSlugs || []).forEach((d) => pushBilingual(`/es/destinos/${d.slug}`, `/en/destinations/${d.slug}`, 'monthly', 0.7, d.created_at));
 
   // 7) Organizadores verificados
   const { data: orgSlugs } = await supabase.from('organizer_profiles').select('slug, updated_at').eq('status', 'verified');
@@ -223,14 +224,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   //     Provincias NO se incluyen aquí porque ya están en (2) como /provincias/[slug].
   const { data: geoNodes } = await supabase
     .from('destinations')
-    .select('slug, kind, updated_at')
+    .select('slug, kind, created_at')
     .eq('is_active', true)
     .in('kind', ['country', 'region', 'province']);
-  (geoNodes || []).forEach((g: { slug: string; kind: string; updated_at?: string }) => {
+  (geoNodes || []).forEach((g: { slug: string; kind: string; created_at?: string }) => {
     const prio = g.kind === 'country' ? 0.9 : g.kind === 'region' ? 0.8 : 0.75;
-    pushBilingual(`/es/retiros-en/${g.slug}`, `/en/retreats-in/${g.slug}`, 'weekly', prio, g.updated_at);
+    pushBilingual(`/es/retiros-en/${g.slug}`, `/en/retreats-in/${g.slug}`, 'weekly', prio, g.created_at);
     if (g.kind !== 'province') {
-      pushBilingual(`/es/centros-retiru/${g.slug}`, `/en/centers-retiru/${g.slug}`, 'weekly', prio, g.updated_at);
+      pushBilingual(`/es/centros-retiru/${g.slug}`, `/en/centers-retiru/${g.slug}`, 'weekly', prio, g.created_at);
     }
   });
 

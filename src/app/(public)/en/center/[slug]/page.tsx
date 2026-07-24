@@ -7,9 +7,11 @@ import { notFound } from 'next/navigation';
 import { RetreatDescriptionBody } from '@/components/ui/retreat-description-body';
 import { CenterMap } from '@/components/ui/center-map';
 import { ClaimCenterButton } from '@/components/ui/claim-center-button';
+import { CenterPhotoGallery } from '@/components/ui/center-photo-gallery';
 import { EmailLink } from '@/components/ui/email-link';
-import { generatePageMetadata, jsonLdLocalBusiness, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
-import { getCenterBySlug, getCenterSlugs, getActiveCenters } from '@/lib/data';
+import { generatePageMetadata, jsonLdLocalBusiness, jsonLdBreadcrumb, jsonLdFAQ, jsonLdScript } from '@/lib/seo';
+import { getCenterBySlug, getCenterSlugs, getActiveCenters, getCenterGoogleData } from '@/lib/data';
+import { buildCenterFaq } from '@/lib/center-faq';
 import { getCenterTypeLabel, facebookProfileHref } from '@/lib/utils';
 
 export const revalidate = 3600;
@@ -32,6 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       path: `/en/center/${slug}`,
     });
   }
+  const ogImage = center.cover_url || (Array.isArray(center.images) ? center.images[0] : undefined) || undefined;
   return generatePageMetadata({
     title: `${center.name} — ${center.type ? `${getCenterTypeLabel(center.type, 'en')} center` : 'Center'} in ${center.city || ''}`,
     description:
@@ -41,6 +44,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     path: `/en/center/${slug}`,
     altPath: `/es/centro/${slug}`,
     ogType: 'website',
+    ogImage,
     keywords: [center.name, center.type, center.city, center.province].filter(Boolean) as string[],
   });
 }
@@ -53,7 +57,29 @@ export default async function CenterDetailEN({ params }: Props) {
   const services: string[] = Array.isArray(C.services_en) ? C.services_en : [];
   const images: string[] = Array.isArray(C.images) ? C.images : [];
   const mainImage = C.cover_url || images[0] || '';
-  const galleryImages = C.cover_url ? images : images.slice(1);
+  const galleryAll = [C.cover_url, ...images].filter((u, i, arr): u is string => !!u && arr.indexOf(u) === i);
+
+  // Google Places data (reviews + opening hours; migration 048)
+  const googleData = await getCenterGoogleData(C.id);
+  const googleReviews = googleData?.reviews || [];
+  const openingHours = googleData?.openingHours || null;
+  const centerFaqs = buildCenterFaq(C, 'en', openingHours);
+
+  // Weekday lines in English derived from the raw periods (the stored
+  // weekday_descriptions come localized in Spanish)
+  const EN_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const hhmm = (h: number, m: number) => `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  const byDay = new Map<number, string[]>();
+  for (const p of openingHours?.periods || []) {
+    if (!p?.open || !p.close) continue;
+    const ranges = byDay.get(p.open.day) || [];
+    ranges.push(`${hhmm(p.open.hour, p.open.minute)}–${hhmm(p.close.hour, p.close.minute)}`);
+    byDay.set(p.open.day, ranges);
+  }
+  // Orden lunes → domingo
+  const hoursLinesEn = [1, 2, 3, 4, 5, 6, 0]
+    .filter((d) => byDay.has(d))
+    .map((d) => `${EN_DAYS[d]}: ${byDay.get(d)!.join(', ')}`);
 
   const provinceSlug = C.province
     ? C.province.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-')
@@ -66,35 +92,12 @@ export default async function CenterDetailEN({ params }: Props) {
 
   return (
     <div className="container-wide py-12">
-      {mainImage && (
-        <div className="mb-4 space-y-3">
-          <div className="w-full aspect-[21/9] rounded-2xl overflow-hidden relative bg-sand-100">
-            <Image
-              src={mainImage}
-              alt={C.name}
-              fill
-              priority
-              sizes="(max-width: 1024px) 100vw, 1024px"
-              className="object-cover"
-            />
-          </div>
-          {galleryImages.length > 0 && (
-            <div className="flex gap-3 overflow-x-auto pb-1">
-              {galleryImages.slice(0, 4).map((img: string, i: number) => (
-                <div key={i} className="w-32 h-24 rounded-xl overflow-hidden shrink-0 relative bg-sand-100">
-                  <Image
-                    src={img}
-                    alt={`${C.name} — photo ${i + 2}`}
-                    fill
-                    sizes="128px"
-                    loading="lazy"
-                    className="object-cover"
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+      {galleryAll.length > 0 && (
+        <CenterPhotoGallery
+          name={C.name}
+          images={galleryAll}
+          thumbLabel={(i) => `View photo ${i + 1} of ${C.name}`}
+        />
       )}
 
       <nav className="mb-6 flex items-center gap-1 text-xs text-muted-foreground flex-wrap">
@@ -158,20 +161,82 @@ export default async function CenterDetailEN({ params }: Props) {
           )}
 
           {/* Schedule & Prices (solo EN — la traducción automática rellena estos campos) */}
-          {(C.schedule_summary_en || C.price_range_en) && (
+          {(hoursLinesEn.length || C.schedule_summary_en || C.price_range_en) && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-              {C.schedule_summary_en && (
+              {hoursLinesEn.length ? (
+                <div className="bg-sand-50 border border-sand-200 rounded-xl p-5">
+                  <h3 className="font-semibold text-sm mb-2">🕐 Opening hours</h3>
+                  <ul className="text-sm text-[#7a6b5d] leading-relaxed space-y-0.5">
+                    {hoursLinesEn.map((d) => (
+                      <li key={d}>{d}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : C.schedule_summary_en ? (
                 <div className="bg-sand-50 border border-sand-200 rounded-xl p-5">
                   <h3 className="font-semibold text-sm mb-2">🕐 Schedule</h3>
                   <p className="text-sm text-[#7a6b5d] leading-relaxed">{C.schedule_summary_en}</p>
                 </div>
-              )}
+              ) : null}
               {C.price_range_en && (
                 <div className="bg-sand-50 border border-sand-200 rounded-xl p-5">
                   <h3 className="font-semibold text-sm mb-2">💰 Prices</h3>
                   <p className="text-sm text-[#7a6b5d] leading-relaxed">{C.price_range_en}</p>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Google reviews */}
+          {googleReviews.length > 0 && (
+            <div className="mb-8">
+              <h2 className="font-serif text-xl mb-4">
+                Google reviews
+                {C.avg_rating != null && (
+                  <span className="ml-2 text-sm font-sans text-[#7a6b5d] align-middle">
+                    {C.avg_rating} · {C.review_count ?? 0} reviews
+                  </span>
+                )}
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {googleReviews.map((r, i) => (
+                  <div key={i} className="bg-white border border-sand-200 rounded-xl p-5">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="font-semibold text-sm text-foreground truncate">{r.author}</span>
+                      <span className="flex items-center gap-0.5 shrink-0">
+                        {Array.from({ length: 5 }).map((_, s) => (
+                          <Star
+                            key={s}
+                            size={13}
+                            className={s < Math.round(r.rating) ? 'text-amber-400 fill-amber-400' : 'text-sand-300'}
+                          />
+                        ))}
+                      </span>
+                    </div>
+                    <p className="text-sm text-[#7a6b5d] leading-relaxed line-clamp-6">{r.text}</p>
+                    {r.relative_time && (
+                      <p className="text-xs text-[#a09383] mt-2">{r.relative_time}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {centerFaqs.length > 0 && (
+            <div className="mb-8">
+              <h2 className="font-serif text-xl mb-4">Frequently asked questions</h2>
+              <div className="space-y-3">
+                {centerFaqs.map((f) => (
+                  <details key={f.question} className="group bg-sand-50 border border-sand-200 rounded-xl px-5 py-4">
+                    <summary className="font-semibold text-sm cursor-pointer list-none flex items-center justify-between gap-3">
+                      {f.question}
+                      <span className="text-[#a09383] group-open:rotate-45 transition-transform text-lg leading-none">+</span>
+                    </summary>
+                    <p className="text-sm text-[#7a6b5d] leading-relaxed mt-3">{f.answer}</p>
+                  </details>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -326,6 +391,8 @@ export default async function CenterDetailEN({ params }: Props) {
             latitude: C.latitude,
             longitude: C.longitude,
             areaServed: C.province,
+            openingHoursPeriods: openingHours?.periods,
+            reviews: googleReviews,
           })),
         }}
       />
@@ -340,6 +407,12 @@ export default async function CenterDetailEN({ params }: Props) {
           ])),
         }}
       />
+      {centerFaqs.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLdFAQ(centerFaqs)) }}
+        />
+      )}
     </div>
   );
 }

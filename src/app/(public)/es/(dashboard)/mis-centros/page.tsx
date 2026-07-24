@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { getCenterTypeLabel } from '@/lib/utils';
 import { MisCentrosActions } from './MisCentrosActions';
+import { CenterBadgeSnippet } from '@/components/ui/center-badge-snippet';
 
 /** Supabase a veces tipa la FK embebida como array; normalizamos a un solo objeto. */
 function joinedCenter(centers: unknown): { name?: string; slug?: string } | null {

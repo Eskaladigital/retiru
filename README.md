@@ -97,7 +97,7 @@ Copia `.env.example` a `.env.local` y rellena los valores:
 | `OPENAI_API_KEY` | (opcional) Descripciones IA, blog, centros y **portadas con IA** (eventos, artículos de blog y centros): agente **GPT-4o** sintetiza un dossier en un prompt en español; **GPT Image 1.5** genera la imagen panorámica (`POST /api/retreats/generate-cover-image`, `POST /api/admin/blog/generate-cover-image`, `POST /api/centers/generate-cover-image`; definir también en Vercel). Objetivo visual: **fotografía editorial hiperrealista**, evitando look ilustrado o “IA” |
 | `ANTHROPIC_API_KEY` | (opcional) Moderación de contenido de retiros antes de publicar (`POST /api/admin/retreats/moderate`, Claude vía SDK `ai`). Si no está definida, el flujo de aprobación en admin **omite** la revisión automática |
 | `NEXT_PUBLIC_TINYMCE_API_KEY` | (opcional) Clave [Tiny Cloud](https://www.tiny.cloud/) para el editor visual de la **descripción** en crear/editar evento (`/es/mis-eventos/...`) y del **cuerpo del artículo** en `/administrator/blog/...`. Si está vacía se usa `no-api-key` (solo adecuado en desarrollo; en producción conviene clave y dominio aprobados) |
-| `GOOGLE_PLACES_API_KEY` | (opcional) Para obtener reseñas de Google Places |
+| `GOOGLE_PLACES_API_KEY` | (opcional) Reseñas/horario/rating Places — **no** fotos (Place Photo) |
 | `CRON_SECRET` | (recomendado en producción) Secreto `Bearer` para `POST /api/cron/*` (`sla-deadlines`, `payment-deadlines`, `event-reminders`, `review-requests`, `mailing-tick`). Si está vacío, los cron no exigen autorización (solo aceptable en local) |
 
 > **Nota:** Supabase es necesario para que la app muestre retiros, centros, blog y tienda. Sin él, las páginas mostrarán listas vacías.
@@ -140,6 +140,8 @@ node scripts/generate-all-descriptions.mjs --force    # Regenerar TODAS las desc
 node scripts/generate-all-descriptions.mjs --limit 10 # Solo N centros
 node scripts/generate-all-descriptions.mjs --dry-run  # Simular sin guardar
 npm run centers:translate-en                          # Solo traducir centros con ES y sin EN (o --force)
+npm run centers:places-sync                           # Reseñas + horario + rating Google Places → ficha SEO (sin fotos: Place Photo es caro)
+npm run centers:places-sync:dry                       # Simulación Places sync
 npm run centers:vaciar-genericas                       # Vaciar descripciones genéricas
 npm run blog:backfill-slugs-en                        # Rellenar slug_en del blog desde title_en (opcional --dry-run)
 npm run blog:translate-en                             # Traducir posts publicados ES→EN (OpenAI); --force retraduce todo
@@ -302,6 +304,7 @@ Con **Supabase CLI** (`supabase link` + `supabase db push`) se aplican solas en 
 45. `supabase/migrations/043_center_type_province_city_seo.sql` — **SEO Fase 2 #6**: extiende `center_type_province_seo` con `city_slug` + `city_name`; sustituye el UNIQUE por dos índices parciales (provincial vs ciudad). 58 ciudades generadas en la primera pasada.
 46. `supabase/migrations/044_center_styles.sql` — **SEO Fase 3 #10**: catálogo `styles` (24 estilos seed: kundalini, vinyasa, hatha, yin, ashtanga, aereo, prenatal, mindfulness, vipassana, zen, panchakarma, marma, abhyanga, shirodhara, etc.) + tabla puente `center_styles (center_id, style_id, source, confidence)` + trigger `check_center_style_type_match` + RLS public read. 441 centros clasificados con `npm run centers:infer-styles` (89 % cobertura).
 47. `supabase/migrations/045_seo_sections.sql` — **SEO Fase 4**: columnas `sections_es/en`, `serp_data`, `suppress_reason` en `categories`, `destinations`, `center_type_province_seo`, `styles`; tabla `style_province_seo` (Cap. 4 estilo×provincia). Contenido rico con `npm run seo:sections` (capas 2–5; Cap. 1 nacional sigue en `src/lib/center-type-editorial.ts`).
+48. `supabase/migrations/048_centers_google_places_data.sql` — **SEO fichas centro**: `google_reviews`, `google_opening_hours`, `google_data_synced_at` (aplicada en prod). Rellenar con `npm run centers:places-sync` (`GOOGLE_PLACES_API_KEY`) — solo reseñas/horario/rating; **nunca** descarga Place Photo (caro). Imágenes: las sube el centro o se buscan fuera de la API de Google. Si faltan columnas, fallback en Storage (`centers/{id}/places-meta.json`).
 
 **Seeds** (después de las migraciones):
 
@@ -625,7 +628,7 @@ src/
 - **Menú de usuario** (logueado): Mis reservas, Mi perfil, Mis centros, Mis eventos. Enlace a **Administración** si el usuario tiene rol `admin` en `user_roles`.
 - **Menú móvil (off-canvas)**: panel lateral deslizable desde la derecha, backdrop con blur, bloqueo de scroll, cierre al hacer clic fuera o en enlace.
 
-> **Documentación**: [`docs/ROUTES.md`](docs/ROUTES.md) · [`docs/SEO-LANDINGS.md`](docs/SEO-LANDINGS.md) · [`docs/SHOP-SURVEY.md`](docs/SHOP-SURVEY.md) · [`docs/SCHEMA-REVIEW.md`](docs/SCHEMA-REVIEW.md) (auditoría BD / gaps).
+> **Documentación**: [`docs/ROUTES.md`](docs/ROUTES.md) · [`docs/SEO-LANDINGS.md`](docs/SEO-LANDINGS.md) · [`docs/SHOP-SURVEY.md`](docs/SHOP-SURVEY.md) · [`docs/SCHEMA-REVIEW.md`](docs/SCHEMA-REVIEW.md) (auditoría BD / gaps) · [`docs/ESTRATEGIA-CRECIMIENTO.md`](docs/ESTRATEGIA-CRECIMIENTO.md) (estrategia de marketing y crecimiento — documento vivo).
 
 
 ---
@@ -660,6 +663,8 @@ src/
 ---
 
 ## Estrategia de crecimiento — Directorio de centros
+
+> **Estrategia global de marketing y captación de oferta:** ver [`docs/ESTRATEGIA-CRECIMIENTO.md`](docs/ESTRATEGIA-CRECIMIENTO.md) — documento vivo con diagnóstico, plan de acción por frentes, propuesta de verificación progresiva de organizadores, métricas semanales y diario de sesiones de reflexión. Leerlo antes de cualquier conversación o cambio de estrategia.
 
 ### Contexto
 

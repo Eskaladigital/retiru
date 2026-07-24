@@ -8,7 +8,9 @@ import {
   getCategoryBySlug,
   getDestinationBySlug,
   getPublishedRetreats,
+  getPastPublishedRetreats,
 } from '@/lib/data';
+import { PastRetreatsFallback } from '@/components/retreats/PastRetreatsFallback';
 import { getOrganizerReviewStats, organizerHasRatingToShow, CATEGORY_SLUG_EN, CATEGORY_SLUG_FROM_EN } from '@/lib/utils';
 import { generatePageMetadata, jsonLdItemList, jsonLdBreadcrumb, jsonLdFAQ, jsonLdScript } from '@/lib/seo';
 
@@ -52,6 +54,11 @@ export default async function RetreatsCategoryDestinationPage({ params }: { para
   if (!cat || !dest) {
     notFound();
   }
+
+  const pastRetreats =
+    retreats.length === 0
+      ? (await getPastPublishedRetreats({ categorySlug: dbSlug, destinationSlug: destination, limit: 12 })).retreats
+      : [];
 
   const combinedFaq = [
     ...(Array.isArray(cat.faq) ? cat.faq : []),
@@ -103,15 +110,16 @@ export default async function RetreatsCategoryDestinationPage({ params }: { para
         </div>
 
         {retreats.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-4xl mb-4">🔍</p>
-            <p className="font-serif text-xl text-foreground mb-2">Coming soon: {cat.name_en} retreats in {dest.name_en}</p>
-            <p className="text-sm text-[#7a6b5d] mb-6">Browse all {cat.name_en.toLowerCase()} retreats or retreats in {dest.name_en}</p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Link href={`/en/retreats-${enSlug}`} className="text-sm font-semibold text-terracotta-600 hover:text-terracotta-700">{cat.name_en} Retreats</Link>
-              <Link href={`/en/retreats-retiru/${destination}`} className="text-sm font-semibold text-terracotta-600 hover:text-terracotta-700">Retreats in {dest.name_en}</Link>
-            </div>
-          </div>
+          <PastRetreatsFallback
+            locale="en"
+            pastRetreats={pastRetreats}
+            heading={`No ${cat.name_en.toLowerCase()} retreats in ${dest.name_en} with open dates`}
+            subheading="While we prepare new editions, you can browse past retreats or explore the directory."
+            ctaHref="/en/retreats-retiru"
+            ctaLabel="View all retreats"
+            organizeHref="/en/for-organizers"
+            organizeLabel="Organizing a retreat? List it on Retiru"
+          />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {retreats.map(r => {

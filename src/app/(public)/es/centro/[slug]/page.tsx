@@ -4,12 +4,14 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { MapPin, Star } from 'lucide-react';
-import { generatePageMetadata, jsonLdLocalBusiness, jsonLdBreadcrumb, jsonLdScript } from '@/lib/seo';
+import { generatePageMetadata, jsonLdLocalBusiness, jsonLdBreadcrumb, jsonLdFAQ, jsonLdScript } from '@/lib/seo';
 import { getCenterTypeLabel, facebookProfileHref, CENTER_TYPE_URL_ES } from '@/lib/utils';
-import { getCenterBySlug, getCenterSlugs, getActiveCenters } from '@/lib/data';
+import { getCenterBySlug, getCenterSlugs, getActiveCenters, getCenterGoogleData } from '@/lib/data';
+import { buildCenterFaq } from '@/lib/center-faq';
 import { RetreatDescriptionBody } from '@/components/ui/retreat-description-body';
 import { CenterMap } from '@/components/ui/center-map';
 import { ClaimCenterButton } from '@/components/ui/claim-center-button';
+import { CenterPhotoGallery } from '@/components/ui/center-photo-gallery';
 import { EmailLink } from '@/components/ui/email-link';
 
 export const revalidate = 3600;
@@ -32,6 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       path: `/es/centro/${slug}`,
     });
   }
+  const ogImage = center.cover_url || (Array.isArray(center.images) ? center.images[0] : undefined) || undefined;
   return generatePageMetadata({
     title: `${center.name} — ${center.type ? `Centro de ${getCenterTypeLabel(center.type)}` : 'Centro'} en ${center.city || ''}`,
     description: center.description_es?.slice(0, 160) || `${center.name}: centro de bienestar en ${center.city}, ${center.province}.`,
@@ -39,6 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     path: `/es/centro/${slug}`,
     altPath: `/en/center/${slug}`,
     ogType: 'website',
+    ogImage,
     keywords: [center.name, center.type, center.city, center.province].filter(Boolean) as string[],
   });
 }
@@ -51,7 +55,13 @@ export default async function CentroDetailPage({ params }: Props) {
   const services: string[] = Array.isArray(C.services_es) ? C.services_es : [];
   const images: string[] = Array.isArray(C.images) ? C.images : [];
   const mainImage = C.cover_url || images[0] || '';
-  const galleryImages = C.cover_url ? images : images.slice(1);
+  const galleryAll = [C.cover_url, ...images].filter((u, i, arr): u is string => !!u && arr.indexOf(u) === i);
+
+  // Datos de Google Places (reseñas + horario; migración 048)
+  const googleData = await getCenterGoogleData(C.id);
+  const googleReviews = googleData?.reviews || [];
+  const openingHours = googleData?.openingHours || null;
+  const centerFaqs = buildCenterFaq(C, 'es', openingHours);
 
   // Otros centros del mismo tipo en la misma provincia (excluye el actual)
   const provinceSlug = C.province
@@ -65,35 +75,12 @@ export default async function CentroDetailPage({ params }: Props) {
 
   return (
     <div className="container-wide py-12">
-      {mainImage && (
-        <div className="mb-4 space-y-3">
-          <div className="w-full aspect-[21/9] rounded-2xl overflow-hidden relative bg-sand-100">
-            <Image
-              src={mainImage}
-              alt={C.name}
-              fill
-              priority
-              sizes="(max-width: 1024px) 100vw, 1024px"
-              className="object-cover"
-            />
-          </div>
-          {galleryImages.length > 0 && (
-            <div className="flex gap-3 overflow-x-auto pb-1">
-              {galleryImages.slice(0, 4).map((img: string, i: number) => (
-                <div key={i} className="w-32 h-24 rounded-xl overflow-hidden shrink-0 relative bg-sand-100">
-                  <Image
-                    src={img}
-                    alt={`${C.name} — foto ${i + 2}`}
-                    fill
-                    sizes="128px"
-                    loading="lazy"
-                    className="object-cover"
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+      {galleryAll.length > 0 && (
+        <CenterPhotoGallery
+          name={C.name}
+          images={galleryAll}
+          thumbLabel={(i) => `Ver foto ${i + 1} de ${C.name}`}
+        />
       )}
 
       <nav className="mb-6 flex items-center gap-1 text-xs text-muted-foreground flex-wrap">
@@ -148,20 +135,82 @@ export default async function CentroDetailPage({ params }: Props) {
           )}
 
           {/* Schedule & Prices */}
-          {(C.schedule_summary_es || C.price_range_es) && (
+          {(openingHours?.weekday_descriptions?.length || C.schedule_summary_es || C.price_range_es) && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-              {C.schedule_summary_es && (
+              {openingHours?.weekday_descriptions?.length ? (
+                <div className="bg-sand-50 border border-sand-200 rounded-xl p-5">
+                  <h3 className="font-semibold text-sm mb-2">🕐 Horarios</h3>
+                  <ul className="text-sm text-[#7a6b5d] leading-relaxed space-y-0.5">
+                    {openingHours.weekday_descriptions.map((d) => (
+                      <li key={d}>{d}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : C.schedule_summary_es ? (
                 <div className="bg-sand-50 border border-sand-200 rounded-xl p-5">
                   <h3 className="font-semibold text-sm mb-2">🕐 Horarios</h3>
                   <p className="text-sm text-[#7a6b5d] leading-relaxed">{C.schedule_summary_es}</p>
                 </div>
-              )}
+              ) : null}
               {C.price_range_es && (
                 <div className="bg-sand-50 border border-sand-200 rounded-xl p-5">
                   <h3 className="font-semibold text-sm mb-2">💰 Precios</h3>
                   <p className="text-sm text-[#7a6b5d] leading-relaxed">{C.price_range_es}</p>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Reseñas de Google */}
+          {googleReviews.length > 0 && (
+            <div className="mb-8">
+              <h2 className="font-serif text-xl mb-4">
+                Opiniones de Google
+                {C.avg_rating != null && (
+                  <span className="ml-2 text-sm font-sans text-[#7a6b5d] align-middle">
+                    {C.avg_rating} · {C.review_count ?? 0} reseñas
+                  </span>
+                )}
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {googleReviews.map((r, i) => (
+                  <div key={i} className="bg-white border border-sand-200 rounded-xl p-5">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="font-semibold text-sm text-foreground truncate">{r.author}</span>
+                      <span className="flex items-center gap-0.5 shrink-0">
+                        {Array.from({ length: 5 }).map((_, s) => (
+                          <Star
+                            key={s}
+                            size={13}
+                            className={s < Math.round(r.rating) ? 'text-amber-400 fill-amber-400' : 'text-sand-300'}
+                          />
+                        ))}
+                      </span>
+                    </div>
+                    <p className="text-sm text-[#7a6b5d] leading-relaxed line-clamp-6">{r.text}</p>
+                    {r.relative_time && (
+                      <p className="text-xs text-[#a09383] mt-2">{r.relative_time}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {centerFaqs.length > 0 && (
+            <div className="mb-8">
+              <h2 className="font-serif text-xl mb-4">Preguntas frecuentes</h2>
+              <div className="space-y-3">
+                {centerFaqs.map((f) => (
+                  <details key={f.question} className="group bg-sand-50 border border-sand-200 rounded-xl px-5 py-4">
+                    <summary className="font-semibold text-sm cursor-pointer list-none flex items-center justify-between gap-3">
+                      {f.question}
+                      <span className="text-[#a09383] group-open:rotate-45 transition-transform text-lg leading-none">+</span>
+                    </summary>
+                    <p className="text-sm text-[#7a6b5d] leading-relaxed mt-3">{f.answer}</p>
+                  </details>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -317,6 +366,8 @@ export default async function CentroDetailPage({ params }: Props) {
             latitude: C.latitude,
             longitude: C.longitude,
             areaServed: C.province,
+            openingHoursPeriods: openingHours?.periods,
+            reviews: googleReviews,
           })),
         }}
       />
@@ -331,6 +382,12 @@ export default async function CentroDetailPage({ params }: Props) {
           ])),
         }}
       />
+      {centerFaqs.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLdFAQ(centerFaqs)) }}
+        />
+      )}
     </div>
   );
 }

@@ -215,6 +215,72 @@ export async function getPublishedRetreats(filters?: {
   return { retreats, total: count ?? 0 };
 }
 
+/**
+ * Retiros publicados ya celebrados (end_date < hoy).
+ * Para landings sin oferta futura: mantener contenido indexable con ediciones pasadas.
+ */
+export async function getPastPublishedRetreats(filters?: {
+  categorySlug?: string;
+  destinationSlug?: string;
+  limit?: number;
+}): Promise<{ retreats: Retreat[]; total: number }> {
+  const supabase = await createServerSupabase();
+  const today = new Date().toISOString().slice(0, 10);
+  let query = supabase
+    .from('retreats')
+    .select(RETREAT_SELECT, { count: 'exact' })
+    .eq('status', 'published')
+    .lt('end_date', today)
+    .order('start_date', { ascending: false });
+
+  if (filters?.categorySlug) {
+    const { data: catIds } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('slug', filters.categorySlug)
+      .limit(1);
+    if (catIds?.length) {
+      const { data: rc } = await supabase
+        .from('retreat_categories')
+        .select('retreat_id')
+        .eq('category_id', catIds[0].id);
+      const retreatIds = rc?.map((r) => r.retreat_id) || [];
+      if (retreatIds.length) query = query.in('id', retreatIds);
+      else return { retreats: [], total: 0 };
+    }
+  }
+
+  if (filters?.destinationSlug) {
+    const destIds = await getLeafDestinationIdsForRetreatFilter(filters.destinationSlug);
+    if (destIds === null || destIds.length === 0) return { retreats: [], total: 0 };
+    query = destIds.length === 1
+      ? query.eq('destination_id', destIds[0])
+      : query.in('destination_id', destIds);
+  }
+
+  const limit = filters?.limit ?? 12;
+  query = query.range(0, limit - 1);
+
+  const { data, error, count } = await query;
+  if (error) {
+    console.error('[getPastPublishedRetreats]', { filters, message: error.message });
+    return { retreats: [], total: 0 };
+  }
+
+  const retreats = (data || []).map((r: Record<string, unknown>) => {
+    const { organizer_profiles, destinations, retreat_images, ...rest } = r;
+    return {
+      ...rest,
+      organizer: organizer_profiles ?? undefined,
+      destination: destinations ?? undefined,
+      categories: [] as Category[],
+      images: (retreat_images as Retreat['images']) ?? [],
+    } as unknown as Retreat;
+  });
+
+  return { retreats, total: count ?? 0 };
+}
+
 export async function getRetreatBySlug(slug: string): Promise<Retreat | null> {
   const supabase = await createServerSupabase();
   const { data, error } = await supabase
@@ -527,6 +593,49 @@ export async function getCentersByProvince(provinceSlug: string): Promise<{ cent
   const filtered = all.filter(c => c.province && normalize(c.province) === provinceSlug);
   const provinceName = filtered.length ? filtered[0].province : null;
   return { centers: filtered, provinceName };
+}
+
+/**
+ * Datos de Google Places del centro (reseñas + horario, migración 048).
+ * Tolerante: si las columnas no existen, lee el fallback en Storage
+ * (`centers/{id}/places-meta.json` escrito por `npm run centers:places-sync`).
+ */
+export async function getCenterGoogleData(centerId: string): Promise<{
+  reviews: import('@/types').CenterGoogleReview[];
+  openingHours: import('@/types').CenterGoogleOpeningHours | null;
+} | null> {
+  const supabase = createStaticSupabase();
+  try {
+    const { data, error } = await supabase
+      .from('centers')
+      .select('google_reviews, google_opening_hours')
+      .eq('id', centerId)
+      .single();
+    if (!error && data) {
+      const reviews = Array.isArray(data.google_reviews) ? data.google_reviews : [];
+      return { reviews, openingHours: data.google_opening_hours || null };
+    }
+  } catch {
+    /* columnas 048 ausentes → fallback Storage */
+  }
+
+  try {
+    const { data: pub } = supabase.storage.from('centers').getPublicUrl(`${centerId}/places-meta.json`);
+    const url = pub?.publicUrl;
+    if (!url) return null;
+    const res = await fetch(url, { next: { revalidate: 3600 } });
+    if (!res.ok) return null;
+    const meta = (await res.json()) as {
+      google_reviews?: import('@/types').CenterGoogleReview[];
+      google_opening_hours?: import('@/types').CenterGoogleOpeningHours | null;
+    };
+    return {
+      reviews: Array.isArray(meta.google_reviews) ? meta.google_reviews : [],
+      openingHours: meta.google_opening_hours || null,
+    };
+  } catch {
+    return null;
+  }
 }
 
 export async function getCenterBySlug(slug: string): Promise<Center | null> {

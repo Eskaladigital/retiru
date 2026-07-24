@@ -525,6 +525,26 @@ export interface Center {
   price_level: string | null;
 }
 
+/** Reseña de Google Places guardada en centers.google_reviews (migración 048) */
+export interface CenterGoogleReview {
+  author: string;
+  rating: number;
+  text: string;
+  relative_time?: string;
+  publish_time?: string;
+}
+
+/** Horario regular de Google Places guardado en centers.google_opening_hours (migración 048) */
+export interface CenterGoogleOpeningHours {
+  /** Texto por día localizado, p. ej. "lunes: 9:00–21:00" */
+  weekday_descriptions?: string[];
+  /** Periodos crudos de Places v1 (day: 0=domingo … 6=sábado) */
+  periods?: Array<{
+    open: { day: number; hour: number; minute: number };
+    close?: { day: number; hour: number; minute: number };
+  }>;
+}
+
 export type ClaimStatus = 'pending' | 'approved' | 'rejected';
 export type ClaimMethod = 'email_match' | 'magic_link' | 'manual_request';
 

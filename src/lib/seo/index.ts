@@ -260,6 +260,12 @@ function pickPriceRangeSymbols(raw?: string | null): string | undefined {
   return trimmed.length <= 60 ? trimmed : undefined;
 }
 
+const SCHEMA_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+function toHHMM(hour: number, minute: number): string {
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+}
+
 export function jsonLdLocalBusiness({
   name,
   description,
@@ -282,6 +288,8 @@ export function jsonLdLocalBusiness({
   latitude,
   longitude,
   areaServed,
+  openingHoursPeriods,
+  reviews,
 }: {
   name: string;
   description: string;
@@ -304,6 +312,13 @@ export function jsonLdLocalBusiness({
   latitude?: number | null;
   longitude?: number | null;
   areaServed?: string | null;
+  /** Periodos de Google Places (day: 0=domingo … 6=sábado) → openingHoursSpecification */
+  openingHoursPeriods?: Array<{
+    open: { day: number; hour: number; minute: number };
+    close?: { day: number; hour: number; minute: number };
+  }> | null;
+  /** Reseñas reales (máx. 5) → schema Review */
+  reviews?: Array<{ author: string; rating: number; text: string; publish_time?: string }> | null;
 }) {
   const schemaMeta = centerType ? CENTER_TYPE_SCHEMA[centerType] : undefined;
   const resolvedType = type ?? schemaMeta?.type ?? 'HealthAndBeautyBusiness';
@@ -352,6 +367,29 @@ export function jsonLdLocalBusiness({
 
   if (rating && reviewCount) {
     ld.aggregateRating = { '@type': 'AggregateRating', ratingValue: rating, reviewCount, bestRating: 5 };
+  }
+
+  const validPeriods = (openingHoursPeriods || []).filter(
+    (p) => p && p.open && p.close && p.open.day >= 0 && p.open.day <= 6,
+  );
+  if (validPeriods.length > 0) {
+    ld.openingHoursSpecification = validPeriods.map((p) => ({
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: `https://schema.org/${SCHEMA_DAYS[p.open.day]}`,
+      opens: toHHMM(p.open.hour, p.open.minute),
+      closes: toHHMM(p.close!.hour, p.close!.minute),
+    }));
+  }
+
+  const validReviews = (reviews || []).filter((r) => r && r.text && r.rating >= 1).slice(0, 5);
+  if (validReviews.length > 0) {
+    ld.review = validReviews.map((r) => ({
+      '@type': 'Review',
+      author: { '@type': 'Person', name: r.author },
+      reviewRating: { '@type': 'Rating', ratingValue: r.rating, bestRating: 5 },
+      reviewBody: r.text.slice(0, 500),
+      ...(r.publish_time ? { datePublished: r.publish_time.slice(0, 10) } : {}),
+    }));
   }
 
   return ld;

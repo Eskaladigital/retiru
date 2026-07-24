@@ -16,6 +16,15 @@ Antes de implementar cualquier cambio funcional (nuevas features, cambios de flu
    - `docs/SCHEMA-REVIEW.md` — si se tocan tablas/migraciones
    - `docs/SEO-LANDINGS.md` — si se tocan landings o SEO
    - `docs/BLOG-EDITORIAL.md` + `docs/BLOG-TITULOS-PROPUESTOS.md` — si se tocan artículos del blog o scripts `*blog*`
+   - `docs/ESTRATEGIA-CRECIMIENTO.md` — si la conversación trata de **estrategia, marketing, captación de centros/organizadores/eventos, SEO de negocio o verificación de organizadores**
+
+## Sesiones de estrategia (reflexiones de marketing/crecimiento)
+
+Cuando el usuario plantee reflexiones de estrategia, marketing o crecimiento (aunque no pida cambios de código):
+
+1. **Leer `docs/ESTRATEGIA-CRECIMIENTO.md` entero antes de responder** — contiene el diagnóstico, el plan por frentes, las propuestas abiertas, el backlog de decisiones y el diario de sesiones. Responder partiendo del camino ya recorrido, sin re-derivar lo ya analizado.
+2. **Al terminar la sesión, actualizar ese documento**: estado de acciones (§4), decisiones tomadas (mover del backlog §7), y nueva entrada arriba del diario (§8) con reflexiones, análisis, decisiones y trabajo ejecutado.
+3. Si una decisión estratégica cambia el producto (verificación, flujos, precios…), aplicar además el resto de esta regla (README, docs y páginas públicas coherentes).
 
 **Migraciones vs datos:** el contenido de retiros/eventos en BD se documenta en `README.md` (scripts operativos). Las migraciones SQL del repo son solo esquema y permisos; ver regla `supabase-datos-operativos.mdc`.
 

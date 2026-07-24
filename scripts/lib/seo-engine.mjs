@@ -318,7 +318,26 @@ Secciones que DEBES generar:
 
 Campos adicionales: intro_es/en (220-280 palabras), meta_title_es/en, meta_description_es/en, faq_es/en (${ctx.layer.faqCount[0]}-${ctx.layer.faqCount[1]} preguntas).
 
-JSON output: misma estructura que capa 1 con las 3 secciones mencionadas.`,
+OBLIGATORIO: sections_es y sections_en con EXACTAMENTE esas 3 keys (what_to_expect, history, how_to_choose). Si faltan, la respuesta es inválida.
+
+JSON output:
+{
+  "intro_es": "...", "intro_en": "...",
+  "meta_title_es": "...", "meta_title_en": "...",
+  "meta_description_es": "...", "meta_description_en": "...",
+  "sections_es": [
+    {"key":"what_to_expect","heading":"...","html":"<p>...</p>"},
+    {"key":"history","heading":"...","html":"<p>...</p>"},
+    {"key":"how_to_choose","heading":"...","html":"<p>...</p>"}
+  ],
+  "sections_en": [
+    {"key":"what_to_expect","heading":"...","html":"<p>...</p>"},
+    {"key":"history","heading":"...","html":"<p>...</p>"},
+    {"key":"how_to_choose","heading":"...","html":"<p>...</p>"}
+  ],
+  "faq_es": [{"question":"...","answer":"..."}],
+  "faq_en": [{"question":"...","answer":"..."}]
+}`,
 
   type_province: (ctx) => {
     const tEs = typeEs(ctx.type); const tEn = typeEn(ctx.type);
@@ -373,7 +392,26 @@ Secciones que DEBES generar (exactamente estas dos):
 
 NO repitas la definición general del estilo (eso está en capa 2). NO hables del panorama provincial general (eso está en capa 3).
 
-Campos: intro_es/en (180-260 palabras), meta_title_es/en, meta_description_es/en, faq_es/en (${ctx.layer.faqCount[0]}-${ctx.layer.faqCount[1]}).`,
+Campos: intro_es/en (180-260 palabras), meta_title_es/en, meta_description_es/en, faq_es/en (${ctx.layer.faqCount[0]}-${ctx.layer.faqCount[1]}).
+
+OBLIGATORIO: sections_es y sections_en con EXACTAMENTE esas 2 keys.
+
+JSON output:
+{
+  "intro_es": "...", "intro_en": "...",
+  "meta_title_es": "...", "meta_title_en": "...",
+  "meta_description_es": "...", "meta_description_en": "...",
+  "sections_es": [
+    {"key":"why_here_for_style","heading":"...","html":"<p>...</p>"},
+    {"key":"how_to_choose_style_local","heading":"...","html":"<p>...</p>"}
+  ],
+  "sections_en": [
+    {"key":"why_here_for_style","heading":"...","html":"<p>...</p>"},
+    {"key":"how_to_choose_style_local","heading":"...","html":"<p>...</p>"}
+  ],
+  "faq_es": [{"question":"...","answer":"..."}],
+  "faq_en": [{"question":"...","answer":"..."}]
+}`,
 
   type_province_city: (ctx) => `Estás escribiendo la landing de centros de ${ctx.type} en ${ctx.cityName} (${ctx.provinceName}) (Retiru).
 Intent primario: acceso, transporte, carácter urbano/rural del punto geográfico. El usuario ya sabe qué es ${ctx.type} y que quiere centros en su ciudad.
@@ -385,7 +423,20 @@ Secciones que DEBES generar (exactamente UNA):
 
 NO duplicar "why_here" (vive en la provincia) ni "how_to_choose" (vive en la provincia). NO hablar de toda la provincia.
 
-Campos: intro_es/en (160-220 palabras, muy enfocado al punto geográfico), meta_title_es/en ("Centros de ${ctx.type} en ${ctx.cityName}" cuando quepa), meta_description_es/en, faq_es/en (${ctx.layer.faqCount[0]}-${ctx.layer.faqCount[1]}: metro cercano, parking, horarios típicos, idiomas).`,
+Campos: intro_es/en (160-220 palabras, muy enfocado al punto geográfico), meta_title_es/en ("Centros de ${ctx.type} en ${ctx.cityName}" cuando quepa), meta_description_es/en, faq_es/en (${ctx.layer.faqCount[0]}-${ctx.layer.faqCount[1]}: metro cercano, parking, horarios típicos, idiomas).
+
+OBLIGATORIO: sections_es y sections_en con EXACTAMENTE 1 item (key access_transport_character). No dejes sections_es como [].
+
+JSON output:
+{
+  "intro_es": "...", "intro_en": "...",
+  "meta_title_es": "...", "meta_title_en": "...",
+  "meta_description_es": "...", "meta_description_en": "...",
+  "sections_es": [ {"key":"access_transport_character","heading":"...","html":"<p>...</p>"} ],
+  "sections_en": [ {"key":"access_transport_character","heading":"...","html":"<p>...</p>"} ],
+  "faq_es": [{"question":"...","answer":"..."}],
+  "faq_en": [{"question":"...","answer":"..."}]
+}`,
 };
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -495,19 +546,47 @@ export async function generateLayerContent({ context, useSerp = true, model = 'g
     model,
     temperature,
     // Cap.3 ahora tiene 4 secciones + 8 FAQs → necesita más tokens.
-    maxTokens: context.layer.id === 3 ? 5200 : (context.layer.id === 5 ? 2600 : 3800),
+    maxTokens: context.layer.id === 3 ? 5200 : (context.layer.id === 5 ? 4200 : 4200),
   });
 
   const allowedKeys = context.layer.allowedSections;
+  let sections_es = normalizeSections(parsed.sections_es, allowedKeys);
+  let sections_en = normalizeSections(parsed.sections_en, allowedKeys);
+  const intro_es = typeof parsed.intro_es === 'string' ? parsed.intro_es.trim() : null;
+  const intro_en = typeof parsed.intro_en === 'string' ? parsed.intro_en.trim() : null;
+
+  // Reparación: el modelo a veces rellena intro/FAQ y deja sections_* vacías.
+  // Si falta contenido de sección, materializamos al menos la primera key permitida.
+  if (sections_es.length === 0 && intro_es && allowedKeys.length) {
+    const key = allowedKeys[0];
+    sections_es = [{
+      key,
+      heading: context.cityName
+        ? `${context.cityName}: acceso y carácter`
+        : (context.styleName ? `${context.styleName}: qué saber` : 'Guía práctica'),
+      html: intro_es.startsWith('<') ? intro_es : `<p>${intro_es}</p>`,
+    }];
+  }
+  if (sections_en.length === 0 && intro_en && allowedKeys.length) {
+    const key = allowedKeys[0];
+    sections_en = [{
+      key,
+      heading: context.cityName
+        ? `${context.cityName}: access & character`
+        : (context.styleName ? `${context.styleName}: what to know` : 'Practical guide'),
+      html: intro_en.startsWith('<') ? intro_en : `<p>${intro_en}</p>`,
+    }];
+  }
+
   return {
-    intro_es: typeof parsed.intro_es === 'string' ? parsed.intro_es.trim() : null,
-    intro_en: typeof parsed.intro_en === 'string' ? parsed.intro_en.trim() : null,
+    intro_es,
+    intro_en,
     meta_title_es: typeof parsed.meta_title_es === 'string' ? parsed.meta_title_es.trim().slice(0, 70) : null,
     meta_title_en: typeof parsed.meta_title_en === 'string' ? parsed.meta_title_en.trim().slice(0, 70) : null,
     meta_description_es: typeof parsed.meta_description_es === 'string' ? parsed.meta_description_es.trim().slice(0, 200) : null,
     meta_description_en: typeof parsed.meta_description_en === 'string' ? parsed.meta_description_en.trim().slice(0, 200) : null,
-    sections_es: normalizeSections(parsed.sections_es, allowedKeys),
-    sections_en: normalizeSections(parsed.sections_en, allowedKeys),
+    sections_es,
+    sections_en,
     faq_es: normalizeFaq(parsed.faq_es),
     faq_en: normalizeFaq(parsed.faq_en),
     serp_data: serp ? {

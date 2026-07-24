@@ -12,6 +12,7 @@
  *   node scripts/send-mailing-test.mjs                                    # por SMTP
  *   node scripts/send-mailing-test.mjs --file=retiru-bienvenida-centro.html
  *   node scripts/send-mailing-test.mjs --to=otroemail@dominio.com
+ *   node scripts/send-mailing-test.mjs --cc=copia@dominio.com
  *   node scripts/send-mailing-test.mjs --subject="Asunto custom"
  *   node scripts/send-mailing-test.mjs --nombre="Yoga Sala Madrid" --location="Madrid"
  *   node scripts/send-mailing-test.mjs --center=yoga-sala-madrid          # datos reales de Supabase
@@ -64,6 +65,7 @@ function flag(name, def) {
 
 const file = flag('file', '2-2026-04-19-retiru-recordatorio-centro.html');
 const to = flag('to', 'contacto@retiru.com');
+const cc = flag('cc', null);
 const subject = flag(
   'subject',
   file.includes('recordatorio')
@@ -185,6 +187,7 @@ console.log(`   • usuario:   ${smtpUser}`);
 console.log(`   • plantilla: ${file}`);
 console.log(`   • de:        ${from}`);
 console.log(`   • para:      ${to}`);
+if (cc) console.log(`   • cc:        ${cc}`);
 console.log(`   • asunto:    ${subject}`);
 if (centerData) {
   console.log(`   • centro:    ${centerData.name} (${centerData.slug})`);
@@ -217,7 +220,7 @@ try {
 }
 
 try {
-  const info = await transport.sendMail({ from, to, subject, html });
+  const info = await transport.sendMail({ from, to, ...(cc ? { cc } : {}), subject, html });
   console.log(`\n✅  Enviado. messageId = ${info.messageId}`);
   if (info.accepted?.length) console.log(`    aceptado por: ${info.accepted.join(', ')}`);
   if (info.rejected?.length) console.log(`    rechazado por: ${info.rejected.join(', ')}`);

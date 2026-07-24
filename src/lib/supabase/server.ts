@@ -9,11 +9,14 @@ import { cookies } from 'next/headers';
 /**
  * Cliente Supabase para generateStaticParams, sitemap, etc.
  * Sin cookies — solo para lectura de datos públicos en build time.
+ * Prefiere service role si está disponible (sitemap/SSG más fiable ante RLS).
  */
 export function createStaticSupabase() {
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    key,
     { auth: { persistSession: false, autoRefreshToken: false } }
   );
 }

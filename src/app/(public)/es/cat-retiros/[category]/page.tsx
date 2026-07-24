@@ -7,8 +7,10 @@ import EventosSearch from '@/components/home/EventosSearch';
 import {
   getCategoryBySlug,
   getPublishedRetreats,
+  getPastPublishedRetreats,
   getDestinationsForCategory,
 } from '@/lib/data';
+import { PastRetreatsFallback } from '@/components/retreats/PastRetreatsFallback';
 import { getOrganizerReviewStats, organizerHasRatingToShow, CATEGORY_SLUG_EN, CENTER_TYPE_URL_ES } from '@/lib/utils';
 import { generatePageMetadata, jsonLdItemList, jsonLdBreadcrumb, jsonLdFAQ, jsonLdScript } from '@/lib/seo';
 
@@ -53,6 +55,11 @@ export default async function RetirosPorCategoriaPage({ params }: { params: Prom
     getPublishedRetreats({ categorySlug: category, limit: 50 }),
     getDestinationsForCategory(category),
   ]);
+
+  const pastRetreats =
+    retreats.length === 0
+      ? (await getPastPublishedRetreats({ categorySlug: category, limit: 12 })).retreats
+      : [];
 
   const enSlug = CATEGORY_SLUG_EN[category] || category;
 
@@ -126,12 +133,16 @@ export default async function RetirosPorCategoriaPage({ params }: { params: Prom
 
         {/* Grid de retiros */}
         {retreats.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-4xl mb-4">🔍</p>
-            <p className="font-serif text-xl text-foreground mb-2">No hay retiros de {cat.name_es} disponibles</p>
-            <p className="text-sm text-[#7a6b5d] mb-6">Prueba otra categoría o explora todos los retiros</p>
-            <Link href="/es/retiros-retiru" className="text-sm font-semibold text-terracotta-600 hover:text-terracotta-700">Ver todos los retiros</Link>
-          </div>
+          <PastRetreatsFallback
+            locale="es"
+            pastRetreats={pastRetreats}
+            heading={`No hay retiros de ${cat.name_es} con fechas abiertas`}
+            subheading="Mientras preparamos nuevas ediciones, puedes ver retiros ya celebrados o explorar el directorio."
+            ctaHref="/es/retiros-retiru"
+            ctaLabel="Ver todos los retiros"
+            organizeHref="/es/para-organizadores"
+            organizeLabel="¿Organizas un retiro? Publícalo en Retiru"
+          />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {retreats.map(r => {
