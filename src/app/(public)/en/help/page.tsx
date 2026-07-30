@@ -17,6 +17,10 @@ const SECTIONS = [
         a: 'When a retreat uses manual confirmation, you send your request without paying anything: the organizer has a maximum window to accept or decline it. If accepted, we email you the link to complete the payment (with its own deadline). If the window expires with no response, the request is automatically cancelled at no cost, since you had not paid anything.',
       },
       {
+        q: 'How do I join a class or event that repeats (e.g. every Tuesday)?',
+        a: 'When you click "Book your spot" on a recurring event you can either book just that date or open a calendar and select several days at once (another single date, every Monday, all upcoming ones…), up to 7 weeks ahead. Each day becomes its own booking, so you can cancel individual dates from "My bookings". There you will also find an "Add more dates" option to extend your enrollment whenever you like.',
+      },
+      {
         q: 'Can I cancel my booking?',
         a: 'Yes, from "My bookings" in your dashboard. Within 48 hours of booking you have a guaranteed 100% refund (if the event starts in more than 7 days). After that, the event\'s cancellation policy applies (deadlines and percentages based on what you paid), visible on the retreat page; most events use the flexible policy: 100% until 7 days before and 50% until 3 days before. If a refund applies, you receive that amount in full—we do not keep an extra non-refundable "platform fee" from your refund.',
       },
@@ -51,7 +55,7 @@ const SECTIONS = [
       },
       {
         q: 'Can I publish a recurring event (e.g. every Tuesday)?',
-        a: 'Yes. When creating the event, check "Recurring event" and set how often it repeats (7 = weekly); you can also make an existing event recurring from its edit page. Retiru automatically publishes the upcoming dates and opens a new one as each date passes; listings only show the nearest date. From your panel you can close dates with no bookings (holidays) or stop the series at any time, and the whole series counts as a single retreat for your commission tier.',
+        a: 'Yes. When creating the event, check "Recurring event" and set how often it repeats (7 = weekly); you can also make an existing event recurring from its edit page. Retiru automatically publishes the upcoming dates and opens a new one as each date passes; listings only show the nearest date. From your panel you can close dates with no bookings (holidays) or stop the series at any time, and the whole series counts as a single retreat for your commission tier. Attendees can enroll on a single date or on several at once from a calendar (up to 7 weeks ahead).',
       },
       {
         q: 'Can I generate the cover image with AI?',

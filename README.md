@@ -522,10 +522,11 @@ Sistema de emails automáticos enviados por la plataforma en eventos clave. **Sa
 | Email | Destinatario | Cuándo se envía | Disparado por |
 |-------|-------------|----------------|---------------|
 | `sendBookingConfirmedEmail` | Asistente | Tras pagar el 100% (reserva confirmada) | Webhook Stripe / Organizador confirma |
-| `sendReservationConfirmedEmail` | Asistente | Plaza reservada sin pago (`reserved_no_payment`, mínimo viable no alcanzado) | `POST /api/checkout` (flujo reserva sin Stripe) |
+| `sendReservationConfirmedEmail` | Asistente | Plaza reservada sin pago (`reserved_no_payment`, mínimo viable no alcanzado o modo lanzamiento sin cobro) | `POST /api/checkout` (flujo reserva sin Stripe) |
+| `sendSeriesReservationEmail` | Asistente | Inscripción en varias fechas de un evento periódico (resumen con la lista de fechas reservadas) | `POST /api/checkout` con `{ seriesId, retreatIds? }` |
 | `sendBookingRequestReceivedEmail` | Asistente | Solicitud enviada en retiro de **confirmación manual** (sin pago; el organizador tiene el SLA para responder) | `POST /api/checkout` |
 | `sendBookingRequestApprovedEmail` | Asistente | El organizador acepta su solicitud: enlace de pago con deadline (o aviso de que falta el mínimo) | `PATCH /api/bookings/[id]` (`confirm` sobre solicitud) |
-| `sendNewBookingToOrganizerEmail` | Organizador | Cuando recibe una nueva reserva pagada o una solicitud sin pago (confirmación manual) | Webhook Stripe · `POST /api/checkout` |
+| `sendNewBookingToOrganizerEmail` | Organizador | Cuando recibe una nueva reserva pagada, una solicitud sin pago (confirmación manual), una reserva en modo lanzamiento (`noPaymentHold`) o una inscripción multifecha en serie (`datesCount`, un solo aviso) | Webhook Stripe · `POST /api/checkout` |
 | `sendMinViableReachedEmail` | Asistente | Mínimo de plazas alcanzado: enlace para pagar antes del deadline | Lógica tras nueva reserva en `POST /api/checkout` |
 | `sendMinViableReachedToOrganizerEmail` | Organizador | Mínimo alcanzado: el evento se confirma en cuanto paguen los inscritos | Misma ruta |
 | `sendPaymentDeadlineReminderEmail` | Asistente | Recordatorio tras vencer el primer deadline (+24 h de gracia) | `POST /api/cron/payment-deadlines` |

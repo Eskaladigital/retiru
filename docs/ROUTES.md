@@ -149,7 +149,7 @@ Parámetros opcionales en registro: `?redirect=/ruta&claim=true` (redirige tras 
 
 | Ruta | Archivo | Descripción |
 |------|---------|-------------|
-| `/es/mis-reservas` | `src/app/(public)/es/(dashboard)/mis-reservas/page.tsx` | Reservas como asistente |
+| `/es/mis-reservas` | `src/app/(public)/es/(dashboard)/mis-reservas/page.tsx` | Reservas como asistente; en eventos periódicos con reserva activa, botón «Ampliar o modificar inscripción» (calendario de la serie) |
 | `/es/mensajes` | `src/app/(public)/es/(dashboard)/mensajes/page.tsx` | Bandeja de mensajes (+ botón soporte) |
 | `/es/mensajes/[id]` | `src/app/(public)/es/(dashboard)/mensajes/[id]/page.tsx` | Conversación individual (chat / soporte) |
 | `/es/perfil` | `src/app/(public)/es/(dashboard)/perfil/page.tsx` | Datos personales desde `profiles` (Supabase); guardar vía `PATCH /api/profile` |
