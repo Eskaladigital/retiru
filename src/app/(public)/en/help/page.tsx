@@ -10,7 +10,7 @@ const SECTIONS = [
     items: [
       {
         q: 'How does booking work?',
-        a: 'For most retreats you pay the PVP (listed price per person) in one secure card payment (Stripe). If the retreat has a minimum group size that is not yet met, you can hold a spot without paying until it is reached; you then get a link to pay by the deadline. Retiru handles the booking and the split with the organizer, with no extra surcharge to you.',
+        a: 'When online payment is active, for most retreats you pay the PVP (listed price per person) in one secure card payment (Stripe). If the retreat has a minimum group size that is not yet met, or if online payment is not available yet (launch phase), you can hold a spot without paying; we email you when it is time to complete payment on Retiru. Retiru handles the booking and the split with the organizer, with no extra surcharge to you.',
       },
       {
         q: 'What if the organizer must confirm my booking and does not respond in time?',

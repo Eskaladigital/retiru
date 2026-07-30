@@ -130,8 +130,9 @@ Prioridad: **impresiones altas + intent alineado con el negocio**, no solo la ma
 | **Motor de cancelación y reembolsos** | Hallazgo (revisión 2026-07-24): la cancelación del asistente no estaba implementada (botón sin acción, `refund_tiers` sin aplicar) y la cancelación de retiro por el organizador no reembolsaba. Implementado como parte del paquete «cancelación flexible de lanzamiento»: `POST /api/bookings/[id]` (asistente, tramos + garantía 48 h + Stripe), reembolso íntegro automático en `POST /api/retreats/[id]` (organizador), webhook sin duplicados. | 🟢 Hecho (2026-07-24) |
 | **Paquete «cancelación flexible de lanzamiento»** | Presets recentrados (default flexible 100 % >7 d / 50 % >3 d; nuevo preset clase/taller 100 % hasta 1 día antes), garantía Retiru 48 h, badge «Cancelación gratuita» en cards y fichas ES/EN, contrato v1.1, condiciones/ayuda/para-asistentes ES+EN, migración 052. | 🟢 Hecho (2026-07-24) |
 | **Copy honesto en reserva sin pago** | Bajo el botón «Reservar plaza (sin pago)» se anunciaba «Visa, Mastercard y más», dando a entender que se pedía tarjeta cuando no se pide ninguna (confundió al propio equipo). Ahora en modo sin pago dice «Sin tarjeta ahora · Te avisaremos por email para completar el pago si se confirma» (ES+EN). | 🟢 Hecho (2026-07-24) |
-| **Confirmación manual: solicitar plaza sin pago** | En retiros de confirmación manual el asistente ya **no paga antes** de que el organizador apruebe: la solicitud entra como `reserved_no_payment` (con SLA para el organizador), al aprobar se envía el enlace de pago con plazo (reutiliza la maquinaria de «mínimo alcanzado») y el pago confirma la plaza directamente. Si el SLA vence sin respuesta, la solicitud se anula sin coste. Migración 053 (`organizer_approved_at`). | 🟢 Hecho (2026-07-24) — falta aplicar migración 053 en prod |
+| **Confirmación manual: solicitar plaza sin pago** | En retiros de confirmación manual el asistente ya **no paga antes** de que el organizador apruebe: la solicitud entra como `reserved_no_payment` (con SLA para el organizador), al aprobar se envía el enlace de pago con plazo (reutiliza la maquinaria de «mínimo alcanzado») y el pago confirma la plaza directamente. Si el SLA vence sin respuesta, la solicitud se anula sin coste. Migración 053 (`organizer_approved_at`), aplicada y verificada en prod. | 🟢 Hecho (2026-07-24) |
 | **Más métodos de pago vía Stripe (Bizum, wallets, plazos)** | El checkout ya usa **métodos automáticos de Stripe** (eliminado `payment_method_types: ['card']`). Falta activar en el dashboard de Stripe **Bizum**, Apple Pay / Google Pay y Klarna. Guardarraíl decidido: **nada de pago fuera de la plataforma** (efectivo/transferencia al organizador) — todo debe quedar registrado y cobrado vía Stripe para que Retiru capture su comisión. Prerrequisito: claves Stripe reales en producción (hoy hay un placeholder; el checkout de pago no ha funcionado nunca). | 🟡 Código hecho (2026-07-24) — falta activar métodos en el dashboard |
+| **Modo lanzamiento: inscripción sin cobro** | Mientras no haya claves Stripe reales, `/api/checkout` crea `reserved_no_payment` (sin deadline) en lugar de fallar. UI y emails honestos. Se apaga solo al configurar Stripe. | 🟢 Hecho (2026-07-30) |
 
 ---
 
@@ -145,15 +146,54 @@ Prioridad: **impresiones altas + intent alineado con el negocio**, no solo la ma
 - [ ] **Separación clases vs retiros en UX/SEO** *(aplazada a propósito — ver decisión 2026-07-24 nocheV)*: solo cuando haya volumen real de eventos de un día, decidir facetas/etiquetas («Clase», «Taller», «Retiro»), landings propias tipo «clases de yoga en [ciudad]» (ataca `yoga classes near me`, 644 imp. pos. 10) y cómo evitar que un buscador de «retiro yoga» aterrice en una página dominada por clases de 2 h.
 - [ ] **Naming/posicionamiento** *(aplazada igual que la anterior)*: ¿Retiru sigue siendo «marketplace de retiros y escapadas» o pasa a «retiros, clases y experiencias de bienestar»? Afecta a home, metas y pitch de captación.
 - [x] **Paquete «cancelación flexible de lanzamiento»** (sesión 2026-07-24 nocheVI): ✅ aprobado por el equipo (paquete completo, garantía 48 h incluida) e implementado en la misma sesión. Ver §6 y diario.
-- [x] **Confirmación manual sin pago por adelantado** — ✅ aprobado e implementado en la sesión 2026-07-24 nocheVII (ver §6 y diario). Pendiente operativo: aplicar migración 053 en prod.
+- [x] **Confirmación manual sin pago por adelantado** — ✅ aprobado e implementado en la sesión 2026-07-24 nocheVII (ver §6 y diario). Migración 053 aplicada y verificada en prod; código en `main` (commit `ec47626`).
 - [x] **Pago fuera de la plataforma: NO** — ✅ decidido (2026-07-24 nocheVII): todo cobro debe quedar registrado y pasar por Stripe para que Retiru capture su comisión. Nada de efectivo ni transferencias directas al organizador.
 - [ ] **Activar Bizum / wallets / Klarna en el dashboard de Stripe** — el código ya usa métodos automáticos (nocheVII); queda activar los métodos en el dashboard cuando estén las claves reales en producción.
+- [x] **Corregir ficha Vinyasa Rodalquilar** (sesión 2026-07-30): ✅ convertido a serie diaria (`npm run retreats:fix-vinyasa-daily`).
+- [x] **Modo inscripción sin cobro mientras no haya Stripe** (2026-07-30): ✅ implementado (`src/lib/payments.ts` + checkout). Sigue vigente el no al cobro offline; al poner claves Stripe reales se reactiva el pago.
 
 ---
 
 ## 8. Diario de sesiones
 
 > Añadir cada sesión **arriba** (orden cronológico inverso). Formato: fecha, reflexiones planteadas, análisis/correcciones del agente, decisiones, trabajo ejecutado.
+
+### 2026-07-30 — Clase Vinyasa Rodalquilar: mal modelada + checkout roto sin Stripe
+
+**Reflexiones del equipo:**
+1. El único evento publicado (Vinyasa Flow · Hotel Los Patios · Rodalquilar) se ve como un retiro de ~516 días; la organizadora lo pensó como **clase diaria** (misma hora, periodo largo).
+2. Al pulsar «Reservar plaza» falla el pago («No se pudo iniciar el pago…»). Sin plataforma Stripe/Redsys operativa, ¿cómo dejar que la gente se inscriba aunque paguen después al organizador?
+
+**Verificado en BD (prod):**
+- Fila `retreats` `2d3ec590-…` / slug `…-mrzdxvl0`: `start_date=2026-08-03`, `end_date=2027-12-31`, `duration_days=516`, `duration_hours=null`, **`series_id=null`**, `confirmation_type=automatic`, `min_attendees=1`, precio 10 €, schedule Día 1 a las **20:00**.
+- Tabla `retreat_series`: **0 filas**. No es un evento periódico; es un único retiro con fechas inicio/fin muy separadas (el rango que la organizadora usó como “periodo”, sin marcar «Evento periódico»).
+- Por eso listados y ficha muestran «516 días · 515 noches».
+
+**Análisis:**
+- **Recurrencia:** el producto ya soporta serie diaria (`is_recurring` + `recurrence_interval_days=1` + `duration_hours` de la clase + `recurrence_end_date` opcional). Aquí no se usó.
+- **Pago:** con confirmación automática y mínimo 1, el botón cobra ya vía Stripe. El mensaje de error es el catch de `/api/checkout` cuando falla `createCheckoutSession` (claves Stripe placeholder / no configuradas en Vercel) — hallazgo ya documentado en nocheVII/IX.
+- **«Pagar luego al organizador»:** choca con la decisión nocheVII (**prohibido pago fuera de plataforma**). Alternativa temporal: modo lanzamiento inscripción sin cobro dentro de Retiru.
+
+**Decisiones:** ✅ convertir Vinyasa a serie diaria; ✅ implementar modo lanzamiento 2 (inscripción sin cobro mientras no haya Stripe), sin reabrir pago offline al organizador.
+
+**Trabajo ejecutado:**
+1. Script `npm run retreats:fix-vinyasa-daily` — master same-day + `duration_hours=1.5`, serie `interval_days=1`, fin 2027-12-31, horizonte 7 fechas.
+2. `src/lib/payments.ts` + checkout: si no hay Stripe real → `reserved_no_payment` sin deadline; UI/ficha/emails/ayuda ES+EN alineados. Se desactiva solo al poner claves reales (o `ONLINE_PAYMENTS_ENABLED=1` con claves válidas).
+
+**Pendiente del equipo:** deploy a Vercel; cuando existan claves Stripe reales, el cobro vuelve solo; reserva de prueba end-to-end.
+
+### 2026-07-24 (nocheIX) — Cierre de la noche: todo en `main` y BD al día
+
+**Contexto:** cierre operativo de las sesiones nocheVI–VIII.
+
+**Trabajo ejecutado:**
+- **Commit `ec47626` subido a `main`** (44 archivos, +1.326/−180). Agrupa todo lo que estaba sin commitear: paquete de cancelación flexible (nocheVI: motor de reembolsos, presets, badge, migración 052), confirmación manual sin pago + métodos de pago automáticos + fixes de checkout (nocheVII, migración 053), copy del hero de `/es/retiros-retiru` (nocheVIII) y el fix de la migración 011 (auditoría BD).
+- **Migración 053 verificada en producción** (`organizer_approved_at` existe; `npm run db:verify-migrations` en verde para toda la estructura). El deploy que dispare este push sale sin riesgo de columna inexistente.
+
+**Pendiente del equipo (sin cambios, consolidado):**
+1. Claves Stripe reales en Vercel (`STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`) — sin ellas el pago sigue fallando (ahora con error claro, ya no un 500 opaco).
+2. Activar Bizum / Apple Pay / Google Pay / Klarna en el dashboard de Stripe.
+3. Reserva de prueba end-to-end cuando estén 1 y 2 (la clase de 10 € de Rodalquilar sirve: confirmación inmediata → prueba checkout + webhook completos).
 
 ### 2026-07-24 (nocheVIII) — `/es/retiros-retiru` habla solo de retiros, ¿y las clases?
 
@@ -185,7 +225,19 @@ En mínimo = 1 con confirmación inmediata no hay nada que cambiar: reservar es 
 - **Métodos de pago**: checkout con métodos automáticos de Stripe (tarjeta, Bizum, wallets, Klarna según lo activado en el dashboard).
 - **Docs sincronizadas**: README (flujos, emails, crons, migraciones 049–053), ayuda/help, condiciones ES+EN, para-organizadores/for-organizers, contrato del organizador (cláusula SLA).
 
-**Pendiente del equipo:** (1) claves Stripe reales en Vercel + desplegar; (2) aplicar migración 053 en el SQL Editor (o añadir `DATABASE_URL` a `.env.local` y correr `node scripts/run-sql-migration.mjs supabase/migrations/053_manual_confirmation_no_prepay.sql`); (3) activar Bizum/wallets/Klarna en el dashboard de Stripe; (4) reserva de prueba end-to-end.
+**Pendiente del equipo:** (1) claves Stripe reales en Vercel + desplegar; (2) ~~aplicar migración 053~~ ✅ aplicada y verificada la misma noche; (3) activar Bizum/wallets/Klarna en el dashboard de Stripe; (4) reserva de prueba end-to-end.
+
+### 2026-07-24 (nocheVII) — Auditoría BD vs migraciones: bug latente del contador de plazas corregido
+
+**Contexto:** tras aplicar la migración 052, el equipo pidió verificar que toda la BD de producción coincide con las migraciones del repo.
+
+**Trabajo y hallazgos:**
+- Nueva herramienta permanente `npm run db:verify-migrations` (`scripts/verify-migrations-db.mjs`): parsea las migraciones y contrasta tablas+columnas, vistas, buckets, enums clave y RPCs contra producción vía PostgREST.
+- **Hallazgo crítico:** la migración 011 nunca se aplicó — un conflicto con una función de 001 revertía la transacción entera en el SQL Editor. Las RPC `increment/decrement_confirmed_bookings` no existían y el código las llama sin comprobar errores: el contador de plazas (`confirmed_bookings` / `available_spots`, el «Completo» de las cards y el mínimo viable) **no se habría actualizado con las reservas futuras**. Sin daño acumulado (1 reserva, contadores coherentes). Archivo corregido, RPCs creadas en prod por el equipo y verificado en verde.
+- Migraciones 052 (default cancelación flexible) y 053 (`organizer_approved_at`, de otra sesión) aplicadas y verificadas.
+- Detalle documental en `docs/SCHEMA-REVIEW.md` → «Verificación contra producción (julio 2026)» y README → «Migraciones y seeds».
+
+**Pendiente del equipo:** deploy a Vercel del paquete de cancelación flexible (nocheVI).
 
 ### 2026-07-24 (nocheVI) — Cancelación mucho más flexible como palanca de lanzamiento (propuesta)
 

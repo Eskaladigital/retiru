@@ -8,6 +8,18 @@ Documento de **trabajo**: contrasta páginas y tipos en `src/types/index.ts` con
 
 ---
 
+## Verificación contra producción (julio 2026)
+
+**2026-07-24 — Auditoría completa esquema vs BD real** con la nueva herramienta `npm run db:verify-migrations` (parsea `supabase/migrations/*.sql` y contrasta tablas+columnas, vistas, buckets, enums clave y RPCs vía PostgREST con service role). Resultado final: **42/42 tablas, 1/1 vista, 3/3 buckets, enums y RPCs OK**.
+
+Hallazgos y correcciones de esa auditoría:
+
+- **Migración 011 nunca se había aplicado**: redefinía `generate_booking_number()` como `RETURNS TEXT`, en conflicto con la función de trigger homónima de 001 (`RETURNS TRIGGER`, trigger `tr_bk_num`). Postgres rechazaba el cambio de tipo de retorno y el SQL Editor revertía la transacción entera, dejando también sin crear `increment_confirmed_bookings` y `decrement_confirmed_bookings`. Consecuencia latente: el código llama a esas RPC al confirmar/reembolsar sin comprobar el error → el contador `confirmed_bookings` / `available_spots` no se habría actualizado (sin daño real: solo 1 reserva en BD y contadores coherentes). **Archivo 011 corregido en el repo** (eliminada la redefinición conflictiva) y RPCs creadas en prod.
+- **Migraciones 049–053 aplicadas y verificadas** (PVP > 0, `duration_hours`, `retreat_series`, default de cancelación flexible, `organizer_approved_at`).
+- **Límite de la verificación**: funciones de trigger, triggers, políticas RLS e índices no se pueden comprobar vía PostgREST (no los expone); requieren `DATABASE_URL` o el SQL Editor.
+
+---
+
 ## Resumen ejecutivo (abril 2026)
 
 - **Implementado en BD y flujo:** `user_roles` (027), campos SEO en `categories` / `destinations` (028 + 029), comisiones escalonadas por retiro (028_tiered_commissions), `shop_product_interests` + RPC estadísticas (030 + 032), verificación de organizador: `contract_accepted_at`, `organizer_verification_steps` con `file_url`, bucket `organizer-docs`, ampliación de enum de pasos (031a + 031b), **sistema de mailing CRM** (038 + 039): `mailing_campaigns`, `mailing_recipients`, vista `mailing_campaigns_stats`, columnas de opt-out en `centers` (`marketing_opt_out_at`, `marketing_opt_out_token`, `marketing_opt_out_reason`), **soft-clear del chat de soporte** (040: `conversations.user_cleared_at`), **opt-out RGPD compartido** (041: `email_suppressions`), **jerarquía de destinos** (037: country/region/province/city en `destinations`).

@@ -12,6 +12,8 @@ interface ReserveButtonProps {
   minReached: boolean;
   /** Confirmación manual: la reserva entra como solicitud sin pago */
   manualConfirmation?: boolean;
+  /** false = modo lanzamiento: inscripción sin cobro (Stripe aún no activo) */
+  onlinePaymentsEnabled?: boolean;
   locale?: 'es' | 'en';
   className?: string;
   compact?: boolean;
@@ -24,6 +26,7 @@ export default function ReserveButton({
   availableSpots,
   minReached,
   manualConfirmation = false,
+  onlinePaymentsEnabled = true,
   locale = 'es',
   className = '',
   compact = false,
@@ -40,7 +43,7 @@ export default function ReserveButton({
         ? (locale === 'es' ? 'Solicitar plaza' : 'Request spot')
         : (locale === 'es' ? 'Solicitar plaza (sin pago)' : 'Request spot (no payment)');
     }
-    if (!minReached) {
+    if (!onlinePaymentsEnabled || !minReached) {
       return compact
         ? (locale === 'es' ? 'Reservar plaza' : 'Reserve spot')
         : (locale === 'es' ? 'Reservar plaza (sin pago)' : 'Reserve spot (no payment)');
@@ -103,9 +106,13 @@ export default function ReserveButton({
             ? (locale === 'es'
                 ? 'Solicitud enviada. El organizador la revisará y, si la acepta, te enviaremos el enlace para completar el pago.'
                 : 'Request sent. The organizer will review it and, if accepted, we\u2019ll send you the link to complete the payment.')
-            : (locale === 'es'
-                ? 'Plaza reservada. Te avisaremos cuando se alcance el mínimo para confirmar con el pago.'
-                : 'Spot reserved. We\u2019ll notify you when the minimum is reached so you can confirm with payment.')}
+            : !onlinePaymentsEnabled
+              ? (locale === 'es'
+                  ? 'Plaza reservada. Por ahora no se cobra en la plataforma; te avisaremos por email cuando puedas pagar en Retiru.'
+                  : 'Spot reserved. Payment is not collected on the platform yet; we\u2019ll email you when you can pay on Retiru.')
+              : (locale === 'es'
+                  ? 'Plaza reservada. Te avisaremos cuando se alcance el mínimo para confirmar con el pago.'
+                  : 'Spot reserved. We\u2019ll notify you when the minimum is reached so you can confirm with payment.')}
         </p>
       </div>
     );

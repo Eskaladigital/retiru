@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
 import { createCheckoutSession } from '@/lib/stripe';
+import { isOnlinePaymentEnabled } from '@/lib/payments';
 import {
   sendReservationConfirmedEmail,
   sendMinViableReachedEmail,
@@ -92,6 +93,7 @@ export async function POST(request: NextRequest) {
 
     const minAttendees = retreat.min_attendees ?? 1;
     const confirmedCount = retreat.confirmed_bookings ?? 0;
+    const maxAttendees = retreat.max_attendees ?? 0;
 
     const { count: reservedCount } = await admin
       .from('bookings')
@@ -102,12 +104,19 @@ export async function POST(request: NextRequest) {
     const totalEnrolled = confirmedCount + (reservedCount ?? 0);
     const minAlreadyReached = totalEnrolled >= minAttendees;
     const isManual = retreat.confirmation_type === 'manual';
+    // Modo lanzamiento: sin claves Stripe reales → inscripción sin cobro
+    const launchNoPayment = !isOnlinePaymentEnabled();
+
+    if (maxAttendees > 0 && totalEnrolled >= maxAttendees) {
+      return NextResponse.json({
+        error: locale === 'es' ? 'No quedan plazas disponibles' : 'No spots available',
+      }, { status: 400 });
+    }
 
     // ─── Reserve/request without payment ─────────────────────────────
     // Sin pago por adelantado cuando: (a) falta el mínimo de participantes,
-    // o (b) el retiro es de confirmación manual (el organizador aprueba antes
-    // de que exista pago; el enlace de pago llega tras la aprobación).
-    if ((!minAlreadyReached && minAttendees > 1) || isManual) {
+    // (b) confirmación manual, o (c) modo lanzamiento (Stripe aún no activo).
+    if ((!minAlreadyReached && minAttendees > 1) || isManual || launchNoPayment) {
       const bookingNumber = generateBookingNumber();
       const eventTitle = locale === 'es' ? retreat.title_es : (retreat.title_en || retreat.title_es);
       const slaHours = retreat.sla_hours || 48;
@@ -159,12 +168,13 @@ export async function POST(request: NextRequest) {
             bookingNumber,
             minAttendees,
             currentReserved: newTotalEnrolled,
+            launchNoPayment,
           });
         }
       } catch (e) { console.error('reservation email failed:', e); }
 
-      // Notificar al organizador la nueva solicitud (solo manual)
-      if (isManual) {
+      // Notificar al organizador: solicitud manual o inscripción en modo lanzamiento
+      if (isManual || launchNoPayment) {
         try {
           const { data: orgProfile } = await admin
             .from('organizer_profiles')
@@ -184,15 +194,16 @@ export async function POST(request: NextRequest) {
               bookingNumber,
               eventTitle: retreat.title_es,
               attendeeName: attendeeProfile?.full_name || 'Asistente',
-              requiresConfirmation: true,
-              slaHours,
+              requiresConfirmation: isManual,
+              slaHours: isManual ? slaHours : undefined,
+              noPaymentHold: launchNoPayment && !isManual,
             });
           }
         } catch (e) { console.error('sendNewBookingToOrganizerEmail failed:', e); }
       }
 
-      // Check if THIS booking triggers the minimum
-      if (minAttendees > 1 && !minAlreadyReached && newTotalEnrolled >= minAttendees) {
+      // Check if THIS booking triggers the minimum (no en modo lanzamiento sin Stripe)
+      if (!launchNoPayment && minAttendees > 1 && !minAlreadyReached && newTotalEnrolled >= minAttendees) {
         try {
           await triggerMinViableReached(admin, retreat, locale);
         } catch (e) {
@@ -275,6 +286,14 @@ async function handlePayExistingBooking(
   user: { id: string; email?: string },
   locale: 'es' | 'en',
 ) {
+  if (!isOnlinePaymentEnabled()) {
+    return NextResponse.json({
+      error: locale === 'es'
+        ? 'El pago online aún no está disponible. Tu plaza sigue reservada; te avisaremos por email cuando puedas pagar en Retiru.'
+        : 'Online payment is not available yet. Your spot remains reserved; we\u2019ll email you when you can pay on Retiru.',
+    }, { status: 503 });
+  }
+
   const admin = createAdminSupabase();
 
   const { data: booking, error } = await admin

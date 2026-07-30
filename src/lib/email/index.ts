@@ -329,9 +329,11 @@ export async function sendNewBookingToOrganizerEmail(
     attendeeName: string;
     requiresConfirmation: boolean;
     slaHours?: number;
+    /** Inscripción sin cobro (modo lanzamiento / mínimo no alcanzado) */
+    noPaymentHold?: boolean;
   }
 ) {
-  const { to, locale, bookingNumber, eventTitle, attendeeName, requiresConfirmation, slaHours } = options;
+  const { to, locale, bookingNumber, eventTitle, attendeeName, requiresConfirmation, slaHours, noPaymentHold } = options;
 
   const subject = t(locale,
     `Nueva reserva: ${attendeeName} — ${eventTitle}`,
@@ -343,7 +345,9 @@ export async function sendNewBookingToOrganizerEmail(
         `&#9888;&#65039; Tienes ${slaHours || 48} horas para confirmar o rechazar esta reserva.`,
         `&#9888;&#65039; You have ${slaHours || 48} hours to confirm or reject this booking.`
       ))
-    : `<p style="margin: 0 0 14px 0; font-size: 15px; color: #47654b; line-height: 1.7; font-family: Arial, sans-serif; font-weight: 600;">&#9989; ${t(locale, 'La reserva se ha confirmado autom&aacute;ticamente.', 'The booking has been automatically confirmed.')}</p>`;
+    : noPaymentHold
+      ? `<p style="margin: 0 0 14px 0; font-size: 15px; color: #47654b; line-height: 1.7; font-family: Arial, sans-serif; font-weight: 600;">&#9989; ${t(locale, 'Inscripci&oacute;n recibida sin cobro por ahora (la plataforma a&uacute;n no cobra online).', 'Registration received with no payment for now (the platform is not collecting online payments yet).')}</p>`
+      : `<p style="margin: 0 0 14px 0; font-size: 15px; color: #47654b; line-height: 1.7; font-family: Arial, sans-serif; font-weight: 600;">&#9989; ${t(locale, 'La reserva se ha confirmado autom&aacute;ticamente.', 'The booking has been automatically confirmed.')}</p>`;
 
   const body = [
     paragraph(`<strong>${attendeeName}</strong> ${t(locale, 'ha reservado plaza en', 'has booked a spot in')} <strong>${eventTitle}</strong>`),
@@ -1263,9 +1267,11 @@ export async function sendReservationConfirmedEmail(
     bookingNumber: string;
     minAttendees: number;
     currentReserved: number;
+    /** Modo lanzamiento sin Stripe: no hablar de mínimo ni de enlace de pago inmediato */
+    launchNoPayment?: boolean;
   }
 ) {
-  const { to, locale, eventTitle, bookingNumber, minAttendees, currentReserved } = options;
+  const { to, locale, eventTitle, bookingNumber, minAttendees, currentReserved, launchNoPayment } = options;
 
   const remaining = minAttendees - currentReserved;
 
@@ -1274,24 +1280,38 @@ export async function sendReservationConfirmedEmail(
     `Spot reserved — ${eventTitle}`
   );
 
-  const body = [
-    paragraph(t(locale,
-      `Tu plaza en <strong>${eventTitle}</strong> ha sido reservada. A&uacute;n no se requiere pago.`,
-      `Your spot at <strong>${eventTitle}</strong> has been reserved. No payment required yet.`
-    )),
-    infoBox([
-      infoLine(t(locale, 'N&ordm; de reserva', 'Booking number'), bookingNumber),
-      infoLine(t(locale, 'Inscritos', 'Enrolled'), `${currentReserved} / ${minAttendees} ${t(locale, 'm&iacute;nimo', 'minimum')}`),
-    ].join('')),
-    paragraph(t(locale,
-      remaining > 0
-        ? `Faltan <strong>${remaining}</strong> inscritos m&aacute;s para alcanzar el m&iacute;nimo. Cuando se alcance, te enviaremos un enlace de pago para confirmar tu plaza.`
-        : 'El m&iacute;nimo ya est&aacute; alcanzado. Recibir&aacute;s pronto un enlace para confirmar con el pago.',
-      remaining > 0
-        ? `<strong>${remaining}</strong> more enrollments needed to reach the minimum. Once reached, we'll send you a payment link to confirm your spot.`
-        : 'The minimum has been reached. You will receive a payment link shortly to confirm your spot.'
-    )),
-  ].join('');
+  const body = launchNoPayment
+    ? [
+        paragraph(t(locale,
+          `Tu plaza en <strong>${eventTitle}</strong> ha sido reservada. Por ahora no se cobra en la plataforma.`,
+          `Your spot at <strong>${eventTitle}</strong> has been reserved. Payment is not collected on the platform yet.`
+        )),
+        infoBox([
+          infoLine(t(locale, 'N&ordm; de reserva', 'Booking number'), bookingNumber),
+        ].join('')),
+        paragraph(t(locale,
+          'Te avisaremos por email cuando puedas completar el pago en Retiru. El organizador ya ha recibido tu inscripci&oacute;n.',
+          'We\u2019ll email you when you can complete payment on Retiru. The organizer has already received your registration.'
+        )),
+      ].join('')
+    : [
+        paragraph(t(locale,
+          `Tu plaza en <strong>${eventTitle}</strong> ha sido reservada. A&uacute;n no se requiere pago.`,
+          `Your spot at <strong>${eventTitle}</strong> has been reserved. No payment required yet.`
+        )),
+        infoBox([
+          infoLine(t(locale, 'N&ordm; de reserva', 'Booking number'), bookingNumber),
+          infoLine(t(locale, 'Inscritos', 'Enrolled'), `${currentReserved} / ${minAttendees} ${t(locale, 'm&iacute;nimo', 'minimum')}`),
+        ].join('')),
+        paragraph(t(locale,
+          remaining > 0
+            ? `Faltan <strong>${remaining}</strong> inscritos m&aacute;s para alcanzar el m&iacute;nimo. Cuando se alcance, te enviaremos un enlace de pago para confirmar tu plaza.`
+            : 'El m&iacute;nimo ya est&aacute; alcanzado. Recibir&aacute;s pronto un enlace para confirmar con el pago.',
+          remaining > 0
+            ? `<strong>${remaining}</strong> more enrollments needed to reach the minimum. Once reached, we'll send you a payment link to confirm your spot.`
+            : 'The minimum has been reached. You will receive a payment link shortly to confirm your spot.'
+        )),
+      ].join('');
 
   const html = emailLayout({
     locale, preheader: subject,

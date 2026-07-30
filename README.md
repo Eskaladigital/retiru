@@ -86,6 +86,8 @@ Copia `.env.example` a `.env.local` y rellena los valores:
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Clave pública de Stripe |
 | `STRIPE_SECRET_KEY` | Clave secreta de Stripe |
 | `STRIPE_WEBHOOK_SECRET` | Secreto del webhook de Stripe |
+| `ONLINE_PAYMENTS_ENABLED` | (opcional) `0`/`false` = modo lanzamiento: inscripción sin cobro; `1`/`true` = forzar cobro. Si se omite, se deduce de si `STRIPE_SECRET_KEY` parece una clave real (`sk_test_` / `sk_live_`) |
+| `NEXT_PUBLIC_ONLINE_PAYMENTS` | (opcional) Misma semántica para la UI de fichas; si se omite, se deduce de la publishable key |
 | `SMTP_HOST` | Servidor SMTP (p. ej. `ssl0.ovh.net`) · transaccionales + campañas |
 | `SMTP_PORT` | `465` (SSL) típico OVH |
 | `SMTP_USER` | Usuario del buzón (p. ej. `contacto@retiru.com`) |
@@ -209,6 +211,7 @@ node scripts/seed-retreats.mjs           # Poblar retiros de ejemplo en Supabase
 node scripts/count-retreats.mjs          # Contar retiros en BD
 node scripts/assign-retreats-to-admin.mjs # Asignar retiros de ejemplo al admin
 npm run retreats:push-alma-nomada        # Contenido ficha Alma Nómada (PDF) → Supabase vía .env.local
+npm run retreats:fix-vinyasa-daily       # Vinyasa Rodalquilar → serie diaria (1,5 h) hasta 2027-12-31
 npm run retreats:backfill-covers-ai    # Portadas IA (GPT Image 1.5) para retiros sin retreat_images; --dry-run, --limit=N, --replace-ai-covers
 ```
 
@@ -227,6 +230,7 @@ En esos textos **no** deben figurar **teléfonos móviles ni emails de contacto*
 | Comando | Uso |
 |--------|-----|
 | `npm run retreats:push-alma-nomada` | Actualiza por slug el retiro Alma Nómada según el contenido acordado (PDF 1ª edición): destino Marruecos, textos ES/EN, incluidos, excluidos, `schedule`, meta. |
+| `npm run retreats:fix-vinyasa-daily` | Convierte la clase Vinyasa Rodalquilar en serie diaria (1,5 h, interval 1, fin 2027-12-31, horizonte 7 fechas). |
 | `npm run retreats:fix-alma-en-parity` | Solo alinea `description_en`, `summary_en` y meta ES/EN con el español limpio y el precio oficial (900 €), sin tocar `description_es` ni el programa. Útil si el EN quedó desfasado tras moderar el ES. |
 | `npm run retreats:backfill-covers-ai` | Igual que la API: dossier completo desde Supabase → **GPT-4o** → **GPT Image 1.5** (`1536x1024`, `high`). Migrado desde DALL·E 3 por deprecación; prioridad absoluta al look de **fotografía real**. Opciones: `--dry-run`, `--limit=N`, `--replace-ai-covers`. |
 
@@ -270,7 +274,7 @@ Con **Supabase CLI** (`supabase link` + `supabase db push`) se aplican solas en 
 8. `supabase/migrations/008_conversations_messaging.sql` — mensajería interna
 9. `supabase/migrations/009_center_types_ayurveda_pilates.sql` — tipos de centro
 10. `supabase/migrations/010_support_conversations.sql` — soporte (chat con admin)
-11. `supabase/migrations/011_booking_rpc_functions.sql` — funciones RPC para gestión de bookings
+11. `supabase/migrations/011_booking_rpc_functions.sql` — funciones RPC para gestión de bookings (`increment/decrement_confirmed_bookings`). **Nota histórica (2026-07-24):** el archivo original redefinía `generate_booking_number()` como `RETURNS TEXT`, chocando con la función de trigger homónima de 001; en el SQL Editor la transacción se revertía entera y las dos RPC quedaron sin crear en producción durante meses (las llamadas `rpc()` del código fallaban en silencio y el contador de plazas no se actualizaba). Archivo corregido y RPCs aplicadas en prod ese día; verificable con `npm run db:verify-migrations`.
 12. `supabase/migrations/012_centers_user_proposals.sql` — añade valor enum `pending_review` (solo esta sentencia; evita error 55P04)
 13. `supabase/migrations/013_centers_user_proposals_rls.sql` — columna `submitted_by`, índices y política RLS `ctr_submitted`
 14. `supabase/migrations/014_center_type_three_disciplines.sql` — enum `center_type`: solo `yoga`, `meditation`, `ayurveda`
@@ -311,8 +315,10 @@ Con **Supabase CLI** (`supabase link` + `supabase db push`) se aplican solas en 
 49. `supabase/migrations/049_relax_retreats_total_price_check.sql` — PVP sin mínimo (solo `> 0`), abre la plataforma a clases y eventos de ticket bajo.
 50. `supabase/migrations/050_retreats_duration_hours.sql` — `duration_hours` para eventos de un día.
 51. `supabase/migrations/051_retreat_series.sql` — eventos periódicos: tabla `retreat_series` + `series_id`/`is_series_next` en `retreats`.
-52. `supabase/migrations/052_flexible_cancellation_default.sql` — default de política de cancelación al preset flexible de lanzamiento.
-53. `supabase/migrations/053_manual_confirmation_no_prepay.sql` — `bookings.organizer_approved_at`: confirmación manual sin pago por adelantado (solicitud → aprobación → enlace de pago).
+52. `supabase/migrations/052_flexible_cancellation_default.sql` — default de política de cancelación al preset flexible de lanzamiento (100 % >7 d / 50 % >3 d). Aplicada y verificada en prod (2026-07-24).
+53. `supabase/migrations/053_manual_confirmation_no_prepay.sql` — `bookings.organizer_approved_at`: confirmación manual sin pago por adelantado (solicitud → aprobación → enlace de pago). Aplicada en prod (2026-07-24).
+
+**Verificar el estado de la BD frente a las migraciones:** `npm run db:verify-migrations` (parsea todos los `.sql` y contrasta tablas+columnas, vistas, buckets, enums clave y RPCs contra el proyecto de `.env.local`; funciones de trigger, triggers, RLS e índices no son verificables vía PostgREST). Para aplicar una migración concreta sin dashboard: `npm run db:apply-booking-rpcs` (011) / `npm run db:apply-manual-confirmation` (053) — requieren `DATABASE_URL` en `.env.local`; sin ella, pegar el archivo en el SQL Editor.
 
 **Seeds** (después de las migraciones):
 
@@ -662,6 +668,7 @@ src/
 - Ejemplo (comisión estándar): retiro de 500 € → el asistente paga 500 € → Retiru retiene 100 € (20 %) y transfiere 400 € (80 %) al organizador.
 - **Ventajas**: un solo pago para el asistente, mayor conversión, control total del flujo financiero, sin pagos pendientes.
 - **Métodos de pago (desde 2026-07-24)**: el checkout usa los **métodos automáticos de Stripe** — se ofrecen los que estén activados en el dashboard (tarjeta, **Bizum**, Apple/Google Pay, Klarna…) según importe, divisa y país del cliente. **Prohibido el pago fuera de la plataforma** (efectivo o transferencia directa al organizador): todo cobro pasa por Stripe para que quede registrado y Retiru capture su comisión.
+- **Modo lanzamiento — inscripción sin cobro (temporal, desde 2026-07-30):** si Stripe no está configurado con claves reales (o `ONLINE_PAYMENTS_ENABLED=0`), `POST /api/checkout` **no** intenta cobrar: crea `reserved_no_payment` sin `payment_deadline`, avisa al asistente y al organizador, y el botón de la ficha dice «Reservar plaza (sin pago)». Cuando haya claves reales en Vercel, el cobro online se reactiva solo (`src/lib/payments.ts`). No es pago offline al organizador.
 - **Cancelaciones**: el organizador elige entre 4 presets al crear el evento (flexible —default: 100 % >7 d / 50 % >3 d—, estándar, estricta, clase/taller —100 % hasta 1 día antes—; `CANCELLATION_PRESETS` en `NuevoEventoForm`, default en BD por migración 052). Si al asistente le corresponde reembolso según esa política, recibe ese importe íntegro en su método de pago. La compensación de la comisión de Retiru en supuestos de cancelación se regula en el **acuerdo comercial con el organizador**, no como retención adicional sobre el reembolso del asistente.
 - **Garantía Retiru de 48 h**: todo asistente puede cancelar con reembolso del 100 % durante las 48 horas siguientes a reservar, si faltan más de 7 días para el inicio. Aplica por encima de la política del evento (cláusula 8 del contrato, `/condiciones`, ayuda y para-asistentes ES+EN).
 - **Motor de cancelación**: el asistente cancela desde `/es/mis-reservas/[id]` (botón con preview del reembolso) → `POST /api/bookings/[id]` calcula el tramo (`getCancellationRefund` en `src/lib/utils`), marca `cancelled_by_attendee`, reembolsa vía Stripe (total o parcial) y avisa por email a ambas partes. Si el **organizador cancela el retiro** (`POST /api/retreats/[id]`), todas las reservas activas pasan a `cancelled_by_organizer` con **reembolso íntegro automático**. El webhook `charge.refunded` solo registra el importe (sin machacar estado ni duplicar emails) cuando el reembolso lo inició uno de estos flujos.

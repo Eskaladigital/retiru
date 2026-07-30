@@ -16,6 +16,7 @@ import { RetreatDescriptionBody, LinkifyText } from '@/components/ui/retreat-des
 import ShareButton from '@/components/ui/share-button';
 import { getSiteUrl } from '@/lib/site-url';
 import { getCancellationTypeLabel, getFreeCancellationDays } from '@/lib/utils';
+import { isOnlinePaymentEnabledForUi } from '@/lib/payments';
 
 export const revalidate = 3600;
 
@@ -113,7 +114,8 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
   const minReached = minViable <= 1 || (confirmedCount + reservedCount) >= minViable;
   // Confirmación manual: siempre solicitud sin pago (se paga tras la aprobación del organizador)
   const isManualConfirmation = r.confirmation_type === 'manual';
-  const payNow = minReached && !isManualConfirmation;
+  const onlinePaymentsEnabled = isOnlinePaymentEnabledForUi();
+  const payNow = minReached && !isManualConfirmation && onlinePaymentsEnabled;
 
   // Evento periódico: próximas fechas de la misma serie
   let seriesDates: { slug: string; start_date: string }[] = [];
@@ -504,6 +506,7 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
                   availableSpots={r.available_spots}
                   minReached={minReached}
                   manualConfirmation={isManualConfirmation}
+                  onlinePaymentsEnabled={onlinePaymentsEnabled}
                   locale="es"
                   className="w-full py-4 text-base"
                 />
@@ -515,12 +518,16 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
                       ? 'Pago 100 % seguro con Stripe · Reembolso según política de cancelación'
                       : isManualConfirmation
                         ? 'Solicitud gratuita · Solo pagas si el organizador acepta'
-                        : 'Reserva gratuita · Solo pagas cuando se confirme el retiro'}
+                        : !onlinePaymentsEnabled
+                          ? 'Inscripción sin cobro por ahora · Te avisaremos cuando el pago online esté disponible'
+                          : 'Reserva gratuita · Solo pagas cuando se confirme el retiro'}
                   </p>
                   <p className="text-[11px] text-muted-foreground/70 mt-1.5">
                     {payNow
                       ? 'Visa, Mastercard, Bizum y más · Tus datos nunca pasan por nuestros servidores'
-                      : 'Sin tarjeta ahora · Te avisaremos por email para completar el pago si se confirma'}
+                      : !onlinePaymentsEnabled
+                        ? 'Sin tarjeta ahora · El organizador recibe tu inscripción'
+                        : 'Sin tarjeta ahora · Te avisaremos por email para completar el pago si se confirma'}
                   </p>
                 </div>
 
@@ -538,7 +545,7 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
         <div className="flex items-center justify-between gap-3">
           <div className="shrink-0">
             <p className="text-lg font-bold text-foreground">{r.total_price}€</p>
-            <p className="text-[10px] text-muted-foreground">por persona · <Shield size={10} className="inline" /> Pago seguro</p>
+            <p className="text-[10px] text-muted-foreground">por persona · <Shield size={10} className="inline" /> {onlinePaymentsEnabled ? 'Pago seguro' : 'Sin cobro ahora'}</p>
           </div>
           <div className="flex items-center gap-2">
             <AskOrganizerButton retreatId={r.id} locale="es" compact />
@@ -549,6 +556,7 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
               availableSpots={r.available_spots}
               minReached={minReached}
               manualConfirmation={isManualConfirmation}
+              onlinePaymentsEnabled={onlinePaymentsEnabled}
               locale="es"
               className="px-6 py-3 whitespace-nowrap"
               compact
