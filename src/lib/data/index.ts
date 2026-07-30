@@ -738,7 +738,7 @@ export async function getBookingsForUser(userId: string) {
     .from('bookings')
     .select(`
       id, booking_number, status, total_price, platform_fee, organizer_amount, created_at, payment_deadline, organizer_approved_at,
-      retreats!retreat_id(id, title_es, title_en, slug, start_date, end_date, confirmation_type, retreat_images(url, is_cover)),
+      retreats!retreat_id(id, title_es, title_en, slug, start_date, end_date, confirmation_type, series_id, retreat_images(url, is_cover)),
       organizer_profiles!organizer_id(id, business_name, slug)
     `)
     .eq('attendee_id', userId)
@@ -755,7 +755,7 @@ export async function getBookingsForUser(userId: string) {
     created_at: string;
     payment_deadline: string | null;
     organizer_approved_at: string | null;
-    retreats: { id: string; title_es: string; title_en: string; slug: string; start_date: string; end_date: string; confirmation_type: string; retreat_images?: { url: string; is_cover: boolean }[] } | null;
+    retreats: { id: string; title_es: string; title_en: string; slug: string; start_date: string; end_date: string; confirmation_type: string; series_id: string | null; retreat_images?: { url: string; is_cover: boolean }[] } | null;
     organizer_profiles: { id: string; business_name: string; slug: string } | null;
   }>;
 }

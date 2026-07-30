@@ -363,6 +363,7 @@ Protegido por middleware y comprobación de admin. No indexado en buscadores.
 | POST | `/api/retreats/[id]` | Cancelar retiro (propietario, action=cancel): marca las reservas activas como `cancelled_by_organizer`, reembolsa el 100 % vía Stripe a las pagadas y notifica a los asistentes |
 | DELETE | `/api/retreats/[id]` | Eliminar retiro (propietario, solo sin reservas confirmadas) |
 | POST | `/api/retreats/series` | Convertir un evento existente en periódico (propietario): crea la serie con el evento como master; si ya está publicado genera las ocurrencias al momento |
+| GET | `/api/retreats/series/[id]` | Fechas futuras reservables de la serie para el calendario de inscripción (público): id, slug, fecha, plazas libres (restando reservas sin pago) y, con sesión, cuáles ya tiene reservadas el usuario. Horizonte máximo: 7 semanas (`SERIES_BOOKING_HORIZON_DAYS`) |
 | POST | `/api/retreats/series/[id]` | Gestión de serie de evento periódico (propietario): `close_date` cierra una fecha sin reservas (vacaciones, se añade a `skip_dates`) y `stop` detiene la serie |
 | POST | `/api/storage/retreat-images` | Subir imagen al bucket `retreat-images` con service role (legacy/integraciones; el wizard del organizador usa subida directa desde el cliente para evitar límite de tamaño del body en serverless) |
 | PATCH | `/api/profile` | Actualizar perfil propio (`full_name`, `phone` obligatorio con ≥9 dígitos, `bio`) |
@@ -375,7 +376,7 @@ Protegido por middleware y comprobación de admin. No indexado en buscadores.
 | GET | `/api/admin/messages` | Listar todas las conversaciones (admin, incluye soporte) |
 | POST | `/api/admin/messages/support` | Admin crea/obtiene conversación de soporte con un usuario (targetUserId) |
 | DELETE | `/api/admin/messages/[messageId]` | Borrar mensaje (solo admin) |
-| POST | `/api/checkout` | Reserva/pago: con `{ retreatId }` crea Stripe Checkout **o** reserva sin pago (`reserved_no_payment`) si el retiro tiene `min_attendees > 1` y aún no se alcanzó el mínimo; respuesta puede incluir `{ reserved: true, bookingId }`. Con `{ bookingId }` (reserva existente) crea sesión Stripe para pagar antes del deadline |
+| POST | `/api/checkout` | Reserva/pago: con `{ retreatId }` crea Stripe Checkout **o** reserva sin pago (`reserved_no_payment`) si falta el mínimo, la confirmación es manual o el cobro online no está activo (modo lanzamiento); respuesta puede incluir `{ reserved: true, bookingId }`. Con `{ bookingId }` (reserva existente) crea sesión Stripe para pagar antes del deadline. Con `{ seriesId, retreatIds? }` (evento periódico) reserva las fechas seleccionadas en el calendario —o todas las futuras publicadas si no llega `retreatIds`— donde el usuario no esté inscrito y haya plaza (`{ reserved: true, series: true, datesBooked }`); el pago, si el cobro está activo, se completa por fecha desde Mis reservas |
 | POST | `/api/webhooks/stripe` | Webhook Stripe (checkout.session.completed, charge.refunded) |
 | PATCH | `/api/bookings/[id]` | Organizador confirma/rechaza reserva |
 | POST | `/api/bookings/[id]` | Asistente cancela su reserva (action=cancel): aplica la garantía Retiru de 48 h y los tramos de la política del evento, reembolsa vía Stripe (total o parcial) y avisa por email a ambas partes |

@@ -5,12 +5,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
 import { createCheckoutSession } from '@/lib/stripe';
 import { isOnlinePaymentEnabled } from '@/lib/payments';
+import { addDaysIso, SERIES_BOOKING_HORIZON_DAYS } from '@/lib/series';
 import {
   sendReservationConfirmedEmail,
   sendMinViableReachedEmail,
   sendMinViableReachedToOrganizerEmail,
   sendBookingRequestReceivedEmail,
   sendNewBookingToOrganizerEmail,
+  sendSeriesReservationEmail,
 } from '@/lib/email';
 
 function generateBookingNumber(): string {
@@ -49,6 +51,15 @@ export async function POST(request: NextRequest) {
     // ─── PATH B: Pay an existing reserved_no_payment booking ─────────
     if (body.bookingId) {
       return handlePayExistingBooking(body.bookingId, user, locale);
+    }
+
+    // ─── PATH C: Reserve upcoming dates of a recurring series ────────
+    // Con retreatIds reserva solo las fechas seleccionadas; sin él, todas.
+    if (body.seriesId) {
+      const selectedIds = Array.isArray(body.retreatIds)
+        ? body.retreatIds.map((x: unknown) => String(x)).filter(Boolean)
+        : null;
+      return handleReserveSeries(String(body.seriesId), user, locale, selectedIds);
     }
 
     // ─── PATH A: New booking (reserve or pay) ────────────────────────
@@ -277,6 +288,183 @@ export async function POST(request: NextRequest) {
     console.error('Checkout error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
+}
+
+// ─── Reserve upcoming dates of a recurring series ────────────────────────────
+// Crea una reserva sin pago (`reserved_no_payment`) por cada ocurrencia futura
+// publicada con plaza libre en la que el usuario no esté ya inscrito. Si
+// `selectedIds` llega, solo esas fechas (calendario); si no, todas. El pago
+// (cuando el cobro online esté activo) se completa por fecha desde Mis reservas.
+
+async function handleReserveSeries(
+  seriesId: string,
+  user: { id: string; email?: string },
+  locale: 'es' | 'en',
+  selectedIds: string[] | null = null,
+) {
+  const admin = createAdminSupabase();
+
+  const { data: series } = await admin
+    .from('retreat_series')
+    .select('id, is_active, organizer_id')
+    .eq('id', seriesId)
+    .maybeSingle();
+  if (!series) {
+    return NextResponse.json({ error: locale === 'es' ? 'Serie no encontrada' : 'Series not found' }, { status: 404 });
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  let occQuery = admin
+    .from('retreats')
+    .select('id, title_es, title_en, organizer_id, total_price, platform_fee, organizer_amount, currency, confirmation_type, sla_hours, start_date, min_attendees, max_attendees, confirmed_bookings')
+    .eq('series_id', seriesId)
+    .eq('status', 'published')
+    .gte('start_date', today)
+    .lte('start_date', addDaysIso(today, SERIES_BOOKING_HORIZON_DAYS))
+    .order('start_date', { ascending: true });
+  if (selectedIds && selectedIds.length > 0) {
+    occQuery = occQuery.in('id', selectedIds);
+  }
+  const { data: occurrences } = await occQuery;
+
+  if (!occurrences || occurrences.length === 0) {
+    return NextResponse.json({
+      error: locale === 'es' ? 'No hay fechas próximas disponibles en esta serie' : 'No upcoming dates available in this series',
+    }, { status: 400 });
+  }
+
+  const occIds = occurrences.map((o: { id: string }) => o.id);
+
+  // Fechas donde el usuario ya tiene reserva activa
+  const { data: mine } = await admin
+    .from('bookings')
+    .select('retreat_id')
+    .eq('attendee_id', user.id)
+    .in('retreat_id', occIds)
+    .in('status', ['reserved_no_payment', 'pending_payment', 'pending_confirmation', 'confirmed']);
+  const alreadyBooked = new Set((mine || []).map((b: { retreat_id: string }) => b.retreat_id));
+
+  // Ocupación por reservas sin pago (available_spots solo resta confirmadas)
+  const { data: holds } = await admin
+    .from('bookings')
+    .select('retreat_id')
+    .in('retreat_id', occIds)
+    .eq('status', 'reserved_no_payment');
+  const holdCount = new Map<string, number>();
+  for (const h of holds || []) {
+    holdCount.set(h.retreat_id as string, (holdCount.get(h.retreat_id as string) || 0) + 1);
+  }
+
+  const paymentsEnabled = isOnlinePaymentEnabled();
+  const createdDates: string[] = [];
+  let skippedFull = 0;
+  let firstBookingNumber = '';
+
+  for (const occ of occurrences) {
+    if (alreadyBooked.has(occ.id)) continue;
+
+    const enrolled = (occ.confirmed_bookings ?? 0) + (holdCount.get(occ.id) || 0);
+    if ((occ.max_attendees ?? 0) > 0 && enrolled >= (occ.max_attendees ?? 0)) {
+      skippedFull++;
+      continue;
+    }
+
+    const isManual = occ.confirmation_type === 'manual';
+    // Con cobro activo, mínimo 1 y confirmación automática la reserva individual
+    // cobraría al momento; en la inscripción de serie se aplaza con deadline para
+    // reutilizar la maquinaria de «pagar reserva existente» + crons de plazo.
+    const payDeadline = paymentsEnabled && !isManual && (occ.min_attendees ?? 1) <= 1
+      ? computePaymentDeadline(occ.start_date as string)
+      : null;
+
+    const bookingNumber = generateBookingNumber();
+    const { error: insErr } = await admin
+      .from('bookings')
+      .insert({
+        booking_number: bookingNumber,
+        retreat_id: occ.id,
+        attendee_id: user.id,
+        organizer_id: occ.organizer_id,
+        total_price: occ.total_price,
+        platform_fee: occ.platform_fee,
+        organizer_amount: occ.organizer_amount,
+        currency: occ.currency,
+        status: 'reserved_no_payment',
+        platform_payment_status: 'pending',
+        remaining_payment_status: 'not_applicable',
+        sla_deadline: isManual
+          ? new Date(Date.now() + (occ.sla_hours || 48) * 60 * 60 * 1000).toISOString()
+          : null,
+        payment_deadline: payDeadline ? payDeadline.toISOString() : null,
+      });
+
+    if (insErr) {
+      console.error('[checkout/series] error insertando reserva', occ.id, insErr.message);
+      continue;
+    }
+    if (!firstBookingNumber) firstBookingNumber = bookingNumber;
+    createdDates.push(occ.start_date as string);
+  }
+
+  if (createdDates.length === 0) {
+    return NextResponse.json({
+      error: locale === 'es'
+        ? (skippedFull > 0 ? 'No quedan plazas en las próximas fechas' : 'Ya estás inscrito en todas las próximas fechas')
+        : (skippedFull > 0 ? 'No spots left on the upcoming dates' : 'You are already enrolled in all upcoming dates'),
+    }, { status: 409 });
+  }
+
+  const master = occurrences[0];
+  const eventTitle = locale === 'es' ? master.title_es : (master.title_en || master.title_es);
+  const isManualSeries = master.confirmation_type === 'manual';
+
+  // Email resumen al asistente (uno solo para toda la serie)
+  try {
+    await sendSeriesReservationEmail({
+      to: user.email!,
+      locale,
+      eventTitle,
+      bookingNumber: firstBookingNumber,
+      dates: createdDates,
+      manualConfirmation: isManualSeries,
+      launchNoPayment: !paymentsEnabled,
+    });
+  } catch (e) { console.error('sendSeriesReservationEmail failed:', e); }
+
+  // Aviso único al organizador
+  try {
+    const { data: orgProfile } = await admin
+      .from('organizer_profiles')
+      .select('user_id, profiles!user_id(email, preferred_locale)')
+      .eq('id', master.organizer_id)
+      .single();
+    const orgUser = orgProfile?.profiles as any;
+    const { data: attendeeProfile } = await admin
+      .from('profiles')
+      .select('full_name')
+      .eq('id', user.id)
+      .single();
+    if (orgUser?.email) {
+      await sendNewBookingToOrganizerEmail({
+        to: orgUser.email,
+        locale: (orgUser.preferred_locale || 'es') as 'es' | 'en',
+        bookingNumber: firstBookingNumber,
+        eventTitle: master.title_es,
+        attendeeName: attendeeProfile?.full_name || 'Asistente',
+        requiresConfirmation: isManualSeries,
+        slaHours: isManualSeries ? (master.sla_hours || 48) : undefined,
+        noPaymentHold: !paymentsEnabled && !isManualSeries,
+        datesCount: createdDates.length,
+      });
+    }
+  } catch (e) { console.error('sendNewBookingToOrganizerEmail (series) failed:', e); }
+
+  return NextResponse.json({
+    reserved: true,
+    series: true,
+    datesBooked: createdDates.length,
+    requested: isManualSeries,
+  });
 }
 
 // ─── Handle payment for an existing reserved_no_payment booking ──────────────

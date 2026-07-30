@@ -179,6 +179,8 @@ Prioridad: **impresiones altas + intent alineado con el negocio**, no solo la ma
 **Trabajo ejecutado:**
 1. Script `npm run retreats:fix-vinyasa-daily` — master same-day + `duration_hours=1.5`, serie `interval_days=1`, fin 2027-12-31, horizonte 7 fechas.
 2. `src/lib/payments.ts` + checkout: si no hay Stripe real → `reserved_no_payment` sin deadline; UI/ficha/emails/ayuda ES+EN alineados. Se desactiva solo al poner claves reales (o `ONLINE_PAYMENTS_ENABLED=1` con claves válidas).
+3. Contador de plazas de la ficha corregido: resta también las reservas sin pago (`spotsLeft`), incl. JSON-LD y estado «Agotado».
+4. **Selector de inscripción en eventos periódicos** (commit posterior): al reservar en una serie se abre un modal con *solo esta fecha* o **calendario multiselección** (otra fecha suelta, cada lunes, todas…; fechas ya reservadas ✓, completas deshabilitadas). `GET /api/retreats/series/[id]` + `POST /api/checkout` con `{ seriesId, retreatIds }`; email resumen + aviso único al organizador. En Mis reservas, botón «Ampliar o modificar inscripción» por serie (mismo calendario). Horizonte máximo de inscripción anticipada: **7 semanas** (decisión 2026-07-30, `SERIES_BOOKING_HORIZON_DAYS`).
 
 **Pendiente del equipo:** deploy a Vercel; cuando existan claves Stripe reales, el cobro vuelve solo; reserva de prueba end-to-end.
 

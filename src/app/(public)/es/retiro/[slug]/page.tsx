@@ -93,23 +93,23 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
     ? `${r.destination.name_es}${r.destination.region ? `, ${r.destination.region}` : ''}`
     : r.address ?? '';
 
-  const availability: 'InStock' | 'SoldOut' | 'LimitedAvailability' =
-    r.available_spots === 0 ? 'SoldOut' : r.available_spots <= 3 ? 'LimitedAvailability' : 'InStock';
-
   const minViable = r.min_attendees ?? 1;
   const confirmedCount = r.confirmed_bookings ?? 0;
 
-  // Count reserved_no_payment bookings to determine if min is reached
-  let reservedCount = 0;
-  if (minViable > 1) {
-    const sb = createStaticSupabase();
-    const { count } = await sb
-      .from('bookings')
-      .select('id', { count: 'exact', head: true })
-      .eq('retreat_id', r.id)
-      .eq('status', 'reserved_no_payment');
-    reservedCount = count ?? 0;
-  }
+  // Reservas sin pago: cuentan para el mínimo viable y ocupan plaza
+  // (available_spots en BD solo resta las confirmadas)
+  const sbCount = createStaticSupabase();
+  const { count: reservedNoPayCount } = await sbCount
+    .from('bookings')
+    .select('id', { count: 'exact', head: true })
+    .eq('retreat_id', r.id)
+    .eq('status', 'reserved_no_payment');
+  const reservedCount = reservedNoPayCount ?? 0;
+  const spotsLeft = Math.max(0, (r.available_spots ?? 0) - reservedCount);
+
+  const availability: 'InStock' | 'SoldOut' | 'LimitedAvailability' =
+    spotsLeft === 0 ? 'SoldOut' : spotsLeft <= 3 ? 'LimitedAvailability' : 'InStock';
+
   // Con mínimo 1 la API cobra siempre (checkout directo), igual que cuando el mínimo ya está cubierto
   const minReached = minViable <= 1 || (confirmedCount + reservedCount) >= minViable;
   // Confirmación manual: siempre solicitud sin pago (se paga tras la aprobación del organizador)
@@ -459,12 +459,12 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
                   </div>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Users size={16} />
-                    <span className={r.available_spots <= 3 ? 'text-terracotta-600 font-semibold' : ''}>
-                      {r.available_spots === 0
+                    <span className={spotsLeft <= 3 ? 'text-terracotta-600 font-semibold' : ''}>
+                      {spotsLeft === 0
                         ? 'Sin plazas disponibles'
-                        : r.available_spots <= 3
-                          ? `¡Solo ${r.available_spots} plazas!`
-                          : `${r.available_spots} plazas disponibles`}
+                        : spotsLeft <= 3
+                          ? `¡Solo ${spotsLeft} plazas!`
+                          : `${spotsLeft} plazas disponibles`}
                     </span>
                   </div>
                   {r.languages?.length > 0 && (
@@ -503,10 +503,11 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
                   retreatId={r.id}
                   retreatSlug={r.slug}
                   totalPrice={r.total_price}
-                  availableSpots={r.available_spots}
+                  availableSpots={spotsLeft}
                   minReached={minReached}
                   manualConfirmation={isManualConfirmation}
                   onlinePaymentsEnabled={onlinePaymentsEnabled}
+                  series={r.series_id && seriesDates.length > 1 ? { seriesId: r.series_id, currentDate: r.start_date, dates: seriesDates } : undefined}
                   locale="es"
                   className="w-full py-4 text-base"
                 />
@@ -553,10 +554,11 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
               retreatId={r.id}
               retreatSlug={r.slug}
               totalPrice={r.total_price}
-              availableSpots={r.available_spots}
+              availableSpots={spotsLeft}
               minReached={minReached}
               manualConfirmation={isManualConfirmation}
               onlinePaymentsEnabled={onlinePaymentsEnabled}
+              series={r.series_id && seriesDates.length > 1 ? { seriesId: r.series_id, currentDate: r.start_date, dates: seriesDates } : undefined}
               locale="es"
               className="px-6 py-3 whitespace-nowrap"
               compact

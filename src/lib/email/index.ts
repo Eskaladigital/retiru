@@ -331,9 +331,11 @@ export async function sendNewBookingToOrganizerEmail(
     slaHours?: number;
     /** Inscripción sin cobro (modo lanzamiento / mínimo no alcanzado) */
     noPaymentHold?: boolean;
+    /** Inscripción en serie: nº de fechas reservadas de una vez */
+    datesCount?: number;
   }
 ) {
-  const { to, locale, bookingNumber, eventTitle, attendeeName, requiresConfirmation, slaHours, noPaymentHold } = options;
+  const { to, locale, bookingNumber, eventTitle, attendeeName, requiresConfirmation, slaHours, noPaymentHold, datesCount } = options;
 
   const subject = t(locale,
     `Nueva reserva: ${attendeeName} — ${eventTitle}`,
@@ -349,8 +351,12 @@ export async function sendNewBookingToOrganizerEmail(
       ? `<p style="margin: 0 0 14px 0; font-size: 15px; color: #47654b; line-height: 1.7; font-family: Arial, sans-serif; font-weight: 600;">&#9989; ${t(locale, 'Inscripci&oacute;n recibida sin cobro por ahora (la plataforma a&uacute;n no cobra online).', 'Registration received with no payment for now (the platform is not collecting online payments yet).')}</p>`
       : `<p style="margin: 0 0 14px 0; font-size: 15px; color: #47654b; line-height: 1.7; font-family: Arial, sans-serif; font-weight: 600;">&#9989; ${t(locale, 'La reserva se ha confirmado autom&aacute;ticamente.', 'The booking has been automatically confirmed.')}</p>`;
 
+  const enrolledText = datesCount && datesCount > 1
+    ? t(locale, `ha reservado plaza en <strong>${datesCount} fechas</strong> de`, `has booked a spot on <strong>${datesCount} dates</strong> of`)
+    : t(locale, 'ha reservado plaza en', 'has booked a spot in');
+
   const body = [
-    paragraph(`<strong>${attendeeName}</strong> ${t(locale, 'ha reservado plaza en', 'has booked a spot in')} <strong>${eventTitle}</strong>`),
+    paragraph(`<strong>${attendeeName}</strong> ${enrolledText} <strong>${eventTitle}</strong>`),
     infoBox(infoLine(t(locale, 'N&ordm; de reserva', 'Booking number'), bookingNumber)),
     actionText,
   ].join('');
@@ -1320,6 +1326,67 @@ export async function sendReservationConfirmedEmail(
     cta: {
       href: `${APP_URL}/${t(locale, 'es/mis-reservas', 'en/my-bookings')}`,
       label: t(locale, 'Ver mi reserva', 'View my booking'),
+    },
+  });
+
+  return sendTransactionalMail({ to, subject, html });
+}
+
+// ─── Series Reservation (recurring event, all upcoming dates) → attendee ────
+
+export async function sendSeriesReservationEmail(
+  options: EmailOptions & {
+    eventTitle: string;
+    bookingNumber: string;
+    /** Fechas reservadas (YYYY-MM-DD) */
+    dates: string[];
+    manualConfirmation?: boolean;
+    launchNoPayment?: boolean;
+  }
+) {
+  const { to, locale, eventTitle, bookingNumber, dates, manualConfirmation, launchNoPayment } = options;
+
+  const fmt = new Intl.DateTimeFormat(locale === 'es' ? 'es-ES' : 'en-GB', {
+    weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
+  });
+  const datesList = dates
+    .map((d) => `<li style="margin: 0 0 4px 0;">${fmt.format(new Date(`${d}T00:00:00`))}</li>`)
+    .join('');
+
+  const subject = t(locale,
+    `Inscripci&oacute;n en ${dates.length} fechas — ${eventTitle}`,
+    `Enrolled on ${dates.length} dates — ${eventTitle}`
+  );
+
+  const tail = manualConfirmation
+    ? t(locale,
+        'El organizador revisar&aacute; cada solicitud; te avisaremos cuando las acepte.',
+        'The organizer will review each request; we\u2019ll let you know once accepted.')
+    : launchNoPayment
+      ? t(locale,
+          'Por ahora no se cobra en la plataforma. Te avisaremos por email cuando puedas completar el pago en Retiru.',
+          'Payment is not collected on the platform yet. We\u2019ll email you when you can complete payment on Retiru.')
+      : t(locale,
+          'Puedes completar el pago de cada fecha desde &laquo;Mis reservas&raquo; dentro del plazo indicado.',
+          'You can complete payment for each date from &ldquo;My bookings&rdquo; within the indicated deadline.');
+
+  const body = [
+    paragraph(t(locale,
+      `Te has inscrito en <strong>${dates.length} fechas</strong> de <strong>${eventTitle}</strong>:`,
+      `You enrolled on <strong>${dates.length} dates</strong> of <strong>${eventTitle}</strong>:`
+    )),
+    `<ul style="margin: 0 0 14px 0; padding-left: 20px; font-size: 14px; color: #5a5248; font-family: Arial, sans-serif;">${datesList}</ul>`,
+    infoBox(infoLine(t(locale, 'Primera reserva', 'First booking'), bookingNumber)),
+    paragraph(tail),
+  ].join('');
+
+  const html = emailLayout({
+    locale, preheader: subject,
+    title: t(locale, 'Inscripci&oacute;n en evento peri&oacute;dico', 'Recurring event enrollment'),
+    body,
+    cta: {
+      href: `${APP_URL}/${t(locale, 'es/mis-reservas', 'en/my-bookings')}`,
+      label: t(locale, 'Ver mis reservas', 'View my bookings'),
     },
   });
 

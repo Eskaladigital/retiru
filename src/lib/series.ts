@@ -8,6 +8,12 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 type Admin = SupabaseClient;
 
+/**
+ * Horizonte máximo de inscripción anticipada en una serie: los asistentes
+ * solo pueden reservar fechas dentro de las próximas 7 semanas.
+ */
+export const SERIES_BOOKING_HORIZON_DAYS = 49;
+
 /** Suma días a una fecha YYYY-MM-DD sin problemas de zona horaria. */
 export function addDaysIso(iso: string, days: number): string {
   const d = new Date(`${iso}T00:00:00Z`);

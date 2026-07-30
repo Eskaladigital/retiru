@@ -6,6 +6,7 @@ import { getBookingsForUser } from '@/lib/data';
 import { formatDateRange } from '@/lib/utils';
 import PaymentSuccessBanner from '@/components/booking/PaymentSuccessBanner';
 import PayNowButton from '@/components/booking/PayNowButton';
+import { SeriesCalendarTrigger } from '@/components/booking/SeriesCalendarModal';
 
 const STATUS: Record<string, { label: string; color: string }> = {
   reserved_no_payment: { label: 'Reservada (pendiente mínimo)', color: 'bg-blue-100 text-blue-700' },
@@ -28,6 +29,17 @@ export default async function MisReservasPage() {
   if (!user) redirect('/es/login?redirect=/es/mis-reservas');
 
   const bookings = await getBookingsForUser(user.id);
+
+  // Eventos periódicos con reserva activa: botón «ampliar inscripción»
+  // solo en la reserva más próxima de cada serie (no en cada fecha).
+  const ACTIVE = new Set(['reserved_no_payment', 'pending_payment', 'pending_confirmation', 'confirmed']);
+  const firstBookingOfSeries = new Map<string, string>();
+  for (const b of [...bookings].sort((a, x) => (a.retreats?.start_date || '').localeCompare(x.retreats?.start_date || ''))) {
+    const sid = b.retreats?.series_id;
+    if (sid && ACTIVE.has(b.status) && !firstBookingOfSeries.has(sid)) {
+      firstBookingOfSeries.set(sid, b.id);
+    }
+  }
 
   return (
     <div>
@@ -92,6 +104,13 @@ export default async function MisReservasPage() {
                       <span className="text-xs text-[#a09383]">
                         Plazo: {new Date(b.payment_deadline!).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                       </span>
+                    </div>
+                  )}
+
+                  {r?.series_id && firstBookingOfSeries.get(r.series_id) === b.id && (
+                    <div className="mt-2 flex items-center gap-2 flex-wrap">
+                      <span className="text-xs text-[#a09383]">Evento periódico ·</span>
+                      <SeriesCalendarTrigger seriesId={r.series_id} locale="es" label="Ampliar o modificar inscripción" />
                     </div>
                   )}
                 </div>
