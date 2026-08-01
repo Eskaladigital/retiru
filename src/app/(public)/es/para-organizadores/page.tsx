@@ -9,7 +9,7 @@ import {
   Check, ArrowRight, BarChart3, MessageSquare, QrCode, Users,
   FileText, Star, Shield, Zap, CreditCard, ChevronRight,
   MapPin, Globe, Clock, Phone, Mail, Building2, CalendarPlus,
-  Megaphone, BadgeCheck, Sparkles,
+  Megaphone, BadgeCheck, Sparkles, CalendarDays,
 } from 'lucide-react';
 import { forOrganizersES } from '@/lib/seo/page-metadata';
 import { jsonLdFAQ, jsonLdScript } from '@/lib/seo';
@@ -116,6 +116,7 @@ const FAQS = [
   { q: '¿Puedo crear un retiro antes de estar homologado como organizador?', a: 'Sí. Tras aceptar el contrato puedes crear borradores y enviarlos a revisión mientras subes la documentación. Retiru revisará el retiro, pero no podrá aprobarse ni publicarse hasta que tu perfil de organizador esté verificado documentalmente.' },
   { q: '¿Cómo reclamo o doy de alta mi centro?', a: 'Si tu centro ya está en el directorio, búscalo y usa «Reclamar este centro» (o regístrate si aún no tienes cuenta). Si no está listado, entra en «Mis centros» tras iniciar sesión, elige «Proponer nuevo centro» y localiza el lugar en Google Maps; enviaremos la propuesta a revisión y, al aprobarla, podrás gestionar la ficha.' },
   { q: '¿Puedo publicar un evento que se repite cada semana?', a: 'Sí. Al crear el evento marca «Evento periódico» e indica cada cuántos días se repite (7 = semanal, 14 = quincenal); también puedes convertir en periódico un evento ya creado desde su edición en el panel. Retiru publica automáticamente las próximas fechas (por defecto 4 a la vista) y, al pasar una, abre la siguiente; en los listados solo aparece la fecha más próxima. Desde tu panel puedes cerrar fechas concretas sin reservas (por ejemplo, vacaciones) o detener la serie cuando quieras. Los asistentes pueden reservar una fecha suelta o varias a la vez desde un calendario (hasta 7 semanas de antelación), y ampliar su inscripción después desde «Mis reservas». Para la comisión, toda la serie cuenta como un único retiro.' },
+  { q: '¿Puedo publicar clases sin tener un centro en el directorio?', a: 'Sí. Si eres profesor independiente o un estudio que ofrece clases puntuales o semanales, puedes publicar actividades sin necesidad de tener una ficha de centro en Retiru. Creas cuenta, aceptas el contrato de organizador y publicas tu clase o taller como evento (incluso periódico, p. ej. yoga semanal). Las mismas herramientas de reserva, mensajería y cobro aplican.' },
   { q: '¿Y si un asistente cancela?', a: 'Tú configuras la política de cancelación (plazos y porcentajes sobre lo pagado). Si al asistente le corresponde reembolso, se le devuelve ese importe íntegro. La compensación de la comisión de Retiru en esos casos se regula en el acuerdo comercial contigo, no como retención adicional sobre el reembolso del asistente.' },
   { q: '¿Qué pasa si activo confirmación manual de reservas y no actúo en el plazo?', a: 'Con confirmación manual las solicitudes te llegan sin pago: el asistente no paga nada hasta que tú aceptes. Tienes un plazo máximo (SLA) para aceptar o rechazar cada solicitud en tu panel; al aceptar, el asistente recibe un enlace de pago con fecha límite y la plaza se confirma cuando paga. Si tu plazo expira sin decisión, la solicitud se anula automáticamente (sin cobros ni reembolsos). Revisa las solicitudes pendientes con frecuencia.' },
 ];
@@ -137,26 +138,80 @@ export default function ParaOrganizadoresPage() {
           <div className="max-w-[620px]">
             <div className="inline-flex items-center gap-2 bg-sage-50 border border-sage-200 text-sage-700 text-[13px] font-semibold px-4 py-1.5 rounded-full mb-6">
               <span className="w-1.5 h-1.5 bg-sage-400 rounded-full" />
-              Para centros y organizadores
+              Para centros, organizadores y profesores
             </div>
             <h1 className="font-serif text-[clamp(36px,6vw,56px)] leading-[1.2] tracking-[-0.01em] text-foreground mb-5">
               Haz crecer tu proyecto<br />
               <span className="text-sage-700">con Retiru</span>
             </h1>
             <p className="text-lg text-[#7a6b5d] leading-[1.7] mb-9 max-w-[560px]">
-              Si tienes un centro de yoga, meditación o ayurveda, o si organizas retiros y eventos de ese tipo,
-              Retiru es tu plataforma. <strong className="font-semibold text-foreground">Sin suscripción</strong> para publicar.
+              Aparece en el directorio de centros, publica retiros y eventos, o comparte clases periódicas
+              (p. ej. yoga semanal como profesor independiente). <strong className="font-semibold text-foreground">Sin suscripción</strong> para publicar.
               Tu <strong className="font-semibold text-foreground">primer retiro sin comisión</strong> (0&nbsp;%),
               el segundo al <strong className="font-semibold text-foreground">10&nbsp;%</strong> y a partir del tercero
               la comisión estándar del <strong className="font-semibold text-foreground">20&nbsp;%</strong> incluida en el PVP.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3">
               <a href="#centros" className="btn-primary bg-sage-700 hover:bg-sage-800 px-8 py-4 text-base text-white">
                 Soy un centro
               </a>
               <a href="#organizadores" className="btn-primary bg-white hover:bg-sand-50 border border-sand-300 px-8 py-4 text-base text-foreground">
                 Organizo retiros o eventos
               </a>
+              <a href="#clases" className="btn-primary bg-terracotta-600 hover:bg-terracotta-700 px-8 py-4 text-base text-white">
+                Organizo clases
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ Empieza ahora ═══ */}
+      <section className="section bg-white border-b border-sand-200">
+        <div className="container-wide">
+          <h2 className="font-serif text-2xl font-bold md:text-3xl mb-2 text-center">Empieza ahora</h2>
+          <p className="text-muted-foreground text-center mb-8 max-w-2xl mx-auto text-sm">
+            Elige tu camino y da el primer paso sin recorrer toda la página.
+          </p>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-2xl border border-sand-200 bg-cream-100 p-6 flex flex-col">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-sage-100">
+                <Building2 size={20} className="text-sage-700" />
+              </div>
+              <h3 className="font-semibold text-foreground mb-2">Centro</h3>
+              <p className="text-sm text-muted-foreground mb-4 flex-1">
+                Busca tu ficha en el directorio y reclámala, o crea cuenta para proponer un centro nuevo.
+              </p>
+              <Link href="/es/centros-retiru" className="btn-primary bg-sage-700 hover:bg-sage-800 px-5 py-3 text-sm text-white text-center">
+                Buscar o reclamar ficha
+              </Link>
+              <Link href="/es/registro" className="mt-2 text-xs text-center text-muted-foreground hover:text-foreground transition-colors">
+                ¿Sin cuenta? Regístrate
+              </Link>
+            </div>
+            <div className="rounded-2xl border border-sand-200 bg-cream-100 p-6 flex flex-col">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-terracotta-100">
+                <Sparkles size={20} className="text-terracotta-700" />
+              </div>
+              <h3 className="font-semibold text-foreground mb-2">Retiros y eventos</h3>
+              <p className="text-sm text-muted-foreground mb-4 flex-1">
+                Crea cuenta, acepta el contrato de organizador y publica retiros o eventos de varios días.
+              </p>
+              <Link href="/es/registro" className="btn-primary bg-terracotta-600 hover:bg-terracotta-700 px-5 py-3 text-sm text-white text-center">
+                Crear cuenta
+              </Link>
+            </div>
+            <div className="rounded-2xl border border-sand-200 bg-cream-100 p-6 flex flex-col">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-terracotta-100">
+                <CalendarDays size={20} className="text-terracotta-700" />
+              </div>
+              <h3 className="font-semibold text-foreground mb-2">Clases</h3>
+              <p className="text-sm text-muted-foreground mb-4 flex-1">
+                Profesor independiente o estudio: publica una clase semanal de yoga, un taller o una sesión puntual.
+              </p>
+              <Link href="/es/registro" className="btn-primary bg-terracotta-600 hover:bg-terracotta-700 px-5 py-3 text-sm text-white text-center">
+                Crear cuenta y publicar clase
+              </Link>
             </div>
           </div>
         </div>
@@ -228,6 +283,61 @@ export default function ParaOrganizadoresPage() {
                 ¿No lo encuentras? Contáctanos
               </Link>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ CLASES ═══ */}
+      <section id="clases" className="section bg-white border-y border-sand-200">
+        <div className="container-wide">
+          <div className="flex items-center gap-3 mb-2">
+            <CalendarDays size={28} className="text-terracotta-600" />
+            <span className="text-sm font-bold uppercase tracking-widest text-terracotta-500">Para profesores y estudios</span>
+          </div>
+          <h2 className="font-serif text-3xl font-bold md:text-4xl mb-3">
+            Publica clases y actividades cortas
+          </h2>
+          <p className="text-muted-foreground max-w-3xl mb-8">
+            ¿Eres profesor de yoga independiente, terapeuta o un estudio que ofrece sesiones puntuales?
+            No necesitas tener un centro listado en el directorio para publicar en Retiru.
+          </p>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-10">
+            {[
+              { title: 'Clase de yoga (1 h)', desc: 'Sesión semanal o puntual con reserva online.' },
+              { title: 'Taller o workshop', desc: 'Actividad de medio día o fin de semana.' },
+              { title: 'Sesión de terapia', desc: 'Masaje, ayurveda, meditación guiada…' },
+              { title: 'Clase recurrente', desc: 'Marca «evento periódico» y abre fechas automáticamente.' },
+            ].map(({ title, desc }) => (
+              <div key={title} className="rounded-xl border border-sand-200 bg-cream-100 p-5">
+                <h3 className="font-semibold text-foreground mb-1 text-sm">{title}</h3>
+                <p className="text-sm text-muted-foreground">{desc}</p>
+              </div>
+            ))}
+          </div>
+          <div className="grid gap-6 md:grid-cols-3 mb-10">
+            {[
+              { icon: CreditCard, title: 'Mismas herramientas de reserva', desc: 'Pago con tarjeta, confirmación automática y panel de asistentes.' },
+              { icon: Clock, title: 'Eventos periódicos', desc: 'Clase semanal con fechas que se abren solas; el asistente reserva la que quiera.' },
+              { icon: MapPin, title: 'Sin centro en el directorio', desc: 'Indicas la ubicación del evento; no hace falta ficha de centro propia.' },
+            ].map(({ icon: Icon, title, desc }) => (
+              <div key={title} className="flex gap-4 items-start">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-terracotta-100">
+                  <Icon size={20} className="text-terracotta-700" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground mb-1">{title}</h3>
+                  <p className="text-sm text-muted-foreground">{desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Link href="/es/registro" className="btn-primary bg-terracotta-600 hover:bg-terracotta-700 px-8 py-4 text-base text-white text-center">
+              Crear cuenta
+            </Link>
+            <a href="#como-funciona" className="btn-primary bg-white hover:bg-sand-50 border border-sand-300 px-8 py-4 text-base text-foreground text-center">
+              Ver cómo funciona
+            </a>
           </div>
         </div>
       </section>
@@ -421,11 +531,10 @@ export default function ParaOrganizadoresPage() {
         <div className="container-narrow">
           <h2 className="font-serif text-3xl font-bold md:text-4xl">Únete a Retiru</h2>
           <p className="mx-auto mt-4 max-w-2xl text-terracotta-100">
-            Ya seas un centro de yoga, meditación o ayurveda o un organizador de retiros en ese ámbito, Retiru te da las herramientas
+            Ya seas un centro, un organizador de retiros o un profesor que publica clases, Retiru te da las herramientas
             y la visibilidad que necesitas. Publicar no lleva suscripción; tu primer retiro es gratis (0&nbsp;%), el segundo al 10&nbsp;% y a partir del tercero el 20&nbsp;% estándar.
-            Si buscas una plataforma que no solo te anuncie, sino que además te ayude a gestionar mejor cada reserva y cada asistente, aquí es donde queremos diferenciar Retiru.
           </p>
-          <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+          <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:flex-wrap sm:justify-center">
             <Link
               href="/es/centros-retiru"
               className="btn-primary bg-white text-terracotta-700 hover:bg-sand-100 px-8 py-4 text-base"
@@ -436,7 +545,13 @@ export default function ParaOrganizadoresPage() {
               href="/es/registro"
               className="btn-primary bg-white/10 hover:bg-white/20 border border-white/30 px-8 py-4 text-base text-white"
             >
-              Soy organizador — Crear cuenta
+              Publico retiros o eventos — Crear cuenta
+            </Link>
+            <Link
+              href="/es/registro"
+              className="btn-primary bg-white/10 hover:bg-white/20 border border-white/30 px-8 py-4 text-base text-white"
+            >
+              Publico clases — Crear cuenta
             </Link>
           </div>
         </div>

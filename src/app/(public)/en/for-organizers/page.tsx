@@ -110,6 +110,7 @@ const FAQS = [
   { q: 'Can I create a retreat before my organizer profile is validated?', a: 'Yes. After accepting the agreement you can save drafts and send them for review while you upload documents. We will review the retreat, but it cannot be approved or published until your organizer profile has been documentally verified.' },
   { q: 'How do I claim or add my center?', a: 'If your center is already listed, search for it and use "Claim this center" (or sign up first). If it is not listed, sign in, go to "My centers", choose "Propose new center" and pick the place in Google Maps; we review the proposal and, once approved, you can manage the listing.' },
   { q: 'Can I publish an event that repeats every week?', a: 'Yes. When creating the event, check "Recurring event" and set how often it repeats (7 = weekly, 14 = fortnightly); you can also turn an existing event into a recurring one from its edit page in your panel. Retiru automatically publishes the upcoming dates (4 ahead by default) and opens the next one as each date passes; listings only show the nearest date. From your panel you can close specific dates with no bookings (e.g. holidays) or stop the series at any time. Attendees can book a single date or several at once from a calendar (up to 7 weeks ahead), and extend their enrollment later from "My bookings". For commission purposes, the whole series counts as a single retreat.' },
+  { q: 'Can I publish classes without owning a center in the directory?', a: 'Yes. If you are an independent teacher or a studio offering one-off or weekly classes, you can publish activities without needing a center listing on Retiru. Create an account, accept the organizer agreement and publish your class or workshop as an event (including recurring, e.g. weekly yoga). The same booking, messaging and payment tools apply.' },
   { q: 'What if an attendee cancels?', a: "You set the cancellation policy (deadlines and percentages on the amount paid). If a refund applies, the attendee receives that amount in full. Compensation for Retiru's commission in those cases is governed by our commercial agreement with you—not as an extra deduction from the attendee's refund." },
   { q: 'What if I use manual booking confirmation and miss the deadline?', a: 'With manual confirmation, requests arrive unpaid: the attendee pays nothing until you accept. You have a maximum window (SLA) to accept or reject each request in your panel; once you accept, the attendee receives a payment link with a deadline and the spot is confirmed when they pay. If your window expires with no action, the request is automatically cancelled (no charges, no refunds). Check pending requests regularly.' },
 ];
@@ -131,26 +132,74 @@ export default function ForOrganizersPageEN() {
           <div className="max-w-[620px]">
             <div className="inline-flex items-center gap-2 bg-sage-50 border border-sage-200 text-sage-700 text-[13px] font-semibold px-4 py-1.5 rounded-full mb-6">
               <span className="w-1.5 h-1.5 bg-sage-400 rounded-full" />
-              For centers &amp; organizers
+              For centers, organizers &amp; teachers
             </div>
             <h1 className="font-serif text-[clamp(36px,6vw,56px)] leading-[1.2] tracking-[-0.01em] text-foreground mb-5">
               Grow your project<br />
               <span className="text-sage-700">with Retiru</span>
             </h1>
             <p className="text-lg text-[#7a6b5d] leading-[1.7] mb-9 max-w-[560px]">
-              Whether you run a yoga, meditation or ayurveda center, or you organize retreats and events in that space,
-              Retiru is your platform. <strong className="font-semibold text-foreground">No subscription</strong> to publish.
+              Get listed in our center directory, publish retreats and events, or share recurring classes
+              (e.g. weekly yoga as an independent teacher). <strong className="font-semibold text-foreground">No subscription</strong> to publish.
               Your <strong className="font-semibold text-foreground">first retreat is free</strong> (0% commission),
               the second at <strong className="font-semibold text-foreground">10%</strong>,
               and from the third onward the standard <strong className="font-semibold text-foreground">20%</strong> fee applies.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3">
               <a href="#centers" className="btn-primary bg-sage-700 hover:bg-sage-800 px-8 py-4 text-base text-white">
                 I have a center
               </a>
               <a href="#organizers" className="btn-primary bg-white hover:bg-sand-50 border border-sand-300 px-8 py-4 text-base text-foreground">
-                I organize events
+                I organize retreats or events
               </a>
+              <a href="#classes" className="btn-primary bg-terracotta-600 hover:bg-terracotta-700 px-8 py-4 text-base text-white">
+                I teach classes
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ Get started now ═══ */}
+      <section className="py-16 bg-white border-b border-sand-200">
+        <div className="container-wide">
+          <h2 className="font-serif text-2xl font-bold md:text-3xl mb-2 text-center">Get started now</h2>
+          <p className="text-[#7a6b5d] text-center mb-8 max-w-2xl mx-auto text-sm">
+            Pick your path and take the first step without scrolling through the whole page.
+          </p>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-2xl border border-sand-200 bg-cream-100 p-6 flex flex-col">
+              <span className="mb-3 block text-2xl">🏢</span>
+              <h3 className="font-semibold mb-2">Center</h3>
+              <p className="text-sm text-[#7a6b5d] mb-4 flex-1">
+                Find your listing in the directory and claim it, or sign up to propose a new center.
+              </p>
+              <Link href="/en/centers-retiru" className="bg-sage-700 hover:bg-sage-800 text-white font-semibold px-5 py-3 rounded-xl transition-colors text-center text-sm">
+                Find or claim listing
+              </Link>
+              <Link href="/en/register" className="mt-2 text-xs text-center text-[#7a6b5d] hover:text-foreground transition-colors">
+                No account yet? Sign up
+              </Link>
+            </div>
+            <div className="rounded-2xl border border-sand-200 bg-cream-100 p-6 flex flex-col">
+              <span className="mb-3 block text-2xl">✨</span>
+              <h3 className="font-semibold mb-2">Retreats &amp; events</h3>
+              <p className="text-sm text-[#7a6b5d] mb-4 flex-1">
+                Create an account, accept the organizer agreement and publish multi-day retreats or events.
+              </p>
+              <Link href="/en/register" className="bg-terracotta-600 hover:bg-terracotta-700 text-white font-semibold px-5 py-3 rounded-xl transition-colors text-center text-sm">
+                Create account
+              </Link>
+            </div>
+            <div className="rounded-2xl border border-sand-200 bg-cream-100 p-6 flex flex-col">
+              <span className="mb-3 block text-2xl">📅</span>
+              <h3 className="font-semibold mb-2">Classes</h3>
+              <p className="text-sm text-[#7a6b5d] mb-4 flex-1">
+                Independent teacher or studio: publish a weekly yoga class, a workshop or a one-off session.
+              </p>
+              <Link href="/en/register" className="bg-terracotta-600 hover:bg-terracotta-700 text-white font-semibold px-5 py-3 rounded-xl transition-colors text-center text-sm">
+                Create account &amp; publish class
+              </Link>
             </div>
           </div>
         </div>
@@ -205,13 +254,66 @@ export default function ForOrganizersPageEN() {
               </p>
             </div>
             <div className="flex flex-col gap-3 shrink-0">
-              <Link href="/en/centers" className="bg-terracotta-600 hover:bg-terracotta-700 text-white font-semibold px-8 py-4 rounded-xl transition-colors text-center">
+              <Link href="/en/centers-retiru" className="bg-terracotta-600 hover:bg-terracotta-700 text-white font-semibold px-8 py-4 rounded-xl transition-colors text-center">
                 📍 Find my center
               </Link>
               <Link href="/en/contact" className="text-sage-400 text-xs text-center hover:text-sage-200 transition-colors">
                 Can&apos;t find it? Contact us
               </Link>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ CLASSES ═══ */}
+      <section id="classes" className="py-20 bg-white border-y border-sand-200">
+        <div className="container-wide">
+          <div className="flex items-center gap-3 mb-2">
+            <span className="text-2xl">📅</span>
+            <span className="text-sm font-bold uppercase tracking-widest text-terracotta-500">For teachers &amp; studios</span>
+          </div>
+          <h2 className="font-serif text-3xl font-bold md:text-4xl mb-3">
+            Publish classes and short activities
+          </h2>
+          <p className="text-[#7a6b5d] max-w-3xl mb-8">
+            Independent yoga teacher, therapist or studio offering one-off sessions?
+            You don&apos;t need a center listing in the directory to publish on Retiru.
+          </p>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-10">
+            {[
+              { title: 'Yoga class (1 h)', desc: 'Weekly or one-off session with online booking.' },
+              { title: 'Workshop', desc: 'Half-day or weekend activity.' },
+              { title: 'Therapy session', desc: 'Massage, ayurveda, guided meditation…' },
+              { title: 'Recurring class', desc: 'Mark as recurring event and open dates automatically.' },
+            ].map(({ title, desc }) => (
+              <div key={title} className="rounded-xl border border-sand-200 bg-cream-100 p-5">
+                <h3 className="font-semibold mb-1 text-sm">{title}</h3>
+                <p className="text-sm text-[#7a6b5d]">{desc}</p>
+              </div>
+            ))}
+          </div>
+          <div className="grid gap-6 md:grid-cols-3 mb-10">
+            {[
+              { icon: '💳', title: 'Same booking tools', desc: 'Card payment, automatic confirmation and attendee panel.' },
+              { icon: '🔄', title: 'Recurring events', desc: 'Weekly class with dates that open automatically; attendees book the ones they want.' },
+              { icon: '📍', title: 'No center listing needed', desc: 'You set the event location; no center profile required.' },
+            ].map(({ icon, title, desc }) => (
+              <div key={title} className="flex gap-4 items-start">
+                <span className="text-2xl shrink-0">{icon}</span>
+                <div>
+                  <h3 className="font-semibold mb-1">{title}</h3>
+                  <p className="text-sm text-[#7a6b5d]">{desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Link href="/en/register" className="bg-terracotta-600 hover:bg-terracotta-700 text-white font-semibold px-8 py-4 rounded-xl transition-colors text-center">
+              Create account
+            </Link>
+            <a href="#how-it-works" className="bg-white hover:bg-sand-50 border border-sand-300 text-foreground font-semibold px-8 py-4 rounded-xl transition-colors text-center">
+              See how it works
+            </a>
           </div>
         </div>
       </section>
@@ -399,16 +501,18 @@ export default function ForOrganizersPageEN() {
         <div className="container-narrow">
           <h2 className="font-serif text-3xl md:text-4xl font-bold">Join Retiru</h2>
           <p className="mx-auto mt-4 max-w-2xl text-terracotta-100">
-            Whether you&apos;re a yoga, meditation or ayurveda center or an organizer in that space, Retiru gives you the tools
+            Whether you&apos;re a center, a retreat organizer or a teacher publishing classes, Retiru gives you the tools
             and visibility you need. No subscription to list; your first retreat is free, the second at 10%, then 20% standard.
-            If you want a platform that not only promotes you, but also helps you manage every booking and attendee better, this is where we want Retiru to stand apart.
           </p>
-          <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <Link href="/en/centers" className="inline-block bg-white text-terracotta-700 font-bold px-8 py-4 rounded-xl hover:bg-sand-100 transition-colors">
+          <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:flex-wrap sm:justify-center">
+            <Link href="/en/centers-retiru" className="inline-block bg-white text-terracotta-700 font-bold px-8 py-4 rounded-xl hover:bg-sand-100 transition-colors">
               I&apos;m a center — Find my listing
             </Link>
             <Link href="/en/register" className="inline-block bg-white/10 hover:bg-white/20 border border-white/30 text-white font-bold px-8 py-4 rounded-xl transition-colors">
-              I&apos;m an organizer — Create account
+              I publish retreats or events — Create account
+            </Link>
+            <Link href="/en/register" className="inline-block bg-white/10 hover:bg-white/20 border border-white/30 text-white font-bold px-8 py-4 rounded-xl transition-colors">
+              I publish classes — Create account
             </Link>
           </div>
         </div>

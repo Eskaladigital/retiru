@@ -58,6 +58,10 @@ const SECTIONS = [
         a: 'Yes. When creating the event, check "Recurring event" and set how often it repeats (7 = weekly); you can also make an existing event recurring from its edit page. Retiru automatically publishes the upcoming dates and opens a new one as each date passes; listings only show the nearest date. From your panel you can close dates with no bookings (holidays) or stop the series at any time, and the whole series counts as a single retreat for your commission tier. Attendees can enroll on a single date or on several at once from a calendar (up to 7 weeks ahead).',
       },
       {
+        q: 'Can I publish classes without having a center in the directory?',
+        a: 'Yes. If you are an independent teacher or a studio offering one-off or weekly classes, you can publish them without a center listing. Create an account, accept the organizer agreement and publish your class or workshop as an event (including recurring ones, e.g. weekly yoga). The same booking, messaging and payment tools apply. Start from "For centers & organizers".',
+      },
+      {
         q: 'Can I generate the cover image with AI?',
         a: 'Yes. When creating or editing an event you can upload up to eight photos: one is the cover (listings and hero on the retreat page) and the rest show in the public gallery. You can use "Generate cover with AI" for a photorealistic image with GPT Image 1.5 from your title and copy. If you upload no images, saving generates a cover automatically when OpenAI is configured on the server.',
       },

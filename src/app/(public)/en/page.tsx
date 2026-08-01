@@ -71,16 +71,18 @@ function CategoryCardIcon({ slug }: { slug: string }) {
 }
 
 export default async function HomePageEN() {
-  const [categories, destinations, { retreats }, shopProducts] = await Promise.all([
+  const [categories, destinations, { retreats: dayEvents }, { retreats: multiDayRetreats }, shopProducts] = await Promise.all([
     getCategories('en'),
     getDestinations('en'),
-    getPublishedRetreats({ limit: 3 }),
+    getPublishedRetreats({ limit: 3, durationKind: 'day' }),
+    getPublishedRetreats({ limit: 3, durationKind: 'multi' }),
     getHomeShopProducts(4),
   ]);
 
   const cats = filterPublicRetreatCategories(categories);
   const dests = destinations.slice(0, 5);
-  const popularRetreats = retreats.slice(0, 3);
+  const popularClasses = dayEvents.slice(0, 3);
+  const popularRetreats = multiDayRetreats.slice(0, 3);
 
   return (
     <>
@@ -97,24 +99,24 @@ export default async function HomePageEN() {
                   <span className="w-1.5 h-1.5 bg-sage-400 rounded-full animate-[float_2s_ease-in-out_infinite]" />
                   850+ centers in Spain
                 </div>
-                <div className="inline-flex items-center gap-2 bg-terracotta-50 border border-terracotta-200 text-terracotta-700 text-[13px] font-semibold px-4 py-1.5 rounded-full">
-                  <span className="w-1.5 h-1.5 bg-terracotta-400 rounded-full animate-[float_2s_ease-in-out_infinite_0.5s]" />
-                  500+ retreats
+                <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 text-[13px] font-semibold px-4 py-1.5 rounded-full">
+                  <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-[float_2s_ease-in-out_infinite_0.5s]" />
+                  Classes, workshops &amp; retreats
                 </div>
               </div>
               <h1 className="font-serif text-[clamp(36px,6vw,60px)] leading-[1.15] tracking-[-0.01em] text-foreground mb-2 max-w-[600px] animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)_0.1s_forwards] opacity-0">
-                <span className="text-terracotta-700 tracking-[-0.02em]">Yoga</span>,{' '}
+                Centers, classes &amp; retreats of{' '}
+                <span className="text-terracotta-700 tracking-[-0.02em]">yoga</span>,{' '}
                 <span className="text-sage-700 tracking-[-0.02em]">meditation</span>{' '}
                 &amp;{' '}
-                <span className="text-amber-700 tracking-[-0.02em]">ayurveda</span>{' '}
-                centers &amp; retreats
+                <span className="text-amber-700 tracking-[-0.02em]">ayurveda</span>
                 <span className="inline-block w-[0.3em] h-[0.3em] bg-terracotta-600 rounded-full animate-[float_3s_ease-in-out_infinite] ml-1 -mb-0.5" />
               </h1>
               <p className="font-serif text-[clamp(18px,3vw,26px)] text-[#7a6b5d] tracking-wide mb-5 animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)_0.15s_forwards] opacity-0">
-                The directory and booking platform you need
+                Directory and booking for centers, classes and retreats
               </p>
               <p className="text-lg text-[#7a6b5d] leading-[1.7] mb-9 max-w-[500px] animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)_0.2s_forwards] opacity-0">
-                Find centers near you or book transformative retreats and getaways across Spain. Everything in one place.
+                Find centers near you, book one-day classes and activities, or multi-day getaways across Spain. Everything in one place.
               </p>
             </div>
 
@@ -142,14 +144,14 @@ export default async function HomePageEN() {
           </div>
         </section>
 
-        {/* TWO PILLARS — Centers + Retreats */}
+        {/* THREE PILLARS — Centers + Classes + Retreats */}
         <section className="py-12 md:py-16 bg-white">
           <div className="container-wide">
             <div className="text-center mb-8 md:mb-10">
-              <h2 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground">Two worlds, one place</h2>
-              <p className="text-base text-[#7a6b5d] mt-2 max-w-[520px] mx-auto">Retiru combines the largest center directory with a retreat booking platform</p>
+              <h2 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground">Three paths, one place</h2>
+              <p className="text-base text-[#7a6b5d] mt-2 max-w-[560px] mx-auto">Center directory, one-day classes and activities, and multi-day retreats — all on Retiru</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-6xl mx-auto">
               <Link href="/en/centers-retiru" className="group relative rounded-3xl overflow-hidden bg-gradient-to-br from-sage-800 to-sage-900 p-8 md:p-10 text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated">
                 <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
                 <div className="relative z-10">
@@ -163,14 +165,27 @@ export default async function HomePageEN() {
                   </span>
                 </div>
               </Link>
-              <Link href="/en/retreats-retiru" className="group relative rounded-3xl overflow-hidden bg-gradient-to-br from-terracotta-600 to-terracotta-700 p-8 md:p-10 text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated">
+              <Link href="/en/retreats-retiru?format=classes" className="group relative rounded-3xl overflow-hidden bg-gradient-to-br from-amber-700 to-terracotta-600 p-8 md:p-10 text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated">
+                <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+                <div className="relative z-10">
+                  <div className="w-12 h-12 bg-white/15 rounded-xl flex items-center justify-center mb-5">
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  </div>
+                  <h3 className="font-serif text-2xl md:text-[28px] mb-2">Classes &amp; activities</h3>
+                  <p className="text-[15px] text-white/80 leading-relaxed mb-5">Yoga classes, workshops and 1–2 hour sessions. Also from independent teachers without their own center.</p>
+                  <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-white/90 group-hover:gap-2.5 transition-all">
+                    Explore classes <IconChevron />
+                  </span>
+                </div>
+              </Link>
+              <Link href="/en/retreats-retiru?format=retreats" className="group relative rounded-3xl overflow-hidden bg-gradient-to-br from-terracotta-600 to-terracotta-700 p-8 md:p-10 text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated">
                 <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
                 <div className="relative z-10">
                   <div className="w-12 h-12 bg-white/15 rounded-xl flex items-center justify-center mb-5">
                     <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
                   </div>
                   <h3 className="font-serif text-2xl md:text-[28px] mb-2">Retreats &amp; getaways</h3>
-                  <p className="text-[15px] text-white/80 leading-relaxed mb-5">Book yoga, meditation and ayurveda retreats with transparent pricing. Secure payments and instant confirmation.</p>
+                  <p className="text-[15px] text-white/80 leading-relaxed mb-5">Book multi-day retreats with transparent pricing. Secure payments and instant confirmation.</p>
                   <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-white/90 group-hover:gap-2.5 transition-all">
                     Explore retreats <IconChevron />
                   </span>
@@ -246,12 +261,92 @@ export default async function HomePageEN() {
           </div>
         </section>
 
+        {/* CLASSES & ACTIVITIES */}
+        <section className="bg-sand-50 py-12 md:py-16">
+          <div className="container-wide">
+            <div className="flex items-end justify-between mb-6 md:mb-8 gap-4 flex-wrap">
+              <div>
+                <h2 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground">Classes &amp; activities</h2>
+                <p className="text-base text-[#7a6b5d] mt-2 max-w-[480px]">Yoga, workshops and one-day experiences near you</p>
+              </div>
+              <Link href="/en/retreats-retiru?format=classes" className="text-[15px] font-semibold text-terracotta-600 inline-flex items-center gap-1.5 hover:gap-2.5 transition-all whitespace-nowrap">
+                View all <IconChevron />
+              </Link>
+            </div>
+            {popularClasses.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {popularClasses.map((r) => {
+                const img = r.images?.find(i => i.is_cover)?.url || r.images?.[0]?.url || DEFAULT_RETREAT_IMG;
+                const category = r.categories?.[0]?.name_en || r.categories?.[0]?.name_es || 'Class';
+                const location = r.destination?.name_en || r.destination?.name_es || '';
+                const dates = r.duration_hours
+                  ? `${dateFmt.format(new Date(r.start_date))} · ${r.duration_hours} h`
+                  : `${dateFmt.format(new Date(r.start_date))} · 1 day`;
+                const spotsLow = r.available_spots <= 5;
+                const instant = r.confirmation_type === 'automatic';
+                const { avg_rating: orgAvg, review_count: orgReviews } = getOrganizerReviewStats(r);
+                const showOrgRating = organizerHasRatingToShow(r);
+                return (
+                <Link key={r.slug} href={`/en/retreat/${r.slug}`} className="group bg-white rounded-2xl overflow-hidden border border-sand-200 transition-all duration-[350ms] hover:shadow-elevated hover:-translate-y-1 hover:border-sand-300">
+                  <div className="relative aspect-[16/10] overflow-hidden">
+                    <Image src={img} alt={r.title_en || r.title_es} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover transition-transform duration-[600ms] group-hover:scale-105" />
+                    <div className="absolute top-3 left-3 flex gap-1.5">
+                      <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground">{category}</span>
+                      {instant && (
+                        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[rgba(92,127,96,0.9)] backdrop-blur-sm text-white inline-flex items-center gap-1">
+                          <Zap className="w-3.5 h-3.5 shrink-0" strokeWidth={2.5} aria-hidden />
+                          Instant confirmation
+                        </span>
+                      )}
+                    </div>
+                    <div className="absolute top-3 right-3 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:scale-110 transition-transform">
+                      <IconHeart />
+                    </div>
+                  </div>
+                  <div className="p-5">
+                    <div className="flex items-center justify-between mb-2.5">
+                      <span className="text-[13px] text-[#7a6b5d] flex items-center gap-1"><IconPin /> {location}</span>
+                      {showOrgRating && (
+                        <span className="text-[13px] font-semibold text-foreground flex items-center gap-1" title="Organizer rating"><IconStar /> {orgAvg.toFixed(1)} <span className="font-normal text-[#7a6b5d]">({orgReviews})</span></span>
+                      )}
+                    </div>
+                    <h3 className="font-serif text-xl leading-[1.3] mb-2 line-clamp-2">{r.title_en || r.title_es}</h3>
+                    <div className="text-sm text-[#7a6b5d] mb-4 flex items-center gap-1.5">
+                      <IconCal /> {dates}
+                    </div>
+                    <div className="flex items-end justify-between pt-4 border-t border-sand-200">
+                      <div className="flex flex-col">
+                        <span className="text-xs text-[#a09383] uppercase tracking-wider font-semibold">From</span>
+                        <span className="text-2xl font-bold text-foreground leading-none mt-0.5">{r.total_price}€ <span className="text-sm font-normal text-[#7a6b5d]">/person</span></span>
+                      </div>
+                      <span className={`text-[13px] font-medium inline-flex items-center gap-1 ${spotsLow ? 'text-terracotta-600' : 'text-sage-600'}`}>
+                        {spotsLow && <Flame className="w-3.5 h-3.5 shrink-0" aria-hidden />}
+                        {r.available_spots} spots
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+                );
+              })}
+            </div>
+            ) : (
+            <div className="max-w-2xl mx-auto bg-gradient-to-br from-amber-50 to-terracotta-50 border border-amber-200 rounded-2xl p-8 md:p-10 text-center">
+              <h3 className="font-serif text-xl md:text-2xl text-foreground mb-3">Yoga classes, workshops and one-day experiences</h3>
+              <p className="text-[15px] text-[#7a6b5d] leading-relaxed mb-6">Find short sessions near you: regular classes, weekend workshops and one-off activities from independent teachers and centers.</p>
+              <Link href="/en/retreats-retiru?format=classes" className="inline-flex items-center gap-2 bg-terracotta-600 text-white font-semibold text-[15px] px-6 py-3 rounded-xl hover:bg-terracotta-700 transition-colors">
+                Explore classes &amp; activities <IconChevron />
+              </Link>
+            </div>
+            )}
+          </div>
+        </section>
+
         {/* POPULAR RETREATS */}
         <section className="bg-sand-100 py-12 md:py-16">
           <div className="container-wide">
             <div className="flex items-end justify-between mb-6 md:mb-8 gap-4 flex-wrap">
-              <div><h2 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground">Popular retreats</h2><p className="text-base text-[#7a6b5d] mt-2 max-w-[480px]">Most booked by our community</p></div>
-              <Link href="/en/search" className="text-[15px] font-semibold text-terracotta-600 inline-flex items-center gap-1.5 hover:gap-2.5 transition-all whitespace-nowrap">View all <IconChevron /></Link>
+              <div><h2 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground">Popular retreats</h2><p className="text-base text-[#7a6b5d] mt-2 max-w-[480px]">Multi-day getaways, most booked by our community</p></div>
+              <Link href="/en/retreats-retiru?format=retreats" className="text-[15px] font-semibold text-terracotta-600 inline-flex items-center gap-1.5 hover:gap-2.5 transition-all whitespace-nowrap">View all <IconChevron /></Link>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {popularRetreats.map((r) => {
@@ -314,10 +409,10 @@ export default async function HomePageEN() {
         {/* HOW IT WORKS */}
         <section className="py-12 md:py-16 bg-white">
           <div className="container-wide">
-            <div className="text-center mb-8 md:mb-10"><h2 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground">How does it work?</h2><p className="text-base text-[#7a6b5d] mt-2">Find centers near you or book your next retreat</p></div>
+            <div className="text-center mb-8 md:mb-10"><h2 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground">How does it work?</h2><p className="text-base text-[#7a6b5d] mt-2">Find centers, classes or retreats and book your next experience</p></div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-6">
               {[
-                { n: 1, t: 'Explore', d: 'Browse our center directory or discover retreats by destination, date or discipline.' },
+                { n: 1, t: 'Explore', d: 'Browse our center directory, discover one-day classes and activities, or find retreats by destination, date or discipline.' },
                 { n: 2, t: 'Book your spot', d: '100% secure payment with Stripe (Visa, Mastercard & more). Pay the listed PVP by card when payment is due, or hold a spot without paying until the minimum group size is met. Your data never touches our servers.' },
                 { n: 3, t: 'Coordinate', d: 'Chat directly with the organizer. Fill in the questionnaire and prepare your experience.' },
                 { n: 4, t: 'Live the experience', d: 'Enjoy the experience. Cancellation refunds, when they apply, follow the retreat policy on what you paid.' },
@@ -445,9 +540,9 @@ export default async function HomePageEN() {
             <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-sage-800 to-sage-900 px-10 py-16 md:px-16 md:py-20 text-white">
               <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle at 25% 25%, white 1px, transparent 1px), radial-gradient(circle at 75% 75%, white 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
               <div className="relative z-10 max-w-[600px]">
-                <div className="inline-flex items-center gap-1.5 bg-white/15 border border-white/20 px-4 py-1.5 rounded-full text-[13px] font-semibold tracking-wide mb-6">No subscription · 1st retreat free</div>
-                <h2 className="font-serif text-[clamp(28px,4vw,42px)] text-white mb-4">Organize retreats? Publish with no listing fee.</h2>
-                <p className="text-[17px] text-white/80 leading-[1.7] mb-8">Full professional dashboard with no subscription. Your first retreat is free (0% commission), the second at 10%, then 20% standard. Breakdown shown when you create the retreat.</p>
+                <div className="inline-flex items-center gap-1.5 bg-white/15 border border-white/20 px-4 py-1.5 rounded-full text-[13px] font-semibold tracking-wide mb-6">No subscription · 1st event free</div>
+                <h2 className="font-serif text-[clamp(28px,4vw,42px)] text-white mb-4">Organize retreats, classes or run a center? Publish with no listing fee.</h2>
+                <p className="text-[17px] text-white/80 leading-[1.7] mb-8">Full professional dashboard with no subscription. Your first event is free (0% commission), the second at 10%, then 20% standard. Independent teachers can publish classes without their own center.</p>
                 <div className="grid grid-cols-2 gap-4 mb-8">
                   {['1st retreat free (0%)', 'Full dashboard', 'Attendee CRM', 'QR Check-in', 'Integrated messaging', 'Analytics'].map((f) => (
                     <div key={f} className="flex items-center gap-2.5 text-sm font-medium"><div className="w-6 h-6 bg-white/15 rounded-full flex items-center justify-center shrink-0"><IconCheck /></div>{f}</div>

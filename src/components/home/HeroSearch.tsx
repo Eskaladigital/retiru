@@ -115,7 +115,7 @@ export default function HeroSearch() {
           }`}
         >
           <CalendarDays size={15} />
-          Retiros
+          Retiros y clases
         </button>
       </div>
 
@@ -128,7 +128,7 @@ export default function HeroSearch() {
             type="text"
             value={queryText}
             onChange={(e) => setQueryText(e.target.value)}
-            placeholder={mode === 'eventos' ? 'Yoga, meditación, ayurveda...' : 'Nombre del centro, disciplina...'}
+            placeholder={mode === 'eventos' ? 'Clase de yoga, retiro, taller...' : 'Nombre del centro, disciplina...'}
             className="w-full bg-transparent text-[15px] text-foreground outline-none placeholder:text-[#a09383] font-sans"
           />
         </div>

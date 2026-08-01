@@ -117,7 +117,7 @@ const FAQS = [
 ];
 
 const STEPS = [
-  { step: '01', title: 'Explora y compara', desc: 'Busca por destino, fechas, tipo de retiro o palabra clave. Compara precios, reseñas y programas con toda la información visible.', detail: 'Cada ficha muestra fotos, programa día a día, qué incluye y qué no, condiciones de cancelación y reseñas verificadas. Tienes todo lo que necesitas para decidir sin buscar por fuera.' },
+  { step: '01', title: 'Explora y compara', desc: 'Busca por destino, fechas, tipo de experiencia o palabra clave. Compara precios, reseñas y programas de clases, talleres y retiros con toda la información visible.', detail: 'Cada ficha muestra fotos, programa, qué incluye y qué no, condiciones de cancelación y reseñas verificadas. Tienes todo lo que necesitas para decidir sin buscar por fuera.' },
   { step: '02', title: 'Reserva con seguridad', desc: 'Paga el precio que ves en la ficha vía Stripe (Visa, Mastercard y más). Tu dinero queda protegido.', detail: 'El pago se retiene en escrow hasta que el retiro cumple las condiciones para celebrarse. Recibes la confirmación por email al instante y puedes contactar con soporte si tienes cualquier duda.' },
   { step: '03', title: 'Disfruta con tranquilidad', desc: 'Recibe la confirmación, los detalles del retiro y la ubicación exacta. Nuestro equipo está a un mensaje de distancia.', detail: 'Si necesitas modificar algo, hablar con el organizador o gestionar una incidencia, nuestro equipo media y te ayuda en todo momento, antes, durante y después de la experiencia.' },
 ];
@@ -142,24 +142,30 @@ export default function ParaAsistentesPage() {
               Para ti, que buscas una experiencia transformadora
             </div>
             <h1 className="font-serif text-[clamp(36px,6vw,56px)] leading-[1.2] tracking-[-0.01em] text-foreground mb-5">
-              Reserva tu retiro<br />
-              <span className="text-terracotta-600">con total garantía</span>
+              Reserva tu experiencia<br />
+              <span className="text-terracotta-600">de bienestar con garantía</span>
             </h1>
             <p className="text-lg text-[#7a6b5d] leading-[1.7] mb-9 max-w-[540px]">
-              En Retiru no encontrarás cualquier retiro: <strong className="font-semibold text-foreground">verificamos a cada organizador</strong>,
-              <strong className="font-semibold text-foreground"> protegemos tu pago</strong> y te acompañamos en todo el proceso.
+              Clases de yoga, actividades de un día, talleres y retiros de varios días: <strong className="font-semibold text-foreground">verificamos a cada organizador</strong>,
+              <strong className="font-semibold text-foreground"> protegemos tu pago</strong> y te acompañamos en todo el proceso de reserva.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3">
               <Link
                 href="/es/retiros-retiru"
                 className="btn-primary bg-terracotta-600 hover:bg-terracotta-700 px-8 py-4 text-base font-semibold"
               >
-                Explorar retiros
+                Explorar experiencias
               </Link>
-              <a href="#garantias" className="btn-primary bg-white hover:bg-sand-50 border border-sand-300 px-8 py-4 text-base text-foreground">
-                Ver garantías
-              </a>
+              <Link
+                href="/es/centros-retiru"
+                className="btn-primary bg-white hover:bg-sand-50 border border-sand-300 px-8 py-4 text-base text-foreground"
+              >
+                Ver centros
+              </Link>
             </div>
+            <a href="#garantias" className="inline-block mt-4 text-sm font-semibold text-terracotta-600 hover:text-terracotta-700 underline underline-offset-2">
+              Ver garantías
+            </a>
           </div>
         </div>
       </section>
@@ -290,7 +296,7 @@ export default function ParaAsistentesPage() {
             Cada detalle está pensado para que tu única preocupación sea disfrutar de la experiencia.
           </p>
           <p className="text-sm text-[#7a6b5d] max-w-2xl mx-auto text-center mb-12 leading-relaxed">
-            Retiru reúne verificación, pago protegido, reseñas auténticas y una selección curada en un solo lugar. Así no tienes que investigar por tu cuenta ni confiar a ciegas: todo está diseñado para que reserves con confianza total.
+            Retiru reúne verificación, pago protegido, reseñas auténticas y una selección curada de clases, talleres y retiros en un solo lugar. Así no tienes que investigar por tu cuenta ni confiar a ciegas: todo está diseñado para que reserves con confianza total.
           </p>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -325,7 +331,7 @@ export default function ParaAsistentesPage() {
         <div className="container-narrow">
           <h2 className="mb-12 text-center font-serif text-3xl font-bold">¿Cómo funciona?</h2>
           <p className="text-sm text-[#7a6b5d] max-w-xl mx-auto text-center mb-12 leading-relaxed">
-            Solo tres pasos para vivir tu próxima experiencia transformadora. Sin sorpresas, sin letra pequeña y con soporte en cada etapa.
+            Solo tres pasos para reservar tu próxima clase, taller o retiro. Sin sorpresas, sin letra pequeña y con soporte en cada etapa.
           </p>
           <div className="space-y-8">
             {STEPS.map(({ step, title, desc, detail }) => (
@@ -372,26 +378,26 @@ export default function ParaAsistentesPage() {
       {/* ═══ Final CTA ═══ */}
       <section className="section bg-gradient-to-br from-terracotta-600 to-terracotta-700 text-white text-center">
         <div className="container-narrow">
-          <h2 className="font-serif text-3xl font-bold md:text-4xl">Encuentra tu próximo retiro</h2>
+          <h2 className="font-serif text-3xl font-bold md:text-4xl">Encuentra tu próxima experiencia</h2>
           <p className="mx-auto mt-4 max-w-lg text-terracotta-100">
-            Yoga, meditación, ayurveda, naturaleza… Experiencias verificadas con pago seguro y soporte dedicado.
+            Clases, talleres, actividades de un día y retiros de varios días: experiencias verificadas con pago seguro y soporte dedicado.
             Tu bienestar merece esa tranquilidad.
           </p>
           <p className="mx-auto mt-3 max-w-lg text-sm text-terracotta-200 leading-relaxed">
-            Explora retiros por toda España, compara programas y precios con toda la información visible, y reserva sabiendo que tu dinero y tu experiencia están protegidos de principio a fin.
+            Explora por toda España, compara programas y precios con toda la información visible, y reserva sabiendo que tu dinero y tu experiencia están protegidos de principio a fin.
           </p>
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link
               href="/es/retiros-retiru"
               className="btn-primary bg-white text-terracotta-700 hover:bg-sand-100 px-8 py-4 text-base"
             >
-              Explorar retiros
+              Explorar clases y retiros
             </Link>
             <Link
-              href="/es/registro"
+              href="/es/centros-retiru"
               className="btn-primary bg-white/10 hover:bg-white/20 border border-white/30 px-8 py-4 text-base text-white"
             >
-              Crear cuenta gratis
+              Explorar centros
             </Link>
           </div>
         </div>

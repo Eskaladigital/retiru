@@ -927,8 +927,8 @@ El cron `/api/cron/payment-deadlines` (cada hora) gestiona la gracia y cancelaci
 ## Funcionalidades principales
 
 ### Front público
-- **Homepage** con H1 "Centros y retiros de yoga, meditación y ayurveda", sección "Dos mundos, un solo lugar" (Directorio + Retiros), HeroSearch (toggle Retiros/Centros), centros destacados, retiros populares (en cards: valoración del **organizador** si tiene reseñas) y destinos desde Supabase; bloque **Tienda** solo si hay filas en `shop_products` con `is_available`
-- **Retiros** (`/es/retiros-retiru`, EN `/en/retreats-retiru`): hero + buscador (texto, destino, fechas) + lista con filtros; filtros/orden por valoración usan datos del **organizador** — Supabase
+- **Homepage** con H1 "Centros, clases y retiros de yoga, meditación y ayurveda", sección "Tres caminos, un solo lugar" (Directorio + Clases/actividades + Retiros), HeroSearch (toggle Centros / Retiros y clases), centros destacados, bloque de clases (eventos de 1 día) entre centros y retiros, retiros populares multi-día (en cards: valoración del **organizador** si tiene reseñas) y destinos desde Supabase; bloque **Tienda** solo si hay filas en `shop_products` con `is_available`
+- **Retiros / experiencias** (`/es/retiros-retiru`, EN `/en/retreats-retiru`): hero + buscador + lista con filtro de **formato** (`?formato=clases` / `?formato=retiros`; EN `?format=classes|retreats`) para separar clases/actividades de un día y retiros de varios días; filtros/orden por valoración usan datos del **organizador** — Supabase
 - **Retiros por ciudad** (`/es/retiros-retiru/[slug]`): retiros filtrados por destino/ciudad (misma lógica de estrellas en card que el listado general)
 - **Ficha de retiro** (`/es/retiro/[slug]`, EN `/en/retreat/[slug]`): **galería** (portada + resto de `retreat_images`, hasta 8 en creación/edición), **breadcrumb debajo de las fotos** (como en centro), título y cuerpo; precio (PVP), progreso si hay mínimo viable, **reseñas del retiro** + valoración del organizador, CTA sticky en móvil — Supabase
 - **Centros** (`/es/centros-retiru`, EN `/en/centers-retiru`): hero + CentrosSearch (texto, tipo, ciudad) + directorio con filtros — datos desde Supabase
@@ -938,8 +938,8 @@ El cron `/api/cron/payment-deadlines` (cada hora) gestiona la gracia y cancelaci
 - **Buscador** (`/es/buscar`, EN `/en/search`): búsqueda unificada retiros + centros con filtros (tarjetas de retiro: valoración del organizador cuando aplica)
 - **Blog** (`/es/blog`, `/es/blog/[slug]`; EN `/en/blog/…`): artículos desde Supabase. **Línea editorial:** contenido informativo (recetas, nutrición, yoga, meditación, ayurveda) — no landings de retiros por destino. Ver `docs/BLOG-EDITORIAL.md` y cola `docs/BLOG-TITULOS-PROPUESTOS.md`.
 - **Tienda** (`/es/tienda`, `/es/tienda/[slug]`; EN: `/en/shop`): productos desde `shop_products`; si el listado público está vacío, **encuesta de interés** (cada clic 1–5 se guarda al instante vía `POST /api/shop/product-interest`; comentario opcional con botón propio) → `shop_product_interests`. Admin: `/administrator/tienda` + `docs/SHOP-SURVEY.md`
-- **Para asistentes** (`/para-asistentes`): garantías de pago seguro, organizadores verificados, soporte, comparativa vs contratación directa/redes
-- **Para centros y organizadores** (`/para-organizadores`): secciones centros + organizadores
+- **Para asistentes** (`/para-asistentes`): reserva de experiencias de bienestar (clases, actividades, talleres y retiros); garantías de pago seguro, organizadores verificados, soporte; CTAs a explorar experiencias y centros (sin onboarding de organizador)
+- **Para centros y organizadores** (`/para-organizadores`): tres caminos visibles desde el hero (centro / retiros-eventos / clases) + franja «Empieza ahora» con registro o reclamación de ficha sin bajar al final; sección dedicada a profesores que publican clases
 - **Condiciones** (`/condiciones`): modelo de precios transparente, política de cancelación y, al final, las tres tarjetas «Acuerdos contractuales» que enlazan con los tres documentos formales (en footer)
 - **Documentos legales** — tres acuerdos diferenciados por figura, todos accesibles sin login:
   1. **Términos legales** (`/legal/terminos`, EN `/en/legal/terminos`): términos generales del visitante/usuario web (uso del servicio, propiedad intelectual, responsabilidad, jurisdicción).

@@ -33,6 +33,8 @@ export default function EventosClient({ retreats, categories, destinations }: Ev
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [selectedDestination, setSelectedDestination] = useState('Todos');
+  /** '' = todos · 'clases' = 1 día · 'retiros' = varios días */
+  const [formato, setFormato] = useState<'' | 'clases' | 'retiros'>('');
   const [minRating, setMinRating] = useState(0);
   const [sortBy, setSortBy] = useState('relevance');
   const [showFilters, setShowFilters] = useState(false);
@@ -50,6 +52,7 @@ export default function EventosClient({ retreats, categories, destinations }: Ev
     const qParam = searchParams.get('q');
     const destParam = searchParams.get('destino');
     const tipoParam = searchParams.get('tipo');
+    const formatoParam = searchParams.get('formato');
     if (qParam) setQuery(qParam);
     if (destParam) {
       const match = destinations.find(
@@ -63,11 +66,18 @@ export default function EventosClient({ retreats, categories, destinations }: Ev
       );
       if (match) { setSelectedCategory(match.name_es); setShowFilters(true); }
     }
-    if (qParam || destParam || tipoParam) setShowFilters(true);
+    if (formatoParam === 'clases' || formatoParam === 'actividades') {
+      setFormato('clases');
+      setShowFilters(true);
+    } else if (formatoParam === 'retiros') {
+      setFormato('retiros');
+      setShowFilters(true);
+    }
+    if (qParam || destParam || tipoParam || formatoParam) setShowFilters(true);
   }, [searchParams, categories, destinations]);
 
   const tokens = useMemo(
-    () => getSearchTokens(query, ['retiro', 'retiros', 'escapada', 'escapadas']),
+    () => getSearchTokens(query, ['retiro', 'retiros', 'escapada', 'escapadas', 'clase', 'clases', 'actividad', 'actividades']),
     [query],
   );
 
@@ -85,7 +95,11 @@ export default function EventosClient({ retreats, categories, destinations }: Ev
       const matchesDestination = selectedDestination === 'Todos'
         || r.destination?.name_es === selectedDestination;
       const matchesRating = getOrganizerReviewStats(r).avg_rating >= minRating;
-      return matchesQuery && matchesCategory && matchesDestination && matchesRating;
+      const days = r.duration_days ?? 0;
+      const matchesFormato = formato === ''
+        || (formato === 'clases' && days === 1)
+        || (formato === 'retiros' && days > 1);
+      return matchesQuery && matchesCategory && matchesDestination && matchesRating && matchesFormato;
     });
 
     switch (sortBy) {
@@ -97,14 +111,15 @@ export default function EventosClient({ retreats, categories, destinations }: Ev
       default: results.sort((a, b) => getOrganizerReviewStats(b).review_count - getOrganizerReviewStats(a).review_count);
     }
     return results;
-  }, [tokens, selectedCategory, selectedDestination, minRating, sortBy, retreats]);
+  }, [tokens, selectedCategory, selectedDestination, formato, minRating, sortBy, retreats]);
 
-  const hasActiveFilters = selectedCategory !== 'Todos' || selectedDestination !== 'Todos' || minRating > 0 || query;
+  const hasActiveFilters = selectedCategory !== 'Todos' || selectedDestination !== 'Todos' || formato !== '' || minRating > 0 || query;
 
   function clearFilters() {
     setQuery('');
     setSelectedCategory('Todos');
     setSelectedDestination('Todos');
+    setFormato('');
     setMinRating(0);
     setSortBy('relevance');
   }
@@ -153,9 +168,20 @@ export default function EventosClient({ retreats, categories, destinations }: Ev
 
       {/* Filter panel */}
       {showFilters && (
-        <div className="bg-white border border-sand-200 rounded-2xl p-6 mb-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="bg-white border border-sand-200 rounded-2xl p-6 mb-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 animate-in fade-in slide-in-from-top-2 duration-200">
           <div>
-            <label className="block text-xs font-semibold text-[#a09383] uppercase tracking-wider mb-2">Tipo de retiro</label>
+            <label className="block text-xs font-semibold text-[#a09383] uppercase tracking-wider mb-2">Formato</label>
+            <div className="relative">
+              <select value={formato} onChange={e => setFormato(e.target.value as '' | 'clases' | 'retiros')} className="w-full appearance-none bg-sand-50 border border-sand-200 rounded-lg px-4 py-2.5 text-sm pr-8 focus:outline-none focus:ring-2 focus:ring-terracotta-300">
+                <option value="">Todos</option>
+                <option value="clases">Clases y actividades</option>
+                <option value="retiros">Retiros (varios días)</option>
+              </select>
+              <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#a09383] pointer-events-none" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-[#a09383] uppercase tracking-wider mb-2">Disciplina</label>
             <div className="relative">
               <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)} className="w-full appearance-none bg-sand-50 border border-sand-200 rounded-lg px-4 py-2.5 text-sm pr-8 focus:outline-none focus:ring-2 focus:ring-terracotta-300">
                 {categoryOptions.map(t => <option key={t} value={t}>{t}</option>)}
@@ -191,7 +217,7 @@ export default function EventosClient({ retreats, categories, destinations }: Ev
             </div>
           </div>
           {hasActiveFilters && (
-            <div className="sm:col-span-2 lg:col-span-4 flex justify-end">
+            <div className="sm:col-span-2 lg:col-span-3 xl:col-span-5 flex justify-end">
               <button onClick={clearFilters} className="text-sm text-terracotta-600 hover:text-terracotta-700 font-medium flex items-center gap-1">
                 <X size={14} /> Limpiar filtros
               </button>
@@ -204,6 +230,8 @@ export default function EventosClient({ retreats, categories, destinations }: Ev
       {hasActiveFilters && !showFilters && (
         <div className="flex flex-wrap gap-2 mb-6">
           {query && <span className="inline-flex items-center gap-1 text-xs bg-terracotta-100 text-terracotta-700 px-3 py-1.5 rounded-full font-medium">&ldquo;{query}&rdquo; <button onClick={() => setQuery('')}><X size={12} /></button></span>}
+          {formato === 'clases' && <span className="inline-flex items-center gap-1 text-xs bg-amber-100 text-amber-800 px-3 py-1.5 rounded-full font-medium">Clases y actividades <button onClick={() => setFormato('')}><X size={12} /></button></span>}
+          {formato === 'retiros' && <span className="inline-flex items-center gap-1 text-xs bg-amber-100 text-amber-800 px-3 py-1.5 rounded-full font-medium">Retiros <button onClick={() => setFormato('')}><X size={12} /></button></span>}
           {selectedCategory !== 'Todos' && <span className="inline-flex items-center gap-1 text-xs bg-sage-100 text-sage-700 px-3 py-1.5 rounded-full font-medium">{selectedCategory} <button onClick={() => setSelectedCategory('Todos')}><X size={12} /></button></span>}
           {selectedDestination !== 'Todos' && <span className="inline-flex items-center gap-1 text-xs bg-sage-100 text-sage-700 px-3 py-1.5 rounded-full font-medium">{selectedDestination} <button onClick={() => setSelectedDestination('Todos')}><X size={12} /></button></span>}
           {minRating > 0 && <span className="inline-flex items-center gap-1 text-xs bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full font-medium">{minRating}+ estrellas <button onClick={() => setMinRating(0)}><X size={12} /></button></span>}
@@ -212,7 +240,7 @@ export default function EventosClient({ retreats, categories, destinations }: Ev
       )}
 
       {/* Results count */}
-      <p className="text-sm text-[#a09383] mb-6">{filtered.length} retiro{filtered.length !== 1 ? 's' : ''} encontrado{filtered.length !== 1 ? 's' : ''}</p>
+      <p className="text-sm text-[#a09383] mb-6">{filtered.length} experiencia{filtered.length !== 1 ? 's' : ''} encontrada{filtered.length !== 1 ? 's' : ''}</p>
 
       {/* Results grid */}
       {filtered.length === 0 ? (

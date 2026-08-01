@@ -32,6 +32,8 @@ export default function EventsClientEN({ retreats, categories, destinations }: E
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedDestination, setSelectedDestination] = useState('All');
+  /** '' = all · 'classes' = 1 day · 'retreats' = multi-day */
+  const [format, setFormat] = useState<'' | 'classes' | 'retreats'>('');
   const [minRating, setMinRating] = useState(0);
   const [sortBy, setSortBy] = useState('relevance');
   const [showFilters, setShowFilters] = useState(false);
@@ -49,6 +51,7 @@ export default function EventsClientEN({ retreats, categories, destinations }: E
     const qParam = searchParams.get('q');
     const destParam = searchParams.get('destination') || searchParams.get('destino');
     const tipoParam = searchParams.get('type') || searchParams.get('tipo');
+    const formatParam = searchParams.get('format') || searchParams.get('formato');
     if (qParam) setQuery(qParam);
     if (destParam) {
       const match = destinations.find(
@@ -62,11 +65,18 @@ export default function EventsClientEN({ retreats, categories, destinations }: E
       );
       if (match) { setSelectedCategory(match.name_en || match.name_es); setShowFilters(true); }
     }
-    if (qParam || destParam || tipoParam) setShowFilters(true);
+    if (formatParam === 'classes' || formatParam === 'clases' || formatParam === 'actividades' || formatParam === 'activities') {
+      setFormat('classes');
+      setShowFilters(true);
+    } else if (formatParam === 'retreats' || formatParam === 'retiros') {
+      setFormat('retreats');
+      setShowFilters(true);
+    }
+    if (qParam || destParam || tipoParam || formatParam) setShowFilters(true);
   }, [searchParams, categories, destinations]);
 
   const tokens = useMemo(
-    () => getSearchTokens(query, ['retreat', 'retreats', 'escape', 'escapes', 'retiro', 'retiros']),
+    () => getSearchTokens(query, ['retreat', 'retreats', 'escape', 'escapes', 'retiro', 'retiros', 'class', 'classes', 'activity', 'activities']),
     [query],
   );
 
@@ -87,7 +97,11 @@ export default function EventsClientEN({ retreats, categories, destinations }: E
       const matchesDestination = selectedDestination === 'All'
         || (r.destination?.name_en || r.destination?.name_es) === selectedDestination;
       const matchesRating = getOrganizerReviewStats(r).avg_rating >= minRating;
-      return matchesQuery && matchesCategory && matchesDestination && matchesRating;
+      const days = r.duration_days ?? 0;
+      const matchesFormat = format === ''
+        || (format === 'classes' && days === 1)
+        || (format === 'retreats' && days > 1);
+      return matchesQuery && matchesCategory && matchesDestination && matchesRating && matchesFormat;
     });
 
     switch (sortBy) {
@@ -98,14 +112,15 @@ export default function EventsClientEN({ retreats, categories, destinations }: E
       default: results.sort((a, b) => getOrganizerReviewStats(b).review_count - getOrganizerReviewStats(a).review_count);
     }
     return results;
-  }, [tokens, selectedCategory, selectedDestination, minRating, sortBy, retreats]);
+  }, [tokens, selectedCategory, selectedDestination, format, minRating, sortBy, retreats]);
 
-  const hasActiveFilters = selectedCategory !== 'All' || selectedDestination !== 'All' || minRating > 0 || query;
+  const hasActiveFilters = selectedCategory !== 'All' || selectedDestination !== 'All' || format !== '' || minRating > 0 || query;
 
   function clearFilters() {
     setQuery('');
     setSelectedCategory('All');
     setSelectedDestination('All');
+    setFormat('');
     setMinRating(0);
     setSortBy('relevance');
   }
@@ -152,9 +167,20 @@ export default function EventsClientEN({ retreats, categories, destinations }: E
       </div>
 
       {showFilters && (
-        <div className="bg-white border border-sand-200 rounded-2xl p-6 mb-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="bg-white border border-sand-200 rounded-2xl p-6 mb-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           <div>
-            <label className="block text-xs font-semibold text-[#a09383] uppercase tracking-wider mb-2">Retreat type</label>
+            <label className="block text-xs font-semibold text-[#a09383] uppercase tracking-wider mb-2">Format</label>
+            <div className="relative">
+              <select value={format} onChange={e => setFormat(e.target.value as '' | 'classes' | 'retreats')} className="w-full appearance-none bg-sand-50 border border-sand-200 rounded-lg px-4 py-2.5 text-sm pr-8 focus:outline-none focus:ring-2 focus:ring-terracotta-300">
+                <option value="">All</option>
+                <option value="classes">Classes &amp; activities</option>
+                <option value="retreats">Retreats (multi-day)</option>
+              </select>
+              <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#a09383] pointer-events-none" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-[#a09383] uppercase tracking-wider mb-2">Discipline</label>
             <div className="relative">
               <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)} className="w-full appearance-none bg-sand-50 border border-sand-200 rounded-lg px-4 py-2.5 text-sm pr-8 focus:outline-none focus:ring-2 focus:ring-terracotta-300">
                 {categoryOptions.map(t => <option key={t} value={t}>{t}</option>)}
@@ -190,7 +216,7 @@ export default function EventsClientEN({ retreats, categories, destinations }: E
             </div>
           </div>
           {hasActiveFilters && (
-            <div className="sm:col-span-2 lg:col-span-4 flex justify-end">
+            <div className="sm:col-span-2 lg:col-span-3 xl:col-span-5 flex justify-end">
               <button onClick={clearFilters} className="text-sm text-terracotta-600 hover:text-terracotta-700 font-medium flex items-center gap-1">
                 <X size={14} /> Clear filters
               </button>
@@ -202,6 +228,8 @@ export default function EventsClientEN({ retreats, categories, destinations }: E
       {hasActiveFilters && !showFilters && (
         <div className="flex flex-wrap gap-2 mb-6">
           {query && <span className="inline-flex items-center gap-1 text-xs bg-terracotta-100 text-terracotta-700 px-3 py-1.5 rounded-full font-medium">&ldquo;{query}&rdquo; <button onClick={() => setQuery('')}><X size={12} /></button></span>}
+          {format === 'classes' && <span className="inline-flex items-center gap-1 text-xs bg-amber-100 text-amber-800 px-3 py-1.5 rounded-full font-medium">Classes &amp; activities <button onClick={() => setFormat('')}><X size={12} /></button></span>}
+          {format === 'retreats' && <span className="inline-flex items-center gap-1 text-xs bg-amber-100 text-amber-800 px-3 py-1.5 rounded-full font-medium">Retreats <button onClick={() => setFormat('')}><X size={12} /></button></span>}
           {selectedCategory !== 'All' && <span className="inline-flex items-center gap-1 text-xs bg-sage-100 text-sage-700 px-3 py-1.5 rounded-full font-medium">{selectedCategory} <button onClick={() => setSelectedCategory('All')}><X size={12} /></button></span>}
           {selectedDestination !== 'All' && <span className="inline-flex items-center gap-1 text-xs bg-sage-100 text-sage-700 px-3 py-1.5 rounded-full font-medium">{selectedDestination} <button onClick={() => setSelectedDestination('All')}><X size={12} /></button></span>}
           {minRating > 0 && <span className="inline-flex items-center gap-1 text-xs bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full font-medium">{minRating}+ stars <button onClick={() => setMinRating(0)}><X size={12} /></button></span>}
@@ -209,7 +237,7 @@ export default function EventsClientEN({ retreats, categories, destinations }: E
         </div>
       )}
 
-      <p className="text-sm text-[#a09383] mb-6">{filtered.length} retreat{filtered.length !== 1 ? 's' : ''} found</p>
+      <p className="text-sm text-[#a09383] mb-6">{filtered.length} experience{filtered.length !== 1 ? 's' : ''} found</p>
 
       {filtered.length === 0 ? (
         <div className="text-center py-16">

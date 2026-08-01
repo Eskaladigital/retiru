@@ -44,8 +44,8 @@ Equivalente EN exactamente igual:
 | `/es/destinos` | `src/app/(public)/es/destinos/page.tsx` | Destinos |
 | `/es/destinos/[slug]` | `src/app/(public)/es/destinos/[slug]/page.tsx` | Destino por slug |
 | `/es/organizador/[slug]` | `src/app/(public)/es/organizador/[slug]/page.tsx` | Perfil organizador |
-| `/es/para-asistentes` | `src/app/(public)/es/para-asistentes/page.tsx` | Para asistentes: garantías, pago seguro, verificación |
-| `/es/para-organizadores` | `src/app/(public)/es/para-organizadores/page.tsx` | Para centros y organizadores |
+| `/es/para-asistentes` | `src/app/(public)/es/para-asistentes/page.tsx` | Para asistentes: experiencias de bienestar (clases, actividades, retiros), garantías, pago seguro |
+| `/es/para-organizadores` | `src/app/(public)/es/para-organizadores/page.tsx` | Para centros, organizadores y profesores (clases): onboarding con CTAs altos |
 | `/es/tienda` | `src/app/(public)/es/tienda/page.tsx` | Tienda (`shop_products`); si no hay productos, encuesta `ProductInterestSurvey` → `shop_product_interests` |
 | `/es/tienda/[slug]` | `src/app/(public)/es/tienda/[slug]/page.tsx` | Ficha de producto |
 | `/es/blog` | `src/app/(public)/es/blog/page.tsx` | Blog (`?q=` búsqueda por título/resumen, `?categoria=` slug categoría). **Editorial:** `docs/BLOG-EDITORIAL.md` |
@@ -297,8 +297,8 @@ Código de referencia: `getOrganizerReviewStats`, `organizerHasRatingToShow` en 
 | `buscar/` | Buscador unificado |
 | `destinos/` | Destinos + `[slug]` |
 | `organizador/[slug]/` | Perfil organizador |
-| `para-asistentes/` | Garantías para asistentes |
-| `para-organizadores/` | Centros y organizadores |
+| `para-asistentes/` | Experiencias de bienestar (clases, actividades, retiros) + garantías |
+| `para-organizadores/` | Centros, organizadores y profesores (clases) |
 | `tienda/` | Listado + `[slug]` ficha producto (`shop_products`) |
 | `blog/` | Blog + `[slug]` |
 | `legal/` | Términos, privacidad, cookies |

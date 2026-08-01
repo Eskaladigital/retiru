@@ -8,12 +8,12 @@ import type { Metadata } from 'next';
 // ─── ES pages ───────────────────────────────────────────────────────────────
 
 export const homeES: Metadata = generatePageMetadata({
-  title: 'Retiru — Retiros y centros de yoga, meditación y ayurveda en España',
-  description: 'Descubre y reserva retiros y eventos de yoga, meditación y ayurveda en España. Directorio de centros y tienda. Organizadores: sin suscripción; primer retiro gratis, después 10 % y 20 % sobre el PVP.',
+  title: 'Retiru — Centros, clases y retiros de yoga, meditación y ayurveda en España',
+  description: 'Directorio de centros y reserva de clases, actividades de un día y retiros de yoga, meditación y ayurveda en España. Organizadores y profesores: sin suscripción; primer evento gratis, después 10 % y 20 % sobre el PVP.',
   locale: 'es',
   path: '/es',
   altPath: '/en',
-  keywords: ['retiros españa', 'retiro yoga', 'retiro meditación', 'ayurveda españa', 'centros yoga', 'retiros ayurveda'],
+  keywords: ['retiros españa', 'clases yoga españa', 'retiro yoga', 'retiro meditación', 'ayurveda españa', 'centros yoga', 'actividades bienestar'],
 });
 
 export const searchES: Metadata = generatePageMetadata({
@@ -63,21 +63,21 @@ export const shopES: Metadata = generatePageMetadata({
 });
 
 export const forOrganizersES: Metadata = generatePageMetadata({
-  title: 'Para centros y organizadores — Retiru',
-  description: 'Centros de yoga, meditación y ayurveda: directorio con 6 meses de cortesía y después 20 €/mes. Organizadores de retiros: sin suscripción; primer retiro gratis (0 %), segundo al 10 %, después 20 % del PVP.',
+  title: 'Para centros, organizadores y profesores — Retiru',
+  description: 'Directorio de centros de bienestar, publicación de retiros y eventos, y clases periódicas para profesores independientes. Sin suscripción para publicar; primer retiro gratis (0 %), segundo al 10 %, después 20 % del PVP.',
   locale: 'es',
   path: '/es/para-organizadores',
   altPath: '/en/for-organizers',
-  keywords: ['publicar retiros', 'directorio centros yoga', 'organizar retiros', 'plataforma retiros gratis', 'ayurveda españa'],
+  keywords: ['publicar retiros', 'publicar clases yoga', 'directorio centros yoga', 'organizar retiros', 'plataforma bienestar', 'ayurveda españa'],
 });
 
 export const forAttendeesES: Metadata = generatePageMetadata({
-  title: 'Para asistentes — Reserva retiros con garantía',
-  description: 'Reserva retiros de yoga, meditación y ayurveda con pago seguro, organizadores verificados y soporte dedicado. Tu dinero protegido hasta que el evento se confirma.',
+  title: 'Para asistentes — Reserva experiencias de bienestar con garantía',
+  description: 'Reserva clases de yoga, actividades de un día, talleres y retiros con pago seguro, organizadores verificados y soporte dedicado. Tu dinero protegido hasta que el evento se confirma.',
   locale: 'es',
   path: '/es/para-asistentes',
   altPath: '/en/for-attendees',
-  keywords: ['reservar retiro seguro', 'retiros verificados', 'pago seguro retiro', 'retiros yoga garantía', 'retiros meditación españa'],
+  keywords: ['reservar retiro seguro', 'clases yoga reserva', 'experiencias bienestar', 'pago seguro retiro', 'retiros verificados', 'retiros meditación españa'],
 });
 
 export const helpES: Metadata = generatePageMetadata({
@@ -201,12 +201,12 @@ export const centerContractES: Metadata = generatePageMetadata({
 // ─── EN pages ───────────────────────────────────────────────────────────────
 
 export const homeEN: Metadata = generatePageMetadata({
-  title: 'Retiru — Yoga, meditation & ayurveda retreats and centers in Spain',
-  description: 'Discover and book yoga, meditation and ayurveda retreats and events in Spain. Center directory and shop. Organizers: no subscription; first retreat free, then 10% and 20% on the PVP.',
+  title: 'Retiru — Yoga, meditation & ayurveda centers, classes and retreats in Spain',
+  description: 'Center directory plus booking for classes, one-day activities and multi-day yoga, meditation and ayurveda retreats in Spain. Organizers and teachers: no subscription; first event free, then 10% and 20% on the PVP.',
   locale: 'en',
   path: '/en',
   altPath: '/es',
-  keywords: ['retreats spain', 'yoga retreat', 'meditation retreat', 'ayurveda spain', 'yoga centers spain'],
+  keywords: ['retreats spain', 'yoga classes spain', 'yoga retreat', 'meditation retreat', 'ayurveda spain', 'yoga centers spain', 'wellness activities'],
 });
 
 export const searchEN: Metadata = generatePageMetadata({
@@ -255,20 +255,20 @@ export const shopEN: Metadata = generatePageMetadata({
 });
 
 export const forOrganizersEN: Metadata = generatePageMetadata({
-  title: 'For centers & organizers — Retiru',
-  description: 'Yoga, meditation and ayurveda centers: directory with 6-month courtesy, then €20/month. Retreat organizers: no subscription; first retreat free (0%), second at 10%, then 20% of the PVP.',
+  title: 'For centers, organizers & teachers — Retiru',
+  description: 'Wellness center directory, retreat and event publishing, and recurring classes for independent teachers. No subscription to publish; first retreat free (0%), second at 10%, then 20% of the PVP.',
   locale: 'en',
   path: '/en/for-organizers',
   altPath: '/es/para-organizadores',
 });
 
 export const forAttendeesEN: Metadata = generatePageMetadata({
-  title: 'For attendees — Book retreats with full confidence',
-  description: 'Book yoga, meditation and ayurveda retreats with secure payment, verified organizers and dedicated support. Your money protected until the event is confirmed.',
+  title: 'For attendees — Book wellness experiences with full confidence',
+  description: 'Book yoga classes, one-day activities, workshops and multi-day retreats with secure payment, verified organizers and dedicated support. Your money protected until the event is confirmed.',
   locale: 'en',
   path: '/en/for-attendees',
   altPath: '/es/para-asistentes',
-  keywords: ['book retreat safely', 'verified retreats', 'secure retreat payment', 'yoga retreats guarantee', 'meditation retreats spain'],
+  keywords: ['book retreat safely', 'yoga class booking', 'wellness experiences', 'verified retreats', 'secure retreat payment', 'meditation retreats spain'],
 });
 
 export const helpEN: Metadata = generatePageMetadata({

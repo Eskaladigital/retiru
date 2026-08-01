@@ -72,16 +72,18 @@ function CategoryCardIcon({ slug }: { slug: string }) {
 }
 
 export default async function HomePage() {
-  const [categories, destinations, { retreats }, shopProducts] = await Promise.all([
+  const [categories, destinations, { retreats: dayEvents }, { retreats: multiDayRetreats }, shopProducts] = await Promise.all([
     getCategories('es'),
     getDestinations('es'),
-    getPublishedRetreats({ limit: 3 }),
+    getPublishedRetreats({ limit: 3, durationKind: 'day' }),
+    getPublishedRetreats({ limit: 3, durationKind: 'multi' }),
     getHomeShopProducts(4),
   ]);
 
   const cats = filterPublicRetreatCategories(categories);
   const dests = destinations.slice(0, 5);
-  const popularRetreats = retreats.slice(0, 3);
+  const popularClasses = dayEvents.slice(0, 3);
+  const popularRetreats = multiDayRetreats.slice(0, 3);
 
   return (
     <>
@@ -112,15 +114,15 @@ export default async function HomePage() {
                   <span className="w-1.5 h-1.5 bg-sage-400 rounded-full animate-[float_2s_ease-in-out_infinite]" />
                   +850 centros en España
                 </div>
-                <div className="inline-flex items-center gap-2 bg-terracotta-50 border border-terracotta-200 text-terracotta-700 text-[13px] font-semibold px-4 py-1.5 rounded-full">
-                  <span className="w-1.5 h-1.5 bg-terracotta-400 rounded-full animate-[float_2s_ease-in-out_infinite_0.5s]" />
-                  +500 retiros
+                <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 text-[13px] font-semibold px-4 py-1.5 rounded-full">
+                  <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-[float_2s_ease-in-out_infinite_0.5s]" />
+                  Clases, talleres y retiros
                 </div>
               </div>
 
               {/* Title */}
               <h1 className="font-serif text-[clamp(36px,6vw,60px)] leading-[1.15] tracking-[-0.01em] text-foreground mb-2 max-w-[600px] animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)_0.1s_forwards] opacity-0">
-                Centros y retiros de{' '}
+                Centros, clases y retiros de{' '}
                 <span className="text-terracotta-700 tracking-[-0.02em]">yoga</span>,{' '}
                 <span className="text-sage-700 tracking-[-0.02em]">meditación</span>{' '}
                 y{' '}
@@ -128,12 +130,12 @@ export default async function HomePage() {
                 <span className="inline-block w-[0.3em] h-[0.3em] bg-terracotta-600 rounded-full animate-[float_3s_ease-in-out_infinite] ml-1 -mb-0.5" />
               </h1>
               <p className="font-serif text-[clamp(18px,3vw,26px)] text-[#7a6b5d] tracking-wide mb-5 animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)_0.15s_forwards] opacity-0">
-                El directorio y la plataforma de reservas que necesitas
+                Directorio y reservas para centros, clases y retiros
               </p>
 
               {/* Subtitle */}
               <p className="text-lg text-[#7a6b5d] leading-[1.7] mb-9 max-w-[500px] animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)_0.2s_forwards] opacity-0">
-                Encuentra centros cerca de ti o reserva retiros y escapadas transformadoras en toda España. Todo en un solo lugar.
+                Encuentra centros cerca de ti, reserva clases y actividades de un día o escapadas de varios días en toda España. Todo en un solo lugar.
               </p>
             </div>
 
@@ -163,15 +165,15 @@ export default async function HomePage() {
         </section>
 
         {/* ═══════════════════════════════════════════════════════
-            DOS PILARES — Centros + Retiros
+            TRES PILARES — Centros + Clases + Retiros
             ═══════════════════════════════════════════════════════ */}
         <section className="py-12 md:py-16 bg-white">
           <div className="container-wide">
             <div className="text-center mb-8 md:mb-10">
-              <h2 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground">Dos mundos, un solo lugar</h2>
-              <p className="text-base text-[#7a6b5d] mt-2 max-w-[520px] mx-auto">Retiru une el mayor directorio de centros con una plataforma de retiros y escapadas</p>
+              <h2 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground">Tres caminos, un solo lugar</h2>
+              <p className="text-base text-[#7a6b5d] mt-2 max-w-[560px] mx-auto">Directorio de centros, clases y actividades de un día, y retiros de varios días — todo en Retiru</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-6xl mx-auto">
               <Link href="/es/centros-retiru" className="group relative rounded-3xl overflow-hidden bg-gradient-to-br from-sage-800 to-sage-900 p-8 md:p-10 text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated">
                 <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
                 <div className="relative z-10">
@@ -185,14 +187,27 @@ export default async function HomePage() {
                   </span>
                 </div>
               </Link>
-              <Link href="/es/retiros-retiru" className="group relative rounded-3xl overflow-hidden bg-gradient-to-br from-terracotta-600 to-terracotta-700 p-8 md:p-10 text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated">
+              <Link href="/es/retiros-retiru?formato=clases" className="group relative rounded-3xl overflow-hidden bg-gradient-to-br from-amber-700 to-terracotta-600 p-8 md:p-10 text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated">
+                <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+                <div className="relative z-10">
+                  <div className="w-12 h-12 bg-white/15 rounded-xl flex items-center justify-center mb-5">
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  </div>
+                  <h3 className="font-serif text-2xl md:text-[28px] mb-2">Clases y actividades</h3>
+                  <p className="text-[15px] text-white/80 leading-relaxed mb-5">Clases de yoga, talleres y sesiones de 1–2 h. También de profesoras independientes sin centro propio.</p>
+                  <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-white/90 group-hover:gap-2.5 transition-all">
+                    Explorar clases <IconChevron />
+                  </span>
+                </div>
+              </Link>
+              <Link href="/es/retiros-retiru?formato=retiros" className="group relative rounded-3xl overflow-hidden bg-gradient-to-br from-terracotta-600 to-terracotta-700 p-8 md:p-10 text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated">
                 <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
                 <div className="relative z-10">
                   <div className="w-12 h-12 bg-white/15 rounded-xl flex items-center justify-center mb-5">
                     <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
                   </div>
                   <h3 className="font-serif text-2xl md:text-[28px] mb-2">Retiros y escapadas</h3>
-                  <p className="text-[15px] text-white/80 leading-relaxed mb-5">Reserva retiros de yoga, meditación y ayurveda con precios transparentes. Pago seguro y confirmación inmediata.</p>
+                  <p className="text-[15px] text-white/80 leading-relaxed mb-5">Reserva retiros de varios días con precios transparentes. Pago seguro y confirmación inmediata.</p>
                   <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-white/90 group-hover:gap-2.5 transition-all">
                     Explorar retiros <IconChevron />
                   </span>
@@ -291,6 +306,88 @@ export default async function HomePage() {
         </section>
 
         {/* ═══════════════════════════════════════════════════════
+            CLASES Y ACTIVIDADES
+            ═══════════════════════════════════════════════════════ */}
+        <section className="bg-sand-50 py-12 md:py-16">
+          <div className="container-wide">
+            <div className="flex items-end justify-between mb-6 md:mb-8 gap-4 flex-wrap">
+              <div>
+                <h2 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground">Clases y actividades</h2>
+                <p className="text-base text-[#7a6b5d] mt-2 max-w-[480px]">Yoga, talleres y experiencias de un día cerca de ti</p>
+              </div>
+              <Link href="/es/retiros-retiru?formato=clases" className="text-[15px] font-semibold text-terracotta-600 inline-flex items-center gap-1.5 hover:gap-2.5 transition-all whitespace-nowrap">
+                Ver todas <IconChevron />
+              </Link>
+            </div>
+            {popularClasses.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {popularClasses.map((r) => {
+                const img = r.images?.find(i => i.is_cover)?.url || r.images?.[0]?.url || DEFAULT_RETREAT_IMG;
+                const category = r.categories?.[0]?.name_es || 'Clase';
+                const location = r.destination?.name_es || '';
+                const dates = r.duration_hours
+                  ? `${dateFmt.format(new Date(r.start_date))} · ${r.duration_hours} h`
+                  : `${dateFmt.format(new Date(r.start_date))} · 1 día`;
+                const spotsLow = r.available_spots <= 5;
+                const instant = r.confirmation_type === 'automatic';
+                const { avg_rating: orgAvg, review_count: orgReviews } = getOrganizerReviewStats(r);
+                const showOrgRating = organizerHasRatingToShow(r);
+                return (
+                <Link key={r.slug} href={`/es/retiro/${r.slug}`} className="group bg-white rounded-2xl overflow-hidden border border-sand-200 transition-all duration-[350ms] hover:shadow-elevated hover:-translate-y-1 hover:border-sand-300">
+                  <div className="relative aspect-[16/10] overflow-hidden">
+                    <Image src={img} alt={r.title_es} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover transition-transform duration-[600ms] group-hover:scale-105" />
+                    <div className="absolute top-3 left-3 flex gap-1.5">
+                      <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground">{category}</span>
+                      {instant && (
+                        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[rgba(92,127,96,0.9)] backdrop-blur-sm text-white inline-flex items-center gap-1">
+                          <Zap className="w-3.5 h-3.5 shrink-0" strokeWidth={2.5} aria-hidden />
+                          Confirmación inmediata
+                        </span>
+                      )}
+                    </div>
+                    <div className="absolute top-3 right-3 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:scale-110 transition-transform">
+                      <IconHeart />
+                    </div>
+                  </div>
+                  <div className="p-5">
+                    <div className="flex items-center justify-between mb-2.5">
+                      <span className="text-[13px] text-[#7a6b5d] flex items-center gap-1"><IconPin /> {location}</span>
+                      {showOrgRating && (
+                        <span className="text-[13px] font-semibold text-foreground flex items-center gap-1" title="Valoración del organizador"><IconStar /> {orgAvg.toFixed(1)} <span className="font-normal text-[#7a6b5d]">({orgReviews})</span></span>
+                      )}
+                    </div>
+                    <h3 className="font-serif text-xl leading-[1.3] mb-2 line-clamp-2">{r.title_es}</h3>
+                    <div className="text-sm text-[#7a6b5d] mb-4 flex items-center gap-1.5">
+                      <IconCal /> {dates}
+                    </div>
+                    <div className="flex items-end justify-between pt-4 border-t border-sand-200">
+                      <div className="flex flex-col">
+                        <span className="text-xs text-[#a09383] uppercase tracking-wider font-semibold">Desde</span>
+                        <span className="text-2xl font-bold text-foreground leading-none mt-0.5">{r.total_price}€ <span className="text-sm font-normal text-[#7a6b5d]">/persona</span></span>
+                      </div>
+                      <span className={`text-[13px] font-medium inline-flex items-center gap-1 ${spotsLow ? 'text-terracotta-600' : 'text-sage-600'}`}>
+                        {spotsLow && <Flame className="w-3.5 h-3.5 shrink-0" aria-hidden />}
+                        {r.available_spots} plazas
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+                );
+              })}
+            </div>
+            ) : (
+            <div className="max-w-2xl mx-auto bg-gradient-to-br from-amber-50 to-terracotta-50 border border-amber-200 rounded-2xl p-8 md:p-10 text-center">
+              <h3 className="font-serif text-xl md:text-2xl text-foreground mb-3">Clases de yoga, talleres y experiencias de un día</h3>
+              <p className="text-[15px] text-[#7a6b5d] leading-relaxed mb-6">Encuentra sesiones cortas cerca de ti: clases regulares, talleres de fin de semana y actividades puntuales de profesoras independientes y centros.</p>
+              <Link href="/es/retiros-retiru?formato=clases" className="inline-flex items-center gap-2 bg-terracotta-600 text-white font-semibold text-[15px] px-6 py-3 rounded-xl hover:bg-terracotta-700 transition-colors">
+                Explorar clases y actividades <IconChevron />
+              </Link>
+            </div>
+            )}
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════════════════
             RETIROS POPULARES
             ═══════════════════════════════════════════════════════ */}
         <section className="bg-sand-100 py-12 md:py-16">
@@ -298,9 +395,9 @@ export default async function HomePage() {
             <div className="flex items-end justify-between mb-6 md:mb-8 gap-4 flex-wrap">
               <div>
                 <h2 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground">Retiros populares</h2>
-                <p className="text-base text-[#7a6b5d] mt-2 max-w-[480px]">Los más reservados por nuestra comunidad</p>
+                <p className="text-base text-[#7a6b5d] mt-2 max-w-[480px]">Escapadas de varios días, los más reservados por nuestra comunidad</p>
               </div>
-              <Link href="/es/buscar" className="text-[15px] font-semibold text-terracotta-600 inline-flex items-center gap-1.5 hover:gap-2.5 transition-all whitespace-nowrap">
+              <Link href="/es/retiros-retiru?formato=retiros" className="text-[15px] font-semibold text-terracotta-600 inline-flex items-center gap-1.5 hover:gap-2.5 transition-all whitespace-nowrap">
                 Ver todos <IconChevron />
               </Link>
             </div>
@@ -371,11 +468,11 @@ export default async function HomePage() {
           <div className="container-wide">
             <div className="text-center mb-8 md:mb-10">
               <h2 className="font-serif text-[clamp(28px,4vw,40px)] text-foreground">¿Cómo funciona?</h2>
-              <p className="text-base text-[#7a6b5d] mt-2">Busca centros cerca de ti o reserva tu próximo retiro</p>
+              <p className="text-base text-[#7a6b5d] mt-2">Busca centros, clases o retiros y reserva tu próxima experiencia</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-6">
               {[
-                { n: 1, t: 'Explora', d: 'Busca en nuestro directorio de centros o descubre retiros por destino, fecha o disciplina.' },
+                { n: 1, t: 'Explora', d: 'Busca en nuestro directorio de centros, descubre clases y actividades de un día, o retiros por destino, fecha o disciplina.' },
                 { n: 2, t: 'Reserva tu plaza', d: 'Pago 100 % seguro con Stripe (Visa, Mastercard y más). Pagas el PVP con tarjeta cuando toca el cobro, o reservas sin pago si el retiro tiene mínimo de plazas. Tus datos nunca pasan por nuestros servidores.' },
                 { n: 3, t: 'Coordina', d: 'Habla directamente con el organizador por el chat. Rellena el cuestionario y prepara tu experiencia.' },
                 { n: 4, t: 'Vive la experiencia', d: 'Disfruta de la experiencia. Los reembolsos por cancelación, si aplican, siguen la política del retiro sobre lo que pagaste.' },
@@ -558,11 +655,11 @@ export default async function HomePage() {
               <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle at 25% 25%, white 1px, transparent 1px), radial-gradient(circle at 75% 75%, white 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
               <div className="relative z-10 max-w-[600px]">
                 <div className="inline-flex items-center gap-1.5 bg-white/15 border border-white/20 px-4 py-1.5 rounded-full text-[13px] font-semibold tracking-wide mb-6">
-                  Sin suscripción · 1.er retiro gratis
+                  Sin suscripción · 1.er evento gratis
                 </div>
-                <h2 className="font-serif text-[clamp(28px,4vw,42px)] text-white mb-4">¿Organizas retiros? Publica sin cuota fija.</h2>
+                <h2 className="font-serif text-[clamp(28px,4vw,42px)] text-white mb-4">¿Organizas retiros, clases o tienes un centro? Publica sin cuota fija.</h2>
                 <p className="text-[17px] text-white/80 leading-[1.7] mb-8">
-                  Panel profesional completo sin suscripción. Tu primer retiro gratis (0&nbsp;%), el segundo al 10&nbsp;% y a partir del tercero la comisión estándar del 20&nbsp;% incluida en el PVP. Desglose visible al crear el retiro.
+                  Panel profesional completo sin suscripción. Tu primer evento gratis (0&nbsp;%), el segundo al 10&nbsp;% y a partir del tercero la comisión estándar del 20&nbsp;%. Profesoras independientes pueden publicar clases sin centro propio.
                 </p>
                 <div className="grid grid-cols-2 gap-4 mb-8">
                   {['1.er retiro gratis (0 %)', 'Panel completo', 'CRM de asistentes', 'Check-in con QR', 'Mensajería integrada', 'Analíticas'].map((f) => (

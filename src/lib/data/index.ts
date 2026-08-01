@@ -125,6 +125,8 @@ const RETREAT_SELECT = `
 export async function getPublishedRetreats(filters?: {
   categorySlug?: string;
   destinationSlug?: string;
+  /** `day` = clases/actividades de un día; `multi` = retiros de varios días */
+  durationKind?: 'day' | 'multi';
   limit?: number;
   offset?: number;
 }): Promise<{ retreats: Retreat[]; total: number }> {
@@ -138,6 +140,12 @@ export async function getPublishedRetreats(filters?: {
     .gte('end_date', today)
     .gt('start_date', today)
     .order('start_date', { ascending: true });
+
+  if (filters?.durationKind === 'day') {
+    query = query.eq('duration_days', 1);
+  } else if (filters?.durationKind === 'multi') {
+    query = query.gt('duration_days', 1);
+  }
 
   if (filters?.categorySlug) {
     const { data: catIds } = await supabase

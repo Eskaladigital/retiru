@@ -117,7 +117,7 @@ const FAQS = [
 ];
 
 const STEPS = [
-  { step: '01', title: 'Explore and compare', desc: 'Search by destination, dates, retreat type or keyword. Compare prices, reviews and programs with all the information clearly displayed.', detail: 'Each listing shows photos, day-by-day schedule, what\u2019s included and excluded, cancellation terms and verified reviews. You have everything you need to decide without searching elsewhere.' },
+  { step: '01', title: 'Explore and compare', desc: 'Search by destination, dates, experience type or keyword. Compare prices, reviews and programs for classes, workshops and retreats with all the information clearly displayed.', detail: 'Each listing shows photos, schedule, what\u2019s included and excluded, cancellation terms and verified reviews. You have everything you need to decide without searching elsewhere.' },
   { step: '02', title: 'Book with confidence', desc: 'Pay the price shown on the listing via Stripe (Visa, Mastercard and more). Your money stays protected.', detail: 'Payment is held in escrow until the retreat meets the conditions to go ahead. You receive confirmation by email instantly and can contact support if you have any questions.' },
   { step: '03', title: 'Enjoy with peace of mind', desc: 'Receive your confirmation, all retreat details and the exact location. Our team is just a message away.', detail: 'If you need to modify anything, talk to the organizer or manage an issue, our team mediates and helps you every step of the way \u2014 before, during and after the experience.' },
 ];
@@ -142,24 +142,30 @@ export default function ForAttendeesPageEN() {
               For you, seeking a transformative experience
             </div>
             <h1 className="font-serif text-[clamp(36px,6vw,56px)] leading-[1.2] tracking-[-0.01em] text-foreground mb-5">
-              Book your retreat<br />
-              <span className="text-terracotta-600">with full confidence</span>
+              Book your wellness<br />
+              <span className="text-terracotta-600">experience with full confidence</span>
             </h1>
             <p className="text-lg text-[#7a6b5d] leading-[1.7] mb-9 max-w-[540px]">
-              On Retiru you won&apos;t find just any retreat: we <strong className="font-semibold text-foreground">verify every organizer</strong>,
-              <strong className="font-semibold text-foreground"> protect your payment</strong> and support you throughout the process.
+              Yoga classes, one-day activities, workshops and multi-day retreats: we <strong className="font-semibold text-foreground">verify every organizer</strong>,
+              <strong className="font-semibold text-foreground"> protect your payment</strong> and support you throughout the booking process.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3">
               <Link
                 href="/en/retreats-retiru"
                 className="btn-primary bg-terracotta-600 hover:bg-terracotta-700 text-white px-8 py-4 text-base font-semibold"
               >
-                Explore retreats
+                Explore experiences
               </Link>
-              <a href="#guarantees" className="btn-primary bg-white hover:bg-sand-50 border border-sand-300 px-8 py-4 text-base text-foreground">
-                See guarantees
-              </a>
+              <Link
+                href="/en/centers-retiru"
+                className="btn-primary bg-white hover:bg-sand-50 border border-sand-300 px-8 py-4 text-base text-foreground"
+              >
+                Browse centers
+              </Link>
             </div>
+            <a href="#guarantees" className="inline-block mt-4 text-sm font-semibold text-terracotta-600 hover:text-terracotta-700 underline underline-offset-2">
+              See guarantees
+            </a>
           </div>
         </div>
       </section>
@@ -290,7 +296,7 @@ export default function ForAttendeesPageEN() {
             Every detail is designed so your only concern is enjoying the experience.
           </p>
           <p className="text-sm text-[#7a6b5d] max-w-2xl mx-auto text-center mb-12 leading-relaxed">
-            Retiru brings verification, protected payment, authentic reviews and a curated selection together in one place. So you don&apos;t have to do your own research or trust blindly: everything is designed so you book with total confidence.
+            Retiru brings verification, protected payment, authentic reviews and a curated selection of classes, workshops and retreats together in one place. So you don&apos;t have to do your own research or trust blindly: everything is designed so you book with total confidence.
           </p>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -325,7 +331,7 @@ export default function ForAttendeesPageEN() {
         <div className="container-narrow">
           <h2 className="mb-12 text-center font-serif text-3xl font-bold">How does it work?</h2>
           <p className="text-sm text-[#7a6b5d] max-w-xl mx-auto text-center mb-12 leading-relaxed">
-            Just three steps to your next transformative experience. No surprises, no fine print, and support at every stage.
+            Just three steps to book your next class, workshop or retreat. No surprises, no fine print, and support at every stage.
           </p>
           <div className="space-y-8">
             {STEPS.map(({ step, title, desc, detail }) => (
@@ -372,20 +378,20 @@ export default function ForAttendeesPageEN() {
       {/* ═══ Final CTA ═══ */}
       <section className="py-20 bg-gradient-to-br from-terracotta-600 to-terracotta-700 text-white text-center">
         <div className="container-narrow">
-          <h2 className="font-serif text-3xl md:text-4xl font-bold">Find your next retreat</h2>
+          <h2 className="font-serif text-3xl md:text-4xl font-bold">Find your next experience</h2>
           <p className="mx-auto mt-4 max-w-lg text-terracotta-100">
-            Yoga, meditation, ayurveda, nature… Verified experiences with secure payment and dedicated support.
+            Classes, workshops, one-day activities and multi-day retreats: verified experiences with secure payment and dedicated support.
             Your wellbeing deserves that peace of mind.
           </p>
           <p className="mx-auto mt-3 max-w-lg text-sm text-terracotta-200 leading-relaxed">
-            Explore retreats across Spain, compare programs and prices with all the information visible, and book knowing your money and your experience are protected from start to finish.
+            Explore across Spain, compare programs and prices with all the information visible, and book knowing your money and your experience are protected from start to finish.
           </p>
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link href="/en/retreats-retiru" className="inline-block bg-white text-terracotta-700 font-bold px-8 py-4 rounded-xl hover:bg-sand-100 transition-colors">
-              Explore retreats
+              Explore classes &amp; retreats
             </Link>
-            <Link href="/en/register" className="inline-block bg-white/10 hover:bg-white/20 border border-white/30 text-white font-bold px-8 py-4 rounded-xl transition-colors">
-              Create free account
+            <Link href="/en/centers-retiru" className="inline-block bg-white/10 hover:bg-white/20 border border-white/30 text-white font-bold px-8 py-4 rounded-xl transition-colors">
+              Browse centers
             </Link>
           </div>
         </div>
