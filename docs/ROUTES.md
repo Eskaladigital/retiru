@@ -360,8 +360,8 @@ Protegido por middleware y comprobación de admin. No indexado en buscadores.
 | POST | `/api/admin/blog/generate-cover-image` | Portada IA de artículo de blog (solo admin): título, extracto, contenido, categoría; mismo agente GPT-4o×2 + GPT Image 1.5; bucket `retreat-images` (`blog/ai-cover-*`) |
 | POST | `/api/centers/generate-cover-image` | Portada IA de centro (propietario reclamado o admin; también prealta sin `center_id`): nombre, descripción, tipo, ubicación, servicios; mismo agente; bucket `centers` (`{centerId}/ai-cover-*` o `generated/ai-cover-*`) |
 | PATCH | `/api/retreats/[id]` | Actualizar retiro (solo propietario) |
-| POST | `/api/retreats/[id]` | Cancelar retiro (propietario, action=cancel): marca las reservas activas como `cancelled_by_organizer`, reembolsa el 100 % vía Stripe a las pagadas y notifica a los asistentes |
-| DELETE | `/api/retreats/[id]` | Eliminar retiro (propietario, solo sin reservas confirmadas) |
+| POST | `/api/retreats/[id]` | Cancelar retiro (propietario, action=cancel): marca reservas activas —incl. `reserved_no_payment`— como `cancelled_by_organizer`, reembolsa pagadas y notifica |
+| DELETE | `/api/retreats/[id]` | Eliminar retiro (propietario; bloquea si hay cualquier inscripción activa, no solo confirmadas) |
 | POST | `/api/retreats/series` | Convertir un evento existente en periódico (propietario): crea la serie con el evento como master; si ya está publicado genera las ocurrencias al momento |
 | GET | `/api/retreats/series/[id]` | Fechas futuras reservables de la serie para el calendario de inscripción (público): id, slug, fecha, plazas libres (restando reservas sin pago) y, con sesión, cuáles ya tiene reservadas el usuario. Horizonte máximo: 7 semanas (`SERIES_BOOKING_HORIZON_DAYS`) |
 | POST | `/api/retreats/series/[id]` | Gestión de serie de evento periódico (propietario): `close_date` cierra una fecha sin reservas (vacaciones, se añade a `skip_dates`) y `stop` detiene la serie |
@@ -387,7 +387,7 @@ Protegido por middleware y comprobación de admin. No indexado en buscadores.
 | GET | `/api/organizer/verification` | Estado global de verificación KYC |
 | POST | `/api/organizer/verification/[step]` | Marcar paso enviado / subir metadatos de documento |
 | GET | `/api/organizer/dashboard` | KPIs reales del organizador |
-| GET | `/api/organizer/attendees` | Listar asistentes cross-evento (incluye `reserved_no_payment` / `pending_payment`) |
+| GET | `/api/organizer/attendees` | Listar asistentes cross-evento (incluye `reserved_no_payment`; agrega por serie) |
 | GET | `/api/organizer/events/[id]/bookings` | Listar bookings de un evento |
 | GET | `/api/organizer/events/[id]/bookings/export` | Exportar asistentes a CSV |
 | PATCH | `/api/organizer/bookings/[id]/payment` | Legacy: marcar liquidación/pago complementario (modelo histórico 80 % fuera de plataforma; con pago 100 % suele no aplicar) |

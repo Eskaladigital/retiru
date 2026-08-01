@@ -57,7 +57,7 @@ export default async function AdminReportingPage() {
   const { count: totalBookings } = await supabase
     .from('bookings')
     .select('*', { count: 'exact', head: true })
-    .in('status', ['confirmed', 'completed', 'cancelled_by_attendee', 'cancelled_by_organizer', 'refunded']);
+    .in('status', ['confirmed', 'completed', 'cancelled_by_attendee', 'cancelled_by_organizer', 'refunded', 'reserved_no_payment', 'pending_payment', 'pending_confirmation']);
 
   const { count: cancelledBookings } = await supabase
     .from('bookings')
@@ -86,7 +86,7 @@ export default async function AdminReportingPage() {
   const { data: allBookings } = await supabase
     .from('bookings')
     .select('retreat_id')
-    .in('status', ['confirmed', 'completed']);
+    .in('status', ['confirmed', 'completed', 'reserved_no_payment', 'pending_payment', 'pending_confirmation']);
 
   const catCounts: Record<string, { name: string; count: number }> = {};
   for (const rc of retreatCats || []) {
@@ -100,11 +100,11 @@ export default async function AdminReportingPage() {
     .slice(0, 5);
   const totalCatBookings = topCategories.reduce((s, c) => s + c.count, 0);
 
-  // Top organizadores por reservas
+  // Top organizadores por reservas (volumen de inscripciones, no solo cobradas)
   const { data: orgBookings } = await supabase
     .from('bookings')
-    .select('organizer_id, total_price')
-    .in('status', ['confirmed', 'completed']);
+    .select('organizer_id, total_price, status')
+    .in('status', ['confirmed', 'completed', 'reserved_no_payment', 'pending_payment', 'pending_confirmation']);
 
   const orgSums: Record<string, { bookings: number; revenue: number }> = {};
   for (const b of orgBookings || []) {
@@ -112,7 +112,9 @@ export default async function AdminReportingPage() {
     if (!oid) continue;
     if (!orgSums[oid]) orgSums[oid] = { bookings: 0, revenue: 0 };
     orgSums[oid].bookings += 1;
-    orgSums[oid].revenue += Number(b.total_price || 0);
+    if (b.status === 'confirmed' || b.status === 'completed') {
+      orgSums[oid].revenue += Number(b.total_price || 0);
+    }
   }
 
   const orgIds = Object.keys(orgSums).slice(0, 10);

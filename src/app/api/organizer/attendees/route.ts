@@ -1,6 +1,7 @@
 // GET /api/organizer/attendees — List all attendees across events
 import { NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
+import { ORGANIZER_ATTENDEE_STATUSES } from '@/lib/utils';
 
 export async function GET() {
   try {
@@ -21,20 +22,12 @@ export async function GET() {
     const { data: bookings } = await admin
       .from('bookings')
       .select(`
-        id, attendee_id, total_price, status, created_at,
+        id, attendee_id, total_price, status, created_at, retreat_id,
         profiles!attendee_id(id, full_name, email, phone, avatar_url),
-        retreats!retreat_id(title_es)
+        retreats!retreat_id(title_es, series_id, start_date)
       `)
       .eq('organizer_id', orgProfile.id)
-      // Incluye inscritos sin cobro (series / modo lanzamiento / mínimo no alcanzado)
-      // y pago pendiente — son asistentes reales aunque aún no estén «confirmed».
-      .in('status', [
-        'confirmed',
-        'completed',
-        'pending_confirmation',
-        'reserved_no_payment',
-        'pending_payment',
-      ])
+      .in('status', [...ORGANIZER_ATTENDEE_STATUSES])
       .order('created_at', { ascending: false });
 
     if (!bookings) return NextResponse.json({ attendees: [] });
@@ -45,10 +38,14 @@ export async function GET() {
       email: string;
       phone: string | null;
       avatar_url: string | null;
+      /** Experiencias distintas (serie o retiro suelto), no cada fecha de una serie */
       events: number;
+      /** Fechas/inscripciones individuales */
+      bookings: number;
       totalSpent: number;
       lastEvent: string;
       lastDate: string;
+      _eventKeys: Set<string>;
     }>();
 
     for (const b of bookings) {
@@ -56,13 +53,24 @@ export async function GET() {
       const retreat = b.retreats as any;
       if (!profile?.id) continue;
 
+      const eventKey = retreat?.series_id
+        ? `series:${retreat.series_id}`
+        : `retreat:${b.retreat_id}`;
+      const title = retreat?.title_es || 'Retiro';
+      const paidStatuses = new Set(['confirmed', 'completed']);
+      const amount = paidStatuses.has(b.status) ? Number(b.total_price) : 0;
+
       const existing = attendeeMap.get(profile.id);
       if (existing) {
-        existing.events += 1;
-        existing.totalSpent += Number(b.total_price);
+        existing.bookings += 1;
+        if (!existing._eventKeys.has(eventKey)) {
+          existing._eventKeys.add(eventKey);
+          existing.events += 1;
+        }
+        existing.totalSpent += amount;
         if (b.created_at > existing.lastDate) {
           existing.lastDate = b.created_at;
-          existing.lastEvent = retreat?.title_es || 'Retiro';
+          existing.lastEvent = title;
         }
       } else {
         attendeeMap.set(profile.id, {
@@ -72,15 +80,18 @@ export async function GET() {
           phone: profile.phone,
           avatar_url: profile.avatar_url,
           events: 1,
-          totalSpent: Number(b.total_price),
-          lastEvent: retreat?.title_es || 'Retiro',
+          bookings: 1,
+          totalSpent: amount,
+          lastEvent: title,
           lastDate: b.created_at,
+          _eventKeys: new Set([eventKey]),
         });
       }
     }
 
     const attendees = Array.from(attendeeMap.values())
-      .sort((a, b) => b.totalSpent - a.totalSpent);
+      .map(({ _eventKeys, ...rest }) => rest)
+      .sort((a, b) => b.bookings - a.bookings || b.totalSpent - a.totalSpent);
 
     return NextResponse.json({ attendees });
   } catch (error) {

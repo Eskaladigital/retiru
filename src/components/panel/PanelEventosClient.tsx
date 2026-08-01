@@ -69,7 +69,7 @@ function deriveDisplayStatus(r: Retreat): string {
   const today = new Date().toISOString().slice(0, 10);
   const started = (r.start_date ?? '') <= today;
   const ended = (r.end_date ?? '') < today;
-  if (ended) return r.confirmed_bookings > 0 ? 'finished' : 'expired';
+  if (ended) return (r.confirmed_bookings > 0 || r.reserved_bookings > 0) ? 'finished' : 'expired';
   if (started) return 'in_progress';
   return 'published';
 }
@@ -208,7 +208,7 @@ export function PanelEventosClient({ retreats: initial, baseHref, locale = 'es' 
               : t.noDate;
             const isDisabled = acting === r.id;
             const canCancel = !['cancelled', 'archived'].includes(r.status);
-            const canDelete = r.confirmed_bookings === 0;
+            const canDelete = r.confirmed_bookings === 0 && r.reserved_bookings === 0;
 
             return (
               <div key={r.id} className="flex flex-col md:flex-row gap-4 bg-white border border-sand-200 rounded-2xl p-4 hover:shadow-soft transition-all">

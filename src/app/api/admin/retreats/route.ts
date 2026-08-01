@@ -204,11 +204,11 @@ export async function POST(request: NextRequest) {
       .from('bookings')
       .select('id', { count: 'exact', head: true })
       .eq('retreat_id', retreatId)
-      .in('status', ['pending_payment', 'pending_confirmation', 'confirmed', 'completed']);
+      .in('status', ['reserved_no_payment', 'pending_payment', 'pending_confirmation', 'confirmed', 'completed']);
 
     if ((count ?? 0) > 0) {
       return NextResponse.json(
-        { error: 'No se puede eliminar: tiene reservas activas. Usa "Cancelar" para ocultarlo del público.' },
+        { error: 'No se puede eliminar: tiene reservas o inscripciones activas. Usa "Cancelar" para ocultarlo del público.' },
         { status: 409 },
       );
     }

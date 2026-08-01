@@ -11,6 +11,20 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/** Reservas que ocupan plaza / deben verse en el panel (series + modo lanzamiento incluidos). */
+export const ACTIVE_ENROLLMENT_STATUSES = [
+  'reserved_no_payment',
+  'pending_payment',
+  'pending_confirmation',
+  'confirmed',
+] as const;
+
+/** Estados visibles en CRM asistentes / check-in / broadcast (incluye completadas). */
+export const ORGANIZER_ATTENDEE_STATUSES = [
+  ...ACTIVE_ENROLLMENT_STATUSES,
+  'completed',
+] as const;
+
 /** Format price in EUR */
 export function formatPrice(amount: number, currency = 'EUR'): string {
   return new Intl.NumberFormat('es-ES', {

@@ -33,7 +33,7 @@ export default async function AnaliticasPage() {
     .select('id', { count: 'exact', head: true })
     .eq('organizer_id', orgProfile.id)
     .gte('created_at', currentMonthStart)
-    .in('status', ['confirmed', 'pending_confirmation', 'completed']);
+    .in('status', ['confirmed', 'pending_confirmation', 'completed', 'reserved_no_payment', 'pending_payment']);
 
   const { count: bookingsLastMonth } = await admin
     .from('bookings')
@@ -41,7 +41,7 @@ export default async function AnaliticasPage() {
     .eq('organizer_id', orgProfile.id)
     .gte('created_at', lastMonthStart)
     .lte('created_at', lastMonthEnd)
-    .in('status', ['confirmed', 'pending_confirmation', 'completed']);
+    .in('status', ['confirmed', 'pending_confirmation', 'completed', 'reserved_no_payment', 'pending_payment']);
 
   const bookingsChange = bookingsLastMonth && bookingsLastMonth > 0
     ? Math.round(((bookingsThisMonth || 0) - bookingsLastMonth) / bookingsLastMonth * 100)

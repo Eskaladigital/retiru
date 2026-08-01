@@ -219,6 +219,25 @@ export async function getPublishedRetreats(filters?: {
           .filter(Boolean) as Category[];
       }
     }
+
+    // available_spots en BD solo resta confirmadas; restar también holds sin cobro
+    const { data: holdRows } = await supabase
+      .from('bookings')
+      .select('retreat_id')
+      .in('retreat_id', retreatIds)
+      .eq('status', 'reserved_no_payment');
+    if (holdRows?.length) {
+      const holdCount = new Map<string, number>();
+      for (const row of holdRows) {
+        holdCount.set(row.retreat_id, (holdCount.get(row.retreat_id) || 0) + 1);
+      }
+      for (const r of retreats) {
+        const holds = holdCount.get(r.id) || 0;
+        if (holds > 0) {
+          r.available_spots = Math.max(0, (r.available_spots ?? 0) - holds);
+        }
+      }
+    }
   }
 
   return { retreats, total: count ?? 0 };

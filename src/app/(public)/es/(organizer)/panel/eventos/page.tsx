@@ -52,11 +52,28 @@ export default async function PanelEventosPage() {
     if (retreatsErr) {
       console.error('[panel/eventos] Error cargando retiros:', retreatsErr.message);
     }
-    // Eventos periódicos: mostrar solo la próxima fecha de cada serie
-    // (el resto se gestiona desde «Fechas programadas» en la edición).
+    // Eventos periódicos: mostrar la próxima fecha + pasadas + cualquier
+    // ocurrencia futura con inscripciones activas (para gestionar esas reservas).
     const today = new Date().toISOString().slice(0, 10);
-    retreats = (data || []).filter(
-      (r: any) => !r.series_id || r.is_series_next || (r.start_date && r.start_date < today),
+    const allRows = data || [];
+    const allIds = allRows.map((r: any) => r.id);
+    const withActiveBookings = new Set<string>();
+    if (allIds.length > 0) {
+      const { data: activeRows } = await admin
+        .from('bookings')
+        .select('retreat_id')
+        .in('retreat_id', allIds)
+        .in('status', ['reserved_no_payment', 'pending_payment', 'pending_confirmation', 'confirmed']);
+      for (const row of activeRows || []) {
+        if (row.retreat_id) withActiveBookings.add(row.retreat_id);
+      }
+    }
+    retreats = allRows.filter(
+      (r: any) =>
+        !r.series_id ||
+        r.is_series_next ||
+        (r.start_date && r.start_date < today) ||
+        withActiveBookings.has(r.id),
     );
   }
 
@@ -67,7 +84,7 @@ export default async function PanelEventosPage() {
       .from('bookings')
       .select('retreat_id')
       .in('retreat_id', retreatIds)
-      .eq('status', 'reserved_no_payment');
+      .in('status', ['reserved_no_payment', 'pending_payment']);
     for (const row of reservedRows || []) {
       reservedMap[row.retreat_id] = (reservedMap[row.retreat_id] || 0) + 1;
     }

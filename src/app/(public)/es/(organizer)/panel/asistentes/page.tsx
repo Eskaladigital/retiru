@@ -11,6 +11,7 @@ interface Attendee {
   phone: string | null;
   avatar_url: string | null;
   events: number;
+  bookings?: number;
   totalSpent: number;
   lastEvent: string;
   lastDate: string;
@@ -73,8 +74,9 @@ export default function AsistentesPage() {
               <tr className="border-b border-sand-200 bg-sand-50">
                 <th className="text-left py-3 px-4 font-semibold text-[#7a6b5d]">Nombre</th>
                 <th className="text-left py-3 px-4 font-semibold text-[#7a6b5d] hidden md:table-cell">Email</th>
-                <th className="text-center py-3 px-4 font-semibold text-[#7a6b5d]">Retiros</th>
-                <th className="text-right py-3 px-4 font-semibold text-[#7a6b5d]">Total</th>
+                <th className="text-center py-3 px-4 font-semibold text-[#7a6b5d]">Eventos</th>
+                <th className="text-center py-3 px-4 font-semibold text-[#7a6b5d] hidden sm:table-cell">Fechas</th>
+                <th className="text-right py-3 px-4 font-semibold text-[#7a6b5d]">Cobrado</th>
                 <th className="text-left py-3 px-4 font-semibold text-[#7a6b5d] hidden lg:table-cell">Último retiro</th>
               </tr>
             </thead>
@@ -96,6 +98,7 @@ export default function AsistentesPage() {
                     <EmailLink email={a.email} className="text-[#7a6b5d] hover:text-terracotta-600 hover:underline break-all" />
                   </td>
                   <td className="py-3 px-4 text-center">{a.events}</td>
+                  <td className="py-3 px-4 text-center text-[#7a6b5d] hidden sm:table-cell">{a.bookings ?? a.events}</td>
                   <td className="py-3 px-4 text-right font-semibold">{a.totalSpent.toLocaleString()}€</td>
                   <td className="py-3 px-4 text-[#7a6b5d] text-xs hidden lg:table-cell">{a.lastEvent}</td>
                 </tr>

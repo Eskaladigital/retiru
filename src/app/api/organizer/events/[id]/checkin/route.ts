@@ -44,8 +44,15 @@ export async function PATCH(
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 
-    if (!['confirmed', 'completed'].includes(booking.status)) {
-      return NextResponse.json({ error: 'Booking must be confirmed to check in' }, { status: 400 });
+    // Incluye inscritos sin cobro (series / modo lanzamiento) y pago pendiente.
+    if (![
+      'confirmed',
+      'completed',
+      'reserved_no_payment',
+      'pending_payment',
+      'pending_confirmation',
+    ].includes(booking.status)) {
+      return NextResponse.json({ error: 'Booking is not eligible for check-in' }, { status: 400 });
     }
 
     const { error: updateError } = await admin

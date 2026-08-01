@@ -52,10 +52,27 @@ export default async function PanelEventosPageEn() {
     if (retreatsErr) {
       console.error('[panel/eventos en] Error loading retreats:', retreatsErr.message);
     }
-    // Recurring events: show only the next date of each series
+    // Recurring: next date + past + any future occurrence with active enrollments
     const today = new Date().toISOString().slice(0, 10);
-    retreats = (data || []).filter(
-      (r: any) => !r.series_id || r.is_series_next || (r.start_date && r.start_date < today),
+    const allRows = data || [];
+    const allIds = allRows.map((r: any) => r.id);
+    const withActiveBookings = new Set<string>();
+    if (allIds.length > 0) {
+      const { data: activeRows } = await admin
+        .from('bookings')
+        .select('retreat_id')
+        .in('retreat_id', allIds)
+        .in('status', ['reserved_no_payment', 'pending_payment', 'pending_confirmation', 'confirmed']);
+      for (const row of activeRows || []) {
+        if (row.retreat_id) withActiveBookings.add(row.retreat_id);
+      }
+    }
+    retreats = allRows.filter(
+      (r: any) =>
+        !r.series_id ||
+        r.is_series_next ||
+        (r.start_date && r.start_date < today) ||
+        withActiveBookings.has(r.id),
     );
   }
 
@@ -66,7 +83,7 @@ export default async function PanelEventosPageEn() {
       .from('bookings')
       .select('retreat_id')
       .in('retreat_id', retreatIds)
-      .eq('status', 'reserved_no_payment');
+      .in('status', ['reserved_no_payment', 'pending_payment']);
     for (const row of reservedRows || []) {
       reservedMap[row.retreat_id] = (reservedMap[row.retreat_id] || 0) + 1;
     }

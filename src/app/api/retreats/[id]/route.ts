@@ -56,7 +56,7 @@ export async function POST(
       .from('bookings')
       .select('id, status, total_price, platform_payment_status, stripe_payment_intent_id, profiles!attendee_id(email, preferred_locale)')
       .eq('retreat_id', id)
-      .in('status', ['confirmed', 'pending_payment', 'pending_confirmation']);
+      .in('status', ['confirmed', 'pending_payment', 'pending_confirmation', 'reserved_no_payment']);
 
     const orgName = (retreatDetail?.organizer_profiles as any)?.business_name || 'Organizador';
 
@@ -109,7 +109,7 @@ export async function POST(
   return NextResponse.json({ success: true, status: 'cancelled' });
 }
 
-// DELETE /api/retreats/[id] — Eliminar retiro (solo si no tiene reservas confirmadas)
+// DELETE /api/retreats/[id] — Eliminar retiro (solo si no tiene reservas activas)
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -117,11 +117,17 @@ export async function DELETE(
   const { id } = await params;
   const result = await getOwnership(id);
   if ('error' in result) return result.error;
-  const { admin, retreat } = result;
+  const { admin } = result;
 
-  if ((retreat.confirmed_bookings || 0) > 0) {
+  const { count: activeBookings } = await admin
+    .from('bookings')
+    .select('id', { count: 'exact', head: true })
+    .eq('retreat_id', id)
+    .in('status', ['reserved_no_payment', 'pending_payment', 'pending_confirmation', 'confirmed', 'completed']);
+
+  if ((activeBookings || 0) > 0) {
     return NextResponse.json(
-      { error: 'No se puede eliminar un retiro con reservas confirmadas. Cancélalo primero.' },
+      { error: 'No se puede eliminar un retiro con reservas o inscripciones activas. Cancélalo primero.' },
       { status: 400 },
     );
   }
