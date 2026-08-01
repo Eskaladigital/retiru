@@ -47,6 +47,7 @@
     "db:apply-price-check": "node scripts/run-sql-migration.mjs supabase/migrations/049_relax_retreats_total_price_check.sql",
     "db:apply-duration-hours": "node scripts/run-sql-migration.mjs supabase/migrations/050_retreats_duration_hours.sql",
     "db:apply-retreat-series": "node scripts/run-sql-migration.mjs supabase/migrations/051_retreat_series.sql",
+    "db:apply-bookings-unique-active": "node scripts/run-sql-migration.mjs supabase/migrations/054_bookings_unique_active_attendee_retreat.sql",
     "retreats:fix-vinyasa-daily": "node scripts/fix-vinyasa-daily-series.mjs",
     "mailing:test": "node scripts/send-mailing-test.mjs",
     "mailing:create": "node scripts/mailing.mjs create",

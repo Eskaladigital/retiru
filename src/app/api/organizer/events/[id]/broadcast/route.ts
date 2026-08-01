@@ -43,13 +43,14 @@ export async function POST(
     // pueda avisar a quien ya tiene plaza aunque aún no haya pagado.
     let statusFilter = ['confirmed', 'completed', 'reserved_no_payment', 'pending_payment', 'pending_confirmation'];
     if (filter === 'pending_payment') {
-      statusFilter = ['confirmed', 'pending_payment', 'reserved_no_payment'];
+      // Quien debe pagar el PVP: checkout abierto o hold con plazo de pago activo
+      statusFilter = ['pending_payment', 'reserved_no_payment'];
     }
 
     const { data: bookings } = await admin
       .from('bookings')
       .select(`
-        id, attendee_id, remaining_payment_status,
+        id, attendee_id, remaining_payment_status, status, payment_deadline,
         profiles!attendee_id(email, full_name, preferred_locale)
       `)
       .eq('retreat_id', retreatId)
@@ -57,7 +58,12 @@ export async function POST(
 
     let filtered = bookings || [];
     if (filter === 'pending_payment') {
-      filtered = filtered.filter((b: any) => b.remaining_payment_status === 'pending');
+      const now = Date.now();
+      filtered = filtered.filter((b: any) =>
+        b.status === 'pending_payment'
+        || (b.status === 'reserved_no_payment' && b.payment_deadline && new Date(b.payment_deadline).getTime() > now)
+        || b.remaining_payment_status === 'pending'
+      );
     }
 
     let messagesSent = 0;

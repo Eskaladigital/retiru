@@ -5,8 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
 import { ensureSeriesOccurrences, reassignSeriesNext, addDaysIso, SERIES_BOOKING_HORIZON_DAYS } from '@/lib/series';
-
-const ACTIVE_BOOKING_STATUSES = ['reserved_no_payment', 'pending_payment', 'pending_confirmation', 'confirmed'];
+import { ACTIVE_ENROLLMENT_STATUSES, HOLD_ENROLLMENT_STATUSES, enrolledFromConfirmedAndHolds } from '@/lib/utils';
 
 export async function GET(
   _request: NextRequest,
@@ -36,14 +35,14 @@ export async function GET(
     const occs = occurrences || [];
     const occIds = occs.map((o: { id: string }) => o.id);
 
-    // Reservas sin pago por fecha (available_spots solo resta confirmadas)
+    // Holds que ocupan plaza pero no están en confirmed_bookings
     const holdCount = new Map<string, number>();
     if (occIds.length > 0) {
       const { data: holds } = await admin
         .from('bookings')
         .select('retreat_id')
         .in('retreat_id', occIds)
-        .eq('status', 'reserved_no_payment');
+        .in('status', [...HOLD_ENROLLMENT_STATUSES]);
       for (const h of holds || []) {
         holdCount.set(h.retreat_id as string, (holdCount.get(h.retreat_id as string) || 0) + 1);
       }
@@ -59,7 +58,7 @@ export async function GET(
         .select('retreat_id')
         .eq('attendee_id', user.id)
         .in('retreat_id', occIds)
-        .in('status', ACTIVE_BOOKING_STATUSES);
+        .in('status', [...ACTIVE_ENROLLMENT_STATUSES]);
       for (const b of mine || []) bookedByMe.add(b.retreat_id as string);
     }
 
@@ -67,7 +66,7 @@ export async function GET(
       seriesId,
       intervalDays: series.interval_days,
       dates: occs.map((o: { id: string; slug: string; start_date: string; max_attendees: number | null; confirmed_bookings: number | null; total_price: number; currency: string }) => {
-        const enrolled = (o.confirmed_bookings ?? 0) + (holdCount.get(o.id) || 0);
+        const enrolled = enrolledFromConfirmedAndHolds(o.confirmed_bookings, holdCount.get(o.id) || 0);
         const spotsLeft = Math.max(0, (o.max_attendees ?? 0) - enrolled);
         return {
           id: o.id,
@@ -140,7 +139,7 @@ export async function POST(
         .from('bookings')
         .select('id', { count: 'exact', head: true })
         .eq('retreat_id', occurrenceId)
-        .in('status', ACTIVE_BOOKING_STATUSES);
+        .in('status', [...ACTIVE_ENROLLMENT_STATUSES]);
       if ((activeBookings ?? 0) > 0) {
         return NextResponse.json(
           { error: 'Esta fecha ya tiene reservas: no se puede cerrar. Gestiona los cambios con tus asistentes o celébrala.' },

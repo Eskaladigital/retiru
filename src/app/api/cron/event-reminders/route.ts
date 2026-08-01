@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
             profiles!attendee_id(email, full_name, preferred_locale)
           `)
           .eq('retreat_id', retreat.id)
-          .eq('status', 'confirmed');
+          .in('status', ['confirmed', 'reserved_no_payment', 'pending_payment', 'pending_confirmation']);
 
         for (const b of bookings || []) {
           const attendee = b.profiles as any;

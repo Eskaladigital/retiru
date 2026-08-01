@@ -27,11 +27,12 @@ export async function POST(request: NextRequest) {
     let sent = 0;
 
     for (const retreat of retreats || []) {
+      // Completar asistentes que acudieron: confirmados e inscritos sin cobro (lanzamiento/series)
       await admin
         .from('bookings')
         .update({ status: 'completed', updated_at: now.toISOString() })
         .eq('retreat_id', retreat.id)
-        .eq('status', 'confirmed');
+        .in('status', ['confirmed', 'reserved_no_payment']);
 
       const { data: bookings } = await admin
         .from('bookings')

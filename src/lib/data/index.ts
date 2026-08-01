@@ -220,12 +220,12 @@ export async function getPublishedRetreats(filters?: {
       }
     }
 
-    // available_spots en BD solo resta confirmadas; restar también holds sin cobro
+    // available_spots en BD solo resta confirmadas; restar holds activos
     const { data: holdRows } = await supabase
       .from('bookings')
       .select('retreat_id')
       .in('retreat_id', retreatIds)
-      .eq('status', 'reserved_no_payment');
+      .in('status', ['reserved_no_payment', 'pending_payment', 'pending_confirmation']);
     if (holdRows?.length) {
       const holdCount = new Map<string, number>();
       for (const row of holdRows) {
@@ -765,7 +765,7 @@ export async function getBookingsForUser(userId: string) {
     .from('bookings')
     .select(`
       id, booking_number, status, total_price, platform_fee, organizer_amount, created_at, payment_deadline, organizer_approved_at,
-      retreats!retreat_id(id, title_es, title_en, slug, start_date, end_date, confirmation_type, series_id, retreat_images(url, is_cover)),
+      retreats!retreat_id(id, title_es, title_en, slug, start_date, end_date, confirmation_type, min_attendees, series_id, retreat_images(url, is_cover)),
       organizer_profiles!organizer_id(id, business_name, slug)
     `)
     .eq('attendee_id', userId)
@@ -782,7 +782,7 @@ export async function getBookingsForUser(userId: string) {
     created_at: string;
     payment_deadline: string | null;
     organizer_approved_at: string | null;
-    retreats: { id: string; title_es: string; title_en: string; slug: string; start_date: string; end_date: string; confirmation_type: string; series_id: string | null; retreat_images?: { url: string; is_cover: boolean }[] } | null;
+    retreats: { id: string; title_es: string; title_en: string; slug: string; start_date: string; end_date: string; confirmation_type: string; min_attendees?: number; series_id: string | null; retreat_images?: { url: string; is_cover: boolean }[] } | null;
     organizer_profiles: { id: string; business_name: string; slug: string } | null;
   }>;
 }

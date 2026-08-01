@@ -14,6 +14,11 @@ import {
   sendNewBookingToOrganizerEmail,
   sendSeriesReservationEmail,
 } from '@/lib/email';
+import {
+  ACTIVE_ENROLLMENT_STATUSES,
+  HOLD_ENROLLMENT_STATUSES,
+  enrolledFromConfirmedAndHolds,
+} from '@/lib/utils';
 
 function generateBookingNumber(): string {
   const now = new Date();
@@ -93,7 +98,7 @@ export async function POST(request: NextRequest) {
       .select('id')
       .eq('retreat_id', retreatId)
       .eq('attendee_id', user.id)
-      .in('status', ['reserved_no_payment', 'pending_payment', 'pending_confirmation', 'confirmed'])
+      .in('status', [...ACTIVE_ENROLLMENT_STATUSES])
       .maybeSingle();
 
     if (existingBooking) {
@@ -106,13 +111,13 @@ export async function POST(request: NextRequest) {
     const confirmedCount = retreat.confirmed_bookings ?? 0;
     const maxAttendees = retreat.max_attendees ?? 0;
 
-    const { count: reservedCount } = await admin
+    const { count: holdCount } = await admin
       .from('bookings')
       .select('id', { count: 'exact', head: true })
       .eq('retreat_id', retreatId)
-      .eq('status', 'reserved_no_payment');
+      .in('status', [...HOLD_ENROLLMENT_STATUSES]);
 
-    const totalEnrolled = confirmedCount + (reservedCount ?? 0);
+    const totalEnrolled = enrolledFromConfirmedAndHolds(confirmedCount, holdCount ?? 0);
     const minAlreadyReached = totalEnrolled >= minAttendees;
     const isManual = retreat.confirmation_type === 'manual';
     // Modo lanzamiento: sin claves Stripe reales → inscripción sin cobro
@@ -156,6 +161,11 @@ export async function POST(request: NextRequest) {
 
       if (bookingError || !booking) {
         console.error('Reservation creation error:', bookingError);
+        if ((bookingError as { code?: string } | null)?.code === '23505') {
+          return NextResponse.json({
+            error: locale === 'es' ? 'Ya tienes una reserva para este retiro' : 'You already have a booking for this retreat',
+          }, { status: 409 });
+        }
         return NextResponse.json({ error: 'Failed to reserve spot' }, { status: 500 });
       }
 
@@ -341,15 +351,15 @@ async function handleReserveSeries(
     .select('retreat_id')
     .eq('attendee_id', user.id)
     .in('retreat_id', occIds)
-    .in('status', ['reserved_no_payment', 'pending_payment', 'pending_confirmation', 'confirmed']);
+    .in('status', [...ACTIVE_ENROLLMENT_STATUSES]);
   const alreadyBooked = new Set((mine || []).map((b: { retreat_id: string }) => b.retreat_id));
 
-  // Ocupación por reservas sin pago (available_spots solo resta confirmadas)
+  // Holds que ocupan plaza pero no están en confirmed_bookings
   const { data: holds } = await admin
     .from('bookings')
     .select('retreat_id')
     .in('retreat_id', occIds)
-    .eq('status', 'reserved_no_payment');
+    .in('status', [...HOLD_ENROLLMENT_STATUSES]);
   const holdCount = new Map<string, number>();
   for (const h of holds || []) {
     holdCount.set(h.retreat_id as string, (holdCount.get(h.retreat_id as string) || 0) + 1);
@@ -363,7 +373,7 @@ async function handleReserveSeries(
   for (const occ of occurrences) {
     if (alreadyBooked.has(occ.id)) continue;
 
-    const enrolled = (occ.confirmed_bookings ?? 0) + (holdCount.get(occ.id) || 0);
+    const enrolled = enrolledFromConfirmedAndHolds(occ.confirmed_bookings, holdCount.get(occ.id) || 0);
     if ((occ.max_attendees ?? 0) > 0 && enrolled >= (occ.max_attendees ?? 0)) {
       skippedFull++;
       continue;
@@ -399,11 +409,13 @@ async function handleReserveSeries(
       });
 
     if (insErr) {
+      // 23505 = unique active booking (race); skip that date
       console.error('[checkout/series] error insertando reserva', occ.id, insErr.message);
       continue;
     }
     if (!firstBookingNumber) firstBookingNumber = bookingNumber;
     createdDates.push(occ.start_date as string);
+    holdCount.set(occ.id, (holdCount.get(occ.id) || 0) + 1);
   }
 
   if (createdDates.length === 0) {

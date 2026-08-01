@@ -83,7 +83,7 @@ export default async function PanelEventosPageEn() {
       .from('bookings')
       .select('retreat_id')
       .in('retreat_id', retreatIds)
-      .in('status', ['reserved_no_payment', 'pending_payment']);
+      .in('status', ['reserved_no_payment', 'pending_payment', 'pending_confirmation']);
     for (const row of reservedRows || []) {
       reservedMap[row.retreat_id] = (reservedMap[row.retreat_id] || 0) + 1;
     }

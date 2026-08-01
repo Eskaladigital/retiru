@@ -96,6 +96,9 @@ export default function ReservasEventoPage() {
   }
 
   const confirmed = bookings.filter((b) => ['confirmed', 'completed'].includes(b.status)).length;
+  const enrolled = bookings.filter((b) =>
+    ['confirmed', 'completed', 'reserved_no_payment', 'pending_payment', 'pending_confirmation'].includes(b.status),
+  ).length;
   const totalIncome = bookings
     .filter((b) => ['confirmed', 'completed'].includes(b.status))
     .reduce((sum, b) => sum + Number(b.organizer_amount), 0);
@@ -117,18 +120,22 @@ export default function ReservasEventoPage() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <p className="text-2xl font-bold">{enrolled}</p>
+          <p className="text-xs text-[#7a6b5d]">Inscritos</p>
+        </div>
         <div className="bg-sage-50 border border-sage-200 rounded-xl p-4">
           <p className="text-2xl font-bold">{confirmed}</p>
-          <p className="text-xs text-[#7a6b5d]">Confirmadas</p>
+          <p className="text-xs text-[#7a6b5d]">Confirmadas / cobradas</p>
         </div>
         <div className="bg-terracotta-50 border border-terracotta-200 rounded-xl p-4">
           <p className="text-2xl font-bold">{totalRevenue.toLocaleString()}€</p>
-          <p className="text-xs text-[#7a6b5d]">Facturación total</p>
+          <p className="text-xs text-[#7a6b5d]">Facturación cobrada</p>
         </div>
         <div className="bg-sage-50 border border-sage-200 rounded-xl p-4">
           <p className="text-2xl font-bold">{totalIncome.toLocaleString()}€</p>
-          <p className="text-xs text-[#7a6b5d]">Tus ingresos</p>
+          <p className="text-xs text-[#7a6b5d]">Tu neto</p>
         </div>
       </div>
 

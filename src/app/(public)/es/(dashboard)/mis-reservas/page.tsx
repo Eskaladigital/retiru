@@ -4,12 +4,13 @@ import { redirect } from 'next/navigation';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { getBookingsForUser } from '@/lib/data';
 import { formatDateRange } from '@/lib/utils';
+import { isOnlinePaymentEnabledForUi } from '@/lib/payments';
 import PaymentSuccessBanner from '@/components/booking/PaymentSuccessBanner';
 import PayNowButton from '@/components/booking/PayNowButton';
 import { SeriesCalendarTrigger } from '@/components/booking/SeriesCalendarModal';
 
 const STATUS: Record<string, { label: string; color: string }> = {
-  reserved_no_payment: { label: 'Reservada (pendiente mínimo)', color: 'bg-blue-100 text-blue-700' },
+  reserved_no_payment: { label: 'Inscrita (sin cobro)', color: 'bg-blue-100 text-blue-700' },
   confirmed: { label: 'Confirmada', color: 'bg-sage-100 text-sage-700' },
   pending_confirmation: { label: 'Pendiente confirmación', color: 'bg-amber-100 text-amber-700' },
   pending_payment: { label: 'Pendiente pago', color: 'bg-amber-100 text-amber-700' },
@@ -29,6 +30,7 @@ export default async function MisReservasPage() {
   if (!user) redirect('/es/login?redirect=/es/mis-reservas');
 
   const bookings = await getBookingsForUser(user.id);
+  const onlinePayments = isOnlinePaymentEnabledForUi();
 
   // Eventos periódicos con reserva activa: botón «ampliar inscripción»
   // solo en la reserva más próxima de cada serie (no en cada fecha).
@@ -64,7 +66,8 @@ export default async function MisReservasPage() {
             const isManual = r?.confirmation_type === 'manual';
             const waitingForApproval = isReservedNoPay && isManual && !b.organizer_approved_at;
             const canPay = isReservedNoPay && !waitingForApproval && b.payment_deadline && new Date(b.payment_deadline) > new Date();
-            const waitingForMin = isReservedNoPay && !waitingForApproval && !b.payment_deadline;
+            const waitingForMin = isReservedNoPay && !waitingForApproval && !b.payment_deadline && onlinePayments && (r?.min_attendees ?? 1) > 1;
+            const launchHold = isReservedNoPay && !waitingForApproval && !b.payment_deadline && !waitingForMin;
 
             return (
               <div
@@ -95,6 +98,12 @@ export default async function MisReservasPage() {
                   {waitingForMin && (
                     <p className="mt-2 text-xs text-blue-600 bg-blue-50 rounded-lg px-3 py-2">
                       Se te avisará cuando el retiro alcance el mínimo de participantes para confirmar con el pago.
+                    </p>
+                  )}
+
+                  {launchHold && (
+                    <p className="mt-2 text-xs text-blue-600 bg-blue-50 rounded-lg px-3 py-2">
+                      Estás inscrito. De momento no se cobra online en la plataforma; el organizador tiene tu plaza reservada.
                     </p>
                   )}
 

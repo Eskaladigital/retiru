@@ -96,15 +96,15 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
   const minViable = r.min_attendees ?? 1;
   const confirmedCount = r.confirmed_bookings ?? 0;
 
-  // Reservas sin pago: cuentan para el mínimo viable y ocupan plaza
+  // Reservas que ocupan plaza sin estar en confirmed_bookings
   // (available_spots en BD solo resta las confirmadas)
   const sbCount = createStaticSupabase();
-  const { count: reservedNoPayCount } = await sbCount
+  const { count: holdCount } = await sbCount
     .from('bookings')
     .select('id', { count: 'exact', head: true })
     .eq('retreat_id', r.id)
-    .eq('status', 'reserved_no_payment');
-  const reservedCount = reservedNoPayCount ?? 0;
+    .in('status', ['reserved_no_payment', 'pending_payment', 'pending_confirmation']);
+  const reservedCount = holdCount ?? 0;
   const spotsLeft = Math.max(0, (r.available_spots ?? 0) - reservedCount);
 
   const availability: 'InStock' | 'SoldOut' | 'LimitedAvailability' =

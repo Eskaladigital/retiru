@@ -86,6 +86,25 @@ export default async function RetirosEnPage({ params }: { params: Promise<{ slug
       cover_url: r.retreat_images?.find((i: any) => i.is_cover)?.url || r.retreat_images?.[0]?.url || null,
       dest_name: r.destinations?.name_es || null,
     }));
+
+    const retreatIds = retreats.map((r) => r.id);
+    if (retreatIds.length) {
+      const { data: holdRows } = await supabase
+        .from('bookings')
+        .select('retreat_id')
+        .in('retreat_id', retreatIds)
+        .in('status', ['reserved_no_payment', 'pending_payment', 'pending_confirmation']);
+      if (holdRows?.length) {
+        const holdCount = new Map<string, number>();
+        for (const row of holdRows) {
+          holdCount.set(row.retreat_id, (holdCount.get(row.retreat_id) || 0) + 1);
+        }
+        retreats = retreats.map((r) => ({
+          ...r,
+          available_spots: Math.max(0, (r.available_spots ?? 0) - (holdCount.get(r.id) || 0)),
+        }));
+      }
+    }
   }
 
   // Centros en la jerarquía: filtramos por los campos country/region/province de `centers`

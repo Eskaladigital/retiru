@@ -19,11 +19,34 @@ export const ACTIVE_ENROLLMENT_STATUSES = [
   'confirmed',
 ] as const;
 
+/** Estados que ocupan plaza pero aún no están en `confirmed_bookings` / `available_spots` de BD. */
+export const HOLD_ENROLLMENT_STATUSES = [
+  'reserved_no_payment',
+  'pending_payment',
+  'pending_confirmation',
+] as const;
+
 /** Estados visibles en CRM asistentes / check-in / broadcast (incluye completadas). */
 export const ORGANIZER_ATTENDEE_STATUSES = [
   ...ACTIVE_ENROLLMENT_STATUSES,
   'completed',
 ] as const;
+
+/** Plazas libres: `available_spots` (max − confirmadas) menos holds activos. */
+export function spotsLeftAfterHolds(
+  availableSpots: number | null | undefined,
+  holdCount: number,
+): number {
+  return Math.max(0, (availableSpots ?? 0) - holdCount);
+}
+
+/** Ocupación total: confirmadas + holds (o max − plazas libres). */
+export function enrolledFromConfirmedAndHolds(
+  confirmedBookings: number | null | undefined,
+  holdCount: number,
+): number {
+  return (confirmedBookings ?? 0) + holdCount;
+}
 
 /** Format price in EUR */
 export function formatPrice(amount: number, currency = 'EUR'): string {

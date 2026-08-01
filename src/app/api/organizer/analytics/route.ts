@@ -78,12 +78,12 @@ export async function GET() {
         id: string;
         title_es: string | null;
         slug: string | null;
-        bookings: unknown[] | null;
+        bookings: { count?: number }[] | null;
       }) => ({
         id: r.id,
         title: r.title_es ?? '',
         slug: r.slug ?? '',
-        bookings: Array.isArray(r.bookings) ? r.bookings.length : 0,
+        bookings: Array.isArray(r.bookings) ? Number(r.bookings[0]?.count ?? 0) : 0,
       }),
     );
     const retreatsWithCounts = [...mappedTopRetreats]

@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -714,6 +715,14 @@ export function EditarEventoForm({ retreat, categories, destinations, apiPath, h
                   </span>
                   <span className="flex items-center gap-3">
                     <span className="text-xs text-[#7a6b5d]">{o.active_bookings} {o.active_bookings === 1 ? 'reserva' : 'reservas'}</span>
+                    {o.active_bookings > 0 && (
+                      <Link
+                        href={`/es/panel/eventos/${o.id}/reservas`}
+                        className="text-xs font-medium text-terracotta-600 hover:underline"
+                      >
+                        Ver reservas
+                      </Link>
+                    )}
                     {o.active_bookings === 0 ? (
                       <button
                         type="button"

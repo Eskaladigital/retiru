@@ -11,6 +11,7 @@ export type OrganizerStatus = 'pending' | 'verified' | 'suspended' | 'rejected';
 export type RetreatStatus = 'draft' | 'pending_review' | 'published' | 'rejected' | 'archived' | 'cancelled';
 export type RetreatConfirmationType = 'automatic' | 'manual';
 export type BookingStatus =
+  | 'reserved_no_payment'
   | 'pending_payment'
   | 'pending_confirmation'
   | 'confirmed'
@@ -22,7 +23,7 @@ export type BookingStatus =
   | 'refunded'
   | 'no_show';
 export type PaymentStatus = 'pending' | 'paid' | 'refunded' | 'partially_refunded' | 'failed';
-export type RemainingPaymentStatus = 'pending' | 'confirmed_by_organizer' | 'overdue' | 'disputed';
+export type RemainingPaymentStatus = 'pending' | 'confirmed_by_organizer' | 'overdue' | 'disputed' | 'not_applicable' | 'expired';
 export type RefundReason = 'cancelled_by_attendee' | 'cancelled_by_organizer' | 'sla_expired' | 'admin_decision' | 'dispute' | 'other';
 export type RefundStatus = 'pending' | 'approved' | 'processed' | 'rejected';
 export type PenaltyType = 'warning' | 'minor' | 'major' | 'suspension';

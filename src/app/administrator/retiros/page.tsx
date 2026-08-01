@@ -69,6 +69,24 @@ export default async function AdminRetirosPage({
     }
   }
 
+  const retreatIds = list.map((r) => r.id);
+  const enrollMap: Record<string, number> = {};
+  if (retreatIds.length > 0) {
+    // Chunk to avoid URL limits
+    const chunk = 200;
+    for (let i = 0; i < retreatIds.length; i += chunk) {
+      const slice = retreatIds.slice(i, i + chunk);
+      const { data: rows } = await supabase
+        .from('bookings')
+        .select('retreat_id')
+        .in('retreat_id', slice)
+        .in('status', ['reserved_no_payment', 'pending_payment', 'pending_confirmation', 'confirmed', 'completed']);
+      for (const row of rows || []) {
+        enrollMap[row.retreat_id] = (enrollMap[row.retreat_id] || 0) + 1;
+      }
+    }
+  }
+
   function coverUrlFromRetreat(r: {
     retreat_images?: { url: string; is_cover: boolean; sort_order?: number }[] | null;
   }): string | null {
@@ -82,8 +100,12 @@ export default async function AdminRetirosPage({
 
   const enriched = list.map((r) => {
     const { retreat_images: _ri, ...rest } = r;
+    const activeEnrollments = enrollMap[r.id] || 0;
     return {
       ...rest,
+      // Para UI admin: mostrar inscritos reales (incluye sin cobro)
+      confirmed_bookings: Math.max(r.confirmed_bookings || 0, activeEnrollments),
+      active_enrollments: activeEnrollments,
       cover_image_url: coverUrlFromRetreat(r),
       organizer_name: organizerMap[r.organizer_id]?.business_name || null,
       organizer_email: organizerMap[r.organizer_id]?.email || null,
@@ -100,11 +122,11 @@ export default async function AdminRetirosPage({
   const inProgress = list.filter(
     (r) => r.status === 'published' && r.start_date <= today && r.end_date >= today,
   ).length;
-  const expired = list.filter(
-    (r) => r.status === 'published' && r.end_date < today && r.confirmed_bookings === 0,
+  const expired = enriched.filter(
+    (r) => r.status === 'published' && r.end_date < today && (r.active_enrollments || 0) === 0,
   ).length;
-  const finished = list.filter(
-    (r) => r.status === 'published' && r.end_date < today && r.confirmed_bookings > 0,
+  const finished = enriched.filter(
+    (r) => r.status === 'published' && r.end_date < today && (r.active_enrollments || 0) > 0,
   ).length;
 
   return (

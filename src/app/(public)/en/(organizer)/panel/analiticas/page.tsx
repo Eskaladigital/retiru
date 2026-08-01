@@ -57,21 +57,24 @@ export default async function AnaliticasPageEn() {
   const revenueThisMonth = (confirmedBookings || [])
     .reduce((sum: number, b: any) => sum + Number(b.organizer_amount), 0);
 
-  const { data: topRetreats } = await admin
-    .from('retreats')
-    .select('id, title_es, slug, confirmed_bookings')
+  const { data: topRetreatRows } = await admin
+    .from('bookings')
+    .select('retreat_id, retreats!retreat_id(title_es, slug)')
     .eq('organizer_id', orgProfile.id)
-    .eq('status', 'published')
-    .order('confirmed_bookings', { ascending: false })
-    .limit(5);
+    .in('status', ['confirmed', 'pending_confirmation', 'completed', 'reserved_no_payment', 'pending_payment']);
 
+  const topMap = new Map<string, { name: string; bookings: number }>();
+  for (const b of topRetreatRows || []) {
+    const rid = b.retreat_id as string;
+    const retreat = b.retreats as { title_es?: string; slug?: string } | null;
+    const existing = topMap.get(rid);
+    if (existing) existing.bookings += 1;
+    else topMap.set(rid, { name: retreat?.title_es ?? '', bookings: 1 });
+  }
   type TopRetreatStat = { name: string; bookings: number };
-  const topRetreatsData: TopRetreatStat[] = (topRetreats ?? []).map(
-    (r: { title_es: string | null; confirmed_bookings: number | null }) => ({
-      name: r.title_es ?? '',
-      bookings: r.confirmed_bookings ?? 0,
-    }),
-  );
+  const topRetreatsData: TopRetreatStat[] = Array.from(topMap.values())
+    .sort((a, b) => b.bookings - a.bookings)
+    .slice(0, 5);
 
   return (
     <div>

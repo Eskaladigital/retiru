@@ -34,14 +34,19 @@ export async function GET() {
       .gte('created_at', monthStart)
       .in('status', ['confirmed', 'pending_confirmation', 'completed', 'reserved_no_payment', 'pending_payment']);
 
-    const { data: confirmedBookings } = await admin
+    const { data: pendingPayBookings } = await admin
       .from('bookings')
-      .select('organizer_amount, remaining_payment_status')
+      .select('organizer_amount, status, payment_deadline, remaining_payment_status')
       .eq('organizer_id', orgProfile.id)
-      .in('status', ['confirmed', 'completed']);
+      .in('status', ['pending_payment', 'reserved_no_payment', 'confirmed', 'completed']);
 
-    const pendingIncome = (confirmedBookings || [])
-      .filter((b: any) => b.remaining_payment_status === 'pending')
+    const nowMs = Date.now();
+    const pendingIncome = (pendingPayBookings || [])
+      .filter((b: any) =>
+        b.status === 'pending_payment'
+        || (b.status === 'reserved_no_payment' && b.payment_deadline && new Date(b.payment_deadline).getTime() > nowMs)
+        || b.remaining_payment_status === 'pending'
+      )
       .reduce((sum: number, b: any) => sum + Number(b.organizer_amount), 0);
 
     const { data: recentBookings } = await admin
