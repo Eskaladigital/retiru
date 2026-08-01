@@ -46,7 +46,7 @@ export default async function CheckinPage({ params }: Props) {
       profiles!attendee_id(full_name, avatar_url)
     `)
     .eq('retreat_id', id)
-    .in('status', ['confirmed', 'completed'])
+    .in('status', ['confirmed', 'completed', 'reserved_no_payment', 'pending_payment', 'pending_confirmation'])
     .order('checked_in_at', { ascending: false, nullsFirst: false });
 
   const attendees: CheckinAttendee[] = (bookings ?? []).map(

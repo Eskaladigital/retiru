@@ -10,7 +10,9 @@ Documento de referencia sobre la estructura de contenido único de las landings 
 
 | Tipo | Ruta | Slug = | Contenido único |
 |------|------|--------|-----------------|
-| **Retiros por ciudad** | `/es/retiros-retiru/[slug]` | Ciudad/destino (murcia, ibiza, barcelona) | Hero + H1 + lista filtrada |
+| **Home** | `/es`, `/en` | — | H1 «Centros, clases y retiros…»; tres pilares + bloques separados (clases `duration_days=1` / retiros multi-día). Metas en `homeES` / `homeEN` (`src/lib/seo/page-metadata.ts`) |
+| **Retiros / experiencias (lista)** | `/es/retiros-retiru` | — | Hero + H1 SEO «Retiros y escapadas» (intacto a propósito) + filtro UX `?formato=clases` / `?formato=retiros` (EN `?format=classes` / `?format=retreats`) |
+| **Retiros por ciudad** | `/es/retiros-retiru/[slug]` | Ciudad/destino (murcia, ibiza, barcelona) | Hero + H1 + lista filtrada (+ mismo filtro de formato) |
 | **Centros por ciudad** | `/es/centros-retiru/[slug]` | Ciudad (madrid, barcelona, murcia) | Hero + H1 + lista filtrada |
 | **Destinos** | `/es/destinos/[slug]` | Destino (ibiza, mallorca) | H1 + lista filtrada |
 | **Ficha retiro** | `/es/retiro/[slug]` | Retiro individual | Portada + galería → **breadcrumb** → título y cuerpo (descripción, programa, reseñas) + sidebar reserva / CTA móvil |
@@ -128,9 +130,11 @@ Las listas filtran por BD pero **no tienen contenido editorial único**. Para SE
 - `hreflang` para ES/EN alternativas.
 - `alternates` en metadata (ya implementado en `generatePageMetadata` y en posts del blog con `x-default` → versión ES).
 - `<html lang>`: dinámico `es` / `en` según ruta (`middleware` envía `x-retiru-locale`, `app/layout.tsx`).
+- **Home y pitch (2026-08-01):** metas `homeES`/`homeEN`, `forOrganizers*`, `forAttendees*` alineadas a «centros, clases y retiros». El filtro `?formato=` / `?format=` en listados es **solo UX** (no crea URLs indexables distintas con contenido canónico propio); H1/title de `/es/retiros-retiru` siguen centrados en «retiros» (§3bis / decisión nocheVIII).
 
 ### F. Internal linking
 
+- Desde home: pilares a `/es/centros-retiru`, `/es/retiros-retiru?formato=clases` y `/es/retiros-retiru?formato=retiros` (EN equivalentes).
 - Desde listas: enlaces a fichas individuales.
 - Desde fichas: "Más retiros en [destino]", "Centros en [ciudad]".
 - Desde blog: enlaces a retiros y centros relacionados.

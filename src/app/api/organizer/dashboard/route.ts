@@ -32,7 +32,7 @@ export async function GET() {
       .select('id', { count: 'exact', head: true })
       .eq('organizer_id', orgProfile.id)
       .gte('created_at', monthStart)
-      .in('status', ['confirmed', 'pending_confirmation', 'completed']);
+      .in('status', ['confirmed', 'pending_confirmation', 'completed', 'reserved_no_payment', 'pending_payment']);
 
     const { data: confirmedBookings } = await admin
       .from('bookings')

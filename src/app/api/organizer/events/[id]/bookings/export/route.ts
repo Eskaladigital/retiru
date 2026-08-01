@@ -54,6 +54,7 @@ export async function GET(
       confirmed: 'Confirmada',
       pending_confirmation: 'Pendiente',
       pending_payment: 'Pago pendiente',
+      reserved_no_payment: 'Inscrito (sin cobro)',
       completed: 'Completada',
       cancelled_by_attendee: 'Cancelada',
       cancelled_by_organizer: 'Cancelada',

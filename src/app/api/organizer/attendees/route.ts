@@ -26,7 +26,15 @@ export async function GET() {
         retreats!retreat_id(title_es)
       `)
       .eq('organizer_id', orgProfile.id)
-      .in('status', ['confirmed', 'completed', 'pending_confirmation'])
+      // Incluye inscritos sin cobro (series / modo lanzamiento / mínimo no alcanzado)
+      // y pago pendiente — son asistentes reales aunque aún no estén «confirmed».
+      .in('status', [
+        'confirmed',
+        'completed',
+        'pending_confirmation',
+        'reserved_no_payment',
+        'pending_payment',
+      ])
       .order('created_at', { ascending: false });
 
     if (!bookings) return NextResponse.json({ attendees: [] });

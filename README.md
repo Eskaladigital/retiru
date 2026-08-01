@@ -1,10 +1,10 @@
-# RETIRU — Marketplace de Retiros y Escapadas
+# RETIRU — Centros, clases y retiros
 
-Plataforma web bilingüe (ES/EN) donde las personas descubren y reservan retiros y eventos centrados en **yoga, meditación y ayurveda**, y los organizadores publican y gestionan sus eventos sin cuota de suscripción (comisión escalonada por retiro).
+Plataforma web bilingüe (ES/EN) donde las personas descubren **centros** y reservan **clases**, actividades de un día y **retiros** de **yoga, meditación y ayurveda**, y los organizadores (y profesores independientes) publican y gestionan sus eventos sin cuota de suscripción (comisión escalonada por retiro).
 
-> "Airbnb de los retiros" — pensado para España y el mercado hispanohablante. Los **retiros se organizan desde España** pero pueden **celebrarse también en Marruecos y Portugal** (destinos internacionales habilitados en la tabla `destinations`).
+> Tres caminos en un solo lugar: directorio de centros, clases/actividades de un día y retiros de varios días. Pensado para España y el mercado hispanohablante. Los **eventos se organizan desde España** pero pueden **celebrarse también en Marruecos y Portugal** (destinos internacionales habilitados en la tabla `destinations`).
 
-**Amplitud de la oferta (desde 2026-07-24):** además de retiros de varios días, la plataforma soporta **eventos de un día** con duración en horas (clases de yoga, sesiones de terapia, talleres, experiencias de bienestar…) y **eventos periódicos** (una clase semanal se publica una vez y Retiru mantiene vivas las próximas fechas automáticamente). Sin precio mínimo (PVP > 0 €). Ver secciones «Eventos periódicos» y «Precio público».
+**Amplitud de la oferta (desde 2026-07-24; posicionamiento UI 2026-08-01):** además de retiros de varios días, la plataforma soporta **eventos de un día** con duración en horas (clases de yoga, sesiones de terapia, talleres, experiencias de bienestar…) y **eventos periódicos** (una clase semanal se publica una vez y Retiru mantiene vivas las próximas fechas automáticamente). Sin precio mínimo (PVP > 0 €). Home y landings separan visualmente los tres caminos; el listado `/es/retiros-retiru` filtra por formato (`?formato=clases|retiros`). Ver secciones «Eventos periódicos» y «Precio público».
 
 ---
 
@@ -357,19 +357,19 @@ Las APIs `/api/retreats`, `/api/centers` y `/api/catalog` exponen datos para bú
 
 | Ruta | Descripción |
 |------|-------------|
-| `/es` | Home genérica |
+| `/es` | Home: tres caminos (centros + clases/actividades + retiros) |
 | `/es/buscar` | Buscador general |
-| `/es/retiros-retiru` | Retiros y escapadas (hero + buscador + lista) |
-| `/es/retiros-retiru/[slug]` | Retiros filtrados por ciudad (ej. `/es/retiros-retiru/murcia`) |
-| `/es/retiro/[slug]` | Ficha de retiro: galería → breadcrumb → contenido + reserva (mismo orden visual que ficha centro) |
+| `/es/retiros-retiru` | Experiencias (hero + buscador + lista); filtro `?formato=clases` / `?formato=retiros` |
+| `/es/retiros-retiru/[slug]` | Eventos filtrados por ciudad (ej. `/es/retiros-retiru/murcia`); mismo filtro de formato |
+| `/es/retiro/[slug]` | Ficha de retiro/clase: galería → breadcrumb → contenido + reserva (mismo orden visual que ficha centro) |
 | `/es/centros-retiru` | Directorio de centros (hero + CentrosSearch) |
 | `/es/centros-retiru/[slug]` | Centros filtrados por ciudad (ej. `/es/centros-retiru/murcia`) |
 | `/es/centro/[slug]` | Ficha de centro: galería → breadcrumb → contenido + contacto (ej. `/es/centro/yoga-sala-madrid`) |
 | `/es/reclamar/[token]` | Link mágico para reclamar un centro |
 | `/es/destinos` | Destinos populares |
 | `/es/destinos/[slug]` | Destino por slug |
-| `/es/para-asistentes` | Para asistentes: garantías, pago seguro, verificación |
-| `/es/para-organizadores` | Para centros y organizadores |
+| `/es/para-asistentes` | Para asistentes: experiencias (clases, actividades, retiros), garantías, pago seguro |
+| `/es/para-organizadores` | Para centros, organizadores y profesores (clases): onboarding con CTAs altos |
 | `/es/tienda` | Tienda wellness (`shop_products`); si no hay productos, encuesta de interés (`ProductInterestSurvey`) |
 | `/es/blog` | Blog |
 
@@ -601,8 +601,8 @@ src/
 │   │   │   ├── buscar/         # Buscador unificado retiros + centros
 │   │   │   ├── destinos/
 │   │   │   ├── organizador/[slug]/
-│   │   │   ├── para-asistentes/   # Garantías para asistentes
-│   │   │   ├── para-organizadores/
+│   │   │   ├── para-asistentes/   # Experiencias + garantías para asistentes
+│   │   │   ├── para-organizadores/ # Centros, organizadores y profesores (clases)
 │   │   │   ├── tienda/
 │   │   │   ├── blog/
 │   │   │   └── ...
@@ -615,7 +615,7 @@ src/
 │   │   │   └── mis-eventos/    # Eventos creados + wizard nuevo + edición
 │   │   ├── (organizer)/        # Panel del organizador (/es/panel/…)
 │   │   │   └── panel/          # Dashboard, eventos, mensajes, verificación, etc.
-│   │   └── page.tsx            # Home ES
+│   │   └── page.tsx            # Home ES (tres caminos)
 │   ├── api/
 │   │   ├── messages/           # API mensajería (conversations, support)
 │   │   └── admin/              # API admin (messages, center-claims)
@@ -623,9 +623,9 @@ src/
 │   └── en/                     # Páginas públicas EN + (organizer)/panel (/en/panel/…)
 ├── components/
 │   ├── home/
-│   │   ├── HeroSearch.tsx      # Buscador home (toggle Retiros/Centros)
-│   │   ├── EventosSearch.tsx    # Buscador solo retiros
-│   │   └── CentrosSearch.tsx    # Buscador solo centros
+│   │   ├── HeroSearch.tsx      # Buscador home (toggle Centros / Retiros y clases)
+│   │   ├── EventosSearch.tsx    # Buscador experiencias (clases + retiros)
+│   │   └── CentrosSearch.tsx    # Buscador solo centros |
 │   ├── layout/
 │   │   ├── Header.tsx          # Nav + off-canvas móvil
 │   │   └── Footer.tsx
@@ -896,6 +896,7 @@ Un evento puede marcarse como **periódico** en el wizard al crearlo («se repit
 - Cada fecha es una **fila normal de `retreats`** (ocurrencia) clonada del master al publicarse este, con su propio slug (`slug-master-AAAAMMDD`), aforo y reservas: checkout, SLA, recordatorios y reseñas funcionan sin cambios. **No se generan infinitas filas**: horizonte rodante repuesto por el cron diario `series-occurrences` (`src/lib/series.ts` → `ensureSeriesOccurrences`).
 - **Listados públicos** (home, buscador, categorías, destinos, geo-landings, sitemap): solo aparece la próxima fecha de cada serie (columna `retreats.is_series_next`). La **ficha pública** muestra chips de «próximas fechas» que enlazan a las fichas hermanas.
 - **Reserva en la ficha (desde 2026-07-30):** en eventos periódicos el botón de reservar abre un **selector**: *solo esta fecha* (flujo normal) o *elegir varias fechas en un calendario* (`SeriesCalendarModal`: multiselección de las fechas futuras publicadas — otra fecha suelta, cada lunes, todas… — con las ya reservadas marcadas ✓ y las completas deshabilitadas; datos frescos vía `GET /api/retreats/series/[id]`; horizonte máximo de inscripción anticipada: **7 semanas** — `SERIES_BOOKING_HORIZON_DAYS` en `src/lib/series.ts`). Al confirmar, `POST /api/checkout` con `{ seriesId, retreatIds }` crea una reserva `reserved_no_payment` por fecha elegida (sin `retreatIds`, todas); email resumen al asistente con la lista de fechas y aviso único al organizador. En **Mis reservas**, cada serie con reserva activa muestra «Ampliar o modificar inscripción» (mismo calendario; la cancelación de días sueltos se hace desde el detalle de cada reserva). Con el cobro online activo, cada fecha se paga por separado desde Mis reservas dentro de su plazo.
+- **Panel organizador y asistentes inscritos sin cobro (fix 2026-08-01):** `/es/panel/asistentes` (`GET /api/organizer/attendees`), check-in, broadcast y KPI «reservas este mes» incluyen también `reserved_no_payment` y `pending_payment` (antes solo `confirmed`/`completed`/`pending_confirmation`, así que las inscripciones a series y el modo lanzamiento sin Stripe no aparecían). Las reservas por fecha siguen en `/es/panel/eventos/[id]/reservas` (una ficha = una ocurrencia). El email de nueva reserva enlaza a `/panel/asistentes`.
 - **Panel organizador**: badge «Periódico», y en la edición una sección «Fechas programadas» para **cerrar fechas sin reservas** (vacaciones; se añaden a `skip_dates` y no se regeneran) o **detener la serie** (`is_active = false`; las fechas ya publicadas siguen su curso). Una fecha con reservas activas **no puede cerrarse**: el organizador la gestiona con sus asistentes o la celebra. Gestión vía `POST /api/retreats/series/[id]` (`close_date` / `stop`).
 - **Comisión escalonada**: una serie completa cuenta como **1 retiro** para el tier (las ocurrencias heredan el `commission_percent` del master); ver `countPaidRetreatUnits` en `src/lib/series.ts`.
 

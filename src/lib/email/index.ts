@@ -366,8 +366,8 @@ export async function sendNewBookingToOrganizerEmail(
     title: t(locale, 'Nueva reserva recibida', 'New booking received'),
     body,
     cta: {
-      href: `${APP_URL}/${t(locale, 'es/panel/reservas', 'en/panel/bookings')}`,
-      label: t(locale, 'Ver en mi panel', 'View in my panel'),
+      href: `${APP_URL}/${t(locale, 'es/panel/asistentes', 'en/panel/asistentes')}`,
+      label: t(locale, 'Ver asistentes', 'View attendees'),
     },
   });
 

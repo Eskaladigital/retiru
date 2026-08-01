@@ -39,9 +39,11 @@ export async function POST(
 
     if (!retreat) return NextResponse.json({ error: 'Retreat not found' }, { status: 404 });
 
-    let statusFilter = ['confirmed', 'completed'];
+    // Incluye inscritos sin cobro (series / lanzamiento) para que el organizador
+    // pueda avisar a quien ya tiene plaza aunque aún no haya pagado.
+    let statusFilter = ['confirmed', 'completed', 'reserved_no_payment', 'pending_payment', 'pending_confirmation'];
     if (filter === 'pending_payment') {
-      statusFilter = ['confirmed'];
+      statusFilter = ['confirmed', 'pending_payment', 'reserved_no_payment'];
     }
 
     const { data: bookings } = await admin

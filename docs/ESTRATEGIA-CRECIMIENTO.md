@@ -127,6 +127,7 @@ Prioridad: **impresiones altas + intent alineado con el negocio**, no solo la ma
 | **Verificación progresiva completa** | Ver §5. | 🔴 Pendiente de decisión |
 | **Eventos de un día (duración en horas) + PVP sin mínimo** | Abre la plataforma a clases, sesiones de terapia, talleres y experiencias (gastronómicas, de bienestar…). Migraciones 049–050. | 🟢 Hecho (2026-07-24) |
 | **Eventos periódicos (series con ocurrencias)** | Una clase semanal se publica una vez; el cron mantiene 1–8 fechas futuras vivas (horizonte rodante), cierre de fechas por vacaciones, detener serie, conversión de evento existente en periódico. En listados solo la próxima fecha; la serie cuenta como 1 retiro para la comisión. Migración 051. | 🟢 Hecho (2026-07-24) |
+| **Posicionamiento «tres caminos» en home y pitch** | Home ES/EN con tres pilares + bloque de clases separado; filtro `?formato=` en listados; copy/SEO de para-organizadores, para-asistentes y metas. H1 SEO de `/retiros-retiru` intacto (nocheVIII). | 🟢 Hecho (2026-08-01) |
 | **Motor de cancelación y reembolsos** | Hallazgo (revisión 2026-07-24): la cancelación del asistente no estaba implementada (botón sin acción, `refund_tiers` sin aplicar) y la cancelación de retiro por el organizador no reembolsaba. Implementado como parte del paquete «cancelación flexible de lanzamiento»: `POST /api/bookings/[id]` (asistente, tramos + garantía 48 h + Stripe), reembolso íntegro automático en `POST /api/retreats/[id]` (organizador), webhook sin duplicados. | 🟢 Hecho (2026-07-24) |
 | **Paquete «cancelación flexible de lanzamiento»** | Presets recentrados (default flexible 100 % >7 d / 50 % >3 d; nuevo preset clase/taller 100 % hasta 1 día antes), garantía Retiru 48 h, badge «Cancelación gratuita» en cards y fichas ES/EN, contrato v1.1, condiciones/ayuda/para-asistentes ES+EN, migración 052. | 🟢 Hecho (2026-07-24) |
 | **Copy honesto en reserva sin pago** | Bajo el botón «Reservar plaza (sin pago)» se anunciaba «Visa, Mastercard y más», dando a entender que se pedía tarjeta cuando no se pide ninguna (confundió al propio equipo). Ahora en modo sin pago dice «Sin tarjeta ahora · Te avisaremos por email para completar el pago si se confirma» (ES+EN). | 🟢 Hecho (2026-07-24) |
@@ -143,8 +144,8 @@ Prioridad: **impresiones altas + intent alineado con el negocio**, no solo la ma
 - [ ] Elegir las **provincias objetivo** y la lista de 30–50 centros para la ronda de llamadas conserje.
 - [ ] Decidir calendario de lanzamiento de la campaña de claims (#1 → #2 → #3).
 - [ ] Definir el ritmo mínimo de publicación en Instagram (p. ej. 2–3 piezas/semana de contenido real).
-- [ ] **Separación clases vs retiros en UX/SEO** *(aplazada a propósito — ver decisión 2026-07-24 nocheV)*: solo cuando haya volumen real de eventos de un día, decidir facetas/etiquetas («Clase», «Taller», «Retiro»), landings propias tipo «clases de yoga en [ciudad]» (ataca `yoga classes near me`, 644 imp. pos. 10) y cómo evitar que un buscador de «retiro yoga» aterrice en una página dominada por clases de 2 h.
-- [ ] **Naming/posicionamiento** *(aplazada igual que la anterior)*: ¿Retiru sigue siendo «marketplace de retiros y escapadas» o pasa a «retiros, clases y experiencias de bienestar»? Afecta a home, metas y pitch de captación.
+- [ ] **Separación clases vs retiros en UX/SEO** *(parcial 2026-08-01)*: ✅ facetado UX en listados (`?formato=clases|retiros`) + home con bloques separados. **Sigue pendiente:** landings propias tipo «clases de yoga en [ciudad]» (ataca `yoga classes near me`, 644 imp. pos. 10) y etiquetas más finas («Clase», «Taller», «Retiro») si el volumen lo pide.
+- [x] **Naming/posicionamiento** — ✅ decidido e implementado (2026-08-01): pitch público = «centros, clases y retiros» (home, metas, para-organizadores/asistentes, README). El H1 SEO de `/es/retiros-retiru` se mantiene en «Retiros y escapadas» (nocheVIII).
 - [x] **Paquete «cancelación flexible de lanzamiento»** (sesión 2026-07-24 nocheVI): ✅ aprobado por el equipo (paquete completo, garantía 48 h incluida) e implementado en la misma sesión. Ver §6 y diario.
 - [x] **Confirmación manual sin pago por adelantado** — ✅ aprobado e implementado en la sesión 2026-07-24 nocheVII (ver §6 y diario). Migración 053 aplicada y verificada en prod; código en `main` (commit `ec47626`).
 - [x] **Pago fuera de la plataforma: NO** — ✅ decidido (2026-07-24 nocheVII): todo cobro debe quedar registrado y pasar por Stripe para que Retiru capture su comisión. Nada de efectivo ni transferencias directas al organizador.
@@ -157,6 +158,20 @@ Prioridad: **impresiones altas + intent alineado con el negocio**, no solo la ma
 ## 8. Diario de sesiones
 
 > Añadir cada sesión **arriba** (orden cronológico inverso). Formato: fecha, reflexiones planteadas, análisis/correcciones del agente, decisiones, trabajo ejecutado.
+
+### 2026-08-01 — Posicionamiento «tres caminos» en producto y docs
+
+**Contexto:** commit `cba54c7` en `main` (home, landings pitch, filtro de formato, SEO). Esta entrada sincroniza el cuaderno y cierra el hueco documental que quedó tras el push.
+
+**Decisión de producto (ya en código):** Retiru se presenta como **tres caminos** — directorio de centros, clases/actividades de un día y retiros multi-día — no solo «centros + retiros».
+
+**Trabajo ejecutado (producto, commit previo):** home ES/EN con tres pilares + sección de clases; `getPublishedRetreats({ durationKind })`; filtro `?formato=` / `?format=` en `EventosClient`; HeroSearch «Retiros y clases»; copy y metas de para-organizadores, para-asistentes, ayuda; README/ROUTES parciales.
+
+**Trabajo ejecutado (docs, esta sesión):** README (título, tabla de rutas, árbol, apertura), ROUTES (home, listado, HeroSearch, cards), SEO-LANDINGS (§1 + §4.E/F), este cuaderno (§6 hecho, §7 naming cerrado / separación parcial).
+
+**Coherencia con noches V/VIII:** no se reabre el H1 SEO de `/es/retiros-retiru` («Retiros y escapadas»). El facetado evita dilución UX sin diluir la query core `retiro yoga`. Landings propias de clases siguen en backlog.
+
+**Pendiente:** landings «clases de yoga en [ciudad]» cuando haya volumen; outreach frente 6.
 
 ### 2026-07-30 — Clase Vinyasa Rodalquilar: mal modelada + checkout roto sin Stripe
 

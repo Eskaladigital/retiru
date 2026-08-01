@@ -33,10 +33,10 @@ Equivalente EN exactamente igual:
 
 | Ruta | Archivo | Descripción |
 |------|---------|-------------|
-| `/es` | `src/app/(public)/es/page.tsx` | Home |
+| `/es` | `src/app/(public)/es/page.tsx` | Home: tres caminos (centros + clases/actividades de 1 día + retiros multi-día); bloques separados vía `durationKind` |
 | `/es/buscar` | `src/app/(public)/es/buscar/page.tsx` | Buscador general (retiros + centros) |
-| `/es/retiros-retiru` | `src/app/(public)/es/destino-retiros/page.tsx` (vía rewrite del middleware) | Lista retiros (`getPublishedRetreats`: publicados, `start_date > hoy`, `end_date ≥ hoy`) |
-| `/es/retiros-retiru/[slug]` | `src/app/(public)/es/destino-retiros/[slug]/page.tsx` (vía rewrite del middleware) | Retiros por `destinations.slug`: admite **hoja** (ciudad) o nivel superior (**provincia / CCAA / país**). Los retiros se enlazan a destinos hoja; el listado agrega todos los descendientes vía `getLeafDestinationIdsForRetreatFilter` en `getPublishedRetreats`. |
+| `/es/retiros-retiru` | `src/app/(public)/es/destino-retiros/page.tsx` (vía rewrite del middleware) | Lista experiencias (`getPublishedRetreats`: publicados, `start_date > hoy`, `end_date ≥ hoy`). Filtro UX `?formato=clases` (`duration_days = 1`) / `?formato=retiros` (`duration_days > 1`); EN: `?format=classes` / `?format=retreats` |
+| `/es/retiros-retiru/[slug]` | `src/app/(public)/es/destino-retiros/[slug]/page.tsx` (vía rewrite del middleware) | Eventos por `destinations.slug`: admite **hoja** (ciudad) o nivel superior (**provincia / CCAA / país**). Mismo filtro de formato. Los retiros se enlazan a destinos hoja; el listado agrega todos los descendientes vía `getLeafDestinationIdsForRetreatFilter` en `getPublishedRetreats`. |
 | `/es/retiro/[slug]` | `src/app/(public)/es/retiro/[slug]/page.tsx` | Ficha de retiro (galería `retreat_images` → breadcrumb → contenido + sidebar reserva; mismo patrón visual que centro). Sigue accesible por URL directa aunque el evento ya haya empezado; los **listados** no muestran retiros en curso. |
 | `/es/centros-retiru` | `src/app/(public)/es/centros-retiru/page.tsx` | Directorio centros |
 | `/es/centros-retiru/[slug]` | `src/app/(public)/es/centros-retiru/[slug]/page.tsx` | Centros por provincia |
@@ -262,15 +262,15 @@ Las URLs concretas salen de slugs en BD (categorías con retiros, destinos, prov
 
 | Componente | Uso | Campos |
 |------------|-----|--------|
-| `HeroSearch` | Home | Toggle Retiros/Centros + campos según modo |
-| `EventosSearch` | retiros-retiru, retiros-retiru/[slug] | Texto, destino, fechas |
+| `HeroSearch` | Home | Toggle Centros / Retiros y clases + campos según modo |
+| `EventosSearch` | retiros-retiru, retiros-retiru/[slug] | Texto, destino, fechas (el filtro de formato vive en `EventosClient`) |
 | `CentrosSearch` | centros-retiru, centros-retiru/[slug] | Texto, tipo, ciudad |
 
 ---
 
 ## Valoraciones en listados de retiros
 
-En **cards** de retiros (home “populares”, `/es/retiros-retiru`, `/es/retiros-retiru/[slug]`, `/es/buscar` cuando el ítem es retiro, equivalentes EN, y componentes `EventCard` / `event-card` si se usan en listados):
+En **cards** de retiros/clases (home bloques «Clases y actividades» y «Retiros populares», `/es/retiros-retiru`, `/es/retiros-retiru/[slug]`, `/es/buscar` cuando el ítem es retiro, equivalentes EN, y componentes `EventCard` / `event-card` si se usan en listados):
 
 - Lo que se muestra como estrellas + contador es la **media y el número de reseñas del organizador** (`organizer_profiles`, derivado de `reviews` por `organizer_id`), no el agregado del retiro concreto.
 - Si el organizador **no tiene** reseñas visibles, **no** se renderiza el bloque de valoración (evita mostrar `0.0 (0)`).
@@ -387,7 +387,7 @@ Protegido por middleware y comprobación de admin. No indexado en buscadores.
 | GET | `/api/organizer/verification` | Estado global de verificación KYC |
 | POST | `/api/organizer/verification/[step]` | Marcar paso enviado / subir metadatos de documento |
 | GET | `/api/organizer/dashboard` | KPIs reales del organizador |
-| GET | `/api/organizer/attendees` | Listar todos los asistentes cross-evento |
+| GET | `/api/organizer/attendees` | Listar asistentes cross-evento (incluye `reserved_no_payment` / `pending_payment`) |
 | GET | `/api/organizer/events/[id]/bookings` | Listar bookings de un evento |
 | GET | `/api/organizer/events/[id]/bookings/export` | Exportar asistentes a CSV |
 | PATCH | `/api/organizer/bookings/[id]/payment` | Legacy: marcar liquidación/pago complementario (modelo histórico 80 % fuera de plataforma; con pago 100 % suele no aplicar) |

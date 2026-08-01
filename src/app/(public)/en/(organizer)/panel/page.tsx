@@ -28,6 +28,7 @@ const STATUS_LABELS: Record<string, string> = {
   confirmed: 'Confirmed',
   pending_confirmation: 'Pending',
   pending_payment: 'Payment pending',
+  reserved_no_payment: 'Enrolled (no payment yet)',
   completed: 'Completed',
   cancelled_by_attendee: 'Cancelled',
   rejected: 'Rejected',
