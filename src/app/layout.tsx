@@ -7,7 +7,9 @@ import { headers } from 'next/headers';
 import { DM_Serif_Display, DM_Sans } from 'next/font/google';
 import './globals.css';
 import BackToTop from '@/components/ui/back-to-top';
+import Script from 'next/script';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
+import { CookieConsentBar } from '@/components/analytics/CookieConsentBar';
 import { getSiteUrl } from '@/lib/site-url';
 
 const dmSerif = DM_Serif_Display({
@@ -43,10 +45,33 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang={lang} className={`${dmSerif.variable} ${dmSans.variable}`} suppressHydrationWarning>
-      <head />
+      <head>
+        <Script
+          id="gtag-consent-default"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){window.dataLayer.push(arguments);}
+              window.gtag = gtag;
+              var granted = false;
+              try { granted = localStorage.getItem('retiru_cookie_consent') === 'granted'; } catch (e) {}
+              var v = granted ? 'granted' : 'denied';
+              gtag('consent', 'default', {
+                analytics_storage: v,
+                ad_storage: v,
+                ad_user_data: v,
+                ad_personalization: v,
+                wait_for_update: 500
+              });
+            `,
+          }}
+        />
+      </head>
       <body className="min-h-screen bg-background antialiased">
         <GoogleAnalytics />
         {children}
+        <CookieConsentBar />
         <BackToTop />
       </body>
     </html>
