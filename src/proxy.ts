@@ -1,6 +1,6 @@
 // ============================================================================
-// RETIRU · Next.js Middleware
-// Handles: locale redirect, auth protection, session refresh
+// RETIRU · Next.js Proxy (antes middleware.ts / Edge)
+// Next 16: corre en Node. Locale, auth, session refresh, rewrites SEO.
 // ============================================================================
 
 import { NextResponse, type NextRequest } from 'next/server';
@@ -85,7 +85,6 @@ const DUPLICATE_PROVINCE_REDIRECTS: Record<string, string> = {
 
 /** Devuelve la URL canónica si el pathname contiene un slug alias; si no, null. */
 function canonicalProvincePathname(pathname: string): string | null {
-  // Partimos por '/' y reemplazamos segmentos que coincidan con un alias.
   const segments = pathname.split('/');
   let changed = false;
   for (let i = 0; i < segments.length; i++) {
@@ -114,11 +113,10 @@ function rewriteWithLocale(request: NextRequest, newPathname: string) {
   return NextResponse.rewrite(url, { request: { headers: withLocaleHeaders(request) } });
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 0. SEO · 301 permanente para slugs de provincia duplicados (§8.9 SEO-LANDINGS).
-  //    Debe ir ANTES de cualquier otra redirección para que Google consolide link equity.
   const canonicalPath = canonicalProvincePathname(pathname);
   if (canonicalPath) {
     const url = request.nextUrl.clone();
@@ -127,15 +125,6 @@ export async function middleware(request: NextRequest) {
   }
 
   // 0b. Rewrite invisible · landings `retiros-retiru` / `retreats-retiru`.
-  //     Next 14 enruta de forma ambigua cualquier segmento `prefijo-XXX` cuando
-  //     existe una carpeta literal `prefijo-Y` hermana de una carpeta dinámica
-  //     `prefijo-[var]`. Síntomas observados:
-  //      - /es/retiros-retiru/<slug>  → 500 (entra en la dinámica con category=undefined)
-  //      - /es/retiros-yoga (etc.)    → 404 directo del router (la dinámica entera
-  //                                      queda anulada por la presencia de la literal)
-  //     Solución: las páginas de `retiros-retiru` (raíz y `/[slug]`) están movidas a
-  //     `destino-retiros/` (ES) y `destination-retreats/` (EN), carpetas SIN prefijo
-  //     `retiros-`/`retreats-`. Aquí mantenemos la URL pública con un rewrite invisible.
   if (pathname === '/es/retiros-retiru' || pathname === '/es/retiros-retiru/') {
     return rewriteWithLocale(request, '/es/destino-retiros');
   }
@@ -151,9 +140,7 @@ export async function middleware(request: NextRequest) {
     return rewriteWithLocale(request, `/en/destination-retreats/${enDestMatch[1]}`);
   }
 
-  // 0c. Mismo problema en `retiros-en/[slug]` (landing geográfica país/CCAA/provincia).
-  //     Movida a `geo-retiros/[slug]` (ES) / `geo-retreats/[slug]` (EN) para no
-  //     compartir prefijo `retiros-`/`retreats-` con la dinámica `retiros-[category]`.
+  // 0c. Mismo patrón en `retiros-en/[slug]` → `geo-retiros` / `geo-retreats`.
   const esGeoMatch = pathname.match(/^\/es\/retiros-en\/([^\/]+)\/?$/);
   if (esGeoMatch) {
     return rewriteWithLocale(request, `/es/geo-retiros/${esGeoMatch[1]}`);
@@ -164,13 +151,6 @@ export async function middleware(request: NextRequest) {
   }
 
   // 0d. Rewrite invisible · landings de retiros por categoría.
-  //     `/es/retiros-<cat>` y `/es/retiros-<cat>/<dest>` se sirven desde
-  //     `(public)/es/cat-retiros/[category](/[destination])` para evitar el
-  //     bug de Next 14 que no enruta segmentos `prefijo-XXX` cuando la dinámica
-  //     se llama `prefijo-[var]`. Las URLs públicas se mantienen.
-  //     IMPORTANTE: este bloque va después de los rewrites de `retiros-retiru`
-  //     y `retiros-en` para no capturarlos antes (no es el caso por la categoría
-  //     reservada, pero por orden lógico).
   const esCatDestMatch = pathname.match(/^\/es\/retiros-([^\/]+)\/([^\/]+)\/?$/);
   if (esCatDestMatch) {
     return rewriteWithLocale(request, `/es/cat-retiros/${esCatDestMatch[1]}/${esCatDestMatch[2]}`);
@@ -212,26 +192,34 @@ export async function middleware(request: NextRequest) {
   // 3. Create a SINGLE Supabase client for both session refresh and auth checks
   let response = NextResponse.next({ request: { headers: withLocaleHeaders(request) } });
 
+  const AUTH_TIMEOUT_MS = 2_500;
   const supabase = createServerClient(supabaseUrl!, supabaseKey!, {
+    global: {
+      fetch: (input: RequestInfo | URL, init?: RequestInit) =>
+        fetch(input, { ...init, signal: AbortSignal.timeout(AUTH_TIMEOUT_MS) }),
+    },
     cookies: {
-      get(name: string) {
-        return request.cookies.get(name)?.value;
+      getAll() {
+        return request.cookies.getAll();
       },
-      set(name: string, value: string, options: CookieOptions) {
-        request.cookies.set({ name, value, ...options });
+      setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         response = NextResponse.next({ request: { headers: withLocaleHeaders(request) } });
-        response.cookies.set({ name, value, ...options });
-      },
-      remove(name: string, options: CookieOptions) {
-        request.cookies.set({ name, value: '', ...options });
-        response = NextResponse.next({ request: { headers: withLocaleHeaders(request) } });
-        response.cookies.set({ name, value: '', ...options });
+        cookiesToSet.forEach(({ name, value, options }) =>
+          response.cookies.set(name, value, options)
+        );
       },
     },
   });
 
   // 4. Refresh session + get user (single call, reuses the same client)
-  const { data: { user } } = await supabase.auth.getUser();
+  let user: { id: string } | null = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // Auth caído o lento: seguir sirviendo sin refrescar cookies
+  }
 
   // 5. Protected routes → check auth
   if (!isPublicPath(pathname)) {
@@ -243,7 +231,6 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // Admin / Administrator → check admin role via user_roles
     if (pathname.startsWith('/administrator') || pathname.startsWith('/admin')) {
       const { data: adminRole } = await supabase
         .from('user_roles')

@@ -26,10 +26,11 @@ function filterFromSearchParams(raw: string | string[] | undefined): RetirosFilt
 export default async function AdminRetirosPage({
   searchParams,
 }: {
-  searchParams?: { filter?: string | string[] };
+  searchParams: Promise<{ filter?: string | string[] }>;
 }) {
   const supabase = createAdminSupabase();
-  const initialFilter = filterFromSearchParams(searchParams?.filter);
+  const sp = await searchParams;
+  const initialFilter = filterFromSearchParams(sp.filter);
 
   const { data: retreats, error } = await supabase
     .from('retreats')

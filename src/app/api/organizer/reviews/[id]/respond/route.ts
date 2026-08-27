@@ -4,9 +4,10 @@ import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createServerSupabase();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
@@ -29,7 +30,7 @@ export async function POST(
     const { data: review } = await admin
       .from('reviews')
       .select('id, organizer_id')
-      .eq('id', params.id)
+      .eq('id', id)
       .single();
 
     if (!review) {
@@ -47,7 +48,7 @@ export async function POST(
         responded_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
-      .eq('id', params.id);
+      .eq('id', id);
 
     if (updateError) throw updateError;
 

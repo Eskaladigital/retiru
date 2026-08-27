@@ -4,9 +4,10 @@ import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createServerSupabase();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
@@ -36,7 +37,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
     }
 
-    if (booking.retreat_id !== params.id) {
+    if (booking.retreat_id !== id) {
       return NextResponse.json({ error: 'Booking does not belong to this retreat' }, { status: 400 });
     }
 

@@ -34,7 +34,7 @@ const nextConfig = {
   /**
    * Cabeceras de seguridad básicas. NO se añade Content-Security-Policy aquí porque Retiru
    * carga scripts de Stripe, Google Maps, Google Analytics y TinyMCE; una CSP estricta
-   * requiere nonces por request (ver middleware). Se añadirá en un segundo paso.
+   * requiere nonces por request (ver proxy.ts). Se añadirá en un segundo paso.
    */
   async headers() {
     const securityHeaders = [

@@ -23,7 +23,8 @@ function blogListHrefEs(opts: { q?: string; categoria?: string }): string {
 
 type SearchParams = { q?: string; categoria?: string };
 
-export default async function BlogPage({ searchParams }: { searchParams?: SearchParams }) {
+export default async function BlogPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const sp = await searchParams;
   const supabase = createStaticSupabase();
 
   const { data: categories } = await supabase
@@ -37,8 +38,8 @@ export default async function BlogPage({ searchParams }: { searchParams?: Search
       .select('id, title_es, title_en, slug, excerpt_es, cover_image_url, read_time_min, published_at, category_id, blog_categories(name_es)'),
   ).order('published_at', { ascending: false });
 
-  const qRaw = (searchParams?.q ?? '').trim();
-  const categoriaSlug = (searchParams?.categoria ?? '').trim();
+  const qRaw = (sp.q ?? '').trim();
+  const categoriaSlug = (sp.categoria ?? '').trim();
 
   let list = filterPublicBlogArticles(articlesRaw);
   if (categoriaSlug && categories?.length) {
