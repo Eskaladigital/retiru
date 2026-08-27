@@ -14,6 +14,8 @@ interface Message {
 
 interface Props {
   locale: 'es' | 'en';
+  /** Si Roy está visible abajo a la derecha, el soporte humano sube para no taparse. */
+  stacked?: boolean;
 }
 
 const t = {
@@ -53,7 +55,7 @@ const t = {
   },
 };
 
-export default function SupportChatWidget({ locale }: Props) {
+export default function SupportChatWidget({ locale, stacked = false }: Props) {
   const i = t[locale];
   const [open, setOpen] = useState(false);
   const [convId, setConvId] = useState<string | null>(null);
@@ -180,7 +182,7 @@ export default function SupportChatWidget({ locale }: Props) {
       {/* Burbuja */}
       <button
         onClick={handleToggle}
-        className="mobile-float-above-cta fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full bg-terracotta-500 text-white shadow-lg hover:bg-terracotta-600 transition-all hover:scale-105 flex items-center justify-center"
+        className={`${stacked ? 'mobile-float-above-cta support-stacked-above-roy' : 'mobile-float-above-cta'} fixed ${stacked ? 'bottom-24' : 'bottom-5'} right-5 z-[9990] w-14 h-14 rounded-full bg-[#2d2319] text-white shadow-lg hover:bg-[#3d3228] transition-all hover:scale-105 flex items-center justify-center`}
         aria-label="Soporte"
       >
         {open ? <X size={22} /> : <MessageCircle size={22} />}

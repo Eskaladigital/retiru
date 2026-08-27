@@ -1,0 +1,23 @@
+---
+description: Tras revisar mensajes de Roy, clasificar en real y mejorar el RAG (molde Andrea)
+alwaysApply: true
+---
+
+# Chatbot Roy: revisión → RAG (obligatorio)
+
+Si el usuario pide revisar, evaluar o mirar las respuestas de Roy / chatbot de Retiru:
+
+1. Ejecuta `npx tsx scripts/review-chatbot-messages.ts` (en Windows no uses `npm run` si hay flags). **Siempre en real**, sin `--dry-run`. Por defecto solo `sin_tipo`. Reevaluar todo: `--all`. Límite: `--limit=50`. Una fila: `--id=<uuid>`.
+2. No te quedes en el informe. Cada incorrecta/mejorable por **dato** entra en uno de estos cajones:
+
+| Cajón | Qué pasó | Qué hacer |
+|---|---|---|
+| `missing` | El hecho no está en `chatbot_kb_chunks` | Fila en `docs/chatbot/INCIDENCIAS-PENDIENTES.csv` y `npx tsx scripts/ingest-chatbot-kb.ts` |
+| `not_retrieved` | El hecho existe pero no salió en el top-k | Retitular o trocear; no hinchar el prompt |
+| `ignored` | El RAG o el bloque vivo sí traían el dato y Roy lo ignoró | Prompt o bloque live en `directory.ts` / `business-data.ts` |
+| Comportamiento (tono, no inventar fichas, Roy ≠ Andrea) | No es un hecho | Prompt |
+
+3. Hechos **estables** (comisiones 0/10/20, 20 €/mes del directorio, cómo reservar) van a la KB.
+4. Hechos **que cambian** (centros, retiros, precios de un evento) van al bloque live de `directory.ts`, no al RAG.
+5. Un concepto = una fila. Título explícito.
+6. No inventes un centro ni un retiro. No filtres email/teléfono de un centro. Informe: `docs/chatbot/INFORME-REVISION-MENSAJES.md`.

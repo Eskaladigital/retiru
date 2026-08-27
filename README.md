@@ -21,6 +21,19 @@ Retiru publica contenido únicamente en **español** (`/es`, campos `*_es`) e **
 
 ---
 
+## Chatbot Roy (visitante)
+
+Guía con IA del marketplace: directorio de centros, retiros y clases publicados, y consejos del blog. Molde Nora/Laura más un bloque vivo de fichas (no se vuelca el catálogo entero). No es el soporte humano **Andrea** (hace falta login). Modelo `gpt-5.6-terra`.
+
+```bash
+npx tsx scripts/ingest-chatbot-kb.ts
+npx tsx scripts/review-chatbot-messages.ts
+```
+
+Tablas `chatbot_*` (no confundir con `conversations` / `messages` del chat de soporte).
+
+---
+
 ## Stack tecnológico
 
 | Capa | Tecnología |

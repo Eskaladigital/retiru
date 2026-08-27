@@ -141,6 +141,9 @@
     body:has(.sticky-cta) .mobile-panel-above-cta {
       bottom: 9.25rem;
     }
+    body:has(.sticky-cta) .support-stacked-above-roy {
+      bottom: 9.5rem;
+    }
   }
 
   /* Text gradient */
@@ -200,4 +203,45 @@
   .aspect-cover {
     aspect-ratio: 3/2;
   }
+}
+
+/* Markdown del chatbot Roy (mismo molde que Nora / Laura; terracotta Retiru) */
+.chat-markdown .chat-link {
+  color: #c85a30;
+  text-decoration: underline;
+}
+.chat-markdown ul.chat-list {
+  margin: 0.25rem 0;
+  padding-left: 1.1rem;
+  list-style: disc;
+}
+.chat-markdown ol.chat-list {
+  margin: 0.25rem 0;
+  padding-left: 1.25rem;
+  list-style: decimal;
+}
+.chat-markdown .chat-list li {
+  margin: 0.15rem 0;
+}
+.chat-markdown .chat-heading {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0.75rem 0 0.35rem;
+  color: #c85a30;
+  line-height: 1.35;
+}
+.chat-markdown .chat-heading:first-child {
+  margin-top: 0;
+}
+.chat-markdown h4.chat-heading {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #4a3f34;
+}
+.chat-markdown p {
+  margin: 0.25rem 0;
+}
+.chat-markdown strong {
+  font-weight: 600;
+  color: #2d2319;
 }

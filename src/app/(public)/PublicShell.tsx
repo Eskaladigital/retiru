@@ -9,6 +9,7 @@ import { usePathname } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SupportChatWidget from '@/components/chat/SupportChatWidget';
+import ChatWidget from '@/components/chatbot/ChatWidget';
 import type { Locale } from '@/i18n/config';
 
 interface PublicShellProps {
@@ -29,13 +30,21 @@ export default function PublicShell({ user, children }: PublicShellProps) {
   // El widget de soporte se oculta a administradores: ellos gestionan el soporte
   // desde /administrator/mensajes y no tiene sentido que se escriban a sí mismos.
   const isAdmin = !!user?.roles?.includes('admin');
+  const royHidden =
+    !!pathname?.includes('/panel') ||
+    !!pathname?.includes('/login') ||
+    !!pathname?.includes('/registro') ||
+    !!pathname?.includes('/register');
 
   return (
     <>
       <Header locale={locale} user={user} />
       <main className="min-h-[60vh] pt-16 md:pt-[72px]">{children}</main>
       <Footer locale={locale} />
-      {!isAdmin && <SupportChatWidget locale={locale} />}
+      <ChatWidget />
+      {!isAdmin && !!user && (
+        <SupportChatWidget locale={locale} stacked={!royHidden} />
+      )}
     </>
   );
 }
