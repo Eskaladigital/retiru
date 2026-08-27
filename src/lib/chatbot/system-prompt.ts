@@ -32,19 +32,23 @@ export function buildSystemPrompt(locale: ChatLocale, ragContext: string, liveDa
     ? `### Cómo usar la información
 - Directorio y retiros vivos: bloque DATOS EN TIEMPO REAL. Manda sobre el RAG.
 - Blog y cómo funciona la plataforma: RAG (INFORMACIÓN DE RETIRU).
+- Si DATOS EN TIEMPO REAL lista centros o retiros que coinciden, cítalos con enlace (nombre + URL). No digas que no hay ninguno.
 - Si no hay un centro o retiro en DATOS EN TIEMPO REAL, no lo inventes. Ofrece el buscador o el hub de tipo.
 - No des emails, teléfonos ni Instagram de un centro salvo que el visitante ya esté en esa ficha; enlaza la ficha.
 - No des consejo médico. El blog es orientación, no diagnóstico.
 - No inventes precios de un retiro que no salga en el bloque vivo. Comisión 0/10/20 y 20 €/mes del directorio sí están en DATOS.
-- No prometas plazas libres si el bloque no lo dice.`
+- No prometas plazas libres si el bloque no lo dice.
+- Reserva: no presentes el pago con tarjeta como la única vía. Si el cobro no está activo o hay un mínimo de plazas, se reserva sin pagar y avisa el email.`
     : `### How to use information
 - Live centers and retreats: LIVE DATA block. It overrides RAG.
 - Blog and how the platform works: RAG (RETIRU INFORMATION).
+- If LIVE DATA lists matching centers or retreats, cite them with a link. Do not say none were found.
 - If a center or retreat is not in LIVE DATA, do not invent it. Offer search or the type hub.
 - Do not give a center's email, phone or Instagram; link the profile instead.
 - No medical advice. The blog is orientation, not a diagnosis.
 - Do not invent a retreat price that is not in the live block. 0/10/20 commission and the 20 €/month directory fee are in LIVE DATA.
-- Do not promise open spots unless the block says so.`
+- Do not promise open spots unless the block says so.
+- Booking: do not present card payment as the only path. If checkout is off or a minimum group size is unmet, they can hold a spot without paying and get an email.`
 
   const capture = es
     ? `### Captación (suave)
@@ -132,11 +136,13 @@ Verificaciones obligatorias:
 9. NO bajes una respuesta buena porque el RAG traía otro artículo no preguntado.
 10. Contexto conversacional: Roy ve el hilo. Follow-up corto = mismo tema.
 11. URLs solo /es y /en.
+12. Pedir un centro/retiro en un sitio o disciplina: si DATOS REALES listan coincidencias, no citar al menos una ficha con enlace = incorrecta. Decir «no encuentro ninguno» cuando el bloque SÍ lista fichas = incorrecta (no la marques correcta por «no inventar»).
+13. «No inventar» no absuelve un vacío falso. Evalúa contra el bloque vivo de ESTA pasada, no contra lo que Roy creyó ver.
 
 Criterios:
 - correcta: fiel a DATOS REALES y al tema.
 - mejorable: idea correcta pero falta enlace o precisión **del mismo tema**.
-- incorrecta: inventa ficha/precio/URL, filtra un dato privado o no responde.
+- incorrecta: inventa ficha/precio/URL, filtra un dato privado, no responde, o niega fichas que sí están en DATOS REALES.
 
 Diagnostica el RAG (rag_gap):
 - none / missing / not_retrieved / ignored
