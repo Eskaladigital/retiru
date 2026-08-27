@@ -54,10 +54,19 @@ async function fetchCentersForGeo(node: GeoNode): Promise<Center[]> {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const geo = await resolveGeoLanding(slug);
+  // No llamar permanentRedirect aquí: en generateMetadata Next lo convierte en 500.
   if (geo?.kind === 'province') {
     const dom = await getDominantCenterTypeForProvince(slug);
     const urlType = CENTER_TYPE_URL_ES[dom] || dom;
-    permanentRedirect(`/es/centros/${urlType}/${slug}`);
+    const label = getCenterTypeLabel(dom, 'es');
+    return generatePageMetadata({
+      title: `Centros de ${label} en ${geo.name_es}`,
+      description: `Encuentra centros de yoga, meditación y ayurveda en ${geo.name_es}. Directorio verificado con reseñas reales.`,
+      locale: 'es',
+      path: `/es/centros/${urlType}/${slug}`,
+      altPath: `/en/centers/${dom}/${slug}`,
+      keywords: [`centros yoga ${geo.name_es}`, `meditación ${geo.name_es}`, `ayurveda ${geo.name_es}`],
+    });
   }
   let name = slug;
   if (geo) {

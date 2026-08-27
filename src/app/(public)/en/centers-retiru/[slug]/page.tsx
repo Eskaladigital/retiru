@@ -39,9 +39,17 @@ async function fetchCentersForGeoEN(node: GeoNode): Promise<Center[]> {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const geo = await resolveGeoLanding(slug);
+  // Do not permanentRedirect in generateMetadata — Next 16 turns it into a 500.
   if (geo?.kind === 'province') {
     const dom = await getDominantCenterTypeForProvince(slug);
-    permanentRedirect(`/en/centers/${dom}/${slug}`);
+    return generatePageMetadata({
+      title: `Yoga, meditation & ayurveda centers in ${geo.name_en}`,
+      description: `Find yoga, meditation and ayurveda centers in ${geo.name_en}. Verified directory with real reviews.`,
+      locale: 'en',
+      path: `/en/centers/${dom}/${slug}`,
+      altPath: `/es/centros-retiru/${slug}`,
+      keywords: ['yoga centers ' + geo.name_en, 'meditation ' + geo.name_en, 'ayurveda ' + geo.name_en],
+    });
   }
   let name = slug;
   if (geo) {
