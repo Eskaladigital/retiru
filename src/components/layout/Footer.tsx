@@ -7,6 +7,7 @@ import Image from 'next/image';
 import type { Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n';
 import LocaleSwitchLink from '@/components/layout/LocaleSwitchLink';
+import { CookieSettingsButton } from '@/components/analytics/CookieConsentBar';
 
 function IconVisa({ className = 'w-10 h-6' }: { className?: string }) {
   return (
@@ -145,6 +146,12 @@ export default function Footer({ locale }: FooterProps) {
               <li><Link href={`${prefix}/legal/terminos`} className="text-sm text-white/70 hover:text-white transition-colors">{t.footer.terms}</Link></li>
               <li><Link href={`${prefix}/legal/privacidad`} className="text-sm text-white/70 hover:text-white transition-colors">{t.footer.privacy}</Link></li>
               <li><Link href={`${prefix}/legal/cookies`} className="text-sm text-white/70 hover:text-white transition-colors">{t.footer.cookies}</Link></li>
+              <li>
+                <CookieSettingsButton
+                  className="text-sm text-white/70 hover:text-white transition-colors text-left bg-transparent p-0 border-0 cursor-pointer"
+                  label={locale === 'es' ? 'Configurar cookies' : 'Manage cookies'}
+                />
+              </li>
             </ul>
           </div>
         </div>

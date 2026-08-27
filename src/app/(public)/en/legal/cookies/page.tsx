@@ -1,6 +1,7 @@
 // RETIRU · Cookie policy — /en/legal/cookies
 import Link from 'next/link';
 import { cookiesEN } from '@/lib/seo/page-metadata';
+import { CookieSettingsButton } from '@/components/analytics/CookieConsentBar';
 
 export const metadata = cookiesEN;
 
@@ -18,7 +19,11 @@ export default function CookiesPageEn() {
       </h1>
 
       <div className="space-y-8 text-[15px] leading-relaxed text-muted-foreground">
-        <p>We use technical cookies for session and security, analytics cookies, and third-party cookies (e.g. Stripe for payments). You can manage cookies in your browser settings.</p>
+        <p>We use technical cookies for session and security, analytics cookies, and third-party cookies (e.g. Stripe for payments). You can change your preferences at any time:</p>
+        <CookieSettingsButton
+          className="inline-flex items-center px-5 py-3 rounded-lg bg-terracotta-600 text-white text-sm font-semibold hover:bg-terracotta-500"
+          label="Manage cookies"
+        />
       </div>
 
       <div className="mt-12 pt-8 border-t border-sand-200 flex flex-wrap gap-4">

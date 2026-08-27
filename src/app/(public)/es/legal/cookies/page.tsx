@@ -4,6 +4,7 @@
 
 import Link from 'next/link';
 import { cookiesES } from '@/lib/seo/page-metadata';
+import { CookieSettingsButton } from '@/components/analytics/CookieConsentBar';
 
 export const metadata = cookiesES;
 
@@ -34,7 +35,9 @@ export default function CookiesPage() {
 
         <section>
           <h2 className="font-serif text-xl font-bold text-foreground mb-3">Gestión de cookies</h2>
-          <p>Puedes configurar tu navegador para rechazar o eliminar cookies. Ten en cuenta que desactivar ciertas cookies puede afectar al funcionamiento de la plataforma.</p>
+          <p className="mb-4">Puedes cambiar tus preferencias en cualquier momento desde el pie de página o con este botón:</p>
+          <CookieSettingsButton className="inline-flex items-center px-5 py-3 rounded-lg bg-terracotta-600 text-white text-sm font-semibold hover:bg-terracotta-500" />
+          <p className="mt-4">También puedes configurar tu navegador para rechazar o eliminar cookies. Ten en cuenta que desactivar ciertas cookies puede afectar al funcionamiento de la plataforma.</p>
         </section>
       </div>
 
