@@ -132,6 +132,16 @@ export function generateSlug(text: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
+/** ¿Este centro cae en el slug del desplegable (madrid, valencia…)? En BD casi nunca está en `city` (barrios de Google); suele coincidir con `province`. */
+export function matchesPlaceSlug(
+  slug: string | null | undefined,
+  ...places: (string | null | undefined)[]
+): boolean {
+  const s = generateSlug(slug || '');
+  if (!s) return false;
+  return places.some((p) => generateSlug(p || '') === s);
+}
+
 /** Truncate text */
 export function truncate(text: string, length: number): string {
   if (text.length <= length) return text;

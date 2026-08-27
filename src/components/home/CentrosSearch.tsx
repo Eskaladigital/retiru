@@ -58,10 +58,7 @@ export default function CentrosSearch({ locale = 'es' }: { locale?: Locale } = {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (city.slug && !queryText.trim() && !centerType.slug) {
-      router.push(`${t.basePath}/${city.slug}`);
-      return;
-    }
+    // Siempre al directorio con query string. `/centros-retiru/{ciudad}` es landing SEO, no el buscador.
     const params = new URLSearchParams();
     if (queryText.trim()) params.set(t.qParam, queryText.trim());
     if (centerType.slug) params.set(t.typeParam, centerType.slug);

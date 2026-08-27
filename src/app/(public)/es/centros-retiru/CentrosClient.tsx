@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Search, SlidersHorizontal, X, MapPin, Star, ChevronDown, CalendarDays } from 'lucide-react';
-import { isGenericDescription, stripMarkdownForPreview, CENTER_FILTER_OPTIONS_ES, getCenterTypeLabel, VALID_CENTER_TYPE_SLUGS, PUBLIC_DIRECTORY_CENTER_TYPE_SLUGS, getSearchTokens, matchesAllTokens } from '@/lib/utils';
+import { isGenericDescription, stripMarkdownForPreview, CENTER_FILTER_OPTIONS_ES, getCenterTypeLabel, VALID_CENTER_TYPE_SLUGS, PUBLIC_DIRECTORY_CENTER_TYPE_SLUGS, getSearchTokens, matchesAllTokens, generateSlug, matchesPlaceSlug } from '@/lib/utils';
 
 const SORT_OPTIONS = [
   { value: 'relevance', label: 'Relevancia' },
@@ -57,16 +57,12 @@ export default function CentrosClient({ centers }: CentrosClientProps) {
     return ['Todas', ...provinces];
   }, [centers]);
 
-  const CIUDAD_SLUG_TO_NAME: Record<string, string> = useMemo(() => {
-    const map: Record<string, string> = {};
-    centers.forEach(c => {
-      if (c.city) {
-        const slug = c.city.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
-        map[slug] = c.city;
-      }
-    });
-    return map;
-  }, [centers]);
+  const placeLabel = useMemo(() => {
+    if (!selectedCity) return null;
+    const fromProv = centers.find((c) => generateSlug(c.province || '') === selectedCity)?.province;
+    const fromCity = centers.find((c) => generateSlug(c.city || '') === selectedCity)?.city;
+    return fromProv || fromCity || selectedCity;
+  }, [centers, selectedCity]);
 
   useEffect(() => {
     const qParam = searchParams.get('q');
@@ -83,13 +79,13 @@ export default function CentrosClient({ centers }: CentrosClientProps) {
       if (match) { setSelectedProvince(match); setShowFilters(true); }
     }
     if (ciudadParam) {
-      const cityName = CIUDAD_SLUG_TO_NAME[ciudadParam.toLowerCase()];
-      if (cityName) { setSelectedCity(cityName); setShowFilters(true); }
+      setSelectedCity(generateSlug(ciudadParam));
+      setShowFilters(true);
     } else {
       setSelectedCity(null);
     }
     if (qParam || tipoParam || provParam || ciudadParam) setShowFilters(true);
-  }, [searchParams, TYPES, PROVINCES, CIUDAD_SLUG_TO_NAME]);
+  }, [searchParams, TYPES, PROVINCES]);
 
   const tokens = useMemo(
     () => getSearchTokens(query, ['centro', 'centros']),
@@ -110,7 +106,7 @@ export default function CentrosClient({ centers }: CentrosClientProps) {
       ]);
       const matchesType = selectedType === 'Todos' || c.type === selectedType;
       const matchesProvince = selectedProvince === 'Todas' || c.province === selectedProvince;
-      const matchesCity = !selectedCity || c.city === selectedCity;
+      const matchesCity = !selectedCity || matchesPlaceSlug(selectedCity, c.city, c.province);
       const matchesRating = (c.avg_rating || 0) >= minRating;
       return matchesQuery && matchesType && matchesProvince && matchesCity && matchesRating;
     });
@@ -231,7 +227,7 @@ export default function CentrosClient({ centers }: CentrosClientProps) {
           {query && <span className="inline-flex items-center gap-1 text-xs bg-terracotta-100 text-terracotta-700 px-3 py-1.5 rounded-full font-medium">&ldquo;{query}&rdquo; <button onClick={() => setQuery('')}><X size={12} /></button></span>}
           {selectedType !== 'Todos' && <span className="inline-flex items-center gap-1 text-xs bg-sage-100 text-sage-700 px-3 py-1.5 rounded-full font-medium">{getCenterTypeLabel(selectedType)} <button onClick={() => setSelectedType('Todos')}><X size={12} /></button></span>}
           {selectedProvince !== 'Todas' && <span className="inline-flex items-center gap-1 text-xs bg-sage-100 text-sage-700 px-3 py-1.5 rounded-full font-medium">{selectedProvince} <button onClick={() => setSelectedProvince('Todas')}><X size={12} /></button></span>}
-          {selectedCity && <span className="inline-flex items-center gap-1 text-xs bg-sage-100 text-sage-700 px-3 py-1.5 rounded-full font-medium">{selectedCity} <button onClick={() => setSelectedCity(null)}><X size={12} /></button></span>}
+          {selectedCity && <span className="inline-flex items-center gap-1 text-xs bg-sage-100 text-sage-700 px-3 py-1.5 rounded-full font-medium">{placeLabel} <button onClick={() => setSelectedCity(null)}><X size={12} /></button></span>}
           {minRating > 0 && <span className="inline-flex items-center gap-1 text-xs bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full font-medium">{minRating}+ estrellas <button onClick={() => setMinRating(0)}><X size={12} /></button></span>}
           <button onClick={clearFilters} className="text-xs text-terracotta-600 hover:underline font-medium">Limpiar todo</button>
         </div>
