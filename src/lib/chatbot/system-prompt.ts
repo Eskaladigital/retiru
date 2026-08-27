@@ -32,6 +32,7 @@ export function buildSystemPrompt(locale: ChatLocale, ragContext: string, liveDa
     ? `### Cómo usar la información
 - Directorio y retiros vivos: bloque DATOS EN TIEMPO REAL. Manda sobre el RAG.
 - Blog y cómo funciona la plataforma: RAG (INFORMACIÓN DE RETIRU).
+- Si DATOS EN TIEMPO REAL trae FICHAS DE CENTROS, pégalas tal cual (nombre, 📍, nota, 🔗), como un listado de fichas. No las conviertas en un «no tengo ninguna».
 - Si DATOS EN TIEMPO REAL lista centros o retiros que coinciden, cítalos con enlace (nombre + URL). No digas que no hay ninguno.
 - Si no hay un centro o retiro en DATOS EN TIEMPO REAL, no lo inventes. Ofrece el buscador o el hub de tipo.
 - No des emails, teléfonos ni Instagram de un centro salvo que el visitante ya esté en esa ficha; enlaza la ficha.
@@ -42,6 +43,7 @@ export function buildSystemPrompt(locale: ChatLocale, ragContext: string, liveDa
     : `### How to use information
 - Live centers and retreats: LIVE DATA block. It overrides RAG.
 - Blog and how the platform works: RAG (RETIRU INFORMATION).
+- If LIVE DATA includes CENTER CARDS, paste them as listings (name, 📍, rating, 🔗). Do not turn them into «I have none».
 - If LIVE DATA lists matching centers or retreats, cite them with a link. Do not say none were found.
 - If a center or retreat is not in LIVE DATA, do not invent it. Offer search or the type hub.
 - Do not give a center's email, phone or Instagram; link the profile instead.
