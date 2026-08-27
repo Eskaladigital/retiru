@@ -28,6 +28,13 @@ export type ChatLocale = 'es' | 'en'
 export type ResponseQuality = 'correcta' | 'mejorable' | 'incorrecta' | 'sin_tipo'
 export type ConversationStatus = 'open' | 'closed' | 'archived'
 
+/** Nota de conversación = media de respuestas clasificadas. No se califica el hilo entero. */
+export const RESPONSE_QUALITY_SCORE: Record<Exclude<ResponseQuality, 'sin_tipo'>, number> = {
+  correcta: 10,
+  mejorable: 5,
+  incorrecta: 0,
+}
+
 export function parseChatLocale(raw: unknown): ChatLocale {
   return raw === 'en' ? 'en' : 'es'
 }
