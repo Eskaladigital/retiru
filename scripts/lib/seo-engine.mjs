@@ -9,7 +9,7 @@
 //   - buildDossier(context)          → string con datos reales para el prompt
 //   - generateLayerContent({ context, serp }) → objeto con intro_*, sections_*, meta_*, faq_*
 //
-// El contenido se genera con GPT-4o vía Chat Completions + response_format JSON.
+// El contenido se genera con gpt-5.6-terra vía Chat Completions + response_format JSON.
 
 import { serpLocalCenters } from './serpapi.mjs';
 
@@ -442,7 +442,7 @@ JSON output:
 // ───────────────────────────────────────────────────────────────────────────
 // OpenAI JSON helper
 // ───────────────────────────────────────────────────────────────────────────
-async function openAIJSON({ system, user, maxTokens = 3500, temperature = 0.55, model = 'gpt-4o' }) {
+async function openAIJSON({ system, user, maxTokens = 3500, model = 'gpt-5.6-terra' }) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error('OPENAI_API_KEY no definida');
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -450,8 +450,7 @@ async function openAIJSON({ system, user, maxTokens = 3500, temperature = 0.55, 
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
       model,
-      temperature,
-      max_tokens: maxTokens,
+      max_completion_tokens: maxTokens,
       response_format: { type: 'json_object' },
       messages: [
         { role: 'system', content: system },
@@ -500,7 +499,7 @@ function normalizeFaq(arr) {
  * @param {boolean} [opts.useSerp=true]
  * @returns {Promise<{intro_es, intro_en, meta_title_es, meta_title_en, meta_description_es, meta_description_en, sections_es, sections_en, faq_es, faq_en, serp_data, suppress_reason}>}
  */
-export async function generateLayerContent({ context, useSerp = true, model = 'gpt-4o', temperature = 0.55 }) {
+export async function generateLayerContent({ context, useSerp = true, model = 'gpt-5.6-terra' }) {
   const suppress = applySuppressionRules(context);
   if (suppress) {
     return {
@@ -544,7 +543,6 @@ export async function generateLayerContent({ context, useSerp = true, model = 'g
     system,
     user: userPrompt,
     model,
-    temperature,
     // Cap.3 ahora tiene 4 secciones + 8 FAQs → necesita más tokens.
     maxTokens: context.layer.id === 3 ? 5200 : (context.layer.id === 5 ? 4200 : 4200),
   });

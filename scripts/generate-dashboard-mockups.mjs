@@ -41,7 +41,7 @@ if (!OPENAI_API_KEY) {
   process.exit(1);
 }
 
-const OPENAI_IMAGE_MODEL = 'gpt-image-1.5';
+const OPENAI_IMAGE_MODEL = 'gpt-image-2';
 const OPENAI_IMAGE_SIZE = '1536x1024';
 const OPENAI_IMAGE_QUALITY = 'high';
 
@@ -341,10 +341,10 @@ async function callOpenAI(messages, temperature = 0.3) {
       'Authorization': `Bearer ${OPENAI_API_KEY}`
     },
     body: JSON.stringify({
-      model: 'gpt-4o',
+      model: 'gpt-5.6-terra',
       messages,
-      temperature,
-      max_tokens: 900
+      max_completion_tokens: 1500,
+      reasoning_effort: 'none'
     })
   });
 
@@ -373,7 +373,7 @@ function normalizeImagePromptParagraph(raw) {
 }
 
 async function generateImage(prompt) {
-  console.log(`   🎨 Generando imagen con gpt-image-1.5...`);
+  console.log(`   🎨 Generando imagen con gpt-image-2...`);
   
   const response = await fetch('https://api.openai.com/v1/images/generations', {
     method: 'POST',
@@ -435,7 +435,7 @@ Tono de marca: Natural, profesional, mediterráneo, moderno pero cálido.
 Ambiente: Oficina o espacio de trabajo luminoso con estética mediterránea.`;
 
   // 2. Primera pasada: Prompt Builder
-  console.log('   ✍️  Paso 1: GPT-4o Prompt Builder...');
+  console.log('   ✍️  Paso 1: gpt-5.6-terra Prompt Builder...');
   const firstPrompt = await callOpenAI([
     { role: 'system', content: PROMPT_BUILDER_SYSTEM },
     { role: 'user', content: dossier }
@@ -444,7 +444,7 @@ Ambiente: Oficina o espacio de trabajo luminoso con estética mediterránea.`;
   console.log(`   📝 Prompt inicial: ${firstPrompt.slice(0, 150)}...`);
 
   // 3. Segunda pasada: Realism Refiner
-  console.log('   ✨ Paso 2: GPT-4o Realism Refiner...');
+  console.log('   ✨ Paso 2: gpt-5.6-terra Realism Refiner...');
   const refinedPrompt = await callOpenAI([
     { role: 'system', content: PROMPT_REALISM_REFINER_SYSTEM },
     { role: 'user', content: `DOSSIER:\n${dossier}\n\nPROMPT INICIAL:\n${firstPrompt}` }

@@ -10,7 +10,7 @@
  *   node scripts/generate-blog-articles.mjs --limit=5
  *   node scripts/generate-blog-articles.mjs --offset=10 --limit=3
  *
- * Variables .env.local: SUPABASE_*, OPENAI_API_KEY, SERPAPI_API_KEY, BLOG_OPENAI_MODEL (default gpt-5.5)
+ * Variables .env.local: SUPABASE_*, OPENAI_API_KEY, SERPAPI_API_KEY, BLOG_OPENAI_MODEL (default gpt-5.6-terra)
  */
 
 import { readFileSync, existsSync } from 'fs';

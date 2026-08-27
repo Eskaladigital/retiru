@@ -42,12 +42,11 @@ Análisis sobre Supabase (`scripts/analyze-blog-quality.mjs`):
 
 | Parámetro | Valor |
 |-----------|--------|
-| Modelo | **`gpt-5.5`** (`BLOG_OPENAI_MODEL` en `.env.local` si se quiere sobrescribir). No usar `gpt-4o-mini` ni `gpt-4o` para artículos finales. |
+| Modelo | **`gpt-5.6-terra`** (`BLOG_OPENAI_MODEL` en `.env.local` si se quiere sobrescribir). No usar `gpt-4o-mini` ni `gpt-4o` para artículos finales. |
 | Investigación web | **SerpAPI obligatorio**: 3–4 búsquedas por artículo (ver abajo). |
 | Longitud ES | **Mínimo 1.200 palabras · objetivo 1.400–1.800** |
 | Longitud EN | **900–1.200 palabras** (no traducción literal comprimida) |
-| `max_tokens` | ≥ 8.000 |
-| `temperature` | 0,65 |
+| `max_output_tokens` | 20.000 (Responses API; GPT-5 no admite `temperature` custom) |
 | Reintento | Si `content_es` &lt; 1.100 palabras → segunda pasada pidiendo ampliar secciones concretas |
 
 ---
@@ -197,7 +196,7 @@ JSON exacto:
 
 ## Scripts que usan este prompt
 
-- `scripts/lib/blog-writer.mjs` — generación compartida (SerpAPI multi-query + OpenAI Responses API, `gpt-5.5`)
+- `scripts/lib/blog-writer.mjs` — generación compartida (SerpAPI multi-query + OpenAI Responses API, `gpt-5.6-terra`)
 - `scripts/publish-blog-queue.mjs` — cola de 100 títulos
 - `scripts/generate-blog-articles.mjs` — generación manual por lote
 
@@ -206,7 +205,7 @@ Variables `.env.local`:
 ```
 OPENAI_API_KEY=...
 SERPAPI_API_KEY=...
-BLOG_OPENAI_MODEL=gpt-5.5
+BLOG_OPENAI_MODEL=gpt-5.6-terra
 ```
 
 Análisis de calidad: `node scripts/analyze-blog-quality.mjs`

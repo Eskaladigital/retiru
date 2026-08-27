@@ -339,7 +339,7 @@ Script unificado `scripts/generate-seo-sections.mjs` (`npm run seo:sections`):
    - `related_searches[]` → palabras clave para el prompt.
    - `local_results.places[]` → valida nombres reales de centros.
    - `answer_box` / `featured_snippet` → señala el intent dominante.
-3. **Prompt GPT-4o/4.1 diferente por capa** (respeta §8.2 §8.3 §8.5). Motor: `scripts/lib/seo-engine.mjs`.
+3. **Prompt gpt-5.6-terra diferente por capa** (respeta §8.2 §8.3 §8.5). Motor: `scripts/lib/seo-engine.mjs`.
 4. **Upsert** en la tabla correspondiente.
 5. **Cacheo** del `serp_data` en la fila — si se regenera el texto en < 30 días, se reutiliza sin llamar a SerpApi.
 

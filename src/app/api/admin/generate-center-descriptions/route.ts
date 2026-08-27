@@ -212,7 +212,7 @@ Reglas:
             send('log', { type: 'detail', message: log });
           }
 
-          send('log', { type: 'detail', message: `  🤖 Generando descripción con GPT-4o-mini...` });
+          send('log', { type: 'detail', message: `  🤖 Generando descripción con GPT-5.6 Terra...` });
 
           const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
@@ -221,13 +221,13 @@ Reglas:
               Authorization: `Bearer ${openaiKey}`,
             },
             body: JSON.stringify({
-              model: 'gpt-4o-mini',
+              model: 'gpt-5.6-terra',
               messages: [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: `Genera la descripción enriquecida (800-1200 palabras) para este centro:\n\n${context}` },
               ],
-              max_tokens: 2400,
-              temperature: 0.65,
+              max_completion_tokens: 4000,
+              reasoning_effort: 'low',
             }),
           });
 

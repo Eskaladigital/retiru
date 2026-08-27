@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Mismo agente que retiros (dossier → GPT-4o ×2 → gpt-image-1.5) aplicado al blog.
+ * Mismo agente que retiros (dossier → gpt-5.6-terra ×2 → gpt-image-2) aplicado al blog.
  * Actualiza portadas (cover_image_url) y, opcionalmente, <img> de stock dentro del HTML.
  *
  * Requiere .env.local: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, OPENAI_API_KEY
@@ -50,7 +50,7 @@ readFileSync(envPath, 'utf8')
 
 const MAX_BODY_CHARS = 2800;
 const MAX_EXCERPT_CHARS = 800;
-const OPENAI_IMAGE_MODEL = 'gpt-image-1.5';
+const OPENAI_IMAGE_MODEL = 'gpt-image-2';
 const OPENAI_IMAGE_SIZE = '1536x1024';
 const OPENAI_IMAGE_QUALITY = 'high';
 
@@ -172,9 +172,9 @@ async function chatParagraph(apiKey, system, user, temperature) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
-      model: 'gpt-4o',
-      temperature,
-      max_tokens: 900,
+      model: 'gpt-5.6-terra',
+      max_completion_tokens: 1500,
+      reasoning_effort: 'none',
       messages: [
         { role: 'system', content: system },
         { role: 'user', content: user },

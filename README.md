@@ -98,7 +98,7 @@ Copia `.env.example` a `.env.local` y rellena los valores:
 | `SMTP_INTERNAL_COPY_EMAIL` | (opcional) BCC archivo en cada transaccional; vacío = desactiva. Sin variable → `contacto@retiru.com`. Alias legado: `RESEND_INTERNAL_COPY_EMAIL` |
 | `NEXT_PUBLIC_APP_URL` | URL base de la app |
 | `NEXT_PUBLIC_APP_NAME` | Nombre de la app (`Retiru`) |
-| `OPENAI_API_KEY` | (opcional) Descripciones IA, blog, centros y **portadas con IA** (eventos, artículos de blog y centros): agente **GPT-4o** sintetiza un dossier en un prompt en español; **GPT Image 1.5** genera la imagen panorámica (`POST /api/retreats/generate-cover-image`, `POST /api/admin/blog/generate-cover-image`, `POST /api/centers/generate-cover-image`; definir también en Vercel). Objetivo visual: **fotografía editorial hiperrealista**, evitando look ilustrado o “IA” |
+| `OPENAI_API_KEY` | (opcional) Descripciones IA, blog, centros y **portadas con IA** (eventos, artículos de blog y centros): agente **gpt-5.6-terra** sintetiza un dossier en un prompt en español; **gpt-image-2** genera la imagen panorámica (`POST /api/retreats/generate-cover-image`, `POST /api/admin/blog/generate-cover-image`, `POST /api/centers/generate-cover-image`; definir también en Vercel). Objetivo visual: **fotografía editorial hiperrealista**, evitando look ilustrado o “IA” |
 | `ANTHROPIC_API_KEY` | (opcional) Moderación de contenido de retiros antes de publicar (`POST /api/admin/retreats/moderate`, Claude vía SDK `ai`). Si no está definida, el flujo de aprobación en admin **omite** la revisión automática |
 | `NEXT_PUBLIC_TINYMCE_API_KEY` | (opcional) Clave [Tiny Cloud](https://www.tiny.cloud/) para el editor visual de la **descripción** en crear/editar evento (`/es/mis-eventos/...`) y del **cuerpo del artículo** en `/administrator/blog/...`. Si está vacía se usa `no-api-key` (solo adecuado en desarrollo; en producción conviene clave y dominio aprobados) |
 | `GOOGLE_PLACES_API_KEY` | (opcional) Reseñas/horario/rating Places — **no** fotos (Place Photo) |
@@ -155,8 +155,8 @@ npm run blog:import-csv:push                          # Igual + inserta/actualiz
 node scripts/generate-blog-articles.mjs               # Genera artículos con IA (temas: docs/BLOG-TITULOS-PROPUESTOS.md)
 npm run blog:publish-queue                            # Cola completa: texto + portadas + fechas (ver --limit, --resume)
 npm run blog:publish-queue:dry                        # Vista previa del calendario sin escribir
-npm run blog:backfill-covers-ai                       # Portadas blog con el mismo agente que retiros (GPT-4o×2 + gpt-image-1.5); por defecto solo si portada vacía o URL de stock. Flags: `--dry-run`, `--force`, `--regenerate-blog-ai` (vuelve a generar portadas ya en `blog/ai-cover-*`), `--inline`, `--limit=N`, `--concurrency=2`, `--id=uuid`
-npm run organizers:generate-dashboard-mockups        # 12 mockups IA (6 panel organizador + 6 beneficios centro) para las landings de organizadores; guarda en `public/images/` (GPT-4o×2 + gpt-image-1.5, `OPENAI_API_KEY` en `.env.local`)
+npm run blog:backfill-covers-ai                       # Portadas blog con el mismo agente que retiros (gpt-5.6-terra ×2 + gpt-image-2); por defecto solo si portada vacía o URL de stock. Flags: `--dry-run`, `--force`, `--regenerate-blog-ai` (vuelve a generar portadas ya en `blog/ai-cover-*`), `--inline`, `--limit=N`, `--concurrency=2`, `--id=uuid`
+npm run organizers:generate-dashboard-mockups        # 12 mockups IA (6 panel organizador + 6 beneficios centro) para las landings de organizadores; guarda en `public/images/` (gpt-5.6-terra ×2 + gpt-image-2, `OPENAI_API_KEY` en `.env.local`)
 
 ### Blog — línea editorial
 
@@ -232,7 +232,7 @@ En esos textos **no** deben figurar **teléfonos móviles ni emails de contacto*
 | `npm run retreats:push-alma-nomada` | Actualiza por slug el retiro Alma Nómada según el contenido acordado (PDF 1ª edición): destino Marruecos, textos ES/EN, incluidos, excluidos, `schedule`, meta. |
 | `npm run retreats:fix-vinyasa-daily` | Convierte la clase Vinyasa Rodalquilar en serie diaria (1,5 h, interval 1, fin 2027-12-31, horizonte 7 fechas). |
 | `npm run retreats:fix-alma-en-parity` | Solo alinea `description_en`, `summary_en` y meta ES/EN con el español limpio y el precio oficial (900 €), sin tocar `description_es` ni el programa. Útil si el EN quedó desfasado tras moderar el ES. |
-| `npm run retreats:backfill-covers-ai` | Igual que la API: dossier completo desde Supabase → **GPT-4o** → **GPT Image 1.5** (`1536x1024`, `high`). Migrado desde DALL·E 3 por deprecación; prioridad absoluta al look de **fotografía real**. Opciones: `--dry-run`, `--limit=N`, `--replace-ai-covers`. |
+| `npm run retreats:backfill-covers-ai` | Igual que la API: dossier completo desde Supabase → **gpt-5.6-terra** → **gpt-image-2** (`1536x1024`, `high`). Migrado desde DALL·E 3 / GPT Image 1.5; prioridad absoluta al look de **fotografía real**. Opciones: `--dry-run`, `--limit=N`, `--replace-ai-covers`. |
 
 Para otro retiro, añadir un script análogo en `scripts/` o generalizar con un JSON + slug (mismo patrón).
 
@@ -881,7 +881,7 @@ Cualquier usuario logueado (incluido el admin) tiene acceso a:
 1. **Mis reservas** — reservas como asistente
 2. **Mi perfil** — datos personales, avatar, contraseña
 3. **Mis centros** — centros reclamados, propuestas en revisión, CTA para reclamar en el directorio o proponer centro nuevo (Google Maps). Las propuestas y la edición de ficha exigen descripción, actividades/servicios e imagen: portada manual desde dispositivo o portada generada con IA, de modo que no haya perfiles públicos vacíos o sin foto.
-4. **Mis eventos** — retiros/eventos creados; wizard para crear/editar con **plazas máximas** (`max_attendees`) y **mínimo viable** (`min_attendees`): umbral de inscritos a partir del cual el organizador se compromete a celebrar el retiro; en ficha pública se muestra progreso de reservas si el mínimo es mayor que 1. **Imágenes:** hasta **8** fotos por retiro (subida al bucket `retreat-images` desde el cliente + registro en `retreat_images` vía API); una es la **portada** (listados y cabecera de ficha), el resto forman la **galería** visible en la ficha pública; portada opcional con **IA** (dossier del evento → GPT-4o → GPT Image 1.5; `POST /api/retreats/generate-cover-image`) o generada al guardar si no hay ninguna foto
+4. **Mis eventos** — retiros/eventos creados; wizard para crear/editar con **plazas máximas** (`max_attendees`) y **mínimo viable** (`min_attendees`): umbral de inscritos a partir del cual el organizador se compromete a celebrar el retiro; en ficha pública se muestra progreso de reservas si el mínimo es mayor que 1. **Imágenes:** hasta **8** fotos por retiro (subida al bucket `retreat-images` desde el cliente + registro en `retreat_images` vía API); una es la **portada** (listados y cabecera de ficha), el resto forman la **galería** visible en la ficha pública; portada opcional con **IA** (dossier del evento → gpt-5.6-terra → gpt-image-2; `POST /api/retreats/generate-cover-image`) o generada al guardar si no hay ninguna foto
 
 El admin tiene además acceso a `/administrator` desde el menú.
 

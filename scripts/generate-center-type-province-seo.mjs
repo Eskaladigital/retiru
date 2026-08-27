@@ -6,7 +6,7 @@
  *
  * Para cada par/terna con al menos N centros activos:
  *  1. Construye un dossier (tipo, provincia, ciudad?, nº centros, muestras).
- *  2. Pide a GPT-4o un JSON estructurado con:
+ *  2. Pide a gpt-5.6-terra un JSON estructurado con:
  *       intro_es, intro_en  (HTML breve, 2-3 párrafos, 220-320 palabras)
  *       meta_title_es, meta_title_en  (50-60 chars, sin años)
  *       meta_description_es, meta_description_en  (150-160 chars, sin años)
@@ -248,9 +248,8 @@ async function generateSeoForPair(pair) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${openaiKey}` },
     body: JSON.stringify({
-      model: 'gpt-4o',
-      temperature: 0.55,
-      max_tokens: 2600,
+      model: 'gpt-5.6-terra',
+      max_completion_tokens: 4000,
       response_format: { type: 'json_object' },
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },

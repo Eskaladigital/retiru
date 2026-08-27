@@ -2,7 +2,7 @@
 //
 //   body: { prompt: string, referenceCampaignIds?: string[] }
 //
-// Genera el HTML de la campaña con OpenAI (gpt-4o-mini) usando 1–2 campañas
+// Genera el HTML de la campaña con OpenAI (gpt-5.6-terra) usando 1–2 campañas
 // previas como ejemplo de estilo. Devuelve Server-Sent Events (text/event-stream)
 // con logs en vivo y al final un evento 'done' con el html_content ya guardado
 // en mailing_campaigns.html_content.
@@ -180,7 +180,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           '(d) cierra todas las etiquetas y el </html>.'
         );
 
-        send('log', { type: 'detail', message: 'Enviando a gpt-4o-mini… (streaming)' });
+        send('log', { type: 'detail', message: 'Enviando a gpt-5.6-terra… (streaming)' });
         const t0 = Date.now();
 
         const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -190,9 +190,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
             Authorization: `Bearer ${openaiKey}`,
           },
           body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            temperature: 0.55,
-            max_tokens: 12000,
+            model: 'gpt-5.6-terra',
+            max_completion_tokens: 12000,
+            reasoning_effort: 'low',
             stream: true,
             messages: [
               { role: 'system', content: SYSTEM_PROMPT },

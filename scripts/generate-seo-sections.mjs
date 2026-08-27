@@ -27,8 +27,7 @@
  *   --province=alava    Filtra por slug de provincia.
  *   --style=kundalini   Filtra por slug de estilo (capas 2, 4).
  *   --city=vitoria      Filtra por slug de ciudad (capa 5).
- *   --model=gpt-4o      Modelo OpenAI (gpt-4o | gpt-4o-mini | gpt-4.1 | gpt-4-turbo).
- *   --temp=0.55         Temperatura (0.3-0.8). Default 0.55.
+ *   --model=gpt-5.6-terra  Modelo OpenAI (default gpt-5.6-terra). GPT-5 no admite --temp.
  */
 import { readFileSync, existsSync } from 'fs';
 import { dirname, join } from 'path';
@@ -74,11 +73,8 @@ const styleFilter = arg('style');
 const cityFilter = arg('city');
 const cityMin = Math.max(1, parseInt(arg('city-min') || '2', 10) || 2);
 const layerArg = arg('layer') || 'all';
-// Default: gpt-4.1 (mucho mejor obedeciendo listas negras y produciendo datos
-// concretos) + temperatura baja para reducir deriva hacia tópicos. Cambiar con
-// --model y --temp.
-const model = arg('model') || 'gpt-4.1';
-const temperature = parseFloat(arg('temp') || '0.4') || 0.4;
+// Default: gpt-5.6-terra (GPT-5 no admite temperature custom). Cambiar con --model.
+const model = arg('model') || 'gpt-5.6-terra';
 
 // Capa 1 (nacional por tipo) vive en `src/lib/center-type-editorial.ts` como
 // contenido estático curado; NO se genera aquí. Si en el futuro se mueve a BD
@@ -430,7 +426,7 @@ function applyFilters(ctxList) {
 async function main() {
   console.log(`\n═══ generate-seo-sections ═══`);
   console.log(`Capas: ${layerIds.join(',')} | dryRun=${dryRun} force=${force} useSerp=${useSerp} conc=${concurrency} limit=${limit ?? '—'}`);
-  console.log(`Modelo: ${model} temp=${temperature}`);
+  console.log(`Modelo: ${model}`);
   console.log(`Filtros: type=${typeFilter ?? '—'} prov=${provinceFilter ?? '—'} style=${styleFilter ?? '—'} city=${cityFilter ?? '—'}\n`);
 
   let allContexts = [];
@@ -480,7 +476,7 @@ async function main() {
         return;
       }
 
-      const content = await generateLayerContent({ context: ctx, useSerp, model, temperature });
+      const content = await generateLayerContent({ context: ctx, useSerp, model });
       if (content.suppress_reason) {
         await upsertForLayer(ctx, content);
         console.log(`🚫 ${label} — suppress: ${content.suppress_reason}`);

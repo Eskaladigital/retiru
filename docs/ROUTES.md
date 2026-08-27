@@ -356,8 +356,8 @@ Protegido por middleware y comprobación de admin. No indexado en buscadores.
 | POST | `/api/admin/organizers/[id]` | Aprobar/rechazar pasos de verificación u operaciones de revisión (admin) |
 | GET | `/api/admin/organizers/[id]/doc-url` | URL firmada temporal para documento en `organizer-docs` |
 | POST | `/api/retreats/create` | Crear retiro (auto-crea organizer_profile) |
-| POST | `/api/retreats/generate-cover-image` | Portada IA: cuerpo con **briefing completo** del evento (textos, destino, fechas, categorías, programa, incluidos…); **GPT-4o** genera un único párrafo-prompt en español; **GPT Image 1.5** genera la imagen (`1536x1024`, `high`); usuario autenticado; `OPENAI_API_KEY`; bucket `retreat-images` |
-| POST | `/api/admin/blog/generate-cover-image` | Portada IA de artículo de blog (solo admin): título, extracto, contenido, categoría; mismo agente GPT-4o×2 + GPT Image 1.5; bucket `retreat-images` (`blog/ai-cover-*`) |
+| POST | `/api/retreats/generate-cover-image` | Portada IA: cuerpo con **briefing completo** del evento (textos, destino, fechas, categorías, programa, incluidos…); **gpt-5.6-terra** genera un único párrafo-prompt en español; **gpt-image-2** genera la imagen (`1536x1024`, `high`); usuario autenticado; `OPENAI_API_KEY`; bucket `retreat-images` |
+| POST | `/api/admin/blog/generate-cover-image` | Portada IA de artículo de blog (solo admin): título, extracto, contenido, categoría; mismo agente gpt-5.6-terra ×2 + gpt-image-2; bucket `retreat-images` (`blog/ai-cover-*`) |
 | POST | `/api/centers/generate-cover-image` | Portada IA de centro (propietario reclamado o admin; también prealta sin `center_id`): nombre, descripción, tipo, ubicación, servicios; mismo agente; bucket `centers` (`{centerId}/ai-cover-*` o `generated/ai-cover-*`) |
 | PATCH | `/api/retreats/[id]` | Actualizar retiro (solo propietario) |
 | POST | `/api/retreats/[id]` | Cancelar retiro (propietario, action=cancel): marca reservas activas —incl. `reserved_no_payment`— como `cancelled_by_organizer`, reembolsa pagadas y notifica |
@@ -403,7 +403,7 @@ Protegido por middleware y comprobación de admin. No indexado en buscadores.
 | GET / POST | `/api/unsubscribe` | Baja de marketing. Con `?t=<marketing_opt_out_token>` hace one-click unsubscribe (`List-Unsubscribe-Post` compatible). Sin token, muestra un formulario bilingüe (ES/EN vía `?lang=` o `Accept-Language`) donde el usuario introduce su email; al enviarlo, marca los `centers` con ese email como opt-out e inserta en `email_suppressions` para bloquear futuros envíos. Respuesta genérica siempre (no revela si el email existía) |
 | GET / POST | `/api/admin/mailing/campaigns` | Listar campañas (vista `mailing_campaigns_stats`) o crear borrador |
 | GET / PATCH / DELETE | `/api/admin/mailing/campaigns/[slug]` | Detalle/edición/borrado (solo `draft`) |
-| POST | `/api/admin/mailing/campaigns/[slug]/generate` | Generar HTML con OpenAI `gpt-4o-mini` usando referencias previas; SSE de logs |
+| POST | `/api/admin/mailing/campaigns/[slug]/generate` | Generar HTML con OpenAI `gpt-5.6-terra` usando referencias previas; SSE de logs |
 | GET | `/api/admin/mailing/campaigns/[slug]/preview` | HTML renderizado con datos reales (para `<iframe>` de preview) |
 | POST | `/api/admin/mailing/campaigns/[slug]/send-test` | Envía un test a un email arbitrario (sin tocar `mailing_recipients`) |
 | POST | `/api/admin/mailing/campaigns/[slug]/populate-recipients` | Volcar destinatarios según `audience_filter` (`all`/`claimed`/`not_claimed`/`test_emails`) |

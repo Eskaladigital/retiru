@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * RETIRU · Publicar cola de 100 artículos (SerpAPI + OpenAI GPT-5.5 + portada IA + fechas programadas)
+ * RETIRU · Publicar cola de 100 artículos (SerpAPI + OpenAI gpt-5.6-terra + portada IA + fechas programadas)
  *
  * Lee docs/BLOG-TITULOS-PROPUESTOS.md. Calendario: 2/semana (~3 y 4 días) desde el 21-may-2026
  * (3 días después del último post existente, 18-may-2026). Los futuros no se ven en web hasta su fecha.
@@ -15,7 +15,7 @@
  *   node scripts/publish-blog-queue.mjs --regenerate --from=5 --to=10
  *
  * Requiere .env.local: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, OPENAI_API_KEY, SERPAPI_API_KEY
- * Opcional: BLOG_OPENAI_MODEL (default gpt-5.5)
+ * Opcional: BLOG_OPENAI_MODEL (default gpt-5.6-terra)
  */
 
 import { readFileSync, writeFileSync, existsSync } from 'fs';

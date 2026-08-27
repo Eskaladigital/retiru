@@ -1,5 +1,5 @@
 /**
- * Portada de centro de bienestar: dossier → GPT-4o ×2 → GPT Image 1.5.
+ * Portada de centro de bienestar: dossier → gpt-5.6-terra ×2 → gpt-image-2.
  */
 
 import { generateDalle3CoverImage } from '@/lib/openai/event-cover-image';
@@ -118,9 +118,9 @@ async function chatParagraph(
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
-      model: 'gpt-4o',
-      temperature,
-      max_tokens: 900,
+      model: 'gpt-5.6-terra',
+      max_completion_tokens: 1500,
+      reasoning_effort: 'none',
       messages: [
         { role: 'system', content: system },
         { role: 'user', content: user },

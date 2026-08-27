@@ -1,11 +1,11 @@
 /**
- * Genera un prompt para GPT Image 1.5 y obtiene la imagen (PNG) a partir del texto del evento.
+ * Genera un prompt para GPT Image 2 y obtiene la imagen (PNG) a partir del texto del evento.
  * Requiere OPENAI_API_KEY en el servidor.
  */
 
 const MAX_DESCRIPTION_CHARS = 2800;
 const MAX_SCHEDULE_CHARS = 1200;
-const OPENAI_IMAGE_MODEL = 'gpt-image-1.5';
+const OPENAI_IMAGE_MODEL = 'gpt-image-2';
 const OPENAI_IMAGE_SIZE = '1536x1024';
 const OPENAI_IMAGE_QUALITY = 'high';
 
@@ -201,9 +201,9 @@ export async function buildDallePromptFromEvent(apiKey: string, input: EventCove
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
-      model: 'gpt-4o',
-      temperature: 0.32,
-      max_tokens: 900,
+      model: 'gpt-5.6-terra',
+      max_completion_tokens: 1500,
+      reasoning_effort: 'none',
       messages: [
         { role: 'system', content: PROMPT_BUILDER_SYSTEM },
         { role: 'user', content: userContent },
@@ -242,9 +242,9 @@ export async function buildDallePromptFromEvent(apiKey: string, input: EventCove
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
-      model: 'gpt-4o',
-      temperature: 0.18,
-      max_tokens: 900,
+      model: 'gpt-5.6-terra',
+      max_completion_tokens: 1500,
+      reasoning_effort: 'none',
       messages: [
         { role: 'system', content: PROMPT_REALISM_REFINER_SYSTEM },
         { role: 'user', content: realismReviewUserContent },

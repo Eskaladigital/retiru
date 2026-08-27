@@ -67,7 +67,7 @@ Al crear artículos nuevos, preferir **`bienestar`** o **`guias`** según el tem
 
 | Script | Notas |
 |--------|--------|
-| `scripts/publish-blog-queue.mjs` | Cola de 100 títulos: SerpAPI (4 búsquedas) + texto (`gpt-5.5` por defecto, ver `BLOG_OPENAI_MODEL`) + portada IA + `published_at` cada 3–4 días. Prompt: [`BLOG-PROMPT-REDACTOR.md`](BLOG-PROMPT-REDACTOR.md). |
+| `scripts/publish-blog-queue.mjs` | Cola de 100 títulos: SerpAPI (4 búsquedas) + texto (`gpt-5.6-terra` por defecto, ver `BLOG_OPENAI_MODEL`) + portada IA + `published_at` cada 3–4 días. Prompt: [`BLOG-PROMPT-REDACTOR.md`](BLOG-PROMPT-REDACTOR.md). |
 | `scripts/lib/blog-writer.mjs` | Prompt compartido, investigación SerpAPI y generación con reintento si &lt; 1.100 palabras. |
 | `scripts/analyze-blog-quality.mjs` | Compara longitud/estructura artículos antiguos vs cola nueva. |
 | `scripts/import-blog-csv.mjs` | Importación masiva; validar títulos contra esta línea editorial. |

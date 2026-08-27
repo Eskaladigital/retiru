@@ -1,5 +1,5 @@
 /**
- * RETIRU · Generación de artículos de blog (prompt + SerpAPI + OpenAI GPT-5.5)
+ * RETIRU · Generación de artículos de blog (prompt + SerpAPI + OpenAI gpt-5.6-terra)
  * Ver docs/BLOG-PROMPT-REDACTOR.md
  */
 
@@ -205,7 +205,7 @@ function extractResponsesText(data) {
 }
 
 export async function generateBlogArticle(topic, letter, serpContext, openaiKey, options = {}) {
-  const model = options.model || process.env.BLOG_OPENAI_MODEL || 'gpt-5.5';
+  const model = options.model || process.env.BLOG_OPENAI_MODEL || 'gpt-5.6-terra';
   const minWords = options.minWords ?? 1200;
   const maxAttempts = options.maxAttempts ?? 3;
 

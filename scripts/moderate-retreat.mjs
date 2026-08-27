@@ -119,9 +119,8 @@ const contentToCheck = JSON.stringify({
 const client = new OpenAI({ apiKey: openaiKey });
 
 const response = await client.chat.completions.create({
-  model: 'gpt-4o',
-  temperature: 0.1,
-  max_tokens: 2000,
+  model: 'gpt-5.6-terra',
+  max_completion_tokens: 2000,
   messages: [
     { role: 'system', content: MODERATION_PROMPT },
     { role: 'user', content: `Analiza este contenido de retiro y detecta información sensible que no debe publicarse:\n\n\`\`\`json\n${contentToCheck}\n\`\`\`\n\nDevuelve SOLO el JSON de moderación, sin texto adicional.` },
