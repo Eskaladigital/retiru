@@ -1,18 +1,24 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { DayPicker, type DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { es, enUS } from 'date-fns/locale';
 import * as Popover from '@radix-ui/react-popover';
 import { useRouter } from 'next/navigation';
 import { MapPin, Search, ChevronDown, Check, X, Building2, CalendarDays } from 'lucide-react';
-import { centerFilterOptionsPublic } from '@/lib/utils';
+import {
+  CENTER_QUALITY_MEDAL_SLUGS,
+  CENTER_QUALITY_TIERS,
+  CENTER_TYPE_META,
+  PUBLIC_DIRECTORY_CENTER_TYPE_SLUGS,
+  getCenterTypeLabel,
+} from '@/lib/utils';
 
 type SearchMode = 'eventos' | 'centros';
 
-const DESTINATIONS = [
-  { slug: '', name: 'Todos los destinos' },
+const DESTINATIONS_BASE = [
   { slug: 'ibiza', name: 'Ibiza' },
   { slug: 'mallorca', name: 'Mallorca' },
   { slug: 'costa-brava', name: 'Costa Brava' },
@@ -23,70 +29,85 @@ const DESTINATIONS = [
   { slug: 'priorat', name: 'Priorat' },
 ];
 
-const CENTER_TYPES = centerFilterOptionsPublic('es').map((o) => ({ slug: o.slug, name: o.label }));
+const COPY = {
+  es: {
+    centers: 'Centros',
+    events: 'Retiros y clases',
+    eventsPh: 'Clase de yoga, retiro, taller...',
+    centersPh: 'Nombre del centro, ciudad…',
+    where: '¿Dónde?',
+    dates: '¿Entre qué fechas?',
+    search: 'Buscar',
+    openMap: 'Abrir el mapa',
+    mapAlt: 'Vista de España con los centros de Retiru',
+    quality: 'Valoración',
+    mapPath: '/es/centros-retiru',
+    eventsPath: '/es/retiros-retiru',
+    typeParam: 'tipo',
+    qualityParam: 'calidad',
+    destParam: 'destino',
+    fromParam: 'fechaDesde',
+    toParam: 'fechaHasta',
+  },
+  en: {
+    centers: 'Centers',
+    events: 'Retreats & classes',
+    eventsPh: 'Yoga class, retreat, workshop...',
+    centersPh: 'Center name, city…',
+    where: 'Where?',
+    dates: 'When?',
+    search: 'Search',
+    openMap: 'Open the map',
+    mapAlt: 'Spain overview of Retiru centers',
+    quality: 'Rating',
+    mapPath: '/en/centers-retiru',
+    eventsPath: '/en/retreats-retiru',
+    typeParam: 'type',
+    qualityParam: 'quality',
+    destParam: 'destination',
+    fromParam: 'dateFrom',
+    toParam: 'dateTo',
+  },
+} as const;
 
-const PROVINCES = [
-  { slug: '', name: 'Toda España' },
-  { slug: 'madrid', name: 'Madrid' },
-  { slug: 'barcelona', name: 'Barcelona' },
-  { slug: 'valencia', name: 'Valencia' },
-  { slug: 'sevilla', name: 'Sevilla' },
-  { slug: 'malaga', name: 'Málaga' },
-  { slug: 'baleares', name: 'Baleares' },
-  { slug: 'vizcaya', name: 'Vizcaya' },
-  { slug: 'granada', name: 'Granada' },
-  { slug: 'murcia', name: 'Murcia' },
-  { slug: 'asturias', name: 'Asturias' },
-  { slug: 'cadiz', name: 'Cádiz' },
-  { slug: 'las-palmas', name: 'Las Palmas' },
-  { slug: 'navarra', name: 'Navarra' },
-  { slug: 'girona', name: 'Girona' },
-  { slug: 'tarragona', name: 'Tarragona' },
-];
-
-export default function HeroSearch() {
+export default function HeroSearch({ locale = 'es' }: { locale?: 'es' | 'en' }) {
   const router = useRouter();
+  const t = COPY[locale];
+  const dateLocale = locale === 'en' ? enUS : es;
   const [mode, setMode] = useState<SearchMode>('centros');
 
-  // Shared
   const [queryText, setQueryText] = useState('');
 
-  // Events mode
-  const [destino, setDestino] = useState(DESTINATIONS[0]);
+  const destinations = [
+    { slug: '', name: locale === 'en' ? 'All destinations' : 'Todos los destinos' },
+    ...DESTINATIONS_BASE,
+  ];
+  const [destino, setDestino] = useState(destinations[0]);
   const [destOpen, setDestOpen] = useState(false);
   const [rangoFechas, setRangoFechas] = useState<DateRange | undefined>();
   const [dateOpen, setDateOpen] = useState(false);
 
-  // Centers mode
-  const [centerType, setCenterType] = useState(CENTER_TYPES[0]);
-  const [typeOpen, setTypeOpen] = useState(false);
-  const [province, setProvince] = useState(PROVINCES[0]);
-  const [provOpen, setProvOpen] = useState(false);
-
   const dateLabel = rangoFechas?.from
     ? rangoFechas.to
-      ? `${format(rangoFechas.from, 'd MMM', { locale: es })} – ${format(rangoFechas.to, 'd MMM', { locale: es })}`
-      : format(rangoFechas.from, 'd MMM yyyy', { locale: es })
+      ? `${format(rangoFechas.from, 'd MMM', { locale: dateLocale })} – ${format(rangoFechas.to, 'd MMM', { locale: dateLocale })}`
+      : format(rangoFechas.from, 'd MMM yyyy', { locale: dateLocale })
     : null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const params = new URLSearchParams();
+    if (queryText.trim()) params.set('q', queryText.trim());
 
     if (mode === 'eventos') {
-      if (queryText.trim()) params.set('q', queryText.trim());
-      if (destino.slug) params.set('destino', destino.slug);
-      if (rangoFechas?.from) params.set('fechaDesde', format(rangoFechas.from, 'yyyy-MM-dd'));
-      if (rangoFechas?.to) params.set('fechaHasta', format(rangoFechas.to, 'yyyy-MM-dd'));
+      if (destino.slug) params.set(t.destParam, destino.slug);
+      if (rangoFechas?.from) params.set(t.fromParam, format(rangoFechas.from, 'yyyy-MM-dd'));
+      if (rangoFechas?.to) params.set(t.toParam, format(rangoFechas.to, 'yyyy-MM-dd'));
       const qs = params.toString();
-      router.push(`/es/retiros-retiru${qs ? `?${qs}` : ''}`);
-    } else {
-      if (queryText.trim()) params.set('q', queryText.trim());
-      if (centerType.slug) params.set('tipo', centerType.slug);
-      if (province.slug) params.set('provincia', province.slug);
-      const qs = params.toString();
-      router.push(`/es/centros-retiru${qs ? `?${qs}` : ''}`);
+      router.push(`${t.eventsPath}${qs ? `?${qs}` : ''}`);
+      return;
     }
+    const qs = params.toString();
+    router.push(`${t.mapPath}${qs ? `?${qs}` : ''}`);
   };
 
   return (
@@ -103,7 +124,7 @@ export default function HeroSearch() {
           }`}
         >
           <Building2 size={15} />
-          Centros
+          {t.centers}
         </button>
         <button
           type="button"
@@ -115,7 +136,7 @@ export default function HeroSearch() {
           }`}
         >
           <CalendarDays size={15} />
-          Retiros y clases
+          {t.events}
         </button>
       </div>
 
@@ -128,7 +149,7 @@ export default function HeroSearch() {
             type="text"
             value={queryText}
             onChange={(e) => setQueryText(e.target.value)}
-            placeholder={mode === 'eventos' ? 'Clase de yoga, retiro, taller...' : 'Nombre del centro, disciplina...'}
+            placeholder={mode === 'eventos' ? t.eventsPh : t.centersPh}
             className="w-full bg-transparent text-[15px] text-foreground outline-none placeholder:text-[#a09383] font-sans"
           />
         </div>
@@ -139,13 +160,13 @@ export default function HeroSearch() {
             {/* Destino */}
             <div className="flex-1 min-w-0">
               <DropdownSelect
-                items={DESTINATIONS}
+                items={destinations}
                 selected={destino}
                 onSelect={(d) => { setDestino(d); setDestOpen(false); }}
                 open={destOpen}
                 onOpenChange={setDestOpen}
                 icon={<MapPin className="w-5 h-5 text-[#a09383] shrink-0" />}
-                placeholder="¿Dónde?"
+                placeholder={t.where}
               />
             </div>
             <div className="hidden md:block w-px h-8 bg-sand-200" />
@@ -163,7 +184,7 @@ export default function HeroSearch() {
                       <path d="M16 2v4M8 2v4M3 10h18" />
                     </svg>
                     <span className={`flex-1 text-[15px] font-sans truncate ${dateLabel ? 'text-foreground' : 'text-[#a09383]'}`}>
-                      {dateLabel || '¿Entre qué fechas?'}
+                      {dateLabel || t.dates}
                     </span>
                     {dateLabel && (
                       <button
@@ -195,7 +216,7 @@ export default function HeroSearch() {
                           setTimeout(() => setDateOpen(false), 2000);
                         }
                       }}
-                      locale={es}
+                      locale={dateLocale}
                       disabled={{ before: new Date() }}
                       numberOfMonths={2}
                     />
@@ -204,47 +225,88 @@ export default function HeroSearch() {
               </Popover.Root>
             </div>
           </>
+        ) : null}
+
+        {mode === 'eventos' ? (
+          <button
+            type="submit"
+            className="flex items-center justify-center gap-2 bg-terracotta-600 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl shadow-[0_2px_8px_rgba(200,90,48,0.3)] hover:bg-terracotta-700 transition-all whitespace-nowrap"
+          >
+            <Search className="w-[18px] h-[18px]" />
+            {t.search}
+          </button>
         ) : (
-          <>
-            {/* Tipo de centro */}
-            <div className="flex-1 min-w-0">
-              <DropdownSelect
-                items={CENTER_TYPES}
-                selected={centerType}
-                onSelect={(t) => { setCenterType(t); setTypeOpen(false); }}
-                open={typeOpen}
-                onOpenChange={setTypeOpen}
-                icon={<Building2 className="w-5 h-5 text-[#a09383] shrink-0" />}
-                placeholder="Tipo de centro"
-              />
-            </div>
-            <div className="hidden md:block w-px h-8 bg-sand-200" />
-
-            {/* Provincia */}
-            <div className="flex-1 min-w-0">
-              <DropdownSelect
-                items={PROVINCES}
-                selected={province}
-                onSelect={(p) => { setProvince(p); setProvOpen(false); }}
-                open={provOpen}
-                onOpenChange={setProvOpen}
-                icon={<MapPin className="w-5 h-5 text-[#a09383] shrink-0" />}
-                placeholder="Toda España"
-              />
-            </div>
-          </>
+          <button
+            type="submit"
+            className="flex items-center justify-center gap-2 bg-terracotta-600 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl shadow-[0_2px_8px_rgba(200,90,48,0.3)] hover:bg-terracotta-700 transition-all whitespace-nowrap"
+          >
+            <Search className="w-[18px] h-[18px]" />
+            {t.openMap}
+          </button>
         )}
-
-        {/* Submit */}
-        <button
-          type="submit"
-          className="flex items-center justify-center gap-2 bg-terracotta-600 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl shadow-[0_2px_8px_rgba(200,90,48,0.3)] hover:bg-terracotta-700 transition-all whitespace-nowrap"
-        >
-          <Search className="w-[18px] h-[18px]" />
-          Buscar
-        </button>
       </form>
+
+      {mode === 'centros' ? (
+        <div className="px-1 pt-3 pb-1">
+          <div className="flex flex-wrap gap-2">
+            {PUBLIC_DIRECTORY_CENTER_TYPE_SLUGS.map((slug) => {
+              const meta = CENTER_TYPE_META[slug];
+              return (
+                <Link
+                  key={slug}
+                  href={`${t.mapPath}?${t.typeParam}=${slug}`}
+                  className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors hover:bg-sand-50"
+                  style={{ borderColor: `${meta.color}55`, color: meta.color }}
+                >
+                  <span aria-hidden>{meta.icon}</span>
+                  {getCenterTypeLabel(slug, locale)}
+                </Link>
+              );
+            })}
+          </div>
+          <p className="mt-2.5 mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#a09383]">{t.quality}</p>
+          <div className="flex flex-wrap gap-2">
+            {CENTER_QUALITY_MEDAL_SLUGS.map((tier) => {
+              const meta = CENTER_QUALITY_TIERS[tier];
+              return (
+                <Link
+                  key={tier}
+                  href={`${t.mapPath}?${t.qualityParam}=${tier}`}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-sand-200 bg-white px-3 py-1.5 text-sm font-semibold text-foreground transition-colors hover:border-sand-300 hover:bg-sand-50"
+                >
+                  <span aria-hidden>{meta.icon}</span>
+                  {meta[locale].name}
+                </Link>
+              );
+            })}
+          </div>
+          <MapPreview href={t.mapPath} cta={t.openMap} alt={t.mapAlt} />
+        </div>
+      ) : null}
     </div>
+  );
+}
+
+function MapPreview({ href, cta, alt }: { href: string; cta: string; alt: string }) {
+  const key = process.env.NEXT_PUBLIC_MAPTILER_API_KEY;
+  const src = key
+    ? `https://api.maptiler.com/maps/streets-v2/static/-3.7,40.4,5.5/800x280@2x.png?key=${encodeURIComponent(key)}&language=es`
+    : null;
+  return (
+    <Link href={href} className="relative mt-3 block h-36 overflow-hidden rounded-xl md:h-40 group">
+      {src ? (
+        // MapTiler estático: no pasa por next/image (LCP del hero no es esta foto)
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt={alt} className="h-full w-full object-cover" />
+      ) : (
+        <span className="absolute inset-0 bg-gradient-to-br from-sage-100 via-sand-100 to-terracotta-50" aria-hidden />
+      )}
+      <span className="absolute inset-0 bg-gradient-to-t from-[#2d2319]/55 to-transparent" aria-hidden />
+      <span className="absolute bottom-3 left-3 right-3 inline-flex items-center justify-center gap-2 rounded-xl bg-terracotta-600 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(200,90,48,0.3)] transition-colors group-hover:bg-terracotta-700">
+        <MapPin className="h-4 w-4" />
+        {cta}
+      </span>
+    </Link>
   );
 }
 

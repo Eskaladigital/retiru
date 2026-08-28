@@ -474,6 +474,7 @@ export default function DirectoryMapView({
   useEffect(() => {
     const q = searchParams.get('q') || '';
     const tipo = searchParams.get(locale === 'en' ? 'type' : 'tipo') || searchParams.get('tipo') || '';
+    const calidad = searchParams.get(locale === 'en' ? 'quality' : 'calidad') || searchParams.get('calidad') || searchParams.get('quality') || '';
     const prov = searchParams.get(locale === 'en' ? 'province' : 'provincia') || searchParams.get('provincia') || '';
     const city = searchParams.get(locale === 'en' ? 'city' : 'ciudad') || searchParams.get('ciudad') || '';
     if (q) setQuery(q);
@@ -482,6 +483,11 @@ export default function DirectoryMapView({
       .map((s) => s.trim())
       .filter((s) => VALID_CENTER_TYPE_SLUGS.includes(s as (typeof VALID_CENTER_TYPE_SLUGS)[number]));
     if (tipos.length) setSelectedTypes(tipos);
+    const tiers = calidad
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s): s is CenterQualityTier => (CENTER_QUALITY_TIER_SLUGS as readonly string[]).includes(s));
+    if (tiers.length) setSelectedTiers(tiers);
     if (prov) {
       const match = provinces.find((p) => generateSlug(p) === generateSlug(prov) || p.toLowerCase().replace(/\s/g, '-') === prov.toLowerCase());
       if (match) setSelectedProvince(match);
@@ -511,7 +517,7 @@ export default function DirectoryMapView({
       const matchesProvince = !selectedProvince || c.province === selectedProvince;
       const matchesCity = !placeSlug || matchesPlaceSlug(placeSlug, c.city, c.province);
       const tier = getCenterQualityTier(c.avg_rating || 0, c.review_count || 0);
-      const matchesQuality = selectedTiers.length === 0 || (tier != null && selectedTiers.includes(tier));
+      const matchesQuality = selectedTiers.length === 0 || selectedTiers.includes(tier);
       return matchesQuery && matchesType && matchesProvince && matchesCity && matchesQuality;
     });
 

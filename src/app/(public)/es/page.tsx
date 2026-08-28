@@ -180,10 +180,10 @@ export default async function HomePage() {
                   <div className="w-12 h-12 bg-white/15 rounded-xl flex items-center justify-center mb-5">
                     <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                   </div>
-                  <h3 className="font-serif text-2xl md:text-[28px] mb-2">Directorio de centros</h3>
-                  <p className="text-[15px] text-white/80 leading-relaxed mb-5">+850 centros de yoga, meditación y ayurveda verificados en toda España. Encuentra el tuyo cerca de casa.</p>
+                  <h3 className="font-serif text-2xl md:text-[28px] mb-2">Mapa de centros</h3>
+                  <p className="text-[15px] text-white/80 leading-relaxed mb-5">+850 centros de yoga, meditación y ayurveda en el mapa. Filtra por disciplina o valoración y abre el que te quede cerca.</p>
                   <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-white/90 group-hover:gap-2.5 transition-all">
-                    Explorar centros <IconChevron />
+                    Abrir el mapa <IconChevron />
                   </span>
                 </div>
               </Link>

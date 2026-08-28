@@ -2,6 +2,7 @@
 
 import 'leaflet/dist/leaflet.css';
 import { useEffect, useRef, useState } from 'react';
+import Supercluster from 'supercluster';
 import { getCenterTypeColor, getCenterTypeIcon } from '@/lib/utils';
 
 export type DirectoryCenter = {
@@ -24,39 +25,12 @@ export type DirectoryCenter = {
   services_en?: string[] | null;
 };
 
-type ClusterGroup = {
-  key: string;
-  lat: number;
-  lng: number;
-  count: number;
-  center?: DirectoryCenter;
-};
+type PointProps = { centerId: string };
 
-function groupCenters(centers: DirectoryCenter[], zoom: number): ClusterGroup[] {
-  const map = new Map<string, DirectoryCenter[]>();
-  for (const c of centers) {
-    if (c.latitude == null || c.longitude == null) continue;
-    let key: string;
-    if (zoom < 7) key = `p:${c.province || c.country || 'x'}`;
-    else if (zoom < 10) key = `c:${c.city || ''}|${c.province || ''}`;
-    else key = `id:${c.id}`;
-    const list = map.get(key);
-    if (list) list.push(c);
-    else map.set(key, [c]);
-  }
-  const groups: ClusterGroup[] = [];
-  for (const [key, list] of map) {
-    const lat = list.reduce((s, c) => s + Number(c.latitude), 0) / list.length;
-    const lng = list.reduce((s, c) => s + Number(c.longitude), 0) / list.length;
-    groups.push({
-      key,
-      lat,
-      lng,
-      count: list.length,
-      center: list.length === 1 ? list[0] : undefined,
-    });
-  }
-  return groups;
+function isClusterProps(
+  props: Supercluster.ClusterProperties | PointProps,
+): props is Supercluster.ClusterProperties {
+  return 'cluster' in props && Boolean(props.cluster);
 }
 
 function pinHtml(type: string | null, selected: boolean) {
@@ -105,51 +79,91 @@ export default function DirectoryLeafletMap({
   const layerRef = useRef<import('leaflet').LayerGroup | null>(null);
   const LRef = useRef<typeof import('leaflet') | null>(null);
   const onSelectRef = useRef(onSelect);
-  const centersRef = useRef(centers);
   const selectedRef = useRef(selectedId);
+  const byIdRef = useRef<Map<string, DirectoryCenter>>(new Map());
+  const clusterIndexRef = useRef<Supercluster<PointProps> | null>(null);
   const userMarkerRef = useRef<import('leaflet').Marker | null>(null);
   const [mapReady, setMapReady] = useState(false);
   onSelectRef.current = onSelect;
-  centersRef.current = centers;
   selectedRef.current = selectedId;
+
+  const rebuildIndex = (list: DirectoryCenter[]) => {
+    const index = new Supercluster<PointProps>({
+      radius: 60,
+      maxZoom: 12,
+      minPoints: 3,
+    });
+    const byId = new Map<string, DirectoryCenter>();
+    const features: Supercluster.PointFeature<PointProps>[] = [];
+    for (const c of list) {
+      if (c.latitude == null || c.longitude == null) continue;
+      byId.set(c.id, c);
+      features.push({
+        type: 'Feature',
+        properties: { centerId: c.id },
+        geometry: { type: 'Point', coordinates: [Number(c.longitude), Number(c.latitude)] },
+      });
+    }
+    index.load(features);
+    clusterIndexRef.current = index;
+    byIdRef.current = byId;
+  };
 
   const paint = () => {
     const map = mapRef.current;
     const L = LRef.current;
     const layer = layerRef.current;
-    if (!map || !L || !layer) return;
+    const index = clusterIndexRef.current;
+    if (!map || !L || !layer || !index) return;
     layer.clearLayers();
-    const groups = groupCenters(centersRef.current, map.getZoom());
-    for (const g of groups) {
-      const isPin = g.count === 1 && g.center;
-      const html = isPin
-        ? pinHtml(g.center!.type, selectedRef.current === g.center!.id)
-        : clusterHtml(g.count);
-      const size = isPin ? (selectedRef.current === g.center!.id ? 34 : 26) : g.count > 80 ? 48 : g.count > 30 ? 42 : 36;
+    const bounds = map.getBounds();
+    const pad = 0.04;
+    const bbox: [number, number, number, number] = [
+      bounds.getWest() - pad,
+      bounds.getSouth() - pad,
+      bounds.getEast() + pad,
+      bounds.getNorth() + pad,
+    ];
+    const zoom = Math.max(0, Math.floor(map.getZoom()));
+    const clusters = index.getClusters(bbox, zoom);
+    for (const feature of clusters) {
+      const [lng, lat] = feature.geometry.coordinates;
+      const props = feature.properties;
+      if (isClusterProps(props)) {
+        const count = props.point_count;
+        const size = count > 80 ? 48 : count > 30 ? 42 : 36;
+        const icon = L.divIcon({
+          className: 'dir-marker',
+          html: clusterHtml(count),
+          iconSize: [size, size],
+          iconAnchor: [size / 2, size / 2],
+        });
+        const marker = L.marker([lat, lng], { icon });
+        const clusterId = props.cluster_id;
+        marker.on('click', () => {
+          let target = 16;
+          try {
+            target = Math.min(index.getClusterExpansionZoom(clusterId), 16);
+          } catch {
+            target = Math.min(map.getZoom() + 2, 16);
+          }
+          map.flyTo([lat, lng], target, { duration: 0.5 });
+        });
+        marker.addTo(layer);
+        continue;
+      }
+      const center = byIdRef.current.get(props.centerId);
+      if (!center) continue;
+      const selected = selectedRef.current === center.id;
+      const size = selected ? 34 : 26;
       const icon = L.divIcon({
         className: 'dir-marker',
-        html,
+        html: pinHtml(center.type, selected),
         iconSize: [size, size],
         iconAnchor: [size / 2, size / 2],
       });
-      const marker = L.marker([g.lat, g.lng], { icon, zIndexOffset: isPin && selectedRef.current === g.center?.id ? 800 : 0 });
-      marker.on('click', () => {
-        if (g.center) {
-          onSelectRef.current(g.center);
-          return;
-        }
-        const members = centersRef.current.filter((c) => {
-          if (c.latitude == null || c.longitude == null) return false;
-          const z = map.getZoom();
-          if (z < 7) return (c.province || c.country || 'x') === g.key.slice(2);
-          return `${c.city || ''}|${c.province || ''}` === g.key.slice(2);
-        });
-        const pts = members
-          .filter((c) => c.latitude != null && c.longitude != null)
-          .map((c) => [Number(c.latitude), Number(c.longitude)] as [number, number]);
-        if (pts.length === 0) return;
-        map.fitBounds(L.latLngBounds(pts).pad(0.18), { maxZoom: 12, animate: true });
-      });
+      const marker = L.marker([lat, lng], { icon, zIndexOffset: selected ? 800 : 0 });
+      marker.on('click', () => onSelectRef.current(center));
       marker.addTo(layer);
     }
   };
@@ -183,6 +197,7 @@ export default function DirectoryLeafletMap({
       const layer = L.layerGroup().addTo(map);
       mapRef.current = map;
       layerRef.current = layer;
+      rebuildIndex(centers);
       map.on('zoomend moveend', paint);
       paint();
       setMapReady(true);
@@ -205,8 +220,13 @@ export default function DirectoryLeafletMap({
   }, []);
 
   useEffect(() => {
+    rebuildIndex(centers);
     paint();
-  }, [centers, selectedId]);
+  }, [centers]);
+
+  useEffect(() => {
+    paint();
+  }, [selectedId]);
 
   useEffect(() => {
     if (!fitToken) return;

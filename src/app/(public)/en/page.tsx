@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { Brain, Flame, Flower2, Leaf, ShoppingBag, Sparkles, Star, Zap } from 'lucide-react';
 import { homeEN } from '@/lib/seo/page-metadata';
 import { ImageWithFallback } from '@/components/ui/image-with-fallback';
+import HeroSearch from '@/components/home/HeroSearch';
 import { getCategories, getDestinations, getHomeShopProducts, getPublishedRetreats } from '@/lib/data';
 import { filterPublicRetreatCategories, getOrganizerReviewStats, organizerHasRatingToShow, CATEGORY_SLUG_EN } from '@/lib/utils';
 
@@ -44,7 +45,6 @@ const TESTIMONIALS = [
 ];
 
 /* ── SVG icon helpers ──────────────────────────────────────────────────── */
-const IconSearch = () => <svg className="w-5 h-5 text-[#a09383] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>;
 const IconPin = () => <svg className="w-[14px] h-[14px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>;
 const IconCal = () => <svg className="w-[15px] h-[15px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>;
 const IconStar = () => <svg className="w-[14px] h-[14px] text-amber-400" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
@@ -122,16 +122,7 @@ export default async function HomePageEN() {
 
             {/* SEARCH BOX — full container width on desktop */}
             <div className="bg-white border border-sand-300 rounded-2xl p-2 shadow-elevated animate-[scaleIn_0.6s_cubic-bezier(0.16,1,0.3,1)_0.4s_forwards] opacity-0 max-w-[620px] md:max-w-none">
-              <form action="/en/search" className="flex flex-col md:flex-row md:items-center gap-2">
-                <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sand-100 transition-colors"><IconSearch /><input name="q" type="text" placeholder="Yoga, meditation, ayurveda..." className="w-full bg-transparent text-[15px] text-foreground outline-none placeholder:text-[#a09383] font-sans" /></div>
-                <div className="hidden md:block w-px h-8 bg-sand-200" />
-                <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sand-100 transition-colors"><svg className="w-5 h-5 text-[#a09383] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg><input name="destination" type="text" placeholder="Where?" className="w-full bg-transparent text-[15px] text-foreground outline-none placeholder:text-[#a09383] font-sans" /></div>
-                <div className="hidden md:block w-px h-8 bg-sand-200" />
-                <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sand-100 transition-colors"><IconCal /><input name="dates" type="text" placeholder="When?" className="w-full bg-transparent text-[15px] text-foreground outline-none placeholder:text-[#a09383] font-sans" /></div>
-                <button type="submit" className="flex items-center justify-center gap-2 bg-terracotta-600 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl shadow-[0_2px_8px_rgba(200,90,48,0.3)] hover:bg-terracotta-700 transition-all whitespace-nowrap">
-                  <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg> Search
-                </button>
-              </form>
+              <HeroSearch locale="en" />
             </div>
 
             <div className="max-w-[620px] md:max-w-[900px]">
@@ -158,10 +149,10 @@ export default async function HomePageEN() {
                   <div className="w-12 h-12 bg-white/15 rounded-xl flex items-center justify-center mb-5">
                     <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                   </div>
-                  <h3 className="font-serif text-2xl md:text-[28px] mb-2">Center directory</h3>
-                  <p className="text-[15px] text-white/80 leading-relaxed mb-5">850+ verified yoga, meditation and ayurveda centers across Spain. Find yours near home.</p>
+                  <h3 className="font-serif text-2xl md:text-[28px] mb-2">Centers map</h3>
+                  <p className="text-[15px] text-white/80 leading-relaxed mb-5">850+ yoga, meditation and ayurveda centers on the map. Filter by practice or rating and open the one near you.</p>
                   <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-white/90 group-hover:gap-2.5 transition-all">
-                    Explore centers <IconChevron />
+                    Open the map <IconChevron />
                   </span>
                 </div>
               </Link>
