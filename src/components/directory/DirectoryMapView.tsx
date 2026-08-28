@@ -219,12 +219,9 @@ function FilterFields({
   setSelectedProvince,
   selectedTiers,
   toggleTier,
-  sortBy,
-  setSortBy,
   provinces,
   hasActive,
   onClear,
-  showSort = true,
   showClear = true,
   t,
   locale,
@@ -237,12 +234,9 @@ function FilterFields({
   setSelectedProvince: (v: string) => void;
   selectedTiers: CenterQualityTier[];
   toggleTier: (tier: CenterQualityTier) => void;
-  sortBy: string;
-  setSortBy: (v: string) => void;
   provinces: string[];
   hasActive: boolean;
   onClear: () => void;
-  showSort?: boolean;
   showClear?: boolean;
   t: (typeof COPY)[Locale];
   locale: Locale;
@@ -341,17 +335,6 @@ function FilterFields({
           })}
         </div>
       </div>
-      {showSort ? (
-        <label className="block">
-          <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#a09383] mb-1.5">{t.sort}</span>
-          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className={selectClass}>
-            <option value="rating">{t.sortRating}</option>
-            <option value="reviews">{t.sortReviews}</option>
-            <option value="name">{t.sortName}</option>
-            <option value="near">{t.sortNear}</option>
-          </select>
-        </label>
-      ) : null}
       {showClear ? (
         <button
           type="button"
@@ -638,8 +621,6 @@ export default function DirectoryMapView({
               setSelectedProvince={setSelectedProvince}
               selectedTiers={selectedTiers}
               toggleTier={toggleTier}
-              sortBy={sortBy}
-              setSortBy={setSortBy}
               provinces={provinces}
               hasActive={hasActive}
               onClear={clearFilters}
@@ -810,11 +791,26 @@ export default function DirectoryMapView({
         </div>
 
         <aside className="hidden md:flex md:w-80 lg:w-96 shrink-0 flex-col bg-white border-l border-sand-200">
-          <div className="px-4 py-3 border-b border-sand-100 flex items-center justify-between">
-            <p className="text-sm font-semibold">{t.results(filtered.length)}</p>
-            {filtered.length > LIST_LIMIT ? (
-              <p className="text-[11px] text-[#a09383]">{t.showing(listed.length, filtered.length)}</p>
-            ) : null}
+          <div className="px-4 py-3 border-b border-sand-100">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-semibold">{t.results(filtered.length)}</p>
+              {filtered.length > LIST_LIMIT ? (
+                <p className="text-[11px] text-[#a09383]">{t.showing(listed.length, filtered.length)}</p>
+              ) : null}
+            </div>
+            <label className="block mt-2">
+              <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#a09383] mb-1.5">{t.sort}</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="w-full appearance-none bg-sand-50 border border-sand-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-terracotta-300"
+              >
+                <option value="rating">{t.sortRating}</option>
+                <option value="reviews">{t.sortReviews}</option>
+                <option value="name">{t.sortName}</option>
+                <option value="near">{t.sortNear}</option>
+              </select>
+            </label>
           </div>
           <div className="flex-1 overflow-y-auto p-3 space-y-2">
             {listed.length === 0 ? (
@@ -936,12 +932,9 @@ export default function DirectoryMapView({
             setSelectedProvince={setSelectedProvince}
             selectedTiers={selectedTiers}
             toggleTier={toggleTier}
-            sortBy={sortBy}
-            setSortBy={setSortBy}
             provinces={provinces}
             hasActive={hasActive}
             onClear={clearFilters}
-            showSort={false}
             showClear={false}
             t={t}
             locale={locale}
