@@ -1,7 +1,7 @@
 'use client';
 
 import 'leaflet/dist/leaflet.css';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getCenterTypeColor, getCenterTypeIcon } from '@/lib/utils';
 
 export type DirectoryCenter = {
@@ -84,7 +84,7 @@ interface DirectoryLeafletMapProps {
   selectedId: string | null;
   onSelect: (center: DirectoryCenter) => void;
   fitToken: string;
-  locateToken: number;
+  userGeo: { lat: number; lng: number } | null;
   resetToken: number;
   resetToFilter: boolean;
   locateLabel: string;
@@ -95,7 +95,7 @@ export default function DirectoryLeafletMap({
   selectedId,
   onSelect,
   fitToken,
-  locateToken,
+  userGeo,
   resetToken,
   resetToFilter,
   locateLabel,
@@ -107,6 +107,8 @@ export default function DirectoryLeafletMap({
   const onSelectRef = useRef(onSelect);
   const centersRef = useRef(centers);
   const selectedRef = useRef(selectedId);
+  const userMarkerRef = useRef<import('leaflet').Marker | null>(null);
+  const [mapReady, setMapReady] = useState(false);
   onSelectRef.current = onSelect;
   centersRef.current = centers;
   selectedRef.current = selectedId;
@@ -183,6 +185,7 @@ export default function DirectoryLeafletMap({
       layerRef.current = layer;
       map.on('zoomend moveend', paint);
       paint();
+      setMapReady(true);
       requestAnimationFrame(() => {
         map?.invalidateSize();
         if (map) applySpainView(map, false);
@@ -192,6 +195,9 @@ export default function DirectoryLeafletMap({
     init();
     return () => {
       cancelled = true;
+      setMapReady(false);
+      userMarkerRef.current?.remove();
+      userMarkerRef.current = null;
       map?.remove();
       mapRef.current = null;
       layerRef.current = null;
@@ -240,16 +246,28 @@ export default function DirectoryLeafletMap({
   }, [resetToken, resetToFilter, centers]);
 
   useEffect(() => {
-    if (!locateToken) return;
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        mapRef.current?.flyTo([pos.coords.latitude, pos.coords.longitude], 12, { duration: 0.7 });
-      },
-      () => undefined,
-      { enableHighAccuracy: true, timeout: 8000 },
-    );
-  }, [locateToken]);
+    if (!mapReady) return;
+    const map = mapRef.current;
+    const L = LRef.current;
+    if (!map || !L) return;
+    if (!userGeo) {
+      userMarkerRef.current?.remove();
+      userMarkerRef.current = null;
+      return;
+    }
+    const icon = L.divIcon({
+      className: 'dir-marker',
+      html: '<span class="dir-user"><span class="dir-user-ring"></span><span class="dir-user-dot"></span></span>',
+      iconSize: [36, 36],
+      iconAnchor: [18, 18],
+    });
+    if (!userMarkerRef.current) {
+      userMarkerRef.current = L.marker([userGeo.lat, userGeo.lng], { icon, zIndexOffset: 1200 }).addTo(map);
+    } else {
+      userMarkerRef.current.setLatLng([userGeo.lat, userGeo.lng]);
+    }
+    map.flyTo([userGeo.lat, userGeo.lng], Math.max(map.getZoom(), 12), { duration: 0.7 });
+  }, [userGeo, mapReady]);
 
   useEffect(() => {
     if (!selectedId) return;
@@ -301,6 +319,22 @@ export default function DirectoryLeafletMap({
           font-size: 13px;
           border: 3px solid #fff;
           box-shadow: 0 2px 8px rgba(200, 90, 48, 0.35);
+        }
+        .dir-user { position: relative; display: block; width: 36px; height: 36px; }
+        .dir-user-ring {
+          position: absolute; inset: 0; border-radius: 999px;
+          background: rgba(200, 90, 48, 0.25); border: 2px solid rgba(200, 90, 48, 0.45);
+          animation: dirUserPulse 2s ease-out infinite;
+        }
+        .dir-user-dot {
+          position: absolute; top: 50%; left: 50%; width: 14px; height: 14px;
+          transform: translate(-50%, -50%); background: #c85a30;
+          border: 3px solid #fff; border-radius: 999px;
+          box-shadow: 0 0 0 4px rgba(200, 90, 48, 0.3);
+        }
+        @keyframes dirUserPulse {
+          0% { transform: scale(0.8); opacity: 1; }
+          100% { transform: scale(1.6); opacity: 0; }
         }
         .leaflet-control-attribution { font-size: 10px; }
         .leaflet-control-zoom { margin: 12px 12px 0 0 !important; }

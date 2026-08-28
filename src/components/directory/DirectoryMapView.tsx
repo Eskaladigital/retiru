@@ -49,6 +49,10 @@ const COPY = {
     filters: 'Filtros',
     list: 'Lista',
     locate: 'Ver ubicación',
+    locating: 'Buscando…',
+    locateDenied: 'Activa la ubicación en el candado del navegador',
+    locateTimeout: 'No hemos podido leer tu ubicación. Prueba otra vez',
+    locateFail: 'No hemos podido leer tu ubicación',
     resetZoom: 'Restablecer zoom',
     see: 'Ver ficha',
     noGps: 'Sin coordenadas',
@@ -79,6 +83,10 @@ const COPY = {
     filters: 'Filters',
     list: 'List',
     locate: 'Show location',
+    locating: 'Finding…',
+    locateDenied: 'Allow location in the browser lock icon',
+    locateTimeout: 'Could not read your location. Try again',
+    locateFail: 'Could not read your location',
     resetZoom: 'Reset zoom',
     see: 'View profile',
     noGps: 'No coordinates',
@@ -384,10 +392,11 @@ export default function DirectoryMapView({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mobileView, setMobileView] = useState<MobileView>('map');
   const [legendOpen, setLegendOpen] = useState(false);
-  const [locateToken, setLocateToken] = useState(0);
   const [resetToken, setResetToken] = useState(0);
   const [openMapSearch, setOpenMapSearch] = useState(false);
   const [userGeo, setUserGeo] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locateError, setLocateError] = useState<string | null>(null);
 
   const spainCenters = useMemo(
     () => centers.filter((c) => !c.country || c.country === 'España'),
@@ -507,15 +516,26 @@ export default function DirectoryMapView({
   }
 
   function locate() {
-    setLocateToken((n) => n + 1);
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      setLocateError(t.locateFail);
+      return;
+    }
+    setLocating(true);
+    setLocateError(null);
+    const mobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setUserGeo({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         setSortBy('near');
+        setLocating(false);
       },
-      () => undefined,
-      { enableHighAccuracy: true, timeout: 8000 },
+      (err) => {
+        setLocating(false);
+        if (err.code === err.PERMISSION_DENIED) setLocateError(t.locateDenied);
+        else if (err.code === err.TIMEOUT) setLocateError(t.locateTimeout);
+        else setLocateError(t.locateFail);
+      },
+      { enableHighAccuracy: mobile, timeout: mobile ? 12000 : 8000, maximumAge: mobile ? 0 : 60_000 },
     );
   }
 
@@ -556,7 +576,7 @@ export default function DirectoryMapView({
             selectedId={selectedId}
             onSelect={(c) => setSelectedId(c.id)}
             fitToken={fitToken}
-            locateToken={locateToken}
+            userGeo={userGeo}
             resetToken={resetToken}
             resetToFilter={Boolean(selectedProvince || placeSlug)}
             locateLabel={t.locate}
@@ -668,14 +688,24 @@ export default function DirectoryMapView({
             </div>
           </div>
 
+          {locateError ? (
+            <div className="absolute left-3 z-[500] bottom-[calc(12rem+env(safe-area-inset-bottom,0px))] md:left-1/2 md:-translate-x-1/2 md:bottom-32 bg-red-50 text-red-700 px-3 py-1.5 rounded-lg shadow-soft text-[11px] max-w-[220px] text-center">
+              {locateError}
+            </div>
+          ) : null}
           <button
             type="button"
             onClick={locate}
-            className="absolute left-3 bottom-[calc(8.25rem+env(safe-area-inset-bottom,0px))] md:left-1/2 md:-translate-x-1/2 md:bottom-20 z-[500] bg-white/95 backdrop-blur p-3 md:px-4 md:py-2 rounded-full shadow-soft border border-sand-200 font-semibold text-[#2d2319] hover:border-terracotta-300 flex items-center md:gap-2"
+            disabled={locating}
+            className={`absolute left-3 bottom-[calc(8.25rem+env(safe-area-inset-bottom,0px))] md:left-1/2 md:-translate-x-1/2 md:bottom-20 z-[500] backdrop-blur p-3 md:px-4 md:py-2 rounded-full shadow-soft border font-semibold flex items-center md:gap-2 disabled:opacity-70 ${
+              userGeo
+                ? 'bg-terracotta-600 text-white border-terracotta-600'
+                : 'bg-white/95 text-[#2d2319] border-sand-200 hover:border-terracotta-300'
+            }`}
             aria-label={t.locate}
           >
             <Locate className="w-5 h-5" />
-            <span className="hidden md:inline text-sm">{t.locate}</span>
+            <span className="hidden md:inline text-sm">{locating ? t.locating : t.locate}</span>
           </button>
           <button
             type="button"
