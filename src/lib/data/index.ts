@@ -403,29 +403,48 @@ const CENTER_SELECT = `
   google_place_id, google_maps_url
 `;
 
+const SUPABASE_PAGE = 1000;
+
 export async function getActiveCenters(filters?: {
   province?: string;
   type?: string;
   limit?: number;
   offset?: number;
+  /** El mapa: todas las filas. PostgREST corta a 1000 por petición. */
+  all?: boolean;
 }): Promise<{ centers: Center[]; total: number }> {
   const supabase = await createServerSupabase();
-  let query = supabase
-    .from('centers')
-    .select(CENTER_SELECT, { count: 'exact' })
-    .eq('status', 'active')
-    .order('name', { ascending: true });
+  const build = () => {
+    let query = supabase
+      .from('centers')
+      .select(CENTER_SELECT, { count: 'exact' })
+      .eq('status', 'active')
+      .eq('country', 'España')
+      .order('name', { ascending: true });
+    if (filters?.province) query = query.eq('province', filters.province);
+    if (filters?.type) query = query.eq('type', filters.type);
+    return query;
+  };
 
-  if (filters?.province) query = query.eq('province', filters.province);
-  if (filters?.type) query = query.eq('type', filters.type);
-  query = query.eq('country', 'España');
+  if (filters?.all) {
+    const centers: Center[] = [];
+    let total = 0;
+    let from = 0;
+    for (;;) {
+      const { data, error, count } = await build().range(from, from + SUPABASE_PAGE - 1);
+      if (error) throw error;
+      total = count ?? total;
+      const batch = (data || []) as Center[];
+      centers.push(...batch);
+      if (batch.length < SUPABASE_PAGE) break;
+      from += SUPABASE_PAGE;
+    }
+    return { centers, total };
+  }
 
   const limit = filters?.limit ?? 12;
   const offset = filters?.offset ?? 0;
-  query = query.range(offset, offset + limit - 1);
-
-  const { data, error, count } = await query;
-
+  const { data, error, count } = await build().range(offset, offset + limit - 1);
   if (error) throw error;
   return { centers: (data || []) as Center[], total: count ?? 0 };
 }

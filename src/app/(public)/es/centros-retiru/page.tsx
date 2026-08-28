@@ -4,7 +4,7 @@ import { getActiveCenters } from '@/lib/data';
 import DirectoryMapView from '@/components/directory/DirectoryMapView';
 
 export default async function CentrosPage() {
-  const { centers } = await getActiveCenters({ limit: 2000 });
+  const { centers } = await getActiveCenters({ all: true });
   const slim = centers.map((c) => ({
     id: c.id,
     name: c.name,

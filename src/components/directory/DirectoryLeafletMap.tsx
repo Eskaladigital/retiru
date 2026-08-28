@@ -44,6 +44,32 @@ function clusterHtml(count: number) {
   return `<span class="dir-cluster" style="--s:${size}px">${count}</span>`;
 }
 
+function hasFinePointer() {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+}
+
+function escapeHtml(text: string) {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function pinTooltipHtml(center: DirectoryCenter) {
+  const rating = Number(center.avg_rating);
+  const reviews = Number(center.review_count);
+  const ratingLabel = Number.isFinite(rating) && rating > 0 ? rating.toFixed(1) : null;
+  const reviewsLabel = Number.isFinite(reviews) && reviews > 0 ? Math.round(reviews).toLocaleString('es-ES') : null;
+  const ratingHtml = ratingLabel
+    ? `<span class="dir-tip-rating"><span class="dir-tip-star">★</span>${ratingLabel}${
+        reviewsLabel ? `<span class="dir-tip-reviews">(${reviewsLabel})</span>` : ''
+      }</span>`
+    : '';
+  return `<div class="dir-tip"><span class="dir-tip-name">${escapeHtml(center.name)}</span>${ratingHtml}</div>`;
+}
+
 /** Vista inicial y «Restablecer zoom»: península + Baleares, sin Canarias. */
 const SPAIN_CENTER: [number, number] = [40.4, -3.7];
 const SPAIN_ZOOM = 6;
@@ -163,6 +189,14 @@ export default function DirectoryLeafletMap({
         iconAnchor: [size / 2, size / 2],
       });
       const marker = L.marker([lat, lng], { icon, zIndexOffset: selected ? 800 : 0 });
+      if (hasFinePointer()) {
+        marker.bindTooltip(pinTooltipHtml(center), {
+          direction: 'top',
+          offset: [0, -14],
+          opacity: 1,
+          className: 'dir-tip-leaflet',
+        });
+      }
       marker.on('click', () => onSelectRef.current(center));
       marker.addTo(layer);
     }
@@ -361,6 +395,45 @@ export default function DirectoryLeafletMap({
         @media (min-width: 768px) {
           .leaflet-control-zoom { margin: 16px 16px 0 0 !important; }
         }
+        .dir-tip {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 10px;
+          font-size: 13px;
+          font-weight: 600;
+          line-height: 1.3;
+          color: #2d2319;
+          background: #fff;
+          border-radius: 8px;
+          box-shadow: 0 2px 10px rgba(45, 35, 25, 0.18);
+          white-space: nowrap;
+          max-width: 340px;
+          pointer-events: none;
+        }
+        .dir-tip-name {
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .dir-tip-rating {
+          display: inline-flex;
+          align-items: center;
+          gap: 3px;
+          flex-shrink: 0;
+          font-size: 12px;
+          font-weight: 700;
+          color: #853a26;
+        }
+        .dir-tip-star { color: #f59e0b; font-size: 12px; line-height: 1; }
+        .dir-tip-reviews { font-weight: 600; color: #7a6b5d; }
+        .leaflet-tooltip.dir-tip-leaflet {
+          padding: 0 !important;
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+        }
+        .leaflet-tooltip.dir-tip-leaflet::before { display: none; }
       `}</style>
       <span className="sr-only">{locateLabel}</span>
     </div>
