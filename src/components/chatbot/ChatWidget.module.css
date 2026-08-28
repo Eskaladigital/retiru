@@ -165,6 +165,16 @@
   gap: 0.75rem;
 }
 
+.geoBanner {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: #3d5c45;
+  background: #e8f0ea;
+  border: 1px solid #c5d6c8;
+  border-radius: 0.65rem;
+  padding: 0.55rem 0.7rem;
+}
+
 .rowUser {
   display: flex;
   justify-content: flex-end;

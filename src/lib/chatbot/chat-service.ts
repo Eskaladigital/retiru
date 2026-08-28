@@ -7,7 +7,7 @@ import {
   type ChatLocale,
 } from './config'
 import { buildBusinessDataBlock } from './business-data'
-import { buildDirectoryBlock } from './directory'
+import { buildDirectoryBlock, type UserCoords } from './directory'
 import { getChatbotModel, getOpenAIClient } from './openai'
 import { buildRagQuery, formatRagContext, retrieveContext } from './rag'
 import { buildSystemPrompt } from './system-prompt'
@@ -53,13 +53,14 @@ export async function prepareChatContext(
   sb: SupabaseClient,
   userText: string,
   history: ChatMessageInput[],
-  locale: ChatLocale
+  locale: ChatLocale,
+  userCoords?: UserCoords | null
 ): Promise<{ systemPrompt: string }> {
   const recentUser = history.filter((m) => m.role === 'user').map((m) => m.content)
   const ragQuery = buildRagQuery(recentUser, userText)
   const chunks = await retrieveContext(sb, ragQuery, locale)
   const ragContext = formatRagContext(chunks)
-  const directoryLive = await buildDirectoryBlock(sb, ragQuery, locale)
+  const directoryLive = await buildDirectoryBlock(sb, ragQuery, locale, userCoords)
   const businessData = buildBusinessDataBlock(locale, directoryLive)
   const systemPrompt = buildSystemPrompt(locale, ragContext, businessData)
   return { systemPrompt }

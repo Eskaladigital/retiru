@@ -17,6 +17,7 @@ import styles from './ChatWidget.module.css'
 const ASSISTANT_NAME = process.env.NEXT_PUBLIC_CHATBOT_ASSISTANT_NAME?.trim() || 'Roy'
 
 type ChatMsg = { id: string; role: 'user' | 'assistant'; content: string }
+type UserLocation = { lat: number; lng: number }
 
 function genSessionId(): string {
   return `sess_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
@@ -53,7 +54,35 @@ export default function ChatWidget() {
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
   const [menuLevel, setMenuLevel] = useState<MenuItem[] | null>(null)
+  const [userLocation, setUserLocation] = useState<UserLocation | null>(null)
+  const [locationDenied, setLocationDenied] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const locationRef = useRef<UserLocation | null>(null)
+
+  useEffect(() => {
+    locationRef.current = userLocation
+  }, [userLocation])
+
+  const requestLocation = useCallback(() => {
+    if (locationRef.current || locationDenied) return
+    if (typeof navigator === 'undefined' || !('geolocation' in navigator)) {
+      setLocationDenied(true)
+      return
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude
+        const lng = position.coords.longitude
+        if (Math.abs(lat) < 0.5 && Math.abs(lng) < 0.5) {
+          setLocationDenied(true)
+          return
+        }
+        setUserLocation({ lat, lng })
+      },
+      () => setLocationDenied(true),
+      { enableHighAccuracy: false, timeout: 5000, maximumAge: 300_000 }
+    )
+  }, [locationDenied])
 
   useEffect(() => {
     if (hidden) return
@@ -84,6 +113,8 @@ export default function ChatWidget() {
 
   const persistOpen = (v: boolean) => {
     setOpen(v)
+    // Molde casi cinco: pide GPS al abrir. En el clic (no useEffect) para que Safari/Chrome no lo maten.
+    if (v) requestLocation()
   }
 
   const refreshConversation = () => {
@@ -115,6 +146,7 @@ export default function ChatWidget() {
             conversationId: conversationId ?? undefined,
             text: trimmed,
             locale,
+            location: locationRef.current ?? undefined,
           }),
         })
 
@@ -239,6 +271,13 @@ export default function ChatWidget() {
           </div>
 
           <div className={`${styles.messages} chat-markdown`} onClick={handleLinkClick}>
+            {userLocation && (
+              <div className={styles.geoBanner} role="status">
+                {locale === 'en'
+                  ? 'Location shared — you can ask for places “near me”.'
+                  : 'Ubicación compartida — puedes preguntar por sitios «cerca de mí».'}
+              </div>
+            )}
             {messages.map((msg) => (
               <div
                 key={msg.id}
@@ -289,6 +328,21 @@ export default function ChatWidget() {
                 </div>
               ) : (
                 <div className={styles.chips}>
+                  {userLocation && (
+                    <button
+                      type="button"
+                      className={styles.chip}
+                      onClick={() =>
+                        sendMessage(
+                          locale === 'en'
+                            ? 'Centers near me — yoga, meditation or ayurveda.'
+                            : 'Centros cerca de mí: yoga, meditación o ayurveda.'
+                        )
+                      }
+                    >
+                      {locale === 'en' ? 'Near me' : 'Cerca de mí'}
+                    </button>
+                  )}
                   {menus.map((t) => (
                     <button
                       key={t.id}

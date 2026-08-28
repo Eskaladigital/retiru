@@ -39,7 +39,8 @@ export function buildSystemPrompt(locale: ChatLocale, ragContext: string, liveDa
 - No des consejo médico. El blog es orientación, no diagnóstico.
 - No inventes precios de un retiro que no salga en el bloque vivo. Comisión 0/10/20 y 20 €/mes del directorio sí están en DATOS.
 - No prometas plazas libres si el bloque no lo dice.
-- Reserva: no presentes el pago con tarjeta como la única vía. Si el cobro no está activo o hay un mínimo de plazas, se reserva sin pagar y avisa el email.`
+- Reserva: no presentes el pago con tarjeta como la única vía. Si el cobro no está activo o hay un mínimo de plazas, se reserva sin pagar y avisa el email.
+- GPS: si DATOS EN TIEMPO REAL trae GPS DEL VISITANTE, úsalo para «cerca de mí», «aquí» o una búsqueda de centros sin ciudad. Si nombra otra ciudad, IGNORA el GPS. Si pide cerca y no hay GPS, pregunta la ciudad; no inventes dónde está.`
     : `### How to use information
 - Live centers and retreats: LIVE DATA block. It overrides RAG.
 - Blog and how the platform works: RAG (RETIRU INFORMATION).
@@ -50,7 +51,8 @@ export function buildSystemPrompt(locale: ChatLocale, ragContext: string, liveDa
 - No medical advice. The blog is orientation, not a diagnosis.
 - Do not invent a retreat price that is not in the live block. 0/10/20 commission and the 20 €/month directory fee are in LIVE DATA.
 - Do not promise open spots unless the block says so.
-- Booking: do not present card payment as the only path. If checkout is off or a minimum group size is unmet, they can hold a spot without paying and get an email.`
+- Booking: do not present card payment as the only path. If checkout is off or a minimum group size is unmet, they can hold a spot without paying and get an email.
+- GPS: if LIVE DATA includes VISITOR GPS, use it for "near me" / "here" or a center search with no city. If they name another city, IGNORE GPS. If they ask nearby and there is no GPS, ask for a city; do not invent where they are.`
 
   const capture = es
     ? `### Captación (suave)

@@ -20,6 +20,8 @@ const NEIGHBORHOODS = [
   'malasaña', 'gracia', 'eixample', 'gotico', 'born', 'ruzafa', 'benimaclet', 'albaicin', 'triana',
 ]
 
+export type UserCoords = { lat: number; lng: number }
+
 type CenterHit = {
   name: string
   slug: string
@@ -31,6 +33,8 @@ type CenterHit = {
   type: string
   avg_rating: number | null
   review_count: number | null
+  latitude?: number | null
+  longitude?: number | null
 }
 
 let gazetteerCache: { at: number; names: string[] } | null = null
@@ -79,11 +83,43 @@ function lastUserTurn(q: string): string {
   return (parts.at(-1) || q).trim()
 }
 
-function wantsDirectory(q: string, place: string | null, neighborhood: string | null): boolean {
+function isValidGps(coords: UserCoords | null | undefined): coords is UserCoords {
+  if (!coords) return false
+  const { lat, lng } = coords
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false
+  if (Math.abs(lat) < 0.5 && Math.abs(lng) < 0.5) return false
+  return true
+}
+
+function hasProximityIntent(q: string): boolean {
+  const n = normalize(q)
+  return (
+    /\b(cerca|aqui|por aqui|en mi zona|cerca de mi|alrededor|donde estoy|mi ubicacion|por la zona|en esta zona|en la zona)\b/.test(
+      n
+    ) || /\b(near me|nearby|around here|close by|where i am|my area)\b/.test(n)
+  )
+}
+
+function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const R = 6371
+  const dLat = ((bLat - aLat) * Math.PI) / 180
+  const dLng = ((bLng - aLng) * Math.PI) / 180
+  const s =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((aLat * Math.PI) / 180) * Math.cos((bLat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)))
+}
+
+function wantsDirectory(
+  q: string,
+  place: string | null,
+  neighborhood: string | null,
+  gpsNear: boolean
+): boolean {
   const n = normalize(q)
   if (n.length < 6) return false
   if (/^(hola|hey|hi|hello|ok|vale|gracias|thanks)[\s!.?]*$/.test(n)) return false
-  if (place || neighborhood) return true
+  if (place || neighborhood || gpsNear) return true
   return /\b(centro|centros|estudio|ashram|retiro|retiros|clase|clases|taller|yoga|medit|ayurveda|center|retreat|class)\b/.test(
     n
   )
@@ -180,13 +216,19 @@ function typeLanding(locale: ChatLocale, type: string): string {
   return `${SITE_URL}/es/centros/${CENTER_TYPE_URL_ES[type] || type}`
 }
 
-function formatCenterCard(c: CenterHit, locale: ChatLocale): string {
+function formatCenterCard(c: CenterHit, locale: ChatLocale, km?: number): string {
   const typeLabel = getCenterTypeLabel(c.type, locale)
   const where = displayWhere(c)
   const reviews = c.review_count ? ` (${c.review_count})` : ''
   const rating = c.avg_rating ? `⭐ ${Number(c.avg_rating).toFixed(1)}${reviews}` : ''
-  const pin = where ? `📍 ${where}` : ''
-  return [`**${c.name}**`, pin, typeLabel, rating, `🔗 ${centerUrl(locale, c.slug)}`]
+  const dist =
+    km != null
+      ? locale === 'en'
+        ? `${km.toFixed(1).replace('.', ',')} km`
+        : `${km.toFixed(1).replace('.', ',')} km`
+      : ''
+  const pin = [dist, where].filter(Boolean).join(' · ')
+  return [`**${c.name}**`, pin ? `📍 ${pin}` : '', typeLabel, rating, `🔗 ${centerUrl(locale, c.slug)}`]
     .filter(Boolean)
     .join('\n')
 }
@@ -223,7 +265,8 @@ function ilikeOr(fields: string[], needle: string): string {
 export async function buildDirectoryBlock(
   sb: SupabaseClient,
   query: string,
-  locale: ChatLocale
+  locale: ChatLocale,
+  userCoords?: UserCoords | null
 ): Promise<string> {
   const today = new Date().toISOString().slice(0, 10)
   const gazetteer = await loadGazetteer(sb)
@@ -251,6 +294,11 @@ export async function buildDirectoryBlock(
   const wantsEvents = /\b(retiro|retiros|clase|clases|evento|eventos|reserv|retreat|class|book)\b/.test(
     normalize(query)
   )
+  const proximity = hasProximityIntent(query)
+  const gpsOk = isValidGps(userCoords)
+  // Molde casi cinco: si nombra ciudad, el GPS no manda.
+  const gps = gpsOk && !place && !neighborhood ? userCoords : null
+  const radiusKm = proximity ? 25 : 50
 
   const [{ count: centersN }, { count: retreatsN }] = await Promise.all([
     sb.from('centers').select('id', { count: 'exact', head: true }).eq('status', 'active'),
@@ -280,7 +328,21 @@ export async function buildDirectoryBlock(
     lines.push(`Buscar: ${SITE_URL}/es/buscar · Eventos: ${SITE_URL}/es/retiros-retiru · Blog: ${SITE_URL}/es/blog`)
   }
 
-  if (!wantsDirectory(query, place, neighborhood)) {
+  if (gpsOk) {
+    lines.push(
+      locale === 'en'
+        ? `VISITOR GPS (optional): ${userCoords.lat.toFixed(4)}, ${userCoords.lng.toFixed(4)}. Use ONLY for "near me" / "here", or if they did not name another city. If they name a city, IGNORE GPS.`
+        : `GPS DEL VISITANTE (opcional): ${userCoords.lat.toFixed(4)}, ${userCoords.lng.toFixed(4)}. Úsalo SOLO si dice «cerca de mí» / «aquí», o si no nombra otra ciudad. Si nombra una ciudad, IGNORA el GPS.`
+    )
+  } else if (proximity) {
+    lines.push(
+      locale === 'en'
+        ? 'Visitor asked for nearby places but did not share GPS. Ask for a city. Do not invent a location.'
+        : 'El visitante pide «cerca» y no ha compartido GPS. Pregunta la ciudad. No inventes una ubicación.'
+    )
+  }
+
+  if (!wantsDirectory(query, place, neighborhood, Boolean(gps) && (proximity || Boolean(type)))) {
     return lines.join('\n')
   }
 
@@ -289,12 +351,27 @@ export async function buildDirectoryBlock(
 
   let centersQuery = sb
     .from('centers')
-    .select('name, slug, city, province, region, address, search_terms, type, avg_rating, review_count')
+    .select(
+      'name, slug, city, province, region, address, search_terms, type, avg_rating, review_count, latitude, longitude'
+    )
     .eq('status', 'active')
     .limit(80)
 
   if (type) centersQuery = centersQuery.eq('type', type)
-  if (needle) centersQuery = centersQuery.or(ilikeOr(CENTER_FIELDS, needle))
+  if (needle) {
+    centersQuery = centersQuery.or(ilikeOr(CENTER_FIELDS, needle))
+  } else if (gps) {
+    const dLat = radiusKm / 111
+    const dLng = radiusKm / (111 * Math.max(0.2, Math.cos((gps.lat * Math.PI) / 180)))
+    centersQuery = centersQuery
+      .not('latitude', 'is', null)
+      .not('longitude', 'is', null)
+      .gte('latitude', gps.lat - dLat)
+      .lte('latitude', gps.lat + dLat)
+      .gte('longitude', gps.lng - dLng)
+      .lte('longitude', gps.lng + dLng)
+      .limit(120)
+  }
 
   let retreatsQuery = sb
     .from('retreats')
@@ -330,8 +407,19 @@ export async function buildDirectoryBlock(
     return lines.join('\n')
   }
 
-  const centers = ((centerRows || []) as CenterHit[])
-    .filter((c) => {
+  const withKm = ((centerRows || []) as CenterHit[]).map((c) => {
+    const lat = Number(c.latitude)
+    const lng = Number(c.longitude)
+    const km =
+      gps && Number.isFinite(lat) && Number.isFinite(lng)
+        ? haversineKm(gps.lat, gps.lng, lat, lng)
+        : undefined
+    return { c, km }
+  })
+
+  const centers = withKm
+    .filter(({ c, km }) => {
+      if (gps) return km != null && km <= radiusKm
       const h = haystack(c)
       if (neighborhood && !h.includes(neighborhood)) return false
       if (place && neighborhood && place !== neighborhood) {
@@ -340,10 +428,13 @@ export async function buildDirectoryBlock(
       if (place) return h.includes(place)
       return false
     })
-    .sort(
-      (a, b) =>
-        locationScore(b, place, neighborhood, cityIntent) - locationScore(a, place, neighborhood, cityIntent)
-    )
+    .sort((a, b) => {
+      if (gps && a.km != null && b.km != null) return a.km - b.km
+      return (
+        locationScore(b.c, place, neighborhood, cityIntent) -
+        locationScore(a.c, place, neighborhood, cityIntent)
+      )
+    })
     .slice(0, 6)
 
   const retreats = (retreatRows || [])
@@ -360,8 +451,8 @@ export async function buildDirectoryBlock(
         ? 'MATCHING CENTER CARDS (paste as listings; do not invent others):'
         : 'FICHAS DE CENTROS QUE COINCIDEN (pégalas tal cual; no inventes otras):'
     )
-    for (const c of centers) {
-      lines.push(formatCenterCard(c, locale))
+    for (const { c, km } of centers) {
+      lines.push(formatCenterCard(c, locale, km))
       lines.push('')
     }
     if (type) {
@@ -371,11 +462,15 @@ export async function buildDirectoryBlock(
           : `Más de este tipo: ${typeLanding(locale, type)}`
       )
     }
-  } else if (needle) {
+  } else if (needle || gps) {
     lines.push(
       locale === 'en'
-        ? 'No matching center in this search. Point to the directory hubs; do not invent a studio.'
-        : 'Ningún centro coincide con esta búsqueda. Deriva a los hubs del directorio; no inventes un estudio.'
+        ? gps
+          ? 'No matching center near the visitor GPS. Ask for a city or point to the directory hubs; do not invent a studio.'
+          : 'No matching center in this search. Point to the directory hubs; do not invent a studio.'
+        : gps
+          ? 'Ningún centro cerca del GPS. Pregunta la ciudad o deriva a los hubs; no inventes un estudio.'
+          : 'Ningún centro coincide con esta búsqueda. Deriva a los hubs del directorio; no inventes un estudio.'
     )
   }
 

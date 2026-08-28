@@ -34,6 +34,7 @@ export async function POST(request: Request) {
     conversationId?: string
     text?: string
     locale?: string
+    location?: { lat?: number; lng?: number }
   }
 
   try {
@@ -45,6 +46,12 @@ export async function POST(request: Request) {
   const sessionId = typeof body.sessionId === 'string' ? body.sessionId.trim() : ''
   const text = typeof body.text === 'string' ? body.text.trim() : ''
   const locale = parseChatLocale(body.locale)
+  const lat = Number(body.location?.lat)
+  const lng = Number(body.location?.lng)
+  const userCoords =
+    Number.isFinite(lat) && Number.isFinite(lng) && !(Math.abs(lat) < 0.5 && Math.abs(lng) < 0.5)
+      ? { lat, lng }
+      : null
 
   if (!sessionId) {
     return new Response(JSON.stringify({ error: 'Falta sessionId' }), { status: 400 })
@@ -56,7 +63,7 @@ export async function POST(request: Request) {
   try {
     const conversationId = await getOrCreateConversation(sb, sessionId, body.conversationId, locale)
     const history = await loadConversationHistory(sb, conversationId)
-    const { systemPrompt } = await prepareChatContext(sb, text, history, locale)
+    const { systemPrompt } = await prepareChatContext(sb, text, history, locale, userCoords)
     const openaiMessages = toOpenAIMessages(history, systemPrompt, text)
 
     await saveMessage(sb, conversationId, 'user', text)
