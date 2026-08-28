@@ -227,23 +227,13 @@ export default function HeroSearch({ locale = 'es' }: { locale?: 'es' | 'en' }) 
           </>
         ) : null}
 
-        {mode === 'eventos' ? (
-          <button
-            type="submit"
-            className="flex items-center justify-center gap-2 bg-terracotta-600 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl shadow-[0_2px_8px_rgba(200,90,48,0.3)] hover:bg-terracotta-700 transition-all whitespace-nowrap"
-          >
-            <Search className="w-[18px] h-[18px]" />
-            {t.search}
-          </button>
-        ) : (
-          <button
-            type="submit"
-            className="flex items-center justify-center gap-2 bg-terracotta-600 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl shadow-[0_2px_8px_rgba(200,90,48,0.3)] hover:bg-terracotta-700 transition-all whitespace-nowrap"
-          >
-            <Search className="w-[18px] h-[18px]" />
-            {t.openMap}
-          </button>
-        )}
+        <button
+          type="submit"
+          className="flex items-center justify-center gap-2 bg-terracotta-600 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl shadow-[0_2px_8px_rgba(200,90,48,0.3)] hover:bg-terracotta-700 transition-all whitespace-nowrap"
+        >
+          <Search className="w-[18px] h-[18px]" />
+          {t.search}
+        </button>
       </form>
 
       {mode === 'centros' ? (
@@ -288,21 +278,13 @@ export default function HeroSearch({ locale = 'es' }: { locale?: 'es' | 'en' }) 
 }
 
 function MapPreview({ href, cta, alt }: { href: string; cta: string; alt: string }) {
-  const key = process.env.NEXT_PUBLIC_MAPTILER_API_KEY;
-  const src = key
-    ? `https://api.maptiler.com/maps/streets-v2/static/-3.7,40.4,5.5/800x280@2x.png?key=${encodeURIComponent(key)}&language=es`
-    : null;
   return (
-    <Link href={href} className="relative mt-3 block h-36 overflow-hidden rounded-xl md:h-40 group">
-      {src ? (
-        // MapTiler estático: no pasa por next/image (LCP del hero no es esta foto)
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt={alt} className="h-full w-full object-cover" />
-      ) : (
-        <span className="absolute inset-0 bg-gradient-to-br from-sage-100 via-sand-100 to-terracotta-50" aria-hidden />
-      )}
-      <span className="absolute inset-0 bg-gradient-to-t from-[#2d2319]/55 to-transparent" aria-hidden />
-      <span className="absolute bottom-3 left-3 right-3 inline-flex items-center justify-center gap-2 rounded-xl bg-terracotta-600 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(200,90,48,0.3)] transition-colors group-hover:bg-terracotta-700">
+    <Link href={href} className="relative mt-3 block h-40 overflow-hidden rounded-xl md:h-48 group">
+      {/* JPEG local: el Static Maps de MapTiler da 403 con esta clave; las tiles sí van */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/images/hero-map-spain.jpg" alt={alt} className="h-full w-full object-cover object-center" />
+      <span className="absolute inset-0 bg-gradient-to-t from-[#2d2319]/45 via-transparent to-transparent" aria-hidden />
+      <span className="absolute bottom-3 left-1/2 -translate-x-1/2 inline-flex items-center justify-center gap-2 rounded-full bg-terracotta-600 px-5 py-2 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(200,90,48,0.3)] transition-colors group-hover:bg-terracotta-700">
         <MapPin className="h-4 w-4" />
         {cta}
       </span>
