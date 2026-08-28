@@ -306,6 +306,23 @@ export function filterPublicRetreatCategories(categories: Category[]): Category[
 /** Tipos de centro en buscadores y filtros del directorio público (fase inicial) */
 export const PUBLIC_DIRECTORY_CENTER_TYPE_SLUGS = ['yoga', 'meditation', 'ayurveda'] as const;
 
+/** Icono + color de pin (mismo emoji en filtros y en el mapa, al molde Casi Cinco). */
+export const CENTER_TYPE_META: Record<(typeof PUBLIC_DIRECTORY_CENTER_TYPE_SLUGS)[number], { icon: string; color: string }> = {
+  yoga: { icon: '🧘', color: '#c85a30' },
+  meditation: { icon: '🕯️', color: '#5f7a62' },
+  ayurveda: { icon: '🪷', color: '#c4a15a' },
+};
+
+export function getCenterTypeIcon(type: string | null | undefined): string {
+  if (!type || !(type in CENTER_TYPE_META)) return '📍';
+  return CENTER_TYPE_META[type as keyof typeof CENTER_TYPE_META].icon;
+}
+
+export function getCenterTypeColor(type: string | null | undefined): string {
+  if (!type || !(type in CENTER_TYPE_META)) return '#c85a30';
+  return CENTER_TYPE_META[type as keyof typeof CENTER_TYPE_META].color;
+}
+
 export function centerFilterOptionsPublic(locale: 'es' | 'en'): { slug: string; label: string }[] {
   const all = locale === 'es' ? CENTER_FILTER_OPTIONS_ES : CENTER_FILTER_OPTIONS_EN;
   const first = all[0];

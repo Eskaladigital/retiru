@@ -1,3 +1,13 @@
+:global(html.directory-map) .fab {
+  bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 768px) {
+  :global(html.directory-map) .fab {
+    bottom: 1.25rem;
+  }
+}
+
 .fab {
   position: fixed;
   bottom: 1.25rem;

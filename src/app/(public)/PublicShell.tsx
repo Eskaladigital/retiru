@@ -35,12 +35,20 @@ export default function PublicShell({ user, children }: PublicShellProps) {
     !!pathname?.includes('/login') ||
     !!pathname?.includes('/registro') ||
     !!pathname?.includes('/register');
+  const isDirectoryHub = pathname === '/es/centros-retiru' || pathname === '/en/centers-retiru';
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('directory-map', isDirectoryHub);
+    return () => document.documentElement.classList.remove('directory-map');
+  }, [isDirectoryHub]);
 
   return (
     <>
       <Header locale={locale} user={user} />
-      <main className="min-h-[60vh] pt-16 md:pt-[72px]">{children}</main>
-      <Footer locale={locale} />
+      <main className={isDirectoryHub ? 'h-[100dvh] pt-16 md:pt-[72px] overflow-hidden' : 'min-h-[60vh] pt-16 md:pt-[72px]'}>
+        {children}
+      </main>
+      {isDirectoryHub ? null : <Footer locale={locale} />}
       <ChatWidget />
       {!isAdmin && !!user && (
         <SupportChatWidget locale={locale} stacked={!royHidden} />
