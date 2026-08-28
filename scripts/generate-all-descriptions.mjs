@@ -51,7 +51,9 @@ const args = process.argv.slice(2);
 const limitIdx = args.indexOf('--limit');
 const LIMIT = limitIdx !== -1 ? parseInt(args[limitIdx + 1], 10) : 0;
 const provinceIdx = args.indexOf('--province');
-const PROVINCE = provinceIdx !== -1 ? args[provinceIdx + 1] : null;
+const RAW_PROVINCE = provinceIdx !== -1 ? args[provinceIdx + 1] : null;
+const PROVINCE_ALIAS = { Jaen: 'Jaén', Almeria: 'Almería', Malaga: 'Málaga' };
+const PROVINCE = PROVINCE_ALIAS[RAW_PROVINCE] || RAW_PROVINCE;
 const DRY_RUN = args.includes('--dry-run');
 const FORCE = args.includes('--force');
 

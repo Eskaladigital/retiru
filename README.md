@@ -153,6 +153,8 @@ npm run stripe:listen    # Escuchar webhooks de Stripe en local
 
 # Centros — descripciones IA (gpt-5.6-terra + web_search nativo; EN con gpt-4o-mini)
 # Sin SerpAPI. También: admin /administrator/centros (mismo pipeline).
+node scripts/import-places-province.mjs --province Madrid --execute
+# Alias sin tilde: Jaen | Almeria | Malaga. También Alicante, Barcelona, Valencia…
 node scripts/generate-all-descriptions.mjs            # Fichas con descripción < 400 chars
 node scripts/generate-all-descriptions.mjs --province Murcia
 node scripts/generate-all-descriptions.mjs --force    # Regenerar TODAS

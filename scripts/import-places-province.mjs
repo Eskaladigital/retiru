@@ -41,7 +41,9 @@ if (!KEY) {
 
 const args = process.argv.slice(2);
 const pIdx = args.indexOf('--province');
-const PROVINCE = pIdx !== -1 ? args[pIdx + 1] : null;
+const RAW_PROVINCE = pIdx !== -1 ? args[pIdx + 1] : null;
+const PROVINCE_ALIAS = { Jaen: 'Jaén', Almeria: 'Almería', Malaga: 'Málaga' };
+const PROVINCE = PROVINCE_ALIAS[RAW_PROVINCE] || RAW_PROVINCE;
 const EXECUTE = args.includes('--execute');
 
 const PROVINCES = {
@@ -97,10 +99,168 @@ const PROVINCES = {
       'Aýna', 'Peñas de San Pedro', 'Pozohondo', 'San Pedro',
     ],
   },
+  Valencia: {
+    cp: '46',
+    region: 'Comunidad Valenciana',
+    nameRe: /Valencia|València/i,
+    towns: [
+      'Valencia', 'València', 'Torrent', 'Paterna', 'Mislata', 'Xirivella', 'Aldaia',
+      'Quart de Poblet', 'Manises', 'Burjassot', 'Godella', 'Rocafort',
+      'La Pobla de Vallbona', 'l\'Eliana', 'Riba-roja de Túria', 'Bétera', 'Llíria',
+      'Puçol', 'El Puig', 'Massamagrell', 'Meliana', 'Alboraia', 'Alboraya',
+      'Tavernes Blanques', 'Almàssera', 'Foios',
+      'Paiporta', 'Picanya', 'Benetússer', 'Sedaví', 'Alfafar', 'Massanassa',
+      'Catarroja', 'Silla', 'Albal', 'Picassent', 'Alcàsser', 'Beniparrell',
+      'Sagunto', 'Sagunt', 'Canet d\'En Berenguer', 'Puçol',
+      'Gandia', 'Oliva', 'Tavernes de la Valldigna', 'Xeraco', 'Xeresa',
+      'Bellreguard', 'Daimús', 'Piles', 'Guardamar de la Safor', 'Miramar',
+      'Cullera', 'Sueca', 'Sollana', 'Albalat de la Ribera', 'Riola',
+      'Alzira', 'Algemesí', 'Carcaixent', 'Alginet', 'Carlet', 'l\'Alcúdia',
+      'Alberic', 'Benifaió', 'Almussafes', 'Castelló de la Ribera',
+      'Xàtiva', 'Canals', 'l\'Olleria', 'Albaida', 'Ontinyent', 'Bocairent',
+      'Agullent', 'Montaverner', 'Benigànim', 'Villalonga',
+      'Requena', 'Utiel', 'Chiva', 'Buñol', 'Cheste', 'Siete Aguas',
+      'Turís', 'Godelleta', 'Monserrat', 'Montserrat',
+    ],
+  },
+  Granada: {
+    cp: '18',
+    region: 'Andalucía',
+    nameRe: /Granada/i,
+    towns: [
+      'Granada', 'Armilla', 'Maracena', 'Albolote', 'Atarfe', 'Peligros',
+      'Pulianas', 'Jun', 'Huétor Vega', 'Cenes de la Vega', 'Monachil',
+      'La Zubia', 'Ogíjares', 'Gójar', 'Dílar', 'Cájar', 'Huétor Vega',
+      'Churriana de la Vega', 'Las Gabias', 'Cúllar Vega', 'Vegas del Genil',
+      'Alhendín', 'Otura', 'Villa de Otura', 'Padul', 'Dúrcal',
+      'Santa Fe', 'Chauchina', 'Fuente Vaqueros', 'Pinos Puente', 'Íllora',
+      'Loja', 'Alhama de Granada', 'Montefrío',
+      'Motril', 'Salobreña', 'Almuñécar', 'Vélez de Benaudalla',
+      'Lanjarón', 'Órgiva', 'Cádiar', 'Ugíjar', 'Trevélez',
+      'Guadix', 'Baza', 'Huéscar', 'Puebla de Don Fadrique', 'Cúllar',
+      'Caniles', 'Benamaurel', 'Freila', 'Zújar',
+    ],
+  },
+  'Málaga': {
+    cp: '29',
+    region: 'Andalucía',
+    nameRe: /Málaga|Malaga/i,
+    towns: [
+      'Málaga', 'Malaga', 'Torremolinos', 'Benalmádena', 'Fuengirola', 'Mijas',
+      'Marbella', 'San Pedro Alcántara', 'Estepona', 'Manilva', 'Casares',
+      'Benahavís', 'Ojén', 'Istán',
+      'Rincón de la Victoria', 'Vélez-Málaga', 'Torre del Mar', 'Torrox',
+      'Nerja', 'Frigiliana', 'Cómpeta', 'Sayalonga', 'Algarrobo',
+      'Alhaurín de la Torre', 'Alhaurín el Grande', 'Cártama', 'Pizarra',
+      'Álora', 'Coín', 'Guaro', 'Monda', 'Tolox', 'Yunquera',
+      'Antequera', 'Archidona', 'Campillos', 'Mollina', 'Humilladero',
+      'Fuente de Piedra', 'Sierra de Yeguas', 'Teba', 'Ardales',
+      'Villanueva del Rosario', 'Villanueva del Trabuco', 'Villanueva de Algaidas',
+      'Ronda', 'Arriate', 'Montejaque', 'Benaoján', 'Cortes de la Frontera',
+      'Gaucín', 'El Burgo', 'Cañete la Real',
+    ],
+  },
+  'Jaén': {
+    cp: '23',
+    region: 'Andalucía',
+    nameRe: /Jaén|Jaen/i,
+    towns: [
+      'Jaén', 'Linares', 'Andújar', 'Úbeda', 'Baeza', 'Martos',
+      'Alcalá la Real', 'Torredelcampo', 'Torredonjimeno', 'Mancha Real',
+      'Mengíbar', 'Bailén', 'La Carolina', 'Jódar', 'Huelma',
+      'Villacarrillo', 'Villanueva del Arzobispo', 'Cazorla', 'Quesada',
+      'Peal de Becerro', 'Sabiote', 'Torreperogil', 'Beas de Segura',
+      'Segura de la Sierra', 'Orcera', 'Siles', 'Santisteban del Puerto',
+      'Alcaudete', 'Porcuna', 'Marmolejo', 'Arjona', 'Arjonilla',
+      'Jamilena', 'Fuensanta de Martos', 'Los Villares', 'Valdepeñas de Jaén',
+    ],
+  },
+  'Ciudad Real': {
+    cp: '13',
+    region: 'Castilla-La Mancha',
+    nameRe: /Ciudad Real/i,
+    towns: [
+      'Ciudad Real', 'Miguelturra', 'Puertollano', 'Tomelloso', 'Alcázar de San Juan',
+      'Valdepeñas', 'Manzanares', 'Daimiel', 'Socuéllamos', 'La Solana',
+      'Campo de Criptana', 'Herencia', 'Pedro Muñoz', 'Bolaños de Calatrava',
+      'Almagro', 'Villarrubia de los Ojos', 'Malagón', 'Porzuna',
+      'Piedrabuena', 'Almodóvar del Campo', 'Argamasilla de Calatrava',
+      'Moral de Calatrava', 'Santa Cruz de Mudela', 'Viso del Marqués',
+      'Almadén', 'Villanueva de los Infantes', 'Montiel', 'Ruidera',
+      'Argamasilla de Alba', 'Membrilla', 'Villanueva de los Infantes',
+    ],
+  },
+  Cuenca: {
+    cp: '16',
+    region: 'Castilla-La Mancha',
+    nameRe: /Cuenca/i,
+    towns: [
+      'Cuenca', 'Tarancón', 'Quintanar del Rey', 'Motilla del Palancar',
+      'San Clemente', 'Las Pedroñeras', 'Mota del Cuervo', 'Horcajo de Santiago',
+      'Villanueva de la Jara', 'Iniesta', 'Minglanilla', 'Landete',
+      'Cañete', 'Priego', 'Huete', 'Sacedón', 'Belmonte',
+      'Villalba del Rey', 'Casasimarro', 'El Provencio', 'Casas de Fernando Alonso',
+      'Villanueva de los Escuderos', 'Alarcón', 'Valverde de Júcar',
+    ],
+  },
+  Madrid: {
+    cp: '28',
+    region: 'Comunidad de Madrid',
+    nameRe: /Madrid/i,
+    towns: [
+      'Madrid', 'Móstoles', 'Alcalá de Henares', 'Fuenlabrada', 'Leganés',
+      'Getafe', 'Alcorcón', 'Torrejón de Ardoz', 'Parla', 'Alcobendas',
+      'Las Rozas', 'San Sebastián de los Reyes', 'Pozuelo de Alarcón',
+      'Coslada', 'Rivas-Vaciamadrid', 'Valdemoro', 'Majadahonda',
+      'Collado Villalba', 'Arganda del Rey', 'Boadilla del Monte', 'Pinto',
+      'Colmenar Viejo', 'Tres Cantos', 'San Fernando de Henares',
+      'Mejorada del Campo', 'Velilla de San Antonio', 'Torrelodones',
+      'Galapagar', 'El Escorial', 'San Lorenzo de El Escorial',
+      'Villanueva de la Cañada', 'Villanueva del Pardillo', 'Brunete',
+      'Navalcarnero', 'Arroyomolinos', 'Humanes de Madrid', 'Griñón',
+      'Ciempozuelos', 'San Martín de la Vega', 'Aranjuez',
+      'Algete', 'San Agustín del Guadalix', 'Colmenar Viejo',
+      'Soto del Real', 'Manzanares el Real', 'Miraflores de la Sierra',
+      'Guadarrama', 'Cercedilla', 'Navacerrada', 'Moralzarzal',
+      'Hoyo de Manzanares', 'Colmenarejo', 'Valdemorillo',
+      'Villaviciosa de Odón', 'Sevilla la Nueva', 'El Álamo',
+      'Morata de Tajuña', 'Chinchón', 'Villarejo de Salvanés',
+      'Loeches', 'Daganzo de Arriba', 'Ajalvir', 'Paracuellos de Jarama',
+      'Fuente el Saz de Jarama', 'Talamanca de Jarama', 'El Molar',
+      'Buitrago del Lozoya', 'Torrelaguna', 'Rascafría',
+    ],
+  },
+  Barcelona: {
+    cp: '08',
+    region: 'Cataluña',
+    nameRe: /Barcelona/i,
+    towns: [
+      'Barcelona', 'L\'Hospitalet de Llobregat', 'Hospitalet', 'Badalona',
+      'Terrassa', 'Sabadell', 'Mataró', 'Santa Coloma de Gramenet',
+      'Cornellà de Llobregat', 'Sant Cugat del Vallès', 'Sant Boi de Llobregat',
+      'El Prat de Llobregat', 'Castelldefels', 'Viladecans', 'Rubí',
+      'Cerdanyola del Vallès', 'Granollers', 'Vilanova i la Geltrú',
+      'Manresa', 'Vic', 'Igualada', 'Vilafranca del Penedès',
+      'Sitges', 'Gavà', 'Esplugues de Llobregat', 'Sant Feliu de Llobregat',
+      'Sant Joan Despí', 'Mollet del Vallès', 'Barberà del Vallès',
+      'Ripollet', 'Montcada i Reixac', 'Sant Adrià de Besòs',
+      'El Masnou', 'Premià de Mar', 'Vilassar de Mar', 'Premià de Dalt',
+      'Arenys de Mar', 'Canet de Mar', 'Calella', 'Pineda de Mar',
+      'Malgrat de Mar', 'Tordera', 'Cardedeu', 'La Roca del Vallès',
+      'Les Franqueses del Vallès', 'La Garriga', 'Granollers',
+      'Parets del Vallès', 'Lliçà d\'Amunt', 'Mollet del Vallès',
+      'Sant Quirze del Vallès', 'Castellar del Vallès',
+      'Martorell', 'Abrera', 'Olesa de Montserrat', 'Esparreguera',
+      'Sant Vicenç dels Horts', 'Molins de Rei', 'Sant Just Desvern',
+      'Sant Pere de Ribes', 'Cubelles', 'Canyelles', 'Olivella',
+      'Berga', 'Manlleu', 'Torelló', 'Roda de Ter', 'Prats de Lluçanès',
+      'Sant Sadurní d\'Anoia', 'Gelida', 'Subirats',
+    ],
+  },
 };
 
 if (!PROVINCE || !PROVINCES[PROVINCE]) {
-  console.error('Usa --province Alicante | Almería | Albacete');
+  console.error('Usa --province ' + Object.keys(PROVINCES).join(' | '));
   process.exit(1);
 }
 
@@ -243,11 +403,12 @@ for (const town of towns) {
         if (cp && !cp.startsWith(META.cp)) continue;
         const addr = `${p.formattedAddress || ''} ${(p.addressComponents || []).map((c) => c.longText).join(' ')}`;
         const provRe =
-          PROVINCE === 'Alicante'
+          META.nameRe ||
+          (PROVINCE === 'Alicante'
             ? /Alicante|Alacant/i
             : PROVINCE === 'Almería'
               ? /Almer[ií]a/i
-              : /Albacete/i;
+              : new RegExp(PROVINCE.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
         if (!cp && !provRe.test(addr)) continue;
         const type = classify(p);
         if (!type) continue;

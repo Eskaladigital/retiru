@@ -60,7 +60,9 @@ const FORCE = process.argv.includes('--force');
 const DRY = process.argv.includes('--dry-run');
 const NO_IA = process.argv.includes('--no-ia');
 const LIMIT = parseInt(argVal('limit') || '0', 10) || 0;
-const PROVINCE = argVal('province');
+const PROVINCE_ALIAS = { Jaen: 'Jaén', Almeria: 'Almería', Malaga: 'Málaga' };
+const RAW_PROVINCE = argVal('province');
+const PROVINCE = PROVINCE_ALIAS[RAW_PROVINCE] || RAW_PROVINCE;
 
 function decodeHtml(s) {
   return s.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ');
