@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -47,7 +48,7 @@ const COPY = {
     emptyHint: 'Prueba a cambiar los filtros',
     map: 'Mapa',
     filters: 'Filtros',
-    list: 'Lista',
+    list: 'Lugares',
     locate: 'Ver ubicación',
     locating: 'Buscando…',
     locateDenied: 'Activa la ubicación en el candado del navegador',
@@ -81,7 +82,7 @@ const COPY = {
     emptyHint: 'Try changing the filters',
     map: 'Map',
     filters: 'Filters',
-    list: 'List',
+    list: 'Places',
     locate: 'Show location',
     locating: 'Finding…',
     locateDenied: 'Allow location in the browser lock icon',
@@ -95,27 +96,33 @@ const COPY = {
 } as const;
 
 type Locale = 'es' | 'en';
-type MobileView = 'map' | 'filters' | 'list';
 
 const CLOSE_THRESHOLD = 100;
+const NAV_OFFSET = 'calc(3.5rem + env(safe-area-inset-bottom, 0px))';
 
 function DirectorySheet({
   isOpen,
   onClose,
   title,
+  footer,
   children,
 }: {
   isOpen: boolean;
   onClose: () => void;
   title: string;
+  footer?: React.ReactNode;
   children: React.ReactNode;
 }) {
+  const [mounted, setMounted] = useState(false);
   const [dragY, setDragY] = useState(0);
   const dragStartRef = useRef<number | null>(null);
 
+  useEffect(() => setMounted(true), []);
+
   useEffect(() => {
-    if (isOpen) document.body.style.overflow = 'hidden';
-    else {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
       document.body.style.overflow = '';
       setDragY(0);
       dragStartRef.current = null;
@@ -140,18 +147,25 @@ function DirectorySheet({
     setDragY(0);
   };
 
-  return (
-    <>
+  if (!mounted) return null;
+
+  return createPortal(
+    <div className="md:hidden">
       <div
-        className={`fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 z-40 md:hidden ${
+        className={`fixed inset-x-0 top-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 z-[10040] ${
           isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
+        style={{ bottom: NAV_OFFSET }}
         onClick={onClose}
       />
       <div
-        style={dragY > 0 ? { transform: `translateY(${dragY}px)`, transition: 'none' } : undefined}
-        className={`fixed left-0 right-0 bottom-0 bg-white rounded-t-3xl transform transition-transform duration-300 z-50 md:hidden flex flex-col h-[90dvh] pb-[env(safe-area-inset-bottom)] ${
-          isOpen ? 'translate-y-0' : 'translate-y-full'
+        style={{
+          bottom: NAV_OFFSET,
+          height: `min(90dvh, calc(100dvh - ${NAV_OFFSET}))`,
+          ...(dragY > 0 ? { transform: `translateY(${dragY}px)`, transition: 'none' } : {}),
+        }}
+        className={`fixed left-0 right-0 bg-white rounded-t-3xl shadow-[0_-8px_32px_rgba(45,35,25,0.18)] z-[10050] flex flex-col transform transition-transform duration-300 ease-out ${
+          isOpen ? 'translate-y-0' : 'translate-y-full pointer-events-none'
         }`}
       >
         <div
@@ -171,8 +185,10 @@ function DirectorySheet({
           </button>
         </div>
         <div className="overflow-y-auto flex-1 min-h-0 px-4 pb-4">{children}</div>
+        {footer}
       </div>
-    </>
+    </div>,
+    document.body,
   );
 }
 
@@ -200,6 +216,8 @@ function FilterFields({
   provinces,
   hasActive,
   onClear,
+  showSort = true,
+  showClear = true,
   t,
   locale,
 }: {
@@ -216,6 +234,8 @@ function FilterFields({
   provinces: string[];
   hasActive: boolean;
   onClear: () => void;
+  showSort?: boolean;
+  showClear?: boolean;
   t: (typeof COPY)[Locale];
   locale: Locale;
 }) {
@@ -289,16 +309,18 @@ function FilterFields({
           <option value={4.8}>4.8+</option>
         </select>
       </label>
-      <label className="block">
-        <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#a09383] mb-1.5">{t.sort}</span>
-        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className={selectClass}>
-          <option value="rating">{t.sortRating}</option>
-          <option value="reviews">{t.sortReviews}</option>
-          <option value="name">{t.sortName}</option>
-          <option value="near">{t.sortNear}</option>
-        </select>
-      </label>
-      {hasActive ? (
+      {showSort ? (
+        <label className="block">
+          <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#a09383] mb-1.5">{t.sort}</span>
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className={selectClass}>
+            <option value="rating">{t.sortRating}</option>
+            <option value="reviews">{t.sortReviews}</option>
+            <option value="name">{t.sortName}</option>
+            <option value="near">{t.sortNear}</option>
+          </select>
+        </label>
+      ) : null}
+      {showClear && hasActive ? (
         <button type="button" onClick={onClear} className="text-sm font-medium text-terracotta-600 hover:text-terracotta-700 inline-flex items-center gap-1">
           <X size={14} /> {t.clear}
         </button>
@@ -390,7 +412,8 @@ export default function DirectoryMapView({
   const [minRating, setMinRating] = useState(0);
   const [sortBy, setSortBy] = useState('rating');
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [mobileView, setMobileView] = useState<MobileView>('map');
+  const [showFilters, setShowFilters] = useState(false);
+  const [showList, setShowList] = useState(false);
   const [legendOpen, setLegendOpen] = useState(false);
   const [resetToken, setResetToken] = useState(0);
   const [openMapSearch, setOpenMapSearch] = useState(false);
@@ -762,47 +785,92 @@ export default function DirectoryMapView({
         </aside>
       </div>
 
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-sand-200 shadow-[0_-4px_16px_rgba(45,35,25,0.06)] pb-[env(safe-area-inset-bottom)]">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[10060] bg-white/95 backdrop-blur-lg border-t border-sand-200 shadow-[0_-4px_16px_rgba(45,35,25,0.06)] pb-[env(safe-area-inset-bottom)]">
         <div className="flex items-center justify-around h-14 px-3">
-          {(
-            [
-              ['map', MapIcon, t.map],
-              ['filters', Filter, t.filters],
-              ['list', List, t.list],
-            ] as const
-          ).map(([view, Icon, label]) => {
-            const active = mobileView === view;
-            return (
-              <button
-                key={view}
-                type="button"
-                onClick={() => setMobileView(view)}
-                className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-all duration-200 active:scale-95 ${
-                  active ? 'text-terracotta-600' : 'text-[#7a6b5d]'
-                }`}
-              >
-                <span className={`relative px-4 py-1 rounded-full ${active ? 'bg-terracotta-50' : ''}`}>
-                  <Icon size={22} />
-                  {view === 'filters' && filterCount > 0 ? (
-                    <span className="absolute -top-1 -right-1 bg-terracotta-600 text-white text-[10px] min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center font-bold">
-                      {filterCount}
-                    </span>
-                  ) : null}
-                  {view === 'list' && filtered.length > 0 ? (
-                    <span className="absolute -top-1.5 -right-3 bg-terracotta-600 text-white text-[10px] min-w-[20px] px-1.5 py-px rounded-full font-bold text-center">
-                      {filtered.length > 99 ? '99+' : filtered.length}
-                    </span>
-                  ) : null}
+          <button
+            type="button"
+            onClick={() => {
+              setShowFilters(false);
+              setShowList(false);
+            }}
+            className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-all duration-200 active:scale-95 ${
+              !showFilters && !showList ? 'text-terracotta-600' : 'text-[#7a6b5d]'
+            }`}
+          >
+            <span className={`px-4 py-1 rounded-full ${!showFilters && !showList ? 'bg-terracotta-50' : ''}`}>
+              <MapIcon size={22} />
+            </span>
+            <span className={`text-[11px] ${!showFilters && !showList ? 'font-semibold' : 'font-medium'}`}>{t.map}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setShowList(false);
+              setShowFilters(true);
+            }}
+            className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-all duration-200 active:scale-95 ${
+              showFilters ? 'text-terracotta-600' : 'text-[#7a6b5d]'
+            }`}
+          >
+            <span className={`relative px-4 py-1 rounded-full ${showFilters ? 'bg-terracotta-50' : ''}`}>
+              <Filter size={22} />
+              {filterCount > 0 ? (
+                <span className="absolute -top-1 -right-1 bg-terracotta-600 text-white text-[10px] min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center font-bold">
+                  {filterCount}
                 </span>
-                <span className={`text-[11px] ${active ? 'font-semibold' : 'font-medium'}`}>{label}</span>
-              </button>
-            );
-          })}
+              ) : null}
+            </span>
+            <span className={`text-[11px] ${showFilters ? 'font-semibold' : 'font-medium'}`}>{t.filters}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setShowFilters(false);
+              setShowList(true);
+            }}
+            className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-all duration-200 active:scale-95 ${
+              showList ? 'text-terracotta-600' : 'text-[#7a6b5d]'
+            }`}
+          >
+            <span className={`relative px-4 py-1 rounded-full ${showList ? 'bg-terracotta-50' : ''}`}>
+              <List size={22} />
+              {filtered.length > 0 ? (
+                <span className="absolute -top-1.5 -right-3 bg-terracotta-600 text-white text-[10px] min-w-[20px] px-1.5 py-px rounded-full font-bold text-center">
+                  {filtered.length > 99 ? '99+' : filtered.length}
+                </span>
+              ) : null}
+            </span>
+            <span className={`text-[11px] ${showList ? 'font-semibold' : 'font-medium'}`}>{t.list}</span>
+          </button>
         </div>
       </nav>
 
-      <DirectorySheet isOpen={mobileView === 'filters'} onClose={() => setMobileView('map')} title={t.filters}>
-        <div className="py-2 space-y-3">
+      <DirectorySheet
+        isOpen={showFilters}
+        onClose={() => setShowFilters(false)}
+        title={t.filters}
+        footer={
+          <div className="border-t border-sand-200 px-4 py-3 space-y-2 bg-white shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowFilters(false)}
+              className="w-full bg-terracotta-600 text-white font-semibold py-3 rounded-xl active:scale-[0.99]"
+            >
+              {t.apply(filtered.length)}
+            </button>
+            <button
+              type="button"
+              onClick={clearFilters}
+              disabled={!hasActive}
+              className="w-full py-2 rounded-xl border border-sand-200 text-sm font-medium text-[#2d2319] disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {t.clear}
+              {filterCount > 0 ? ` (${filterCount})` : ''}
+            </button>
+          </div>
+        }
+      >
+        <div className="py-2">
           <FilterFields
             query={query}
             setQuery={setQuery}
@@ -817,20 +885,15 @@ export default function DirectoryMapView({
             provinces={provinces}
             hasActive={hasActive}
             onClear={clearFilters}
+            showSort={false}
+            showClear={false}
             t={t}
             locale={locale}
           />
-          <button
-            type="button"
-            onClick={() => setMobileView('map')}
-            className="w-full bg-terracotta-600 text-white font-semibold py-3 rounded-xl"
-          >
-            {t.apply(filtered.length)}
-          </button>
         </div>
       </DirectorySheet>
 
-      <DirectorySheet isOpen={mobileView === 'list'} onClose={() => setMobileView('map')} title={t.results(filtered.length)}>
+      <DirectorySheet isOpen={showList} onClose={() => setShowList(false)} title={`${filtered.length} ${t.list}`}>
         <div className="space-y-2 py-2">
           <div className="sticky top-0 bg-white pb-3 border-b border-sand-100 z-10">
             <label className="block text-sm font-medium text-[#7a6b5d] mb-2">{t.sort}</label>
@@ -864,7 +927,7 @@ export default function DirectoryMapView({
                 selected={c.id === selectedId}
                 onPick={() => {
                   setSelectedId(c.id);
-                  if (c.latitude != null) setMobileView('map');
+                  if (c.latitude != null) setShowList(false);
                 }}
                 t={t}
               />
