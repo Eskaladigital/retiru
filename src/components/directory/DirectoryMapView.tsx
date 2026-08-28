@@ -214,7 +214,7 @@ function FilterFields({
   countries: string[];
   hasActive: boolean;
   onClear: () => void;
-  t: (typeof COPY)['es'];
+  t: (typeof COPY)[Locale];
   locale: Locale;
 }) {
   const selectClass =
@@ -329,7 +329,7 @@ function CenterCard({
   locale: Locale;
   selected: boolean;
   onPick: () => void;
-  t: (typeof COPY)['es'];
+  t: (typeof COPY)[Locale];
 }) {
   const href = locale === 'es' ? `/es/centro/${c.slug}` : `/en/center/${c.slug}`;
   const img = c.cover_url || (Array.isArray(c.images) ? c.images[0] : '') || '';

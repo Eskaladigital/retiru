@@ -491,7 +491,6 @@ export interface Center {
   address: string;
   city: string;
   province: string;
-  country: string | null;
   postal_code: string | null;
   latitude: number | null;
   longitude: number | null;
