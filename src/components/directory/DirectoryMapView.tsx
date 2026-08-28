@@ -7,8 +7,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Check, Filter, List, Locate, Map as MapIcon, MapPin, RotateCcw, Search, Star, X } from 'lucide-react';
 import {
+  CENTER_QUALITY_TIER_SLUGS,
+  CENTER_QUALITY_TIERS,
   CENTER_TYPE_META,
   PUBLIC_DIRECTORY_CENTER_TYPE_SLUGS,
+  meetsCenterQualityBar,
+  type CenterQualityTier,
   VALID_CENTER_TYPE_SLUGS,
   generateSlug,
   getCenterTypeColor,
@@ -36,6 +40,7 @@ const COPY = {
     allProvinces: 'Todas',
     rating: 'Valoración',
     anyRating: 'Todas',
+    qualityHint: 'Sin marcar, se ven todos. El listón cuenta estrellas y reseñas.',
     sort: 'Ordenar',
     sortRating: 'Mejor valorados',
     sortReviews: 'Más reseñas',
@@ -70,6 +75,7 @@ const COPY = {
     allProvinces: 'All',
     rating: 'Rating',
     anyRating: 'Any',
+    qualityHint: 'Leave empty to see everyone. The bar uses stars and review count.',
     sort: 'Sort',
     sortRating: 'Top rated',
     sortReviews: 'Most reviews',
@@ -209,8 +215,8 @@ function FilterFields({
   setSelectedType,
   selectedProvince,
   setSelectedProvince,
-  minRating,
-  setMinRating,
+  selectedTiers,
+  toggleTier,
   sortBy,
   setSortBy,
   provinces,
@@ -227,8 +233,8 @@ function FilterFields({
   setSelectedType: (v: string) => void;
   selectedProvince: string;
   setSelectedProvince: (v: string) => void;
-  minRating: number;
-  setMinRating: (v: number) => void;
+  selectedTiers: CenterQualityTier[];
+  toggleTier: (tier: CenterQualityTier) => void;
   sortBy: string;
   setSortBy: (v: string) => void;
   provinces: string[];
@@ -300,15 +306,38 @@ function FilterFields({
           ))}
         </select>
       </label>
-      <label className="block">
-        <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#a09383] mb-1.5">{t.rating}</span>
-        <select value={minRating} onChange={(e) => setMinRating(Number(e.target.value))} className={selectClass}>
-          <option value={0}>{t.anyRating}</option>
-          <option value={4}>4+</option>
-          <option value={4.5}>4.5+</option>
-          <option value={4.8}>4.8+</option>
-        </select>
-      </label>
+      <div>
+        <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#a09383] mb-1">{t.rating}</span>
+        <p className="text-[11px] text-[#a09383] mb-1.5">{t.qualityHint}</p>
+        <div className="space-y-2">
+          {CENTER_QUALITY_TIER_SLUGS.map((tier) => {
+            const meta = CENTER_QUALITY_TIERS[tier];
+            const label = meta[locale];
+            const activo = selectedTiers.includes(tier);
+            return (
+              <button
+                key={tier}
+                type="button"
+                onClick={() => toggleTier(tier)}
+                aria-pressed={activo}
+                className={`w-full flex items-center gap-3 rounded-xl border-2 px-3 py-2.5 text-left transition-all active:scale-[0.99] ${
+                  activo ? 'shadow-sm' : 'border-sand-200 bg-white hover:border-sand-300'
+                }`}
+                style={activo ? { borderColor: meta.color, backgroundColor: `${meta.color}22` } : undefined}
+              >
+                <span className="text-xl shrink-0" aria-hidden>
+                  {meta.icon}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold">{label.name}</span>
+                  <span className="block text-[11px] text-[#7a6b5d] leading-tight">{label.hint}</span>
+                </span>
+                {activo ? <Check className="w-5 h-5 shrink-0" style={{ color: meta.color }} /> : null}
+              </button>
+            );
+          })}
+        </div>
+      </div>
       {showSort ? (
         <label className="block">
           <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#a09383] mb-1.5">{t.sort}</span>
@@ -409,7 +438,7 @@ export default function DirectoryMapView({
   const [selectedType, setSelectedType] = useState('');
   const [selectedProvince, setSelectedProvince] = useState('');
   const [placeSlug, setPlaceSlug] = useState<string | null>(null);
-  const [minRating, setMinRating] = useState(0);
+  const [selectedTiers, setSelectedTiers] = useState<CenterQualityTier[]>([]);
   const [sortBy, setSortBy] = useState('rating');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -471,8 +500,10 @@ export default function DirectoryMapView({
       const matchesType = !selectedType || c.type === selectedType;
       const matchesProvince = !selectedProvince || c.province === selectedProvince;
       const matchesCity = !placeSlug || matchesPlaceSlug(placeSlug, c.city, c.province);
-      const matchesRating = (c.avg_rating || 0) >= minRating;
-      return matchesQuery && matchesType && matchesProvince && matchesCity && matchesRating;
+      const matchesQuality =
+        selectedTiers.length === 0 ||
+        selectedTiers.some((tier) => meetsCenterQualityBar(c.avg_rating || 0, c.review_count || 0, tier));
+      return matchesQuery && matchesType && matchesProvince && matchesCity && matchesQuality;
     });
 
     results.sort((a, b) => {
@@ -492,7 +523,7 @@ export default function DirectoryMapView({
       return (b.avg_rating || 0) - (a.avg_rating || 0);
     });
     return results;
-  }, [spainCenters, tokens, selectedType, selectedProvince, placeSlug, minRating, sortBy, userGeo, locale]);
+  }, [spainCenters, tokens, selectedType, selectedProvince, placeSlug, selectedTiers, sortBy, userGeo, locale]);
 
   const mapped = useMemo(
     () => filtered.filter((c) => c.latitude != null && c.longitude != null),
@@ -502,8 +533,8 @@ export default function DirectoryMapView({
   const fitToken = selectedProvince || placeSlug ? `${selectedProvince}|${placeSlug || ''}` : '';
   const listed = filtered.slice(0, LIST_LIMIT);
   const selected = filtered.find((c) => c.id === selectedId) || null;
-  const hasActive = Boolean(query || selectedType || selectedProvince || placeSlug || minRating);
-  const filterCount = [query, selectedType, selectedProvince, placeSlug, minRating || ''].filter(Boolean).length;
+  const hasActive = Boolean(query || selectedType || selectedProvince || placeSlug || selectedTiers.length);
+  const filterCount = [query, selectedType, selectedProvince, placeSlug, selectedTiers.length || ''].filter(Boolean).length;
 
   const mapSuggestions = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -529,12 +560,16 @@ export default function DirectoryMapView({
     return out;
   }, [query, spainCenters]);
 
+  function toggleTier(tier: CenterQualityTier) {
+    setSelectedTiers((prev) => (prev.includes(tier) ? prev.filter((x) => x !== tier) : [...prev, tier]));
+  }
+
   function clearFilters() {
     setQuery('');
     setSelectedType('');
     setSelectedProvince('');
     setPlaceSlug(null);
-    setMinRating(0);
+    setSelectedTiers([]);
     setSortBy('rating');
   }
 
@@ -580,8 +615,8 @@ export default function DirectoryMapView({
               setSelectedType={setSelectedType}
               selectedProvince={selectedProvince}
               setSelectedProvince={setSelectedProvince}
-              minRating={minRating}
-              setMinRating={setMinRating}
+              selectedTiers={selectedTiers}
+              toggleTier={toggleTier}
               sortBy={sortBy}
               setSortBy={setSortBy}
               provinces={provinces}
@@ -878,8 +913,8 @@ export default function DirectoryMapView({
             setSelectedType={setSelectedType}
             selectedProvince={selectedProvince}
             setSelectedProvince={setSelectedProvince}
-            minRating={minRating}
-            setMinRating={setMinRating}
+            selectedTiers={selectedTiers}
+            toggleTier={toggleTier}
             sortBy={sortBy}
             setSortBy={setSortBy}
             provinces={provinces}

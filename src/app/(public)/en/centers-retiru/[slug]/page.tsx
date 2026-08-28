@@ -2,6 +2,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
+import { AiCoverBadge } from '@/components/ui/ai-cover-badge';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { MapPin, Star } from 'lucide-react';
 import { getCenterProvinces, getCentersByProvince, getDominantCenterTypeForProvince } from '@/lib/data';
@@ -135,7 +136,10 @@ export default async function CentersByGeoPageEN({ params }: { params: Promise<{
               >
                 <div className="w-full md:w-52 h-40 rounded-xl overflow-hidden shrink-0 relative bg-sand-100">
                   {img ? (
-                    <Image src={img} alt={c.name} fill loading="lazy" className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 208px" />
+                    <>
+                      <Image src={img} alt={c.name} fill loading="lazy" className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 208px" />
+                      <AiCoverBadge url={img} locale="en" size="card" />
+                    </>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-3xl text-sand-300">🏢</div>
                   )}

@@ -2,6 +2,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
+import { AiCoverBadge } from '@/components/ui/ai-cover-badge';
 import { notFound } from 'next/navigation';
 import { MapPin, Star } from 'lucide-react';
 import { getCentersByStyle, getStyleProvincePairs, getStyleProvinceSeo } from '@/lib/data';
@@ -152,14 +153,17 @@ export default async function CentersStyleProvincePage({ params }: { params: Par
                 >
                   <div className="w-full md:w-52 h-40 rounded-xl overflow-hidden shrink-0 relative bg-sand-100">
                     {imgSrc ? (
-                      <Image
-                        src={imgSrc}
-                        alt={c.name}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 208px"
-                        {...(idx < 3 ? { priority: true } : { loading: 'lazy' as const })}
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
+                      <>
+                        <Image
+                          src={imgSrc}
+                          alt={c.name}
+                          fill
+                          sizes="(max-width: 768px) 100vw, 208px"
+                          {...(idx < 3 ? { priority: true } : { loading: 'lazy' as const })}
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <AiCoverBadge url={imgSrc} locale="en" size="card" />
+                      </>
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-[#a09383] text-sm">No image</div>
                     )}

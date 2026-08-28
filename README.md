@@ -151,12 +151,13 @@ node scripts/_peek-seo.mjs ayurveda alava # Inspecciona intro/sections/FAQ de un
 node scripts/moderate-retreat.mjs       # Probar moderación IA de un retiro por slug (requiere ANTHROPIC_API_KEY en .env.local)
 npm run stripe:listen    # Escuchar webhooks de Stripe en local
 
-# Centros — descripciones IA (scraping web + Google Places + OpenAI, temp 0.2)
-# Tras generar ES, si hay OPENAI_API_KEY se traduce automáticamente a EN (description_en, services_en, horarios/precios).
-node scripts/generate-all-descriptions.mjs            # Generar descripciones faltantes
-node scripts/generate-all-descriptions.mjs --force    # Regenerar TODAS las descripciones
-node scripts/generate-all-descriptions.mjs --limit 10 # Solo N centros
-node scripts/generate-all-descriptions.mjs --dry-run  # Simular sin guardar
+# Centros — descripciones IA (gpt-5.6-terra + web_search nativo; EN con gpt-4o-mini)
+# Sin SerpAPI. También: admin /administrator/centros (mismo pipeline).
+node scripts/generate-all-descriptions.mjs            # Fichas con descripción < 400 chars
+node scripts/generate-all-descriptions.mjs --province Murcia
+node scripts/generate-all-descriptions.mjs --force    # Regenerar TODAS
+node scripts/generate-all-descriptions.mjs --limit 10
+node scripts/generate-all-descriptions.mjs --dry-run
 npm run centers:translate-en                          # Solo traducir centros con ES y sin EN (o --force)
 npm run centers:places-sync                           # Reseñas + horario + rating Google Places → ficha SEO (sin fotos: Place Photo es caro)
 npm run centers:places-sync:dry                       # Simulación Places sync
@@ -376,7 +377,7 @@ Las APIs `/api/retreats`, `/api/centers` y `/api/catalog` exponen datos para bú
 | `/es/retiros-retiru` | Experiencias (hero + buscador + lista); filtro `?formato=clases` / `?formato=retiros` |
 | `/es/retiros-retiru/[slug]` | Eventos filtrados por ciudad (ej. `/es/retiros-retiru/murcia`); mismo filtro de formato |
 | `/es/retiro/[slug]` | Ficha de retiro/clase: galería → breadcrumb → contenido + reserva (mismo orden visual que ficha centro) |
-| `/es/centros-retiru` | Directorio de centros (hero + CentrosSearch) |
+| `/es/centros-retiru` | Directorio = **mapa** a pantalla (Leaflet + MapTiler; chips Yoga/Meditación/Ayurveda). Móvil: solo Filtros y Lugares suben hoja |
 | `/es/centros-retiru/[slug]` | Centros filtrados por ciudad (ej. `/es/centros-retiru/murcia`) |
 | `/es/centro/[slug]` | Ficha de centro: galería → breadcrumb → contenido + contacto (ej. `/es/centro/yoga-sala-madrid`) |
 | `/es/reclamar/[token]` | Link mágico para reclamar un centro |
@@ -606,10 +607,9 @@ src/
 │   │   │   ├── geo-retiros/[slug]/
 │   │   │   │                   # ⚠ Sirve /es/retiros-en/[slug] vía rewrite (force-dynamic)
 │   │   │   ├── retiro/[slug]/  # Ficha retiro: galería → breadcrumb → contenido (retreat_images)
-│   │   │   ├── centros-retiru/ # Centros (hero + CentrosClient)
+│   │   │   ├── centros-retiru/ # Hub = mapa (DirectoryMapView); [slug] = landing SEO
 │   │   │   │   ├── page.tsx
-│   │   │   │   ├── CentrosClient.tsx
-│   │   │   │   └── [slug]/     # Por ciudad
+│   │   │   │   └── [slug]/     # Listado SEO por ciudad/provincia
 │   │   │   ├── centros/[tipo]/ # Landings por tipo (/es/centros/yoga, …/[provincia])
 │   │   │   ├── centro/[slug]/   # Ficha centro: galería → breadcrumb → contenido
 │   │   │   ├── buscar/         # Buscador unificado retiros + centros
@@ -721,9 +721,9 @@ Se han importado **~592 centros** de yoga, pilates, meditación, wellness y spa 
 **Scripts disponibles:**
 
 ```bash
-node scripts/generate-all-descriptions.mjs            # Generar descripciones faltantes (+ traducción EN si hay OPENAI_API_KEY)
-node scripts/generate-all-descriptions.mjs --force    # Regenerar TODAS (scraping web + Google Places + OpenAI)
-node scripts/generate-all-descriptions.mjs --limit 5  # Solo N centros
+node scripts/generate-all-descriptions.mjs            # Fichas < 400 chars (terra + web search → EN 4o-mini)
+node scripts/generate-all-descriptions.mjs --force    # Regenerar TODAS
+node scripts/generate-all-descriptions.mjs --limit 5
 npm run centers:translate-en                            # Rellenar solo campos EN para centros ya en ES
 node scripts/count-generic-descriptions.mjs            # Contar descripciones genéricas
 node scripts/quick-stats.mjs                           # Estadísticas rápidas
@@ -946,8 +946,8 @@ El cron `/api/cron/payment-deadlines` (cada hora) gestiona la gracia y cancelaci
 - **Retiros / experiencias** (`/es/retiros-retiru`, EN `/en/retreats-retiru`): hero + buscador + lista con filtro de **formato** (`?formato=clases` / `?formato=retiros`; EN `?format=classes|retreats`) para separar clases/actividades de un día y retiros de varios días; filtros/orden por valoración usan datos del **organizador** — Supabase
 - **Retiros por ciudad** (`/es/retiros-retiru/[slug]`): retiros filtrados por destino/ciudad (misma lógica de estrellas en card que el listado general)
 - **Ficha de retiro** (`/es/retiro/[slug]`, EN `/en/retreat/[slug]`): **galería** (portada + resto de `retreat_images`, hasta 8 en creación/edición), **breadcrumb debajo de las fotos** (como en centro), título y cuerpo; precio (PVP), progreso si hay mínimo viable, **reseñas del retiro** + valoración del organizador, CTA sticky en móvil — Supabase
-- **Centros** (`/es/centros-retiru`, EN `/en/centers-retiru`): hero + CentrosSearch (texto, tipo, ciudad) + directorio con filtros — datos desde Supabase
-- **Centros por ciudad** (`/es/centros-retiru/[slug]`): centros filtrados por ciudad
+- **Centros** (`/es/centros-retiru`, EN `/en/centers-retiru`): **mapa** a pantalla (Leaflet + MapTiler, clusters, chips de disciplina, lista 50). Desktop 3 columnas; móvil barra Mapa / Filtros / Lugares (Mapa no abre hoja). Query `?q=&tipo=&ciudad=&provincia=`. Solo España. Landings SEO (`/es/centros-retiru/[slug]`, `/es/centros/yoga/…`) no se tocan. Guía del taller: `W - RETIRU/DIRECTORIO-MAPA.md` (fuera de Git).
+- **Centros por ciudad / provincia** (`/es/centros-retiru/[slug]`): landing SEO (listado), no el hub-mapa
 - **Ficha de centro** (`/es/centro/[slug]`, EN `/en/center/[slug]`): galería, breadcrumb, servicios, horarios, contacto — datos desde Supabase
 - **Organizador** (`/es/organizador/[slug]`, EN `/en/organizer/[slug]`): perfil público con retiros publicados (en cada retiro del grid solo se muestra valoración si el organizador tiene reseñas)
 - **Buscador** (`/es/buscar`, EN `/en/search`): búsqueda unificada retiros + centros con filtros (tarjetas de retiro: valoración del organizador cuando aplica)

@@ -192,6 +192,11 @@ export function matchesAllTokens(
 
 const GENERIC_DESC_SUFFIX = 'Descripción generada automáticamente. Puedes completarla desde el panel de administración.';
 
+/** Portada generada con IA (path `ai-cover` del bucket `centers`). Overlay, no pintada en el píxel. */
+export function isCenterCoverIA(url?: string | null): boolean {
+  return typeof url === 'string' && /ai-cover/i.test(url);
+}
+
 /** Detecta si la descripción es la genérica del import */
 export function isGenericDescription(desc: string | null | undefined): boolean {
   return !!desc?.includes(GENERIC_DESC_SUFFIX);
@@ -321,6 +326,41 @@ export function getCenterTypeIcon(type: string | null | undefined): string {
 export function getCenterTypeColor(type: string | null | undefined): string {
   if (!type || !(type in CENTER_TYPE_META)) return '#c85a30';
   return CENTER_TYPE_META[type as keyof typeof CENTER_TYPE_META].color;
+}
+
+/** Filtro de valoración (estrellas + reseñas). Los pins del mapa siguen siendo la disciplina. Umbrales = Casi Cinco. */
+export const CENTER_QUALITY_TIER_SLUGS = ['diamond', 'platinum', 'gold', 'silver'] as const;
+export type CenterQualityTier = (typeof CENTER_QUALITY_TIER_SLUGS)[number];
+
+export const CENTER_QUALITY_TIERS: Record<
+  CenterQualityTier,
+  { icon: string; color: string; es: { name: string; hint: string }; en: { name: string; hint: string } }
+> = {
+  diamond: { icon: '💎', color: '#38bdf8', es: { name: 'Diamante', hint: '4,8★ y 1.000+ reseñas' }, en: { name: 'Diamond', hint: '4.8★ and 1,000+ reviews' } },
+  platinum: { icon: '🏆', color: '#94a3b8', es: { name: 'Platino', hint: '4,8★ y 500+ reseñas (y más)' }, en: { name: 'Platinum', hint: '4.8★ and 500+ reviews (and up)' } },
+  gold: { icon: '🥇', color: '#f59e0b', es: { name: 'Oro', hint: '4,8★ y 200+ reseñas (y más)' }, en: { name: 'Gold', hint: '4.8★ and 200+ reviews (and up)' } },
+  silver: { icon: '🥈', color: '#cbd5e1', es: { name: 'Plata', hint: '4,7★ y 100+ reseñas (y más)' }, en: { name: 'Silver', hint: '4.7★ and 100+ reviews (and up)' } },
+};
+
+export function getCenterQualityTier(rating: number, reviews: number): CenterQualityTier | null {
+  if (rating >= 4.8 && reviews >= 1000) return 'diamond';
+  if (rating >= 4.8 && reviews >= 500) return 'platinum';
+  if (rating >= 4.8 && reviews >= 200) return 'gold';
+  if (rating >= 4.7 && reviews >= 100) return 'silver';
+  return null;
+}
+
+const CENTER_QUALITY_BAR: Record<CenterQualityTier, { rating: number; reviews: number }> = {
+  diamond: { rating: 4.8, reviews: 1000 },
+  platinum: { rating: 4.8, reviews: 500 },
+  gold: { rating: 4.8, reviews: 200 },
+  silver: { rating: 4.7, reviews: 100 },
+};
+
+/** ¿Cumple el listón de ese filtro? Oro incluye platino y diamante. Sin filtro se muestran todos. */
+export function meetsCenterQualityBar(rating: number, reviews: number, tier: CenterQualityTier): boolean {
+  const bar = CENTER_QUALITY_BAR[tier];
+  return rating >= bar.rating && reviews >= bar.reviews;
 }
 
 export function centerFilterOptionsPublic(locale: 'es' | 'en'): { slug: string; label: string }[] {

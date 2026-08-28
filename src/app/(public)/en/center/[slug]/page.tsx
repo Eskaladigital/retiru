@@ -8,6 +8,7 @@ import { RetreatDescriptionBody } from '@/components/ui/retreat-description-body
 import { CenterMap } from '@/components/ui/center-map';
 import { ClaimCenterButton } from '@/components/ui/claim-center-button';
 import { CenterPhotoGallery } from '@/components/ui/center-photo-gallery';
+import { AiCoverBadge } from '@/components/ui/ai-cover-badge';
 import { EmailLink } from '@/components/ui/email-link';
 import { generatePageMetadata, jsonLdLocalBusiness, jsonLdBreadcrumb, jsonLdFAQ, jsonLdScript } from '@/lib/seo';
 import { getCenterBySlug, getCenterSlugs, getActiveCenters, getCenterGoogleData } from '@/lib/data';
@@ -333,7 +334,10 @@ export default async function CenterDetailEN({ params }: Props) {
                 >
                   <div className="relative w-full h-36 bg-sand-100">
                     {rImg ? (
-                      <Image src={rImg} alt={r.name} fill loading="lazy" className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 33vw" />
+                      <>
+                        <Image src={rImg} alt={r.name} fill loading="lazy" className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 33vw" />
+                        <AiCoverBadge url={rImg} locale="en" size="card" />
+                      </>
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-3xl text-sand-300">🏢</div>
                     )}

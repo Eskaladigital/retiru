@@ -4,6 +4,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
+import { AiCoverBadge } from '@/components/ui/ai-cover-badge';
 import { notFound } from 'next/navigation';
 import { MapPin, CalendarDays, Users, Star } from 'lucide-react';
 import EventosSearch from '@/components/home/EventosSearch';
@@ -236,7 +237,14 @@ export default async function RetreatsInPage({ params }: { params: Promise<{ slu
               {centers.slice(0, 12).map((c: any) => (
                 <Link key={c.id} href={`/en/center/${c.slug}`} className="group bg-white rounded-xl overflow-hidden border border-sand-200 hover:shadow-elevated hover:-translate-y-0.5 transition-all">
                   <div className="relative aspect-[4/3] bg-sand-100">
-                    {c.cover_url ? <Image src={c.cover_url} alt={c.name} fill className="object-cover" sizes="(max-width: 768px) 100vw, 25vw" /> : c.logo_url ? <Image src={c.logo_url} alt={c.name} fill className="object-contain p-6" sizes="(max-width: 768px) 100vw, 25vw" /> : null}
+                    {c.cover_url ? (
+                      <>
+                        <Image src={c.cover_url} alt={c.name} fill className="object-cover" sizes="(max-width: 768px) 100vw, 25vw" />
+                        <AiCoverBadge url={c.cover_url} locale="en" size="card" />
+                      </>
+                    ) : c.logo_url ? (
+                      <Image src={c.logo_url} alt={c.name} fill className="object-contain p-6" sizes="(max-width: 768px) 100vw, 25vw" />
+                    ) : null}
                   </div>
                   <div className="p-3">
                     <h3 className="font-serif text-base leading-tight mb-1 line-clamp-2 group-hover:text-terracotta-600">{c.name}</h3>

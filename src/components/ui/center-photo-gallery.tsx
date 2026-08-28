@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { AiCoverBadge } from '@/components/ui/ai-cover-badge';
 
 type Props = {
   name: string;
@@ -29,6 +30,7 @@ export function CenterPhotoGallery({ name, images, locale = 'es' }: Props) {
           sizes="(max-width: 1024px) 100vw, 1024px"
           className="object-cover animate-in fade-in duration-300"
         />
+        <AiCoverBadge url={hero} locale={locale} size="full" />
       </div>
       {urls.length > 1 && (
         <div className="flex gap-3 overflow-x-auto pb-1" role="list">
@@ -58,6 +60,7 @@ export function CenterPhotoGallery({ name, images, locale = 'es' }: Props) {
                   loading="lazy"
                   className="object-cover"
                 />
+                <AiCoverBadge url={img} locale={locale} size="thumb" />
               </button>
             );
           })}

@@ -147,7 +147,7 @@ export function GenerateDescriptionsButton() {
                 <span className="text-lg">✨</span>
                 <div>
                   <h2 className="text-white font-semibold text-base">Generador de descripciones con IA</h2>
-                  <p className="text-gray-400 text-xs mt-0.5">SerpAPI + Google Maps + GPT-4o-mini</p>
+                  <p className="text-gray-400 text-xs mt-0.5">gpt-5.6-terra + búsqueda web · traducción gpt-4o-mini</p>
                 </div>
               </div>
               <button

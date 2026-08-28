@@ -38,8 +38,8 @@ Equivalente EN exactamente igual:
 | `/es/retiros-retiru` | `src/app/(public)/es/destino-retiros/page.tsx` (vía rewrite del middleware) | Lista experiencias (`getPublishedRetreats`: publicados, `start_date > hoy`, `end_date ≥ hoy`). Filtro UX `?formato=clases` (`duration_days = 1`) / `?formato=retiros` (`duration_days > 1`); EN: `?format=classes` / `?format=retreats` |
 | `/es/retiros-retiru/[slug]` | `src/app/(public)/es/destino-retiros/[slug]/page.tsx` (vía rewrite del middleware) | Eventos por `destinations.slug`: admite **hoja** (ciudad) o nivel superior (**provincia / CCAA / país**). Mismo filtro de formato. Los retiros se enlazan a destinos hoja; el listado agrega todos los descendientes vía `getLeafDestinationIdsForRetreatFilter` en `getPublishedRetreats`. |
 | `/es/retiro/[slug]` | `src/app/(public)/es/retiro/[slug]/page.tsx` | Ficha de retiro (galería `retreat_images` → breadcrumb → contenido + sidebar reserva; mismo patrón visual que centro). Sigue accesible por URL directa aunque el evento ya haya empezado; los **listados** no muestran retiros en curso. |
-| `/es/centros-retiru` | `src/app/(public)/es/centros-retiru/page.tsx` | Directorio centros |
-| `/es/centros-retiru/[slug]` | `src/app/(public)/es/centros-retiru/[slug]/page.tsx` | Centros por provincia |
+| `/es/centros-retiru` | `src/app/(public)/es/centros-retiru/page.tsx` | **Mapa** de centros (Leaflet + MapTiler). No crear `/es/mapa`. Móvil: Filtros y Lugares suben hoja; Mapa solo cierra. `DirectoryMapView` + `DirectoryLeafletMap`. |
+| `/es/centros-retiru/[slug]` | `src/app/(public)/es/centros-retiru/[slug]/page.tsx` | Landing SEO (listado por provincia/ciudad). **No** es el hub-mapa. |
 | `/es/centro/[slug]` | `src/app/(public)/es/centro/[slug]/page.tsx` | Ficha de centro (galería → breadcrumb → contenido + contacto / mapa) |
 | `/es/destinos` | `src/app/(public)/es/destinos/page.tsx` | Destinos |
 | `/es/destinos/[slug]` | `src/app/(public)/es/destinos/[slug]/page.tsx` | Destino por slug |
@@ -80,7 +80,7 @@ Equivalente EN exactamente igual:
 | `/en/retreats-retiru` | `src/app/(public)/en/destination-retreats/page.tsx` (vía rewrite del middleware) |
 | `/en/retreats-retiru/[slug]` | `src/app/(public)/en/destination-retreats/[slug]/page.tsx` (vía rewrite del middleware) |
 | `/en/retreat/[slug]` | `src/app/(public)/en/retreat/[slug]/page.tsx` |
-| `/en/centers-retiru` | `src/app/(public)/en/centers-retiru/page.tsx` |
+| `/en/centers-retiru` | `src/app/(public)/en/centers-retiru/page.tsx` (mapa; mismo `DirectoryMapView` que ES) |
 | `/en/centers-retiru/[slug]` | `src/app/(public)/en/centers-retiru/[slug]/page.tsx` |
 | `/en/center/[slug]` | `src/app/(public)/en/center/[slug]/page.tsx` |
 | `/en/destinations` | `src/app/(public)/en/destinations/page.tsx` |

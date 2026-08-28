@@ -1,15 +1,17 @@
 #!/usr/bin/env node
 /**
- * RETIRU · Asignar imágenes de portada a centros (SerpAPI Images + OpenAI + Supabase Storage)
- * Busca en Google Images, la IA elige la mejor, sube al bucket centers y actualiza cover_url.
+ * RETIRU · Portadas de centros (mismo criterio que MapafurgoCasa)
  *
- * Usa .env.local: SUPABASE_*, OPENAI_API_KEY, SERPAPI_API_KEY
+ * 1. Entra en la web oficial del centro, saca una foto usable, la sube al bucket.
+ * 2. Si no hay web o no hay foto, genera con IA (gpt-image-2).
+ * No usa Places Photo ni Google Images / SerpAPI.
  *
- * Uso: node scripts/assign-center-images.mjs [--limit N] [--force]
- *   --limit N   Procesar solo N centros (default: todos)
- *   --force     Sobrescribir cover_url aunque ya exista
+ *   node scripts/assign-center-images.mjs
+ *   node scripts/assign-center-images.mjs --province Murcia --no-ia
+ *   node scripts/assign-center-images.mjs --province Murcia --limit 5
+ *
+ * Flags: --force  --limit N  --province X  --no-ia  --dry-run
  */
-
 import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -21,214 +23,301 @@ const root = join(__dirname, '..');
 function loadEnvLocal() {
   const envPath = join(root, '.env.local');
   if (!existsSync(envPath)) {
-    console.error('❌ .env.local no encontrado');
+    console.error('Falta .env.local');
     process.exit(1);
   }
-  const content = readFileSync(envPath, 'utf8');
-  content.split('\n').forEach((line) => {
-    const trimmed = line.trim();
-    if (trimmed && !trimmed.startsWith('#') && trimmed.includes('=')) {
-      const eq = trimmed.indexOf('=');
-      const key = trimmed.slice(0, eq).trim();
-      let value = trimmed.slice(eq + 1).trim();
-      value = value.replace(/^["']|["']$/g, '');
-      process.env[key] = value;
+  readFileSync(envPath, 'utf8').split('\n').forEach((line) => {
+    const t = line.trim();
+    if (t && !t.startsWith('#') && t.includes('=')) {
+      const eq = t.indexOf('=');
+      process.env[t.slice(0, eq).trim()] = t.slice(eq + 1).trim().replace(/^["']|["']$/g, '');
     }
   });
 }
 
-// ─── SerpAPI: búsqueda de imágenes ───────────────────────────────────────────
-async function searchImages(query, serpKey) {
-  try {
-    const url = `https://serpapi.com/search.json?engine=google_images&q=${encodeURIComponent(query)}&api_key=${serpKey}&hl=es&gl=es&num=10`;
-    const res = await fetch(url);
-    const data = res.ok ? await res.json() : null;
-    return data?.images_results?.slice(0, 10) || [];
-  } catch (e) {
-    console.warn('  ⚠ SerpAPI:', e.message);
-    return [];
-  }
+const UA =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+const SOCIAL =
+  /instagram\.com|facebook\.com|fb\.com|tiktok\.com|twitter\.com|x\.com|wa\.me|canva\.com|linktr\.ee|bit\.ly/i;
+const JUNK =
+  /logo|logotipo|favicon|sprite|avatar|whatsapp|pixel|1x1|icon[-_]|banner-kit|opengraph-image|twitter-image|elementor\/thumbs|cookie|aviso-legal|politica-de-privacidad/i;
+const PHOTO_EXT = /\.(jpe?g|png|webp)(\?|#|$)/i;
+const EXTRA_PATHS = [
+  '/galeria', '/fotos', '/gallery', '/el-estudio', '/estudio', '/sala',
+  '/clases', '/nosotros', '/el-centro', '/instalaciones', '/espacio', '/about',
+];
+const MIN_BYTES = 28000;
+const MIN_W = 480;
+const MIN_H = 280;
+
+function argVal(name) {
+  const args = process.argv.slice(2);
+  const i = args.indexOf(`--${name}`);
+  if (i !== -1 && args[i + 1] && !args[i + 1].startsWith('--')) return args[i + 1];
+  return null;
+}
+const FORCE = process.argv.includes('--force');
+const DRY = process.argv.includes('--dry-run');
+const NO_IA = process.argv.includes('--no-ia');
+const LIMIT = parseInt(argVal('limit') || '0', 10) || 0;
+const PROVINCE = argVal('province');
+
+function decodeHtml(s) {
+  return s.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ');
 }
 
-// ─── OpenAI: elegir la mejor imagen ──────────────────────────────────────────
-async function pickBestImage(centerName, city, images, openaiKey) {
-  if (!images?.length) return 0;
-
-  const list = images
-    .map((img, i) => `[${i}] ${img.original || img.thumbnail} - ${img.title || 'Sin título'} (${img.source || '?'})`)
-    .join('\n');
-
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${openaiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: `Eres un selector de imágenes para Retiru (centros de yoga, wellness, pilates).
-Elige la imagen que mejor represente un centro de bienestar: profesional, acogedor, relacionado con yoga/meditación/wellness.
-Evita logos, capturas de pantalla, imágenes genéricas de comida. Prioriza fotos de espacios, personas practicando, naturaleza.
-Responde SOLO con el número del índice (0-9), nada más.`,
-        },
-        {
-          role: 'user',
-          content: `Centro: ${centerName}, ${city}\n\nImágenes:\n${list}\n\nÍndice de la mejor (0-9):`,
-        },
-      ],
-      temperature: 0.2,
-    }),
-  });
-
-  if (!res.ok) return 0;
-  const data = await res.json();
-  const raw = data.choices?.[0]?.message?.content?.trim() || '0';
-  const idx = parseInt(raw.replace(/\D/g, ''), 10);
-  return isNaN(idx) || idx < 0 || idx >= images.length ? 0 : idx;
-}
-
-// ─── Descargar imagen y subir a Supabase ─────────────────────────────────────
-async function downloadAndUpload(imageUrl, centerId, supabase) {
+function abs(base, raw) {
+  const clean = decodeHtml((raw || '').trim());
+  if (!clean || clean.startsWith('data:') || clean.startsWith('#')) return null;
   try {
-    const res = await fetch(imageUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Retiru/1.0)' },
-      redirect: 'follow',
-    });
-    if (!res.ok) return null;
-
-    const rawBuffer = Buffer.from(await res.arrayBuffer());
-    let uploadBuffer = rawBuffer;
-    let contentType = 'image/webp';
-    let ext = 'webp';
-    try {
-      uploadBuffer = await sharp(rawBuffer).webp({ quality: 82, effort: 5 }).toBuffer();
-    } catch (e) {
-      console.warn('  ⚠ sharp falló, subiendo original:', e.message);
-      const srcContentType = res.headers.get('content-type') || 'image/jpeg';
-      contentType = srcContentType.split(';')[0].trim();
-      ext = contentType.includes('png') ? 'png' : 'jpg';
+    const url = new URL(clean, base);
+    if (url.pathname.includes('/_next/image')) {
+      const inner = url.searchParams.get('url');
+      if (inner) return abs(`${url.protocol}//${url.host}`, inner);
     }
-    const path = `${centerId}/cover.${ext}`;
-
-    const { error } = await supabase.storage.from('centers').upload(path, uploadBuffer, {
-      contentType,
-      cacheControl: '31536000',
-      upsert: true,
-    });
-
-    if (error) {
-      console.warn('  ⚠ Upload:', error.message);
-      return null;
-    }
-
-    const { data } = supabase.storage.from('centers').getPublicUrl(path);
-    return data.publicUrl;
-  } catch (e) {
-    console.warn('  ⚠ Download:', e.message);
+    return url.href;
+  } catch {
     return null;
   }
 }
 
-async function main() {
-  loadEnvLocal();
+function usableUrl(url) {
+  if (!url) return false;
+  const u = url.toLowerCase();
+  if (JUNK.test(u) || u.includes('.svg') || u.includes('.gif')) return false;
+  const cdn =
+    u.includes('wixstatic.com') ||
+    u.includes('cdn-website.com') ||
+    u.includes('wp-content/uploads') ||
+    u.includes('/images/') ||
+    u.includes('/uploads/');
+  return PHOTO_EXT.test(u) || cdn;
+}
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const openaiKey = process.env.OPENAI_API_KEY;
-  const serpKey = process.env.SERPAPI_API_KEY;
-
-  if (!url || !serviceKey || !openaiKey || !serpKey) {
-    console.error('❌ Faltan NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, OPENAI_API_KEY o SERPAPI_API_KEY');
-    process.exit(1);
+function extraerFotos(base, html) {
+  const found = new Set();
+  const push = (raw) => {
+    const url = abs(base, raw);
+    if (url && usableUrl(url)) found.add(url);
+  };
+  const og = html.match(/property=["']og:image["'][^>]*content=["']([^"']+)["']/i)
+    || html.match(/content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
+  if (og) push(og[1]);
+  const tw = html.match(/name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i);
+  if (tw) push(tw[1]);
+  const attrRe = /(?:src|data-src|data-lazy-src|data-original|data-bg)=["']([^"']+)["']/gi;
+  let m;
+  while ((m = attrRe.exec(html))) push(m[1]);
+  const srcsetRe = /srcset=["']([^"']+)["']/gi;
+  while ((m = srcsetRe.exec(html))) {
+    for (const part of m[1].split(',')) push(part.trim().split(/\s+/)[0]);
   }
-
-  const args = process.argv.slice(2);
-  const limitIdx = args.indexOf('--limit');
-  const limit = limitIdx >= 0 ? parseInt(args[limitIdx + 1], 10) : null;
-  const force = args.includes('--force');
-
-  const { createClient } = await import('@supabase/supabase-js');
-  const supabase = createClient(url, serviceKey);
-
-  let { data: centers } = await supabase
-    .from('centers')
-    .select('id, name, city, province, cover_url')
-    .eq('status', 'active')
-    .order('name');
-
-  if (!centers?.length) {
-    console.log('No hay centros activos.');
-    process.exit(0);
+  const cssBg = /url\((['"]?)([^'")]+)\1\)/gi;
+  while ((m = cssBg.exec(html))) {
+    if (PHOTO_EXT.test(m[2])) push(m[2]);
   }
+  return [...found];
+}
 
-  if (!force) {
-    centers = centers.filter((c) => !c.cover_url || !c.cover_url.includes('supabase'));
+async function fetchHtml(url) {
+  try {
+    const resp = await fetch(url, {
+      headers: { 'User-Agent': UA, Accept: 'text/html,application/xhtml+xml' },
+      redirect: 'follow',
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!resp.ok) return null;
+    const ctype = resp.headers.get('content-type') || '';
+    if (ctype && !/html|xml|text/.test(ctype)) return null;
+    return { url: resp.url, html: await resp.text() };
+  } catch {
+    return null;
   }
+}
 
-  const toProcess = limit ? centers.slice(0, limit) : centers;
-  console.log(`\n🖼️  RETIRU · Asignar imágenes a centros\n   Total: ${toProcess.length} centros\n`);
+function scoreUrl(url) {
+  const u = url.toLowerCase();
+  let s = 0;
+  if (/yoga|shala|sala|estudio|meditaci|ayurved|clase|asana|esterilla/i.test(u)) s += 20;
+  if (u.includes('wp-content/uploads')) s += 10;
+  if (u.includes('wixstatic.com')) s += 8;
+  if (/\.jpe?g(\?|#|$)/i.test(u)) s += 4;
+  if (/logo|icon|avatar|sprite/i.test(u)) s -= 30;
+  return s;
+}
 
-  let ok = 0;
-  let fail = 0;
-
-  for (let i = 0; i < toProcess.length; i++) {
-    const c = toProcess[i];
-    console.log(`   [${i + 1}/${toProcess.length}] ${c.name} (${c.city})...`);
-
-    const cleanName = (c.name || '').replace(/[|]/g, ' ').replace(/\s+/g, ' ').slice(0, 40);
-    let query = `${cleanName} ${c.city} yoga wellness`;
-    let images = await searchImages(query, serpKey);
-
-    if (!images.length) {
-      query = `yoga wellness ${c.city}`;
-      images = await searchImages(query, serpKey);
-    }
-
-    if (!images.length) {
-      console.log('      ⚠ Sin resultados de imágenes');
-      fail++;
-      await sleep(800);
-      continue;
-    }
-
-    const idx = await pickBestImage(c.name, c.city, images, openaiKey);
-    const chosen = images[idx];
-    const imageUrl = chosen?.original || chosen?.thumbnail;
-
-    if (!imageUrl) {
-      console.log('      ⚠ Sin URL de imagen');
-      fail++;
-      await sleep(500);
-      continue;
-    }
-
-    const publicUrl = await downloadAndUpload(imageUrl, c.id, supabase);
-    if (!publicUrl) {
-      fail++;
-      await sleep(500);
-      continue;
-    }
-
-    const { error } = await supabase.from('centers').update({ cover_url: publicUrl }).eq('id', c.id);
-    if (error) {
-      console.log('      ❌ Error al actualizar:', error.message);
-      fail++;
-    } else {
-      console.log('      ✅ Imagen asignada');
-      ok++;
-    }
-
-    await sleep(1500);
+async function validarFoto(url, referer) {
+  try {
+    const resp = await fetch(url, {
+      headers: {
+        'User-Agent': UA,
+        Accept: 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+        Referer: referer || `${new URL(url).origin}/`,
+      },
+      redirect: 'follow',
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!resp.ok) return null;
+    const ctype = resp.headers.get('content-type') || '';
+    if (ctype && !/image\/(jpeg|jpg|png|webp|avif)/i.test(ctype)) return null;
+    const buf = Buffer.from(await resp.arrayBuffer());
+    if (buf.length < MIN_BYTES || buf.length > 8_000_000) return null;
+    const meta = await sharp(buf).metadata();
+    const w = meta.width || 0;
+    const h = meta.height || 0;
+    if (w < MIN_W || h < MIN_H) return null;
+    const ratio = w / Math.max(h, 1);
+    if (ratio > 0.85 && ratio < 1.15 && w < 700) return null;
+    return { url, buf, w, h };
+  } catch {
+    return null;
   }
+}
 
-  console.log(`\n✅ Completado: ${ok} centros con imagen, ${fail} fallos\n`);
+async function scrapeWebOficial(website) {
+  if (!website || SOCIAL.test(website)) return null;
+  let home = website.trim();
+  if (!/^https?:\/\//i.test(home)) home = `https://${home}`;
+  const first = await fetchHtml(home);
+  if (!first) return null;
+  const urls = new Set(extraerFotos(first.url, first.html));
+  try {
+    const u = new URL(first.url);
+    for (const p of EXTRA_PATHS) {
+      const extra = await fetchHtml(`${u.protocol}//${u.host}${p}`);
+      if (extra) extraerFotos(extra.url, extra.html).forEach((x) => urls.add(x));
+    }
+  } catch {
+    /* ignore */
+  }
+  const ranked = [...urls].sort((a, b) => scoreUrl(b) - scoreUrl(a)).slice(0, 18);
+  for (const url of ranked) {
+    const ok = await validarFoto(url, first.url);
+    if (ok) return ok;
+  }
+  return null;
+}
+
+async function uploadBuffer(supabase, centerId, buffer, tag) {
+  const webp = await sharp(buffer).webp({ quality: 82, effort: 5 }).toBuffer();
+  const path = `${centerId}/${tag}-${Date.now()}.webp`;
+  const { error } = await supabase.storage.from('centers').upload(path, webp, {
+    contentType: 'image/webp',
+    cacheControl: '31536000',
+    upsert: true,
+  });
+  if (error) throw new Error(error.message);
+  return supabase.storage.from('centers').getPublicUrl(path).data.publicUrl;
+}
+
+async function generateAiCover(openaiKey, center) {
+  const tipo = center.type === 'ayurveda' ? 'ayurveda' : center.type === 'meditation' ? 'meditación' : 'yoga';
+  const city = center.city || center.province || 'España';
+  const prompt =
+    `Fotografía hiperrealista y cinematográfica del interior de un centro de ${tipo} en ${city}, ` +
+    `Región de Murcia: sala con luz natural de día, madera, lino y plantas, ambiente real de estudio, ` +
+    `sin texto ni logos, composición editorial horizontal, realismo fotográfico absoluto, portada web. ` +
+    `Tomada como fotografía real con cámara full frame, luz existente, color natural, de día, sin HDR, sin render 3D.`;
+  const res = await fetch('https://api.openai.com/v1/images/generations', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${openaiKey}` },
+    body: JSON.stringify({
+      model: 'gpt-image-2',
+      prompt: prompt.slice(0, 4000),
+      n: 1,
+      size: '1536x1024',
+      quality: 'high',
+      output_format: 'png',
+    }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error?.message || `OpenAI ${res.status}`);
+  const b64 = data.data?.[0]?.b64_json;
+  const url = data.data?.[0]?.url;
+  if (b64) return Buffer.from(b64, 'base64');
+  if (url) {
+    const img = await fetch(url);
+    if (!img.ok) throw new Error('No se pudo bajar la imagen IA');
+    return Buffer.from(await img.arrayBuffer());
+  }
+  throw new Error('Respuesta IA vacía');
 }
 
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
+}
+
+async function main() {
+  loadEnvLocal();
+  const { createClient } = await import('@supabase/supabase-js');
+  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const openaiKey = process.env.OPENAI_API_KEY;
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error('Faltan claves Supabase');
+    process.exit(1);
+  }
+  if (!NO_IA && !openaiKey) {
+    console.error('Falta OPENAI_API_KEY (o usa --no-ia)');
+    process.exit(1);
+  }
+
+  let q = supabase
+    .from('centers')
+    .select('id, name, city, province, type, website, cover_url, description_es')
+    .eq('status', 'active')
+    .order('name');
+  if (PROVINCE) q = q.eq('province', PROVINCE);
+  const { data, error } = await q;
+  if (error) throw error;
+  let centers = data || [];
+  if (!FORCE) centers = centers.filter((c) => !c.cover_url);
+  if (LIMIT) centers = centers.slice(0, LIMIT);
+
+  console.log(`Portadas Retiru · ${centers.length} centros${PROVINCE ? ` · ${PROVINCE}` : ''}${NO_IA ? ' · sin IA' : ''}`);
+  if (DRY) {
+    centers.forEach((c) => console.log(` - ${c.name} | ${c.website || 'sin web'}`));
+    return;
+  }
+
+  let webOk = 0;
+  let iaOk = 0;
+  let miss = 0;
+
+  for (let i = 0; i < centers.length; i++) {
+    const c = centers[i];
+    process.stdout.write(`[${i + 1}/${centers.length}] ${c.name}… `);
+    try {
+      const scraped = await scrapeWebOficial(c.website);
+      if (scraped) {
+        if (!DRY) {
+          const publicUrl = await uploadBuffer(supabase, c.id, scraped.buf, 'web-cover');
+          const { error: up } = await supabase.from('centers').update({ cover_url: publicUrl }).eq('id', c.id);
+          if (up) throw new Error(up.message);
+        }
+        webOk++;
+        console.log(`web ${scraped.w}x${scraped.h}`);
+        await sleep(200);
+        continue;
+      }
+      if (NO_IA) {
+        miss++;
+        console.log(`sin foto (${c.website || 'sin web'})`);
+        continue;
+      }
+      const buf = await generateAiCover(openaiKey, c);
+      const publicUrl = await uploadBuffer(supabase, c.id, buf, 'ai-cover');
+      const { error: up } = await supabase.from('centers').update({ cover_url: publicUrl }).eq('id', c.id);
+      if (up) throw new Error(up.message);
+      iaOk++;
+      console.log('IA');
+      await sleep(400);
+    } catch (e) {
+      miss++;
+      console.log(`error ${e.message}`);
+    }
+  }
+
+  console.log(`\nWeb oficial: ${webOk} · IA: ${iaOk} · sin foto: ${miss}`);
 }
 
 main().catch((e) => {

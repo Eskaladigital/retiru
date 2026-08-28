@@ -1,137 +1,41 @@
 // ============================================================================
-// RETIRU · API Admin — Generar descripciones ENRIQUECIDAS de centros (SerpAPI + Google Maps + OpenAI)
+// RETIRU · API Admin — Generar descripciones de centros
+// gpt-5.6-terra + web_search nativo (sin SerpAPI)
 // POST /api/admin/generate-center-descriptions
-// Body opcional: { force?: boolean, limit?: number }
-// Respuesta: Server-Sent Events (text/event-stream) con logs en tiempo real
+// Body: { force?: boolean, limit?: number }
 // ============================================================================
 
 import { createAdminSupabase } from '@/lib/supabase/server';
 import { translateCenterFieldsToEn } from '@/lib/openai/translate-center-en';
+import {
+  CENTER_DESC_MIN_LENGTH,
+  generateCenterDescriptionEs,
+} from '@/lib/openai/center-description';
 
-// Vercel: 300s máx (Pro plan). Sin esto, timeout a 60s y solo se procesan ~8 centros.
 export const maxDuration = 300;
-
-const MIN_DESC_LENGTH = 400;
 
 type CenterRow = {
   id: string;
   name: string;
-  slug: string;
   city: string;
   province: string;
   address?: string | null;
-  type?: string;
+  type?: string | null;
+  website?: string | null;
   services_es?: string[] | null;
   description_es?: string | null;
   schedule_summary_es?: string | null;
   price_range_es?: string | null;
 };
 
-async function fetchContext(center: CenterRow, serpKey: string): Promise<{ context: string; logs: string[] }> {
-  const parts: string[] = [];
-  const logs: string[] = [];
-
-  // Anclaje obligatorio: reduce confusiones cuando la marca tiene varias sedes (misma marca, distinta ciudad/tipo de local).
-  const anchor = [
-    '## Ubicación en Retiru (prioridad sobre snippets de Google)',
-    `- Nombre en ficha: ${center.name}`,
-    center.address ? `- Dirección en ficha: ${center.address}` : '- Dirección en ficha: (no registrada)',
-    `- Ciudad / provincia: ${center.city}, ${center.province}`,
-    '',
-    'REGLA: La descripción debe referirse SOLO a este establecimiento. Si en los resultados de búsqueda aparece otra sede de la misma marca (p. ej. un resort rural y un estudio urbano), NO mezcles instalaciones, reseñas ni datos de la otra ubicación. Prioriza siempre la ciudad y la dirección de esta ficha.',
-  ].join('\n');
-  parts.push(anchor);
-
-  const query = [center.name, center.address, center.city, center.province, 'España'].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
-
-  // 1. Google orgánico
-  logs.push(`  🔍 Buscando en Google: "${query}"`);
-  const googleRes = await fetch(
-    `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(query)}&api_key=${serpKey}&hl=es&num=10`
-  );
-  const googleData = googleRes.ok ? await googleRes.json() : null;
-  if (googleData?.organic_results) {
-    const snippets = googleData.organic_results
-      .slice(0, 10)
-      .map((r: { snippet?: string }) => r.snippet)
-      .filter(Boolean);
-    if (snippets.length) {
-      parts.push('## Contexto web (Google):\n' + snippets.join('\n\n'));
-      logs.push(`  ✅ ${snippets.length} resultados de Google`);
-    }
-  } else {
-    logs.push(`  ⚠️ Sin resultados de Google`);
-  }
-
-  // 2. Google Maps (incluir dirección si existe para desambiguar sedes de la misma marca)
-  logs.push(`  📍 Buscando en Google Maps...`);
-  const mapsQuery = encodeURIComponent([center.name, center.address, center.city].filter(Boolean).join(' '));
-  const mapsRes = await fetch(
-    `https://serpapi.com/search.json?engine=google_maps&q=${mapsQuery}&api_key=${serpKey}&hl=es&type=search`
-  );
-  const mapsData = mapsRes.ok ? await mapsRes.json() : null;
-
-  let mapsInfo = '';
-  let dataId: string | null = null;
-
-  if (mapsData?.local_results?.[0]) {
-    const place = mapsData.local_results[0];
-    mapsInfo = `Rating: ${place.rating ?? 'N/A'}, ${place.reviews ?? 0} reseñas. Tipo: ${place.type ?? place.types?.[0] ?? center.type ?? 'centro de bienestar'}.`;
-    if (place.address) mapsInfo += ` Dirección: ${place.address}.`;
-    dataId = place.data_id || null;
-    logs.push(`  ✅ Maps: ⭐ ${place.rating ?? '?'} (${place.reviews ?? 0} reseñas)`);
-  } else {
-    logs.push(`  ⚠️ No encontrado en Google Maps`);
-  }
-
-  if (mapsInfo) {
-    parts.push('## Google Maps:\n' + mapsInfo);
-  }
-
-  // 3. Reseñas de Google Maps
-  if (dataId) {
-    try {
-      logs.push(`  💬 Obteniendo reseñas de usuarios...`);
-      const reviewsRes = await fetch(
-        `https://serpapi.com/search.json?engine=google_maps_reviews&data_id=${encodeURIComponent(dataId)}&api_key=${serpKey}&hl=es`
-      );
-      const reviewsData = reviewsRes.ok ? await reviewsRes.json() : null;
-      if (reviewsData?.reviews?.length) {
-        const reviewTexts = reviewsData.reviews
-          .slice(0, 8)
-          .map((r: { snippet?: string; extract?: string }) => r.snippet || r.extract || '')
-          .filter(Boolean);
-        if (reviewTexts.length) {
-          parts.push('## Reseñas de usuarios (Google):\n' + reviewTexts.map((t: string) => `- "${t}"`).join('\n'));
-          logs.push(`  ✅ ${reviewTexts.length} reseñas obtenidas`);
-        }
-      }
-    } catch {
-      logs.push(`  ⚠️ Error al obtener reseñas`);
-    }
-  }
-
-  // 4. Servicios del centro (BD)
-  const services = center.services_es && center.services_es.length > 0
-    ? center.services_es.join(', ')
-    : center.type || 'yoga, meditación, wellness';
-  parts.push('## Servicios / oferta del centro (BD):\n' + services);
-
-  return {
-    context: parts.join('\n\n') || `Centro: ${center.name}, ${center.city}, ${center.province}. Tipo: ${center.type || 'wellness'}.`,
-    logs,
-  };
-}
-
 export async function POST(request: Request) {
   const openaiKey = process.env.OPENAI_API_KEY;
-  const serpKey = process.env.SERPAPI_API_KEY;
 
-  if (!openaiKey || !serpKey) {
-    return new Response(
-      JSON.stringify({ error: 'Faltan OPENAI_API_KEY o SERPAPI_API_KEY en .env.local' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+  if (!openaiKey) {
+    return new Response(JSON.stringify({ error: 'Falta OPENAI_API_KEY en el servidor' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   let force = false;
@@ -144,25 +48,28 @@ export async function POST(request: Request) {
       limit = Math.min(Math.max(0, Number(body.limit) || 0), 100);
     }
   } catch {
-    // ignorar body vacío o inválido
+    /* body vacío */
   }
 
   const supabase = createAdminSupabase();
 
   const { data: centers, error } = await supabase
     .from('centers')
-    .select('id, name, slug, city, province, address, type, services_es, description_es, schedule_summary_es, price_range_es');
+    .select(
+      'id, name, city, province, address, type, website, services_es, description_es, schedule_summary_es, price_range_es',
+    )
+    .eq('status', 'active');
 
   if (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   let toProcess = ((centers || []) as CenterRow[]).filter((c) => {
     const desc = c.description_es?.trim() || '';
-    return force ? true : desc.length < MIN_DESC_LENGTH;
+    return force ? true : desc.length < CENTER_DESC_MIN_LENGTH;
   });
   if (limit > 0) toProcess = toProcess.slice(0, limit);
 
@@ -174,77 +81,40 @@ export async function POST(request: Request) {
       }
 
       if (toProcess.length === 0) {
-        send('log', { type: 'info', message: force ? '📋 No hay centros para procesar.' : '✅ Todos los centros ya tienen descripción enriquecida.' });
+        send('log', {
+          type: 'info',
+          message: force
+            ? '📋 No hay centros para procesar.'
+            : '✅ Todos los centros ya tienen descripción enriquecida.',
+        });
         send('done', { processed: 0, ok: 0, errors: 0 });
         controller.close();
         return;
       }
 
-      send('log', { type: 'info', message: `🚀 Iniciando generación para ${toProcess.length} centros...` });
+      send('log', {
+        type: 'info',
+        message: `🚀 ${toProcess.length} centros · gpt-5.6-terra + web search`,
+      });
 
       let okCount = 0;
       let errorCount = 0;
 
-      const systemPrompt = `Eres un redactor profesional para Retiru, plataforma de retiros y centros de bienestar en España.
-Tu tarea: escribir una descripción COMPLETA y ENRIQUECIDA del centro de 800 a 1200 palabras, en español.
-
-Estructura sugerida:
-1. **Introducción** (párrafo): Presentar el centro, ubicación, filosofía o especialidad.
-2. **Servicios y oferta**: Detallar clases, disciplinas, tratamientos, horarios si se mencionan. Destacar qué hace único al centro.
-3. **Reseñas y reputación**: Si hay reseñas en el contexto, intégralas de forma natural (ej: "Los usuarios destacan...", "Según las valoraciones..."). Menciona puntuación y cantidad de reseñas si aparecen.
-4. **Ambiente e instalaciones**: Si hay información, describe el espacio, el equipo, la atmósfera.
-5. **Cierre**: Invitación a visitar o contacto, tono cercano.
-
-Reglas:
-- Tono: profesional, cercano, premium. Sin exagerar.
-- NO inventes datos (direcciones exactas, precios, nombres de profesores) que no estén en el contexto.
-- Marcas con varias sedes: si el contexto mezcla un resort rural, hotel o masía con un estudio en ciudad (o viceversa), ignora lo que no coincida con la ciudad y dirección del bloque "Ubicación en Retiru". No describas la instalación equivocada.
-- Usa el contexto proporcionado. Si hay poca información, elabora una descripción sólida basada en nombre, ciudad, tipo y servicios.
-- Longitud: entre 800 y 1200 palabras. Párrafos bien estructurados.`;
-
       for (let i = 0; i < toProcess.length; i++) {
         const center = toProcess[i];
-        send('log', { type: 'start', message: `\n📌 [${i + 1}/${toProcess.length}] ${center.name} (${center.city})` });
+        send('log', {
+          type: 'start',
+          message: `\n📌 [${i + 1}/${toProcess.length}] ${center.name} (${center.city})`,
+        });
 
         try {
-          const { context, logs: fetchLogs } = await fetchContext(center, serpKey);
-          for (const log of fetchLogs) {
-            send('log', { type: 'detail', message: log });
-          }
-
-          send('log', { type: 'detail', message: `  🤖 Generando descripción con GPT-5.6 Terra...` });
-
-          const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${openaiKey}`,
-            },
-            body: JSON.stringify({
-              model: 'gpt-5.6-terra',
-              messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: `Genera la descripción enriquecida (800-1200 palabras) para este centro:\n\n${context}` },
-              ],
-              max_completion_tokens: 4000,
-              reasoning_effort: 'low',
-            }),
-          });
-
-          if (!openaiRes.ok) {
-            const errData = await openaiRes.json().catch(() => ({}));
-            throw new Error(errData.error?.message || openaiRes.statusText);
-          }
-
-          const openaiData = await openaiRes.json();
-          const description = openaiData.choices?.[0]?.message?.content?.trim();
-
-          if (!description) {
-            throw new Error('OpenAI no devolvió contenido');
-          }
-
+          send('log', { type: 'detail', message: '  🤖 Terra + búsqueda web…' });
+          const { text: description, searches } = await generateCenterDescriptionEs(openaiKey, center);
           const wordCount = description.split(/\s+/).length;
-          send('log', { type: 'detail', message: `  📝 Descripción generada: ${wordCount} palabras` });
+          send('log', {
+            type: 'detail',
+            message: `  📝 ${wordCount} palabras · ${searches} búsquedas`,
+          });
 
           const now = new Date().toISOString();
           const { error: updateError } = await supabase
@@ -255,22 +125,18 @@ Reglas:
               updated_at: now,
             })
             .eq('id', center.id);
-
           if (updateError) throw updateError;
 
-          send('log', { type: 'detail', message: `  💾 Guardado ES en BD` });
-
           try {
-            send('log', { type: 'detail', message: `  🌐 Traduciendo a inglés...` });
-            const servicesEs = Array.isArray(center.services_es) ? center.services_es : [];
+            send('log', { type: 'detail', message: '  🌐 Traduciendo a inglés…' });
             const enFields = await translateCenterFieldsToEn(
               {
                 descriptionEs: description,
-                servicesEs,
+                servicesEs: Array.isArray(center.services_es) ? center.services_es : [],
                 scheduleSummaryEs: center.schedule_summary_es ?? null,
                 priceRangeEs: center.price_range_es ?? null,
               },
-              openaiKey
+              openaiKey,
             );
             const { error: enErr } = await supabase
               .from('centers')
@@ -283,13 +149,12 @@ Reglas:
               })
               .eq('id', center.id);
             if (enErr) throw enErr;
-            send('log', { type: 'detail', message: `  💾 Traducción EN guardada` });
           } catch (trErr) {
             const msg = trErr instanceof Error ? trErr.message : String(trErr);
-            send('log', { type: 'error', message: `  ⚠️ Traducción EN fallida (ES guardado): ${msg}` });
+            send('log', { type: 'error', message: `  ⚠️ EN fallida (ES guardado): ${msg}` });
           }
 
-          send('log', { type: 'success', message: `  ✅ ${center.name} — completado (${wordCount} palabras)` });
+          send('log', { type: 'success', message: `  ✅ ${center.name}` });
           okCount++;
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
@@ -298,7 +163,10 @@ Reglas:
         }
       }
 
-      send('log', { type: 'info', message: `\n🏁 Finalizado: ${okCount} OK, ${errorCount} errores de ${toProcess.length} centros` });
+      send('log', {
+        type: 'info',
+        message: `\n🏁 ${okCount} OK, ${errorCount} errores de ${toProcess.length}`,
+      });
       send('done', { processed: toProcess.length, ok: okCount, errors: errorCount });
       controller.close();
     },
