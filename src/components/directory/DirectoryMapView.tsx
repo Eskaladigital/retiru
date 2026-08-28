@@ -352,9 +352,14 @@ function FilterFields({
           </select>
         </label>
       ) : null}
-      {showClear && hasActive ? (
-        <button type="button" onClick={onClear} className="text-sm font-medium text-terracotta-600 hover:text-terracotta-700 inline-flex items-center gap-1">
-          <X size={14} /> {t.clear}
+      {showClear ? (
+        <button
+          type="button"
+          onClick={onClear}
+          disabled={!hasActive}
+          className="w-full bg-terracotta-600 text-white font-semibold py-2.5 rounded-xl inline-flex items-center justify-center gap-1.5 hover:bg-terracotta-700 disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <X size={16} /> {t.clear}
         </button>
       ) : null}
     </div>
@@ -907,7 +912,7 @@ export default function DirectoryMapView({
               type="button"
               onClick={clearFilters}
               disabled={!hasActive}
-              className="w-full py-2 rounded-xl border border-sand-200 text-sm font-medium text-[#2d2319] disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full bg-terracotta-600 text-white font-semibold py-2.5 rounded-xl hover:bg-terracotta-700 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {t.clear}
               {filterCount > 0 ? ` (${filterCount})` : ''}
