@@ -57,6 +57,7 @@ export default function ChatWidget() {
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null)
   const [geoBusy, setGeoBusy] = useState(false)
   const [geoBlocked, setGeoBlocked] = useState(false)
+  const [geoSoftFail, setGeoSoftFail] = useState(false)
   const [geoDeclined, setGeoDeclined] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const locationRef = useRef<UserLocation | null>(null)
@@ -68,28 +69,34 @@ export default function ChatWidget() {
   const shareLocation = useCallback(() => {
     if (geoBusy) return
     if (typeof navigator === 'undefined' || !('geolocation' in navigator)) {
-      setGeoBlocked(true)
+      setGeoSoftFail(true)
       return
     }
     setGeoBusy(true)
+    setGeoBlocked(false)
+    setGeoSoftFail(false)
+    // Mismas opciones que el mapa: caché 5 min. maximumAge:0 + 8s pintaba
+    // un timeout de Windows como «el navegador lo ha bloqueado».
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const lat = position.coords.latitude
         const lng = position.coords.longitude
         setGeoBusy(false)
-        if (Math.abs(lat) < 0.5 && Math.abs(lng) < 0.5) {
-          setGeoBlocked(true)
+        if (!Number.isFinite(lat) || !Number.isFinite(lng) || (Math.abs(lat) < 0.5 && Math.abs(lng) < 0.5)) {
+          setGeoSoftFail(true)
           return
         }
         setUserLocation({ lat, lng })
         setGeoDeclined(false)
         setGeoBlocked(false)
+        setGeoSoftFail(false)
       },
-      () => {
+      (error) => {
         setGeoBusy(false)
-        setGeoBlocked(true)
+        if (error.code === error.PERMISSION_DENIED) setGeoBlocked(true)
+        else setGeoSoftFail(true)
       },
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 300000 }
     )
   }, [geoBusy])
 
@@ -98,6 +105,7 @@ export default function ChatWidget() {
     locationRef.current = null
     setGeoDeclined(true)
     setGeoBlocked(false)
+    setGeoSoftFail(false)
   }
 
   useEffect(() => {
@@ -296,18 +304,20 @@ export default function ChatWidget() {
                   {locale === 'en' ? 'Stop using it' : 'Dejar de usarla'}
                 </button>
               </div>
-            ) : geoBlocked ? (
-              <div className={styles.geoAsk} role="status">
-                {locale === 'en'
-                  ? 'The browser blocked location. Allow it in the address bar if you want nearby places.'
-                  : 'El navegador ha bloqueado la ubicación. Si quieres sitios cerca, permítela en la barra de direcciones.'}
-              </div>
             ) : !geoDeclined ? (
               <div className={styles.geoAsk} role="status">
                 <p>
-                  {locale === 'en'
-                    ? 'It is much better to share your location: Roy can then point to centers near you instead of guessing a city. You can turn it off any time. This is not the map’s “Show location”.'
-                    : 'Es mucho mejor compartir tu ubicación: así Roy te da centros cerca de ti y no tiene que adivinar la ciudad. La puedes quitar cuando quieras. No es el «Ver ubicación» del mapa.'}
+                  {geoBlocked
+                    ? locale === 'en'
+                      ? 'I could not use your location. Allow it in the address-bar lock, then try again — or tell me a city.'
+                      : 'No he podido usar la ubicación. En el candado de la barra, permite la ubicación a esta web y pulsa otra vez. Si no, dime la ciudad.'
+                    : geoSoftFail
+                      ? locale === 'en'
+                        ? 'I could not locate you just now. Try again or tell me a city.'
+                        : 'No he podido localizarte ahora. Prueba otra vez o dime la ciudad.'
+                      : locale === 'en'
+                        ? 'It is much better to share your location: Roy can then point to centers near you instead of guessing a city. You can turn it off any time. This is not the map’s “Show location”.'
+                        : 'Es mucho mejor compartir tu ubicación: así Roy te da centros cerca de ti y no tiene que adivinar la ciudad. La puedes quitar cuando quieras. No es el «Ver ubicación» del mapa.'}
                 </p>
                 <div className={styles.geoActions}>
                   <button type="button" className={styles.geoYes} onClick={shareLocation} disabled={geoBusy}>
@@ -315,11 +325,23 @@ export default function ChatWidget() {
                       ? locale === 'en'
                         ? 'Locating…'
                         : 'Localizando…'
-                      : locale === 'en'
-                        ? 'Share'
-                        : 'Compartir'}
+                      : geoBlocked || geoSoftFail
+                        ? locale === 'en'
+                          ? 'Try again'
+                          : 'Probar otra vez'
+                        : locale === 'en'
+                          ? 'Share'
+                          : 'Compartir'}
                   </button>
-                  <button type="button" className={styles.geoNo} onClick={() => setGeoDeclined(true)}>
+                  <button
+                    type="button"
+                    className={styles.geoNo}
+                    onClick={() => {
+                      setGeoDeclined(true)
+                      setGeoBlocked(false)
+                      setGeoSoftFail(false)
+                    }}
+                  >
                     {locale === 'en' ? 'Not now' : 'Ahora no'}
                   </button>
                 </div>
