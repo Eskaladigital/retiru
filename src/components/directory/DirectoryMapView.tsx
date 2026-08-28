@@ -11,7 +11,7 @@ import {
   CENTER_QUALITY_TIERS,
   CENTER_TYPE_META,
   PUBLIC_DIRECTORY_CENTER_TYPE_SLUGS,
-  meetsCenterQualityBar,
+  getCenterQualityTier,
   type CenterQualityTier,
   VALID_CENTER_TYPE_SLUGS,
   generateSlug,
@@ -34,13 +34,14 @@ const COPY = {
     search: 'Buscar centro, ciudad…',
     mapSearch: '¿A dónde ir?',
     type: 'Categoría',
+    typeHint: 'Puedes marcar varias',
     allTypes: 'Todos',
     legend: 'Leyenda',
     province: 'Provincia',
     allProvinces: 'Todas',
     rating: 'Valoración',
     anyRating: 'Todas',
-    qualityHint: 'Sin marcar, se ven todos. El listón cuenta estrellas y reseñas.',
+    qualityHint: 'Puedes marcar varias. Sin marcar, se ven todos.',
     sort: 'Ordenar',
     sortRating: 'Mejor valorados',
     sortReviews: 'Más reseñas',
@@ -69,13 +70,14 @@ const COPY = {
     search: 'Search center, city…',
     mapSearch: 'Where to go?',
     type: 'Category',
+    typeHint: 'You can pick more than one',
     allTypes: 'All',
     legend: 'Legend',
     province: 'Province',
     allProvinces: 'All',
     rating: 'Rating',
     anyRating: 'Any',
-    qualityHint: 'Leave empty to see everyone. The bar uses stars and review count.',
+    qualityHint: 'You can pick more than one. Leave empty to see everyone.',
     sort: 'Sort',
     sortRating: 'Top rated',
     sortReviews: 'Most reviews',
@@ -211,8 +213,8 @@ function haversine(aLat: number, aLng: number, bLat: number, bLng: number) {
 function FilterFields({
   query,
   setQuery,
-  selectedType,
-  setSelectedType,
+  selectedTypes,
+  toggleType,
   selectedProvince,
   setSelectedProvince,
   selectedTiers,
@@ -229,8 +231,8 @@ function FilterFields({
 }: {
   query: string;
   setQuery: (v: string) => void;
-  selectedType: string;
-  setSelectedType: (v: string) => void;
+  selectedTypes: string[];
+  toggleType: (slug: string) => void;
   selectedProvince: string;
   setSelectedProvince: (v: string) => void;
   selectedTiers: CenterQualityTier[];
@@ -265,16 +267,17 @@ function FilterFields({
         ) : null}
       </div>
       <div>
-        <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#a09383] mb-1.5">{t.type}</span>
+        <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#a09383] mb-1">{t.type}</span>
+        <p className="text-[11px] text-[#a09383] mb-1.5">{t.typeHint}</p>
         <div className="space-y-2">
           {PUBLIC_DIRECTORY_CENTER_TYPE_SLUGS.map((slug) => {
-            const activo = selectedType === slug;
+            const activo = selectedTypes.includes(slug);
             const color = getCenterTypeColor(slug);
             return (
               <button
                 key={slug}
                 type="button"
-                onClick={() => setSelectedType(activo ? '' : slug)}
+                onClick={() => toggleType(slug)}
                 aria-pressed={activo}
                 className={`w-full flex items-center gap-3 rounded-xl border-2 px-3 py-2.5 text-left transition-all active:scale-[0.99] ${
                   activo ? 'shadow-sm' : 'border-sand-200 bg-white hover:border-sand-300'
@@ -435,7 +438,7 @@ export default function DirectoryMapView({
   const searchParams = useSearchParams();
 
   const [query, setQuery] = useState('');
-  const [selectedType, setSelectedType] = useState('');
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedProvince, setSelectedProvince] = useState('');
   const [placeSlug, setPlaceSlug] = useState<string | null>(null);
   const [selectedTiers, setSelectedTiers] = useState<CenterQualityTier[]>([]);
@@ -469,9 +472,11 @@ export default function DirectoryMapView({
     const prov = searchParams.get(locale === 'en' ? 'province' : 'provincia') || searchParams.get('provincia') || '';
     const city = searchParams.get(locale === 'en' ? 'city' : 'ciudad') || searchParams.get('ciudad') || '';
     if (q) setQuery(q);
-    if (tipo && VALID_CENTER_TYPE_SLUGS.includes(tipo as (typeof VALID_CENTER_TYPE_SLUGS)[number])) {
-      setSelectedType(tipo);
-    }
+    const tipos = tipo
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => VALID_CENTER_TYPE_SLUGS.includes(s as (typeof VALID_CENTER_TYPE_SLUGS)[number]));
+    if (tipos.length) setSelectedTypes(tipos);
     if (prov) {
       const match = provinces.find((p) => generateSlug(p) === generateSlug(prov) || p.toLowerCase().replace(/\s/g, '-') === prov.toLowerCase());
       if (match) setSelectedProvince(match);
@@ -497,12 +502,11 @@ export default function DirectoryMapView({
         getCenterTypeLabel(c.type, locale),
         ...list,
       ]);
-      const matchesType = !selectedType || c.type === selectedType;
+      const matchesType = selectedTypes.length === 0 || (c.type != null && selectedTypes.includes(c.type));
       const matchesProvince = !selectedProvince || c.province === selectedProvince;
       const matchesCity = !placeSlug || matchesPlaceSlug(placeSlug, c.city, c.province);
-      const matchesQuality =
-        selectedTiers.length === 0 ||
-        selectedTiers.some((tier) => meetsCenterQualityBar(c.avg_rating || 0, c.review_count || 0, tier));
+      const tier = getCenterQualityTier(c.avg_rating || 0, c.review_count || 0);
+      const matchesQuality = selectedTiers.length === 0 || (tier != null && selectedTiers.includes(tier));
       return matchesQuery && matchesType && matchesProvince && matchesCity && matchesQuality;
     });
 
@@ -523,7 +527,7 @@ export default function DirectoryMapView({
       return (b.avg_rating || 0) - (a.avg_rating || 0);
     });
     return results;
-  }, [spainCenters, tokens, selectedType, selectedProvince, placeSlug, selectedTiers, sortBy, userGeo, locale]);
+  }, [spainCenters, tokens, selectedTypes, selectedProvince, placeSlug, selectedTiers, sortBy, userGeo, locale]);
 
   const mapped = useMemo(
     () => filtered.filter((c) => c.latitude != null && c.longitude != null),
@@ -533,8 +537,10 @@ export default function DirectoryMapView({
   const fitToken = selectedProvince || placeSlug ? `${selectedProvince}|${placeSlug || ''}` : '';
   const listed = filtered.slice(0, LIST_LIMIT);
   const selected = filtered.find((c) => c.id === selectedId) || null;
-  const hasActive = Boolean(query || selectedType || selectedProvince || placeSlug || selectedTiers.length);
-  const filterCount = [query, selectedType, selectedProvince, placeSlug, selectedTiers.length || ''].filter(Boolean).length;
+  const hasActive = Boolean(query || selectedTypes.length || selectedProvince || placeSlug || selectedTiers.length);
+  const filterCount = [query, selectedTypes.length || '', selectedProvince, placeSlug, selectedTiers.length || ''].filter(
+    Boolean,
+  ).length;
 
   const mapSuggestions = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -560,13 +566,17 @@ export default function DirectoryMapView({
     return out;
   }, [query, spainCenters]);
 
+  function toggleType(slug: string) {
+    setSelectedTypes((prev) => (prev.includes(slug) ? prev.filter((x) => x !== slug) : [...prev, slug]));
+  }
+
   function toggleTier(tier: CenterQualityTier) {
     setSelectedTiers((prev) => (prev.includes(tier) ? prev.filter((x) => x !== tier) : [...prev, tier]));
   }
 
   function clearFilters() {
     setQuery('');
-    setSelectedType('');
+    setSelectedTypes([]);
     setSelectedProvince('');
     setPlaceSlug(null);
     setSelectedTiers([]);
@@ -611,8 +621,8 @@ export default function DirectoryMapView({
             <FilterFields
               query={query}
               setQuery={setQuery}
-              selectedType={selectedType}
-              setSelectedType={setSelectedType}
+              selectedTypes={selectedTypes}
+              toggleType={toggleType}
               selectedProvince={selectedProvince}
               setSelectedProvince={setSelectedProvince}
               selectedTiers={selectedTiers}
@@ -909,8 +919,8 @@ export default function DirectoryMapView({
           <FilterFields
             query={query}
             setQuery={setQuery}
-            selectedType={selectedType}
-            setSelectedType={setSelectedType}
+            selectedTypes={selectedTypes}
+            toggleType={toggleType}
             selectedProvince={selectedProvince}
             setSelectedProvince={setSelectedProvince}
             selectedTiers={selectedTiers}
