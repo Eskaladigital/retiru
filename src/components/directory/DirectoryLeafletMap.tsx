@@ -83,6 +83,7 @@ interface DirectoryLeafletMapProps {
   centers: DirectoryCenter[];
   selectedId: string | null;
   onSelect: (center: DirectoryCenter) => void;
+  onDeselect: () => void;
   fitToken: string;
   userGeo: { lat: number; lng: number } | null;
   resetToken: number;
@@ -94,6 +95,7 @@ export default function DirectoryLeafletMap({
   centers,
   selectedId,
   onSelect,
+  onDeselect,
   fitToken,
   userGeo,
   resetToken,
@@ -105,12 +107,14 @@ export default function DirectoryLeafletMap({
   const layerRef = useRef<import('leaflet').LayerGroup | null>(null);
   const LRef = useRef<typeof import('leaflet') | null>(null);
   const onSelectRef = useRef(onSelect);
+  const onDeselectRef = useRef(onDeselect);
   const selectedRef = useRef(selectedId);
   const byIdRef = useRef<Map<string, DirectoryCenter>>(new Map());
   const clusterIndexRef = useRef<Supercluster<PointProps> | null>(null);
   const userMarkerRef = useRef<import('leaflet').Marker | null>(null);
   const [mapReady, setMapReady] = useState(false);
   onSelectRef.current = onSelect;
+  onDeselectRef.current = onDeselect;
   selectedRef.current = selectedId;
 
   const rebuildIndex = (list: DirectoryCenter[]) => {
@@ -233,6 +237,7 @@ export default function DirectoryLeafletMap({
       layerRef.current = layer;
       rebuildIndex(centers);
       map.on('zoomend moveend', paint);
+      map.on('click', () => onDeselectRef.current());
       paint();
       setMapReady(true);
       requestAnimationFrame(() => {

@@ -61,6 +61,7 @@ const COPY = {
     locateFail: 'No se pudo obtener tu ubicación',
     resetZoom: 'Restablecer zoom',
     see: 'Ver ficha',
+    close: 'Cerrar',
     noGps: 'Sin coordenadas',
     apply: (n: number) => `Ver resultados (${n})`,
   },
@@ -96,6 +97,7 @@ const COPY = {
     locateFail: 'Could not get your location',
     resetZoom: 'Reset zoom',
     see: 'View profile',
+    close: 'Close',
     noGps: 'No coordinates',
     apply: (n: number) => `See results (${n})`,
   },
@@ -353,12 +355,14 @@ function CenterCard({
   selected,
   onPick,
   t,
+  className = '',
 }: {
   c: DirectoryCenter;
   locale: Locale;
   selected: boolean;
   onPick: () => void;
   t: (typeof COPY)[Locale];
+  className?: string;
 }) {
   const href = locale === 'es' ? `/es/centro/${c.slug}` : `/en/center/${c.slug}`;
   const img = c.cover_url || (Array.isArray(c.images) ? c.images[0] : '') || '';
@@ -369,7 +373,7 @@ function CenterCard({
     <article
       className={`flex gap-3 p-3 rounded-xl border transition-colors cursor-pointer ${
         selected ? 'border-terracotta-400 bg-terracotta-50' : 'border-sand-200 bg-white hover:border-sand-300'
-      }`}
+      } ${className}`}
       onClick={onPick}
     >
       <div className="relative w-20 h-20 rounded-lg overflow-hidden shrink-0 bg-sand-100">
@@ -675,7 +679,8 @@ export default function DirectoryMapView({
           <DirectoryLeafletMap
             centers={mapped}
             selectedId={selectedId}
-            onSelect={(c) => setSelectedId(c.id)}
+            onSelect={(c) => setSelectedId((id) => (id === c.id ? null : c.id))}
+            onDeselect={() => setSelectedId(null)}
             fitToken={fitToken}
             userGeo={userGeo}
             resetToken={resetToken}
@@ -819,12 +824,21 @@ export default function DirectoryMapView({
 
           {selected ? (
             <div className="absolute bottom-[calc(12.5rem+env(safe-area-inset-bottom,0px))] left-3 right-3 md:bottom-3 md:left-3 md:right-auto md:w-[340px] z-[500]">
+              <button
+                type="button"
+                onClick={() => setSelectedId(null)}
+                className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-white border border-sand-200 shadow-soft text-[#7a6b5d] hover:text-foreground hover:border-sand-300 flex items-center justify-center"
+                aria-label={t.close}
+              >
+                <X size={16} />
+              </button>
               <CenterCard
                 c={selected}
                 locale={locale}
                 selected
                 onPick={() => undefined}
                 t={t}
+                className="pr-10"
               />
             </div>
           ) : null}
