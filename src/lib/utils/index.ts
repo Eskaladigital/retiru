@@ -329,35 +329,38 @@ export function getCenterTypeColor(type: string | null | undefined): string {
 }
 
 /** Filtro de valoración (estrellas + reseñas). Pins = disciplina. Umbrales de Retiru (no Casi Cinco). */
-export const CENTER_QUALITY_TIER_SLUGS = ['diamond', 'platinum', 'gold', 'silver', 'rest'] as const;
+export const CENTER_QUALITY_TIER_SLUGS = ['diamond', 'platinum', 'gold', 'silver', 'bronze', 'rest'] as const;
 export type CenterQualityTier = (typeof CENTER_QUALITY_TIER_SLUGS)[number];
-/** Los cuatro cubos de listón; la home no enseña Resto. */
-export const CENTER_QUALITY_MEDAL_SLUGS = ['diamond', 'platinum', 'gold', 'silver'] as const;
+/** Medallas en la home; Resto solo en filtros del mapa. */
+export const CENTER_QUALITY_MEDAL_SLUGS = ['diamond', 'platinum', 'gold', 'silver', 'bronze'] as const;
 
 export const CENTER_QUALITY_TIERS: Record<
   CenterQualityTier,
   { icon: string; color: string; es: { name: string; hint: string }; en: { name: string; hint: string } }
 > = {
   diamond: { icon: '💎', color: '#38bdf8', es: { name: 'Diamante', hint: '4,8★ y 300+ reseñas' }, en: { name: 'Diamond', hint: '4.8★ and 300+ reviews' } },
-  platinum: { icon: '🏆', color: '#94a3b8', es: { name: 'Platino', hint: '4,8★ y 150+ reseñas' }, en: { name: 'Platinum', hint: '4.8★ and 150+ reviews' } },
-  gold: { icon: '🥇', color: '#f59e0b', es: { name: 'Oro', hint: '4,8★ y 60+ reseñas' }, en: { name: 'Gold', hint: '4.8★ and 60+ reviews' } },
-  silver: { icon: '🥈', color: '#cbd5e1', es: { name: 'Plata', hint: '4,7★ y 25+ reseñas' }, en: { name: 'Silver', hint: '4.7★ and 25+ reviews' } },
-  rest: { icon: '○', color: '#a09383', es: { name: 'Resto', hint: 'No llega a Plata' }, en: { name: 'Rest', hint: 'Below Silver' } },
+  platinum: { icon: '🏆', color: '#94a3b8', es: { name: 'Platino', hint: '4,5★ y 150+ reseñas' }, en: { name: 'Platinum', hint: '4.5★ and 150+ reviews' } },
+  gold: { icon: '🥇', color: '#f59e0b', es: { name: 'Oro', hint: '4,3★ y 60+ reseñas' }, en: { name: 'Gold', hint: '4.3★ and 60+ reviews' } },
+  silver: { icon: '🥈', color: '#cbd5e1', es: { name: 'Plata', hint: '4,0★ y 25+ reseñas' }, en: { name: 'Silver', hint: '4.0★ and 25+ reviews' } },
+  bronze: { icon: '🥉', color: '#cd7f32', es: { name: 'Bronce', hint: '3,7★ y 10+ reseñas' }, en: { name: 'Bronze', hint: '3.7★ and 10+ reviews' } },
+  rest: { icon: '○', color: '#a09383', es: { name: 'Resto', hint: 'No llega a Bronce' }, en: { name: 'Rest', hint: 'Below Bronze' } },
 };
 
 export function getCenterQualityTier(rating: number, reviews: number): CenterQualityTier {
   if (rating >= 4.8 && reviews >= 300) return 'diamond';
-  if (rating >= 4.8 && reviews >= 150) return 'platinum';
-  if (rating >= 4.8 && reviews >= 60) return 'gold';
-  if (rating >= 4.7 && reviews >= 25) return 'silver';
+  if (rating >= 4.5 && reviews >= 150) return 'platinum';
+  if (rating >= 4.3 && reviews >= 60) return 'gold';
+  if (rating >= 4.0 && reviews >= 25) return 'silver';
+  if (rating >= 3.7 && reviews >= 10) return 'bronze';
   return 'rest';
 }
 
 const CENTER_QUALITY_BAR: Record<Exclude<CenterQualityTier, 'rest'>, { rating: number; reviews: number }> = {
   diamond: { rating: 4.8, reviews: 300 },
-  platinum: { rating: 4.8, reviews: 150 },
-  gold: { rating: 4.8, reviews: 60 },
-  silver: { rating: 4.7, reviews: 25 },
+  platinum: { rating: 4.5, reviews: 150 },
+  gold: { rating: 4.3, reviews: 60 },
+  silver: { rating: 4.0, reviews: 25 },
+  bronze: { rating: 3.7, reviews: 10 },
 };
 
 /** Listón inclusivo (Oro incluye platino y diamante). El mapa usa el cubo exacto. */
