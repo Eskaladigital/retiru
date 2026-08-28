@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Check, Filter, List, Map as MapIcon, MapPin, Search, Star, X } from 'lucide-react';
+import { Check, Filter, List, Locate, Map as MapIcon, MapPin, RotateCcw, Search, Star, X } from 'lucide-react';
 import {
   CENTER_TYPE_META,
   PUBLIC_DIRECTORY_CENTER_TYPE_SLUGS,
@@ -27,13 +27,12 @@ const COPY = {
   es: {
     h1: 'Directorio de centros',
     search: 'Buscar centro, ciudad…',
+    mapSearch: '¿A dónde ir?',
     type: 'Categoría',
     allTypes: 'Todos',
     legend: 'Leyenda',
     province: 'Provincia',
     allProvinces: 'Todas',
-    country: 'País',
-    allCountries: 'Todos',
     rating: 'Valoración',
     anyRating: 'Todas',
     sort: 'Ordenar',
@@ -49,7 +48,8 @@ const COPY = {
     map: 'Mapa',
     filters: 'Filtros',
     list: 'Lista',
-    locate: 'Ver mi ubicación',
+    locate: 'Ver ubicación',
+    resetZoom: 'Restablecer zoom',
     see: 'Ver ficha',
     noGps: 'Sin coordenadas',
     apply: (n: number) => `Ver resultados (${n})`,
@@ -57,13 +57,12 @@ const COPY = {
   en: {
     h1: 'Centers directory',
     search: 'Search center, city…',
+    mapSearch: 'Where to go?',
     type: 'Category',
     allTypes: 'All',
     legend: 'Legend',
     province: 'Province',
     allProvinces: 'All',
-    country: 'Country',
-    allCountries: 'All',
     rating: 'Rating',
     anyRating: 'Any',
     sort: 'Sort',
@@ -79,7 +78,8 @@ const COPY = {
     map: 'Map',
     filters: 'Filters',
     list: 'List',
-    locate: 'Show my location',
+    locate: 'Show location',
+    resetZoom: 'Reset zoom',
     see: 'View profile',
     noGps: 'No coordinates',
     apply: (n: number) => `See results (${n})`,
@@ -185,14 +185,11 @@ function FilterFields({
   setSelectedType,
   selectedProvince,
   setSelectedProvince,
-  selectedCountry,
-  setSelectedCountry,
   minRating,
   setMinRating,
   sortBy,
   setSortBy,
   provinces,
-  countries,
   hasActive,
   onClear,
   t,
@@ -204,14 +201,11 @@ function FilterFields({
   setSelectedType: (v: string) => void;
   selectedProvince: string;
   setSelectedProvince: (v: string) => void;
-  selectedCountry: string;
-  setSelectedCountry: (v: string) => void;
   minRating: number;
   setMinRating: (v: number) => void;
   sortBy: string;
   setSortBy: (v: string) => void;
   provinces: string[];
-  countries: string[];
   hasActive: boolean;
   onClear: () => void;
   t: (typeof COPY)[Locale];
@@ -267,19 +261,6 @@ function FilterFields({
           })}
         </div>
       </div>
-      {countries.length > 1 ? (
-        <label className="block">
-          <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#a09383] mb-1.5">{t.country}</span>
-          <select value={selectedCountry} onChange={(e) => setSelectedCountry(e.target.value)} className={selectClass}>
-            <option value="">{t.allCountries}</option>
-            {countries.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-        </label>
-      ) : null}
       <label className="block">
         <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#a09383] mb-1.5">{t.province}</span>
         <select value={selectedProvince} onChange={(e) => setSelectedProvince(e.target.value)} className={selectClass}>
@@ -397,7 +378,6 @@ export default function DirectoryMapView({
   const [query, setQuery] = useState('');
   const [selectedType, setSelectedType] = useState('');
   const [selectedProvince, setSelectedProvince] = useState('');
-  const [selectedCountry, setSelectedCountry] = useState('España');
   const [placeSlug, setPlaceSlug] = useState<string | null>(null);
   const [minRating, setMinRating] = useState(0);
   const [sortBy, setSortBy] = useState('rating');
@@ -405,19 +385,22 @@ export default function DirectoryMapView({
   const [mobileView, setMobileView] = useState<MobileView>('map');
   const [legendOpen, setLegendOpen] = useState(false);
   const [locateToken, setLocateToken] = useState(0);
+  const [resetToken, setResetToken] = useState(0);
+  const [openMapSearch, setOpenMapSearch] = useState(false);
   const [userGeo, setUserGeo] = useState<{ lat: number; lng: number } | null>(null);
 
-  const countries = useMemo(
-    () => Array.from(new Set(centers.map((c) => c.country).filter(Boolean) as string[])).sort(),
+  const spainCenters = useMemo(
+    () => centers.filter((c) => !c.country || c.country === 'España'),
     [centers],
   );
 
-  const provinces = useMemo(() => {
-    const pool = selectedCountry ? centers.filter((c) => c.country === selectedCountry) : centers;
-    return Array.from(new Set(pool.map((c) => c.province).filter(Boolean) as string[])).sort((a, b) =>
-      a.localeCompare(b, locale === 'es' ? 'es' : 'en'),
-    );
-  }, [centers, selectedCountry, locale]);
+  const provinces = useMemo(
+    () =>
+      Array.from(new Set(spainCenters.map((c) => c.province).filter(Boolean) as string[])).sort((a, b) =>
+        a.localeCompare(b, locale === 'es' ? 'es' : 'en'),
+      ),
+    [spainCenters, locale],
+  );
 
   useEffect(() => {
     const q = searchParams.get('q') || '';
@@ -441,7 +424,7 @@ export default function DirectoryMapView({
   );
 
   const filtered = useMemo(() => {
-    const results = centers.filter((c) => {
+    const results = spainCenters.filter((c) => {
       const services = locale === 'es' ? c.services_es : c.services_en;
       const list = Array.isArray(services) ? services : [];
       const matchesQuery = matchesAllTokens(tokens, [
@@ -454,11 +437,10 @@ export default function DirectoryMapView({
         ...list,
       ]);
       const matchesType = !selectedType || c.type === selectedType;
-      const matchesCountry = !selectedCountry || c.country === selectedCountry;
       const matchesProvince = !selectedProvince || c.province === selectedProvince;
       const matchesCity = !placeSlug || matchesPlaceSlug(placeSlug, c.city, c.province);
       const matchesRating = (c.avg_rating || 0) >= minRating;
-      return matchesQuery && matchesType && matchesCountry && matchesProvince && matchesCity && matchesRating;
+      return matchesQuery && matchesType && matchesProvince && matchesCity && matchesRating;
     });
 
     results.sort((a, b) => {
@@ -478,25 +460,47 @@ export default function DirectoryMapView({
       return (b.avg_rating || 0) - (a.avg_rating || 0);
     });
     return results;
-  }, [centers, tokens, selectedType, selectedCountry, selectedProvince, placeSlug, minRating, sortBy, userGeo, locale]);
+  }, [spainCenters, tokens, selectedType, selectedProvince, placeSlug, minRating, sortBy, userGeo, locale]);
 
   const mapped = useMemo(
     () => filtered.filter((c) => c.latitude != null && c.longitude != null),
     [filtered],
   );
 
-  const fitToken = [selectedType, selectedCountry, selectedProvince, placeSlug, query, minRating].join('|');
+  const fitToken = selectedProvince || placeSlug ? `${selectedProvince}|${placeSlug || ''}` : '';
   const listed = filtered.slice(0, LIST_LIMIT);
   const selected = filtered.find((c) => c.id === selectedId) || null;
-  const hasActive = Boolean(query || selectedType || selectedProvince || placeSlug || minRating || selectedCountry !== 'España');
-  const filterCount = [query, selectedType, selectedProvince, placeSlug, minRating || '', selectedCountry !== 'España' ? selectedCountry : '']
-    .filter(Boolean).length;
+  const hasActive = Boolean(query || selectedType || selectedProvince || placeSlug || minRating);
+  const filterCount = [query, selectedType, selectedProvince, placeSlug, minRating || ''].filter(Boolean).length;
+
+  const mapSuggestions = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (q.length < 2) return [] as { type: 'center' | 'city'; label: string; sublabel: string; id?: string; city?: string }[];
+    const cities = new Set<string>();
+    const out: { type: 'center' | 'city'; label: string; sublabel: string; id?: string; city?: string }[] = [];
+    for (const c of spainCenters) {
+      const city = c.city || '';
+      if (city && city.toLowerCase().startsWith(q) && !cities.has(city.toLowerCase())) {
+        cities.add(city.toLowerCase());
+        out.push({ type: 'city', label: city, sublabel: c.province || '', city });
+      }
+      if (c.name.toLowerCase().includes(q) && out.filter((x) => x.type === 'center').length < 6) {
+        out.push({
+          type: 'center',
+          label: c.name,
+          sublabel: [c.city, c.province].filter(Boolean).join(', '),
+          id: c.id,
+        });
+      }
+      if (out.length >= 8) break;
+    }
+    return out;
+  }, [query, spainCenters]);
 
   function clearFilters() {
     setQuery('');
     setSelectedType('');
     setSelectedProvince('');
-    setSelectedCountry('España');
     setPlaceSlug(null);
     setMinRating(0);
     setSortBy('rating');
@@ -533,14 +537,11 @@ export default function DirectoryMapView({
               setSelectedType={setSelectedType}
               selectedProvince={selectedProvince}
               setSelectedProvince={setSelectedProvince}
-              selectedCountry={selectedCountry}
-              setSelectedCountry={setSelectedCountry}
               minRating={minRating}
               setMinRating={setMinRating}
               sortBy={sortBy}
               setSortBy={setSortBy}
               provinces={provinces}
-              countries={countries}
               hasActive={hasActive}
               onClear={clearFilters}
               t={t}
@@ -556,6 +557,8 @@ export default function DirectoryMapView({
             onSelect={(c) => setSelectedId(c.id)}
             fitToken={fitToken}
             locateToken={locateToken}
+            resetToken={resetToken}
+            resetToFilter={Boolean(selectedProvince || placeSlug)}
             locateLabel={t.locate}
           />
           <div className="absolute top-3 left-3 z-[500] flex flex-col items-start gap-2">
@@ -591,15 +594,101 @@ export default function DirectoryMapView({
               </div>
             ) : null}
           </div>
+
+          <div className="absolute top-3 left-3 right-14 md:top-4 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-80 z-[500] pointer-events-none">
+            <div className="flex justify-end md:block">
+              {!openMapSearch && !query ? (
+                <button
+                  type="button"
+                  onClick={() => setOpenMapSearch(true)}
+                  className="md:hidden pointer-events-auto w-11 h-11 bg-white/95 backdrop-blur border border-sand-200 rounded-full shadow-soft flex items-center justify-center"
+                  aria-label={t.mapSearch}
+                >
+                  <Search className="w-5 h-5 text-[#7a6b5d]" />
+                </button>
+              ) : null}
+              <div className={`relative pointer-events-auto ${openMapSearch || query ? 'block w-full' : 'hidden md:block'}`}>
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#a09383] pointer-events-none" />
+                <input
+                  type="search"
+                  placeholder={t.mapSearch}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onFocus={() => setOpenMapSearch(true)}
+                  onBlur={() => {
+                    setTimeout(() => {
+                      if (!query) setOpenMapSearch(false);
+                    }, 150);
+                  }}
+                  className="w-full pl-9 pr-8 py-2.5 text-sm bg-white/95 backdrop-blur border-0 rounded-full shadow-soft ring-1 ring-sand-200 focus:outline-none focus:ring-2 focus:ring-terracotta-300"
+                />
+                {query ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setQuery('');
+                      setPlaceSlug(null);
+                      setOpenMapSearch(false);
+                    }}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-[#a09383]"
+                    aria-label={t.clear}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                ) : null}
+                {openMapSearch && mapSuggestions.length > 0 ? (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-soft ring-1 ring-sand-200 overflow-hidden">
+                    {mapSuggestions.map((s, i) => (
+                      <button
+                        key={`${s.type}-${s.label}-${i}`}
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          if (s.type === 'city' && s.city) {
+                            setPlaceSlug(generateSlug(s.city));
+                            setQuery('');
+                          } else if (s.id) {
+                            setSelectedId(s.id);
+                            setQuery('');
+                          }
+                          setOpenMapSearch(false);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-sand-50 border-b border-sand-100 last:border-b-0"
+                      >
+                        <MapPin className={`h-4 w-4 shrink-0 ${s.type === 'city' ? 'text-terracotta-600' : 'text-[#a09383]'}`} />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{s.label}</p>
+                          {s.sublabel ? <p className="text-xs text-[#a09383] truncate">{s.sublabel}</p> : null}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </div>
+
           <button
             type="button"
             onClick={locate}
-            className="absolute top-3 right-3 z-[500] bg-white/95 backdrop-blur border border-sand-200 text-sm font-medium px-3 py-1.5 rounded-full shadow-soft hover:border-terracotta-300"
+            className="absolute left-3 bottom-[calc(8.25rem+env(safe-area-inset-bottom,0px))] md:left-1/2 md:-translate-x-1/2 md:bottom-20 z-[500] bg-white/95 backdrop-blur p-3 md:px-4 md:py-2 rounded-full shadow-soft border border-sand-200 font-semibold text-[#2d2319] hover:border-terracotta-300 flex items-center md:gap-2"
+            aria-label={t.locate}
           >
-            {t.locate}
+            <Locate className="w-5 h-5" />
+            <span className="hidden md:inline text-sm">{t.locate}</span>
           </button>
+          <button
+            type="button"
+            onClick={() => setResetToken((n) => n + 1)}
+            className="absolute left-3 bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] md:left-1/2 md:-translate-x-1/2 md:bottom-6 z-[500] bg-white/95 backdrop-blur p-3 md:px-4 md:py-2 rounded-full shadow-soft border border-sand-200 font-semibold text-[#2d2319] hover:border-terracotta-300 flex items-center md:gap-2"
+            aria-label={t.resetZoom}
+          >
+            <RotateCcw className="w-5 h-5" />
+            <span className="hidden md:inline text-sm">{t.resetZoom}</span>
+          </button>
+
           {selected ? (
-            <div className="absolute bottom-3 left-3 right-3 md:left-3 md:right-auto md:w-[340px] z-[500]">
+            <div className="absolute bottom-[calc(12.5rem+env(safe-area-inset-bottom,0px))] left-3 right-3 md:bottom-3 md:left-3 md:right-auto md:w-[340px] z-[500]">
               <CenterCard
                 c={selected}
                 locale={locale}
@@ -691,14 +780,11 @@ export default function DirectoryMapView({
             setSelectedType={setSelectedType}
             selectedProvince={selectedProvince}
             setSelectedProvince={setSelectedProvince}
-            selectedCountry={selectedCountry}
-            setSelectedCountry={setSelectedCountry}
             minRating={minRating}
             setMinRating={setMinRating}
             sortBy={sortBy}
             setSortBy={setSortBy}
             provinces={provinces}
-            countries={countries}
             hasActive={hasActive}
             onClear={clearFilters}
             t={t}

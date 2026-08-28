@@ -70,12 +70,23 @@ function clusterHtml(count: number) {
   return `<span class="dir-cluster" style="--s:${size}px">${count}</span>`;
 }
 
+/** Vista inicial y «Restablecer zoom»: península + Baleares, sin Canarias. */
+const SPAIN_CENTER: [number, number] = [40.4, -3.7];
+const SPAIN_ZOOM = 6;
+
+function applySpainView(map: import('leaflet').Map, animate: boolean) {
+  if (animate) map.flyTo(SPAIN_CENTER, SPAIN_ZOOM, { duration: 0.6 });
+  else map.setView(SPAIN_CENTER, SPAIN_ZOOM);
+}
+
 interface DirectoryLeafletMapProps {
   centers: DirectoryCenter[];
   selectedId: string | null;
   onSelect: (center: DirectoryCenter) => void;
   fitToken: string;
   locateToken: number;
+  resetToken: number;
+  resetToFilter: boolean;
   locateLabel: string;
 }
 
@@ -85,6 +96,8 @@ export default function DirectoryLeafletMap({
   onSelect,
   fitToken,
   locateToken,
+  resetToken,
+  resetToFilter,
   locateLabel,
 }: DirectoryLeafletMapProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -151,8 +164,9 @@ export default function DirectoryLeafletMap({
       map = L.map(wrapRef.current, {
         zoomControl: false,
         attributionControl: true,
-      }).setView([40.2, -3.7], 6);
-      L.control.zoom({ position: 'bottomright' }).addTo(map);
+      });
+      applySpainView(map, false);
+      L.control.zoom({ position: 'topright' }).addTo(map);
       const maptilerKey = process.env.NEXT_PUBLIC_MAPTILER_API_KEY;
       const tiles = maptilerKey
         ? L.tileLayer(`https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${maptilerKey}&language=es`, {
@@ -171,12 +185,7 @@ export default function DirectoryLeafletMap({
       paint();
       requestAnimationFrame(() => {
         map?.invalidateSize();
-        const pts = centersRef.current
-          .filter((c) => c.latitude != null && c.longitude != null)
-          .map((c) => [Number(c.latitude), Number(c.longitude)] as [number, number]);
-        if (pts.length > 1) {
-          map?.fitBounds(L.latLngBounds(pts).pad(0.12), { maxZoom: 11, animate: false });
-        }
+        if (map) applySpainView(map, false);
       });
     };
 
@@ -194,22 +203,41 @@ export default function DirectoryLeafletMap({
   }, [centers, selectedId]);
 
   useEffect(() => {
+    if (!fitToken) return;
     const map = mapRef.current;
     const L = LRef.current;
     if (!map || !L) return;
     const pts = centers
       .filter((c) => c.latitude != null && c.longitude != null)
       .map((c) => [Number(c.latitude), Number(c.longitude)] as [number, number]);
-    if (pts.length === 0) {
-      map.setView([40.2, -3.7], 6);
-      return;
-    }
+    if (pts.length === 0) return;
     if (pts.length === 1) {
       map.flyTo(pts[0], 13, { duration: 0.6 });
       return;
     }
     map.fitBounds(L.latLngBounds(pts).pad(0.12), { maxZoom: 11, animate: true });
-  }, [fitToken]);
+  }, [fitToken, centers]);
+
+  useEffect(() => {
+    if (!resetToken) return;
+    const map = mapRef.current;
+    const L = LRef.current;
+    if (!map || !L) return;
+    if (resetToFilter) {
+      const pts = centers
+        .filter((c) => c.latitude != null && c.longitude != null)
+        .map((c) => [Number(c.latitude), Number(c.longitude)] as [number, number]);
+      if (pts.length === 1) {
+        map.flyTo(pts[0], 13, { duration: 0.6 });
+        return;
+      }
+      if (pts.length > 1) {
+        map.fitBounds(L.latLngBounds(pts).pad(0.12), { maxZoom: 11, animate: true });
+        return;
+      }
+    }
+    applySpainView(map, true);
+  }, [resetToken, resetToFilter, centers]);
 
   useEffect(() => {
     if (!locateToken) return;
@@ -275,9 +303,9 @@ export default function DirectoryLeafletMap({
           box-shadow: 0 2px 8px rgba(200, 90, 48, 0.35);
         }
         .leaflet-control-attribution { font-size: 10px; }
-        .leaflet-control-zoom { margin-bottom: 72px !important; }
+        .leaflet-control-zoom { margin: 12px 12px 0 0 !important; }
         @media (min-width: 768px) {
-          .leaflet-control-zoom { margin-bottom: 16px !important; }
+          .leaflet-control-zoom { margin: 16px 16px 0 0 !important; }
         }
       `}</style>
       <span className="sr-only">{locateLabel}</span>

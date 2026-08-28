@@ -418,6 +418,7 @@ export async function getActiveCenters(filters?: {
 
   if (filters?.province) query = query.eq('province', filters.province);
   if (filters?.type) query = query.eq('type', filters.type);
+  query = query.eq('country', 'España');
 
   const limit = filters?.limit ?? 12;
   const offset = filters?.offset ?? 0;
