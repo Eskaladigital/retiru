@@ -55,7 +55,9 @@ export default function ChatWidget() {
   const [streaming, setStreaming] = useState(false)
   const [menuLevel, setMenuLevel] = useState<MenuItem[] | null>(null)
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null)
-  const [locationDenied, setLocationDenied] = useState(false)
+  const [geoBusy, setGeoBusy] = useState(false)
+  const [geoBlocked, setGeoBlocked] = useState(false)
+  const [geoDeclined, setGeoDeclined] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const locationRef = useRef<UserLocation | null>(null)
 
@@ -63,26 +65,40 @@ export default function ChatWidget() {
     locationRef.current = userLocation
   }, [userLocation])
 
-  const requestLocation = useCallback(() => {
-    if (locationRef.current || locationDenied) return
+  const shareLocation = useCallback(() => {
+    if (geoBusy) return
     if (typeof navigator === 'undefined' || !('geolocation' in navigator)) {
-      setLocationDenied(true)
+      setGeoBlocked(true)
       return
     }
+    setGeoBusy(true)
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const lat = position.coords.latitude
         const lng = position.coords.longitude
+        setGeoBusy(false)
         if (Math.abs(lat) < 0.5 && Math.abs(lng) < 0.5) {
-          setLocationDenied(true)
+          setGeoBlocked(true)
           return
         }
         setUserLocation({ lat, lng })
+        setGeoDeclined(false)
+        setGeoBlocked(false)
       },
-      () => setLocationDenied(true),
-      { enableHighAccuracy: false, timeout: 5000, maximumAge: 300_000 }
+      () => {
+        setGeoBusy(false)
+        setGeoBlocked(true)
+      },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 0 }
     )
-  }, [locationDenied])
+  }, [geoBusy])
+
+  const stopUsingLocation = () => {
+    setUserLocation(null)
+    locationRef.current = null
+    setGeoDeclined(true)
+    setGeoBlocked(false)
+  }
 
   useEffect(() => {
     if (hidden) return
@@ -113,8 +129,6 @@ export default function ChatWidget() {
 
   const persistOpen = (v: boolean) => {
     setOpen(v)
-    // Molde casi cinco: pide GPS al abrir. En el clic (no useEffect) para que Safari/Chrome no lo maten.
-    if (v) requestLocation()
   }
 
   const refreshConversation = () => {
@@ -271,13 +285,46 @@ export default function ChatWidget() {
           </div>
 
           <div className={`${styles.messages} chat-markdown`} onClick={handleLinkClick}>
-            {userLocation && (
+            {userLocation ? (
               <div className={styles.geoBanner} role="status">
-                {locale === 'en'
-                  ? 'Location shared — you can ask for places “near me”.'
-                  : 'Ubicación compartida — puedes preguntar por sitios «cerca de mí».'}
+                <span>
+                  {locale === 'en'
+                    ? 'Roy is using your location for “near me”. Not the map pin.'
+                    : 'Roy está usando tu ubicación para «cerca de mí». No es el pin del mapa.'}
+                </span>
+                <button type="button" className={styles.geoLink} onClick={stopUsingLocation}>
+                  {locale === 'en' ? 'Stop using it' : 'Dejar de usarla'}
+                </button>
               </div>
-            )}
+            ) : geoBlocked ? (
+              <div className={styles.geoAsk} role="status">
+                {locale === 'en'
+                  ? 'The browser blocked location. Allow it in the address bar if you want nearby places.'
+                  : 'El navegador ha bloqueado la ubicación. Si quieres sitios cerca, permítela en la barra de direcciones.'}
+              </div>
+            ) : !geoDeclined ? (
+              <div className={styles.geoAsk} role="status">
+                <p>
+                  {locale === 'en'
+                    ? 'It is much better to share your location: Roy can then point to centers near you instead of guessing a city. You can turn it off any time. This is not the map’s “Show location”.'
+                    : 'Es mucho mejor compartir tu ubicación: así Roy te da centros cerca de ti y no tiene que adivinar la ciudad. La puedes quitar cuando quieras. No es el «Ver ubicación» del mapa.'}
+                </p>
+                <div className={styles.geoActions}>
+                  <button type="button" className={styles.geoYes} onClick={shareLocation} disabled={geoBusy}>
+                    {geoBusy
+                      ? locale === 'en'
+                        ? 'Locating…'
+                        : 'Localizando…'
+                      : locale === 'en'
+                        ? 'Share'
+                        : 'Compartir'}
+                  </button>
+                  <button type="button" className={styles.geoNo} onClick={() => setGeoDeclined(true)}>
+                    {locale === 'en' ? 'Not now' : 'Ahora no'}
+                  </button>
+                </div>
+              </div>
+            ) : null}
             {messages.map((msg) => (
               <div
                 key={msg.id}
@@ -328,21 +375,24 @@ export default function ChatWidget() {
                 </div>
               ) : (
                 <div className={styles.chips}>
-                  {userLocation && (
-                    <button
-                      type="button"
-                      className={styles.chip}
-                      onClick={() =>
+                  <button
+                    type="button"
+                    className={styles.chip}
+                    onClick={() => {
+                      if (userLocation) {
                         sendMessage(
                           locale === 'en'
                             ? 'Centers near me — yoga, meditation or ayurveda.'
                             : 'Centros cerca de mí: yoga, meditación o ayurveda.'
                         )
+                        return
                       }
-                    >
-                      {locale === 'en' ? 'Near me' : 'Cerca de mí'}
-                    </button>
-                  )}
+                      setGeoDeclined(false)
+                      shareLocation()
+                    }}
+                  >
+                    {locale === 'en' ? 'Near me' : 'Cerca de mí'}
+                  </button>
                   {menus.map((t) => (
                     <button
                       key={t.id}

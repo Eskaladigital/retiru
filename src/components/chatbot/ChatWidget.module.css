@@ -165,14 +165,78 @@
   gap: 0.75rem;
 }
 
-.geoBanner {
+.geoBanner,
+.geoAsk {
   font-size: 0.75rem;
   line-height: 1.4;
+  border-radius: 0.65rem;
+  padding: 0.6rem 0.75rem;
+}
+
+.geoBanner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
   color: #3d5c45;
   background: #e8f0ea;
   border: 1px solid #c5d6c8;
-  border-radius: 0.65rem;
-  padding: 0.55rem 0.7rem;
+}
+
+.geoAsk {
+  color: #4a3f34;
+  background: #fff;
+  border: 1px solid #e8dfd4;
+}
+
+.geoAsk p {
+  margin: 0 0 0.5rem;
+}
+
+.geoActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.geoYes,
+.geoNo {
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
+  cursor: pointer;
+}
+
+.geoYes {
+  border: none;
+  background: #c85a30;
+  color: #fff;
+}
+
+.geoYes:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.geoNo {
+  border: 1px solid #e8dfd4;
+  background: #fff;
+  color: #4a3f34;
+}
+
+.geoLink {
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #c85a30;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .rowUser {
