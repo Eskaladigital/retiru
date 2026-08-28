@@ -131,6 +131,9 @@ export default function Footer({ locale }: FooterProps) {
               <li><Link href={aboutPath} className="text-sm text-white/70 hover:text-white transition-colors">{t.footer.about}</Link></li>
               <li><Link href={helpPath} className="text-sm text-white/70 hover:text-white transition-colors">{t.nav.help}</Link></li>
               <li><Link href={contactPath} className="text-sm text-white/70 hover:text-white transition-colors">{t.footer.contact}</Link></li>
+              <li><Link href={`${prefix}/condiciones`} className="text-sm text-white/70 hover:text-white transition-colors">{t.footer.conditions}</Link></li>
+              <li><Link href={`${prefix}/legal/contrato-organizador`} className="text-sm text-white/70 hover:text-white transition-colors">{locale === 'es' ? 'Contrato del organizador' : 'Organizer agreement'}</Link></li>
+              <li><Link href={`${prefix}/legal/contrato-centro`} className="text-sm text-white/70 hover:text-white transition-colors">{locale === 'es' ? 'Contrato del centro' : 'Center agreement'}</Link></li>
             </ul>
           </div>
 
@@ -140,10 +143,7 @@ export default function Footer({ locale }: FooterProps) {
               {t.footer.legal}
             </h4>
             <ul className="space-y-2.5">
-              <li><Link href={`${prefix}/condiciones`} className="text-sm text-white/70 hover:text-white transition-colors">{t.footer.conditions}</Link></li>
-              <li><Link href={`${prefix}/legal/contrato-organizador`} className="text-sm text-white/70 hover:text-white transition-colors">{locale === 'es' ? 'Contrato del organizador' : 'Organizer agreement'}</Link></li>
-              <li><Link href={`${prefix}/legal/contrato-centro`} className="text-sm text-white/70 hover:text-white transition-colors">{locale === 'es' ? 'Contrato del centro' : 'Center agreement'}</Link></li>
-              <li><Link href={`${prefix}/legal/terminos`} className="text-sm text-white/70 hover:text-white transition-colors">{t.footer.terms}</Link></li>
+              <li><Link href={`${prefix}/legal/terminos`} className="text-sm text-white/70 hover:text-white transition-colors">{locale === 'es' ? 'Aviso legal' : 'Legal notice'}</Link></li>
               <li><Link href={`${prefix}/legal/privacidad`} className="text-sm text-white/70 hover:text-white transition-colors">{t.footer.privacy}</Link></li>
               <li><Link href={`${prefix}/legal/cookies`} className="text-sm text-white/70 hover:text-white transition-colors">{t.footer.cookies}</Link></li>
               <li>

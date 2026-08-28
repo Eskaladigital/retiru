@@ -31,7 +31,6 @@ function storageKeys(locale: ChatLocale) {
     session: `retiru_roy_session_${locale}`,
     conv: `retiru_roy_conversation_${locale}`,
     messages: `retiru_roy_messages_${locale}`,
-    open: 'retiru_roy_open',
   }
 }
 
@@ -62,7 +61,8 @@ export default function ChatWidget() {
     localStorage.setItem(keys.session, sid)
     setSessionId(sid)
     setConversationId(localStorage.getItem(keys.conv))
-    setOpen(localStorage.getItem(keys.open) === '1')
+    // Molde Andrea: el hilo se restaura; el panel no. Al entrar a la página siempre se ve el icono.
+    setOpen(false)
     try {
       const saved = localStorage.getItem(keys.messages)
       if (saved) setMessages(JSON.parse(saved))
@@ -70,7 +70,7 @@ export default function ChatWidget() {
     } catch {
       setMessages([{ id: 'welcome', role: 'assistant', content: welcomeMessage(locale) }])
     }
-  }, [hidden, keys.conv, keys.messages, keys.open, keys.session, locale])
+  }, [hidden, keys.conv, keys.messages, keys.session, locale])
 
   useEffect(() => {
     if (!hidden && messages.length) {
@@ -84,7 +84,6 @@ export default function ChatWidget() {
 
   const persistOpen = (v: boolean) => {
     setOpen(v)
-    localStorage.setItem(keys.open, v ? '1' : '0')
   }
 
   const refreshConversation = () => {
@@ -183,6 +182,10 @@ export default function ChatWidget() {
     if (isInternalRetiruUrl(href)) {
       e.preventDefault()
       const path = href.startsWith('http') ? new URL(href).pathname : href
+      // En móvil el panel cubre toda la pantalla: si no se cierra, parece que el enlace no ha hecho nada.
+      if (typeof window !== 'undefined' && !window.matchMedia('(min-width: 640px)').matches) {
+        persistOpen(false)
+      }
       router.push(path)
     }
   }

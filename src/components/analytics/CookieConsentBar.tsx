@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { BarChart3, Cookie, Shield, X } from 'lucide-react';
+import { BarChart3, Cookie, Megaphone, Settings, Shield, X } from 'lucide-react';
 
 export const OPEN_COOKIE_SETTINGS = 'openCookieSettings';
 const KEY = 'retiru_cookie_consent';
@@ -11,19 +11,22 @@ const PREFS_KEY = 'retiru_cookie_preferences';
 type Prefs = {
   necessary: true;
   analytics: boolean;
+  functional: boolean;
+  marketing: boolean;
 };
 
-const ALL_ON: Prefs = { necessary: true, analytics: true };
-const ONLY_NECESSARY: Prefs = { necessary: true, analytics: false };
+const ALL_ON: Prefs = { necessary: true, analytics: true, functional: true, marketing: true };
+const ONLY_NECESSARY: Prefs = { necessary: true, analytics: false, functional: false, marketing: false };
 
 function updateGtag(prefs: Prefs) {
   if (typeof window === 'undefined' || !(window as any).gtag) return;
-  const v = prefs.analytics ? 'granted' : 'denied';
+  const analytics = prefs.analytics ? 'granted' : 'denied';
+  const ads = prefs.marketing ? 'granted' : 'denied';
   (window as any).gtag('consent', 'update', {
-    analytics_storage: v,
-    ad_storage: 'denied',
-    ad_user_data: 'denied',
-    ad_personalization: 'denied',
+    analytics_storage: analytics,
+    ad_storage: ads,
+    ad_user_data: ads,
+    ad_personalization: ads,
   });
 }
 
@@ -38,7 +41,12 @@ function readPrefs(): Prefs | null {
     const raw = localStorage.getItem(PREFS_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<Prefs>;
-      return { necessary: true, analytics: Boolean(parsed.analytics) };
+      return {
+        necessary: true,
+        analytics: Boolean(parsed.analytics),
+        functional: Boolean(parsed.functional),
+        marketing: Boolean(parsed.marketing),
+      };
     }
     const legacy = localStorage.getItem(KEY);
     if (legacy === 'granted') return ALL_ON;
@@ -137,40 +145,39 @@ export function CookieConsentBar() {
           <div className="flex-1 overflow-y-auto p-6">
             <p className="text-muted-foreground mb-6">
               {es
-                ? 'Elige qué tipos de cookies deseas aceptar. Las cookies necesarias no se pueden desactivar.'
-                : 'Choose which cookies to accept. Necessary cookies cannot be turned off.'}
+                ? 'Elige qué tipos de cookies deseas aceptar. Las cookies necesarias no se pueden desactivar ya que son imprescindibles para el funcionamiento del sitio.'
+                : 'Choose which cookies to accept. Necessary cookies cannot be turned off because they are essential for the site to work.'}
             </p>
-            <div className={`p-4 rounded-xl border-2 mb-4 ${prefs.necessary ? 'border-terracotta-500 bg-terracotta-50' : 'border-sand-200'}`}>
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-terracotta-500 text-white shrink-0">
-                  <Shield className="h-5 w-5" aria-hidden="true" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between gap-3 mb-1">
-                    <h3 className="font-semibold text-foreground">{es ? 'Cookies necesarias' : 'Necessary cookies'}</h3>
-                    <span className="text-xs bg-sand-200 text-foreground/70 px-2 py-1 rounded-full">{es ? 'Siempre activas' : 'Always on'}</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{es ? 'Sesión, idioma, seguridad y tu consentimiento.' : 'Session, language, security and your consent.'}</p>
-                </div>
-              </div>
-            </div>
-            <div className={`p-4 rounded-xl border-2 mb-4 ${prefs.analytics ? 'border-terracotta-500 bg-terracotta-50' : 'border-sand-200 bg-sand-50'}`}>
-              <div className="flex items-start gap-4">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${prefs.analytics ? 'bg-terracotta-500 text-white' : 'bg-sand-200 text-muted-foreground'}`}>
-                  <BarChart3 className="h-5 w-5" aria-hidden="true" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between gap-3 mb-1">
-                    <h3 className="font-semibold text-foreground">{es ? 'Cookies analíticas' : 'Analytics cookies'}</h3>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" checked={prefs.analytics} onChange={(e) => setPrefs((p) => ({ ...p, analytics: e.target.checked }))} aria-label={es ? 'Analíticas' : 'Analytics'} />
-                      <span className="w-10 h-6 bg-sand-300 rounded-full peer-checked:bg-terracotta-500 transition-colors" />
-                      <span className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4" />
-                    </label>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{es ? 'Nos permiten medir visitas y mejorar Retiru (Google Analytics).' : 'Help us measure visits and improve Retiru (Google Analytics).'}</p>
-                </div>
-              </div>
+            <div className="space-y-4">
+              <RetiruCategory
+                icon={Shield}
+                title={es ? 'Cookies necesarias' : 'Necessary cookies'}
+                description={es ? 'Estas cookies son esenciales para el funcionamiento del sitio web. Sin ellas, el sitio no funcionaría correctamente.' : 'These cookies are essential for the website to work. Without them, the site would not function correctly.'}
+                enabled
+                required
+                alwaysOn={es ? 'Siempre activas' : 'Always on'}
+              />
+              <RetiruCategory
+                icon={BarChart3}
+                title={es ? 'Cookies analíticas' : 'Analytics cookies'}
+                description={es ? 'Nos permiten contar las visitas y analizar cómo los usuarios navegan por el sitio para mejorarlo.' : 'Allow us to count visits and analyse how users browse the site in order to improve it.'}
+                enabled={prefs.analytics}
+                onChange={(v) => setPrefs((p) => ({ ...p, analytics: v }))}
+              />
+              <RetiruCategory
+                icon={Settings}
+                title={es ? 'Cookies funcionales' : 'Functional cookies'}
+                description={es ? 'Permiten recordar tus preferencias para una experiencia más personalizada.' : 'Remember your preferences for a more personalised experience.'}
+                enabled={prefs.functional}
+                onChange={(v) => setPrefs((p) => ({ ...p, functional: v }))}
+              />
+              <RetiruCategory
+                icon={Megaphone}
+                title={es ? 'Cookies de marketing' : 'Marketing cookies'}
+                description={es ? 'Se utilizan para mostrarte anuncios relevantes y medir la efectividad de las campañas publicitarias.' : 'Used to show you relevant ads and measure the effectiveness of advertising campaigns.'}
+                enabled={prefs.marketing}
+                onChange={(v) => setPrefs((p) => ({ ...p, marketing: v }))}
+              />
             </div>
             <p className="text-sm text-muted-foreground mt-6">
               {es ? 'Más información en la ' : 'More information in our '}
@@ -205,8 +212,8 @@ export function CookieConsentBar() {
             <h3 className="text-lg font-serif font-bold text-foreground mb-1">{es ? 'Utilizamos cookies' : 'We use cookies'}</h3>
             <p className="text-sm text-muted-foreground">
               {es
-                ? 'Usamos cookies de analítica para medir visitas y mejorar Retiru. Puedes aceptar todas o configurar tus preferencias. '
-                : 'We use analytics cookies to measure visits and improve Retiru. You can accept all or set your preferences. '}
+                ? 'Usamos cookies propias y de terceros para mejorar tu experiencia, analizar el tráfico y mostrarte contenido personalizado. Puedes aceptar todas o configurar tus preferencias. '
+                : 'We use our own and third-party cookies to improve your experience, analyse traffic and show you personalised content. You can accept all or set your preferences. '}
               <Link href={policyHref} className="text-terracotta-600 hover:underline">
                 {es ? 'Política de cookies' : 'Cookie policy'}
               </Link>
@@ -220,6 +227,49 @@ export function CookieConsentBar() {
           <button type="button" onClick={acceptAll} className="px-4 py-2 bg-terracotta-600 text-white rounded-lg font-medium text-sm hover:bg-terracotta-500">
             {es ? 'Aceptar todas' : 'Accept all'}
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RetiruCategory({
+  icon: Icon,
+  title,
+  description,
+  enabled,
+  required,
+  alwaysOn,
+  onChange,
+}: {
+  icon: typeof Shield;
+  title: string;
+  description: string;
+  enabled: boolean;
+  required?: boolean;
+  alwaysOn?: string;
+  onChange?: (v: boolean) => void;
+}) {
+  return (
+    <div className={`p-4 rounded-xl border-2 ${enabled ? 'border-terracotta-500 bg-terracotta-50' : 'border-sand-200 bg-sand-50'}`}>
+      <div className="flex items-start gap-4">
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${enabled ? 'bg-terracotta-500 text-white' : 'bg-sand-200 text-muted-foreground'}`}>
+          <Icon className="h-5 w-5" aria-hidden="true" />
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center justify-between gap-3 mb-1">
+            <h3 className="font-semibold text-foreground">{title}</h3>
+            {required ? (
+              <span className="text-xs bg-sand-200 text-foreground/70 px-2 py-1 rounded-full whitespace-nowrap">{alwaysOn}</span>
+            ) : (
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" className="sr-only peer" checked={enabled} onChange={(e) => onChange?.(e.target.checked)} aria-label={title} />
+                <span className="w-10 h-6 bg-sand-300 rounded-full peer-checked:bg-terracotta-500 transition-colors" />
+                <span className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4" />
+              </label>
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground">{description}</p>
         </div>
       </div>
     </div>
