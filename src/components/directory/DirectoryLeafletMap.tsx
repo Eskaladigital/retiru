@@ -299,6 +299,8 @@ export default function DirectoryLeafletMap({
     applySpainView(map, true);
   }, [resetToken, resetToFilter, centers]);
 
+  const hasCenteredOnUserRef = useRef(false);
+
   useEffect(() => {
     if (!mapReady) return;
     const map = mapRef.current;
@@ -307,6 +309,7 @@ export default function DirectoryLeafletMap({
     if (!userGeo) {
       userMarkerRef.current?.remove();
       userMarkerRef.current = null;
+      hasCenteredOnUserRef.current = false;
       return;
     }
     const icon = L.divIcon({
@@ -320,7 +323,10 @@ export default function DirectoryLeafletMap({
     } else {
       userMarkerRef.current.setLatLng([userGeo.lat, userGeo.lng]);
     }
-    map.flyTo([userGeo.lat, userGeo.lng], Math.max(map.getZoom(), 12), { duration: 0.7 });
+    if (!hasCenteredOnUserRef.current) {
+      hasCenteredOnUserRef.current = true;
+      map.flyTo([userGeo.lat, userGeo.lng], Math.max(map.getZoom(), 12), { duration: 0.7 });
+    }
   }, [userGeo, mapReady]);
 
   useEffect(() => {

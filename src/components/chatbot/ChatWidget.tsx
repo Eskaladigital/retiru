@@ -307,15 +307,11 @@ export default function ChatWidget() {
             ) : !geoDeclined ? (
               <div className={styles.geoAsk} role="status">
                 <p>
-                  {geoBlocked
+                  {geoBlocked || geoSoftFail
                     ? locale === 'en'
-                      ? 'I could not use your location. Allow it in the address-bar lock, then try again — or tell me a city.'
-                      : 'No he podido usar la ubicación. En el candado de la barra, permite la ubicación a esta web y pulsa otra vez. Si no, dime la ciudad.'
-                    : geoSoftFail
-                      ? locale === 'en'
-                        ? 'I could not locate you just now. Try again or tell me a city.'
-                        : 'No he podido localizarte ahora. Prueba otra vez o dime la ciudad.'
-                      : locale === 'en'
+                      ? 'Could not get your location. Try again or tell me a city.'
+                      : 'No se pudo obtener tu ubicación. Prueba otra vez o dime la ciudad.'
+                    : locale === 'en'
                         ? 'It is much better to share your location: Roy can then point to centers near you instead of guessing a city. You can turn it off any time. This is not the map’s “Show location”.'
                         : 'Es mucho mejor compartir tu ubicación: así Roy te da centros cerca de ti y no tiene que adivinar la ciudad. La puedes quitar cuando quieras. No es el «Ver ubicación» del mapa.'}
                 </p>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -56,10 +56,9 @@ const COPY = {
     filters: 'Filtros',
     list: 'Lugares',
     locate: 'Ver ubicación',
+    locateOn: 'GPS Activo',
     locating: 'Buscando…',
-    locateDenied: 'Activa la ubicación en el candado del navegador',
-    locateTimeout: 'No hemos podido leer tu ubicación. Prueba otra vez',
-    locateFail: 'No hemos podido leer tu ubicación',
+    locateFail: 'No se pudo obtener tu ubicación',
     resetZoom: 'Restablecer zoom',
     see: 'Ver ficha',
     noGps: 'Sin coordenadas',
@@ -92,10 +91,9 @@ const COPY = {
     filters: 'Filters',
     list: 'Places',
     locate: 'Show location',
+    locateOn: 'GPS on',
     locating: 'Finding…',
-    locateDenied: 'Allow location in the browser lock icon',
-    locateTimeout: 'Could not read your location. Try again',
-    locateFail: 'Could not read your location',
+    locateFail: 'Could not get your location',
     resetZoom: 'Reset zoom',
     see: 'View profile',
     noGps: 'No coordinates',
@@ -438,8 +436,8 @@ export default function DirectoryMapView({
   const [resetToken, setResetToken] = useState(0);
   const [openMapSearch, setOpenMapSearch] = useState(false);
   const [userGeo, setUserGeo] = useState<{ lat: number; lng: number } | null>(null);
-  const [locating, setLocating] = useState(false);
   const [locateError, setLocateError] = useState<string | null>(null);
+  const geoWatchIdRef = useRef<number | null>(null);
 
   const spainCenters = useMemo(
     () => centers.filter((c) => !c.country || c.country === 'España'),
@@ -577,29 +575,72 @@ export default function DirectoryMapView({
     setSortBy('rating');
   }
 
-  function locate() {
+  const stopWatch = useCallback(() => {
+    if (geoWatchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(geoWatchIdRef.current);
+      geoWatchIdRef.current = null;
+    }
+  }, []);
+
+  const startWatch = useCallback(() => {
+    if (!navigator.geolocation) return;
+    stopWatch();
+    geoWatchIdRef.current = navigator.geolocation.watchPosition(
+      (pos) => {
+        setUserGeo({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocateError(null);
+      },
+      (err) => {
+        console.error('Error GPS:', err);
+        setLocateError(t.locateFail);
+        setUserGeo(null);
+        stopWatch();
+        setSortBy((s) => (s === 'near' ? 'rating' : s));
+      },
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 },
+    );
+  }, [stopWatch, t.locateFail]);
+
+  const deactivateLocate = useCallback(() => {
+    stopWatch();
+    setUserGeo(null);
+    setLocateError(null);
+    setSortBy((s) => (s === 'near' ? 'rating' : s));
+  }, [stopWatch]);
+
+  const activateLocate = useCallback(() => {
     if (!navigator.geolocation) {
       setLocateError(t.locateFail);
       return;
     }
-    setLocating(true);
     setLocateError(null);
-    const mobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    setSortBy('near');
+    startWatch();
+  }, [startWatch, t.locateFail]);
+
+  // Al entrar: mismo getCurrentPosition sin opciones que MapafurgoCasa / casi cinco.
+  useEffect(() => {
+    if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setUserGeo({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        if (Math.abs(lat) < 0.5 && Math.abs(lng) < 0.5) return;
+        setUserGeo({ lat, lng });
         setSortBy('near');
-        setLocating(false);
       },
-      (err) => {
-        setLocating(false);
-        if (err.code === err.PERMISSION_DENIED) setLocateError(t.locateDenied);
-        else if (err.code === err.TIMEOUT) setLocateError(t.locateTimeout);
-        else setLocateError(t.locateFail);
+      (error) => {
+        console.log('GPS no disponible:', error.message);
       },
-      { enableHighAccuracy: mobile, timeout: mobile ? 12000 : 8000, maximumAge: mobile ? 0 : 60_000 },
     );
-  }
+    return () => stopWatch();
+  }, [stopWatch]);
+
+  useEffect(() => {
+    if (userGeo && geoWatchIdRef.current === null && navigator.geolocation) {
+      startWatch();
+    }
+  }, [userGeo, startWatch]);
 
   return (
     <div className="relative h-full flex flex-col overflow-hidden bg-sand-50">
@@ -755,17 +796,16 @@ export default function DirectoryMapView({
           ) : null}
           <button
             type="button"
-            onClick={locate}
-            disabled={locating}
-            className={`absolute left-3 bottom-[calc(8.25rem+env(safe-area-inset-bottom,0px))] md:left-1/2 md:-translate-x-1/2 md:bottom-20 z-[500] backdrop-blur p-3 md:px-4 md:py-2 rounded-full shadow-soft border font-semibold flex items-center md:gap-2 disabled:opacity-70 ${
+            onClick={userGeo ? deactivateLocate : activateLocate}
+            className={`absolute left-3 bottom-[calc(8.25rem+env(safe-area-inset-bottom,0px))] md:left-1/2 md:-translate-x-1/2 md:bottom-20 z-[500] backdrop-blur p-3 md:px-4 md:py-2 rounded-full shadow-soft border font-semibold flex items-center md:gap-2 ${
               userGeo
                 ? 'bg-terracotta-600 text-white border-terracotta-600'
                 : 'bg-white/95 text-[#2d2319] border-sand-200 hover:border-terracotta-300'
             }`}
-            aria-label={t.locate}
+            aria-label={userGeo ? t.locateOn : t.locate}
           >
             <Locate className="w-5 h-5" />
-            <span className="hidden md:inline text-sm">{locating ? t.locating : t.locate}</span>
+            <span className="hidden md:inline text-sm">{userGeo ? t.locateOn : t.locate}</span>
           </button>
           <button
             type="button"
