@@ -169,7 +169,7 @@ Verificaciones obligatorias:
 12. Pedir un centro/retiro en un sitio o disciplina: si DATOS REALES listan coincidencias, no citar al menos una ficha con enlace = incorrecta. Decir «no encuentro ninguno» cuando el bloque SÍ lista fichas = incorrecta (no la marques correcta por «no inventar»).
 13. «No inventar» no absuelve un vacío falso. Evalúa contra el bloque vivo de ESTA pasada, no contra lo que Roy creyó ver.
 14. Google Maps / maps.google / goo.gl/maps = incorrecta. Solo fichas /es/centro/ /en/center/ /es/buscar /en/search.
-15. Follow-up que pierde la ciudad o la disciplina del bloque vivo = incorrecta o mejorable. Ciudad dicha + GPS ignorado = correcta.`
+15. Follow-up que pierde la ciudad o la disciplina del bloque vivo = incorrecta o mejorable. Ciudad dicha + GPS ignorado = correcta.
 
 Criterios:
 - correcta: fiel a DATOS REALES y al tema.
