@@ -68,6 +68,32 @@ function levenshtein(a: string, b: string): number {
   return d[m][n]
 }
 
+type QualityFloor = { minRating: number; minReviews: number; label: string }
+
+/** Cubos del mapa Retiru (DIRECTORIO-MAPA.md). */
+function detectQualityOnce(q: string): QualityFloor | null {
+  const n = normalize(q)
+  if (/\bdiamante|diamond\b/.test(n)) return { minRating: 4.8, minReviews: 300, label: 'diamante' }
+  if (/\bplatino|platinum\b/.test(n)) return { minRating: 4.5, minReviews: 150, label: 'platino' }
+  if (/\boro\b|\bgold\b/.test(n)) return { minRating: 4.3, minReviews: 60, label: 'oro' }
+  if (/\bplata|silver\b/.test(n)) return { minRating: 4.0, minReviews: 25, label: 'plata' }
+  if (/\bbronce|bronze\b/.test(n)) return { minRating: 3.7, minReviews: 10, label: 'bronce' }
+  if (/\bmejor valorad|mejor nota|top rated|highest rated|mejor rating\b/.test(n)) {
+    return { minRating: 4.5, minReviews: 150, label: 'platino' }
+  }
+  return null
+}
+
+function isBareCityTurn(q: string): boolean {
+  const n = normalize(q).replace(/[¿?¡!.]/g, '').trim()
+  if (!n || n.split(/\s+/).length > 4) return false
+  if (/^(y |and |e |et )/.test(n)) return false
+  if (/\b(cerca|yoga|medit|ayurveda|centro|retiro|clase|ducha|barat|diamante|platino|oro|plata|bronce)\b/.test(n)) {
+    return false
+  }
+  return true
+}
+
 function detectTypeOnce(q: string): 'yoga' | 'meditation' | 'ayurveda' | null {
   const n = normalize(q)
   if (n.includes('ayurveda') && !n.includes('yoga') && !/medit/.test(n)) return 'ayurveda'
@@ -328,7 +354,15 @@ export async function buildDirectoryBlock(
   const { places, neighborhoods } = resolvePlaceFromTurns(query, gazetteer, neighborhoodNames)
   const typeFromLast = detectTypeOnce(last)
   const typeFromThread = detectTypeOnce(query)
-  const type = wantsOtherType(last) ? typeFromLast : typeFromLast || typeFromThread
+  const qualityFromLast = detectQualityOnce(last)
+  const qualityFromThread = detectQualityOnce(query)
+  const bareCity = isBareCityTurn(last)
+  const type = bareCity
+    ? typeFromLast
+    : wantsOtherType(last)
+      ? typeFromLast
+      : typeFromLast || typeFromThread
+  const quality = bareCity ? qualityFromLast : qualityFromLast || qualityFromThread
   let place = places[0] || null
   let neighborhood = neighborhoods[0] || null
   const hasMadrid = places.includes('madrid')
@@ -394,7 +428,23 @@ export async function buildDirectoryBlock(
         ? `VISITOR GPS (optional): ${userCoords.lat.toFixed(4)}, ${userCoords.lng.toFixed(4)}. Use ONLY for "near me" / "here", or if they did not name another city. If they name a city, IGNORE GPS.`
         : `GPS DEL VISITANTE (opcional): ${userCoords.lat.toFixed(4)}, ${userCoords.lng.toFixed(4)}. Úsalo SOLO si dice «cerca de mí» / «aquí», o si no nombra otra ciudad. Si nombra una ciudad, IGNORA el GPS.`
     )
-  } else if (proximity && !place && !neighborhood) {
+  }
+
+  const filtroBits = [
+    type ? (locale === 'en' ? `type=${type}` : `disciplina=${type}`) : '',
+    quality ? (locale === 'en' ? `quality=${quality.label}` : `calidad=${quality.label}`) : '',
+    place || neighborhood ? (locale === 'en' ? `place=${neighborhood || place}` : `sitio=${neighborhood || place}`) : '',
+    gps ? 'GPS' : '',
+  ].filter(Boolean)
+  if (filtroBits.length) {
+    lines.push(
+      locale === 'en'
+        ? `ACTIVE FILTERS THIS TURN (keep on follow-up unless they name a city alone): ${filtroBits.join(' · ')}`
+        : `FILTROS DE ESTE TURNO (consérvalos en el follow-up salvo ciudad sola): ${filtroBits.join(' · ')}`
+    )
+  }
+
+  if (proximity && !place && !neighborhood && !gpsOk) {
     lines.push(
       locale === 'en'
         ? 'Visitor asked for nearby places but did not share GPS. Ask for a city. Do not invent a location.'
@@ -421,6 +471,11 @@ export async function buildDirectoryBlock(
     .limit(80)
 
   if (type) centersQuery = centersQuery.eq('type', type)
+  if (quality) {
+    centersQuery = centersQuery
+      .gte('avg_rating', quality.minRating)
+      .gte('review_count', quality.minReviews)
+  }
   if (needle) {
     centersQuery = centersQuery.or(ilikeOr(CENTER_FIELDS, needle))
   } else if (gps) {
@@ -482,6 +537,11 @@ export async function buildDirectoryBlock(
 
   const centers = withKm
     .filter(({ c, km }) => {
+      if (quality) {
+        const rating = Number(c.avg_rating || 0)
+        const reviews = Number(c.review_count || 0)
+        if (rating < quality.minRating || reviews < quality.minReviews) return false
+      }
       if (gps) return km != null && km <= radiusKm
       const h = haystack(c)
       if (neighborhood && !h.includes(neighborhood)) return false
@@ -525,15 +585,20 @@ export async function buildDirectoryBlock(
           : `Más de este tipo: ${typeLanding(locale, type)}`
       )
     }
-  } else if (needle || gps) {
+  } else if (needle || gps || quality) {
+    const qualityHint = quality
+      ? locale === 'en'
+        ? ` No ${quality.label}-tier listing matched.`
+        : ` Ninguno llega al cubo ${quality.label}.`
+      : ''
     lines.push(
       locale === 'en'
         ? gps
-          ? 'No matching center near the visitor GPS. Ask for a city or point to the directory hubs; do not invent a studio.'
-          : 'No matching center in this search. Point to the directory hubs; do not invent a studio.'
+          ? `No matching center near the visitor GPS.${qualityHint} Ask for a city or point to the directory hubs; do not invent a studio.`
+          : `No matching center in this search.${qualityHint} Point to the directory hubs; do not invent a studio.`
         : gps
-          ? 'Ningún centro cerca del GPS. Pregunta la ciudad o deriva a los hubs; no inventes un estudio.'
-          : 'Ningún centro coincide con esta búsqueda. Deriva a los hubs del directorio; no inventes un estudio.'
+          ? `Ningún centro cerca del GPS.${qualityHint} Pregunta la ciudad o deriva a los hubs; no inventes un estudio.`
+          : `Ningún centro coincide con esta búsqueda.${qualityHint} Deriva a los hubs del directorio; no inventes un estudio.`
     )
   }
 

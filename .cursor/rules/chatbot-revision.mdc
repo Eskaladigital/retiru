@@ -21,3 +21,4 @@ Si el usuario pide revisar, evaluar o mirar las respuestas de Roy / chatbot de R
 4. Hechos **que cambian** (centros, retiros, precios de un evento) van al bloque live de `directory.ts`, no al RAG.
 5. Un concepto = una fila. Título explícito.
 6. No inventes un centro ni un retiro. No filtres email/teléfono de un centro. Informe: `docs/chatbot/INFORME-REVISION-MENSAJES.md`.
+7. Seis reglas de directorio (taller: `CHATBOTS-DIRECTORIOS.md`): ciudad > GPS; ficha tal cual; si hay fichas, prohibido «no tengo»; follow-up conserva filtros (ciudad sola resetea); cerca sin GPS → preguntar; solo enlaces internos (no Google Maps).

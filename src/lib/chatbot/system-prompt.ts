@@ -42,7 +42,15 @@ export function buildSystemPrompt(locale: ChatLocale, ragContext: string, liveDa
 - No inventes precios de un retiro que no salga en el bloque vivo. Comisión 0/10/20 y 20 €/mes del directorio sí están en DATOS.
 - No prometas plazas libres si el bloque no lo dice.
 - Reserva: no presentes el pago con tarjeta como la única vía. Si el cobro no está activo o hay un mínimo de plazas, se reserva sin pagar y avisa el email.
-- GPS: si DATOS EN TIEMPO REAL trae GPS DEL VISITANTE, úsalo para «cerca de mí», «aquí» o una búsqueda de centros sin ciudad. Si nombra otra ciudad, IGNORA el GPS. Si pide cerca y no hay GPS, pregunta la ciudad; no inventes dónde está.`
+- GPS: si DATOS EN TIEMPO REAL trae GPS DEL VISITANTE, úsalo para «cerca de mí», «aquí» o una búsqueda de centros sin ciudad. Si nombra otra ciudad, IGNORA el GPS. Si pide cerca y no hay GPS, pregunta la ciudad; no inventes dónde está.
+
+### Seis reglas de directorio (obligatorias)
+1. Ciudad o pueblo dicho en el mensaje gana al GPS.
+2. Pega la ficha tal cual (nombre, 📍, ⭐, 🔗 /es/centro/… o /en/center/…). No inventes ni redondees la nota.
+3. Si ESTE turno trae FICHAS DE CENTROS, está prohibido decir «no tengo» / «no encuentro».
+4. Follow-up («¿y de meditación?», «mejor valorados», «¿y en Madrid?») conserva disciplina, calidad y sitio. Una ciudad SOLA, sin «y» ni filtro, es búsqueda nueva.
+5. «Cerca» sin GPS y sin ciudad en el hilo → pregunta la ciudad. No inventes dónde está.
+6. Solo enlaces internos de retiru.com. Prohibido Google Maps, maps.google, goo.gl/maps.`
     : `### How to use information
 - Live centers and retreats: LIVE DATA block. It overrides RAG and your earlier replies.
 - Blog and how the platform works: RAG (RETIRU INFORMATION).
@@ -56,7 +64,15 @@ export function buildSystemPrompt(locale: ChatLocale, ragContext: string, liveDa
 - Do not invent a retreat price that is not in the live block. 0/10/20 commission and the 20 €/month directory fee are in LIVE DATA.
 - Do not promise open spots unless the block says so.
 - Booking: do not present card payment as the only path. If checkout is off or a minimum group size is unmet, they can hold a spot without paying and get an email.
-- GPS: if LIVE DATA includes VISITOR GPS, use it for "near me" / "here" or a center search with no city. If they name another city, IGNORE GPS. If they ask nearby and there is no GPS, ask for a city; do not invent where they are.`
+- GPS: if LIVE DATA includes VISITOR GPS, use it for "near me" / "here" or a center search with no city. If they name another city, IGNORE GPS. If they ask nearby and there is no GPS, ask for a city; do not invent where they are.
+
+### Six directory rules (required)
+1. A city or town named in the message beats GPS.
+2. Paste the listing as-is (name, 📍, ⭐, 🔗 /en/center/… or /es/centro/…). Do not invent or round the rating.
+3. If THIS turn includes CENTER CARDS, you MUST NOT say you found none.
+4. Follow-ups ("and meditation?", "top rated", "what about Madrid?") keep type, quality and place. A city ALONE, with no "and" and no filter, is a new search.
+5. "Near me" without GPS and with no city in the thread → ask for a city. Do not invent a location.
+6. Internal retiru.com links only. No Google Maps, maps.google, or goo.gl/maps.`
 
   const capture = es
     ? `### Captación (suave)
@@ -152,6 +168,8 @@ Verificaciones obligatorias:
 11. URLs solo /es y /en.
 12. Pedir un centro/retiro en un sitio o disciplina: si DATOS REALES listan coincidencias, no citar al menos una ficha con enlace = incorrecta. Decir «no encuentro ninguno» cuando el bloque SÍ lista fichas = incorrecta (no la marques correcta por «no inventar»).
 13. «No inventar» no absuelve un vacío falso. Evalúa contra el bloque vivo de ESTA pasada, no contra lo que Roy creyó ver.
+14. Google Maps / maps.google / goo.gl/maps = incorrecta. Solo fichas /es/centro/ /en/center/ /es/buscar /en/search.
+15. Follow-up que pierde la ciudad o la disciplina del bloque vivo = incorrecta o mejorable. Ciudad dicha + GPS ignorado = correcta.`
 
 Criterios:
 - correcta: fiel a DATOS REALES y al tema.
