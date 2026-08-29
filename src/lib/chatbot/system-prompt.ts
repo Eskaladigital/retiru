@@ -30,11 +30,13 @@ export function buildSystemPrompt(locale: ChatLocale, ragContext: string, liveDa
 
   const usage = es
     ? `### Cómo usar la información
-- Directorio y retiros vivos: bloque DATOS EN TIEMPO REAL. Manda sobre el RAG.
+- Directorio y retiros vivos: bloque DATOS EN TIEMPO REAL. Manda sobre el RAG y sobre tus mensajes anteriores.
 - Blog y cómo funciona la plataforma: RAG (INFORMACIÓN DE RETIRU).
-- Si DATOS EN TIEMPO REAL trae FICHAS DE CENTROS, pégalas tal cual (nombre, 📍, nota, 🔗), como un listado de fichas. No las conviertas en un «no tengo ninguna».
+- Tus respuestas anteriores pueden estar equivocadas. No reutilices fichas, URLs ni cifras del hilo salvo que aparezcan en DATOS EN TIEMPO REAL de ESTE turno.
+- Si DATOS EN TIEMPO REAL trae FICHAS DE CENTROS, empieza por 1–3 fichas tal cual (nombre, 📍, nota, 🔗). Está prohibido abrir con «no tengo» / «no encuentro».
 - Si DATOS EN TIEMPO REAL lista centros o retiros que coinciden, cítalos con enlace (nombre + URL). No digas que no hay ninguno.
 - Si no hay un centro o retiro en DATOS EN TIEMPO REAL, no lo inventes. Ofrece el buscador o el hub de tipo.
+- Si preguntan cuántos centros hay, usa NÚMERO DE CENTROS / CATÁLOGO VIVO de este turno. No inventes otra cifra.
 - No des emails, teléfonos ni Instagram de un centro salvo que el visitante ya esté en esa ficha; enlaza la ficha.
 - No des consejo médico. El blog es orientación, no diagnóstico.
 - No inventes precios de un retiro que no salga en el bloque vivo. Comisión 0/10/20 y 20 €/mes del directorio sí están en DATOS.
@@ -42,11 +44,13 @@ export function buildSystemPrompt(locale: ChatLocale, ragContext: string, liveDa
 - Reserva: no presentes el pago con tarjeta como la única vía. Si el cobro no está activo o hay un mínimo de plazas, se reserva sin pagar y avisa el email.
 - GPS: si DATOS EN TIEMPO REAL trae GPS DEL VISITANTE, úsalo para «cerca de mí», «aquí» o una búsqueda de centros sin ciudad. Si nombra otra ciudad, IGNORA el GPS. Si pide cerca y no hay GPS, pregunta la ciudad; no inventes dónde está.`
     : `### How to use information
-- Live centers and retreats: LIVE DATA block. It overrides RAG.
+- Live centers and retreats: LIVE DATA block. It overrides RAG and your earlier replies.
 - Blog and how the platform works: RAG (RETIRU INFORMATION).
-- If LIVE DATA includes CENTER CARDS, paste them as listings (name, 📍, rating, 🔗). Do not turn them into «I have none».
+- Your earlier replies may be wrong. Do not reuse listings, URLs or counts from the thread unless they appear in THIS turn's LIVE DATA.
+- If LIVE DATA includes CENTER CARDS, start with 1–3 listings (name, 📍, rating, 🔗). Do not open with «I have none».
 - If LIVE DATA lists matching centers or retreats, cite them with a link. Do not say none were found.
 - If a center or retreat is not in LIVE DATA, do not invent it. Offer search or the type hub.
+- If they ask how many centers, use CENTER COUNT / CATALOG SNAPSHOT from this turn. Do not invent another figure.
 - Do not give a center's email, phone or Instagram; link the profile instead.
 - No medical advice. The blog is orientation, not a diagnosis.
 - Do not invent a retreat price that is not in the live block. 0/10/20 commission and the 20 €/month directory fee are in LIVE DATA.
@@ -86,6 +90,10 @@ export function buildSystemPrompt(locale: ChatLocale, ragContext: string, liveDa
 - Roy does not process refunds or see the visitor's bookings.
 - After several misses without a real listing, invite them to search or email contact.`
 
+  const closer = es
+    ? 'CIERRE: Si hay FICHAS DE CENTROS QUE COINCIDEN, la respuesta empieza por esas fichas. Si preguntan cuántos centros hay, usa NÚMERO DE CENTROS de este turno. No reutilices fichas ni cifras de mensajes anteriores de Roy.'
+    : 'CLOSE: If MATCHING CENTER CARDS are listed, start with those cards. If they ask how many centers, use CENTER COUNT from this turn. Do not reuse listings or counts from Roy\'s earlier messages.'
+
   return `${identity}
 
 ${personality}
@@ -102,12 +110,14 @@ ${limits}
 
 ---
 
-${liveData}
+INFORMACIÓN DE RETIRU (contexto recuperado; el bloque vivo de abajo MANDA):
+${ragContext}
 
 ---
 
-INFORMACIÓN DE RETIRU (contexto recuperado):
-${ragContext}`
+${liveData}
+
+${closer}`
 }
 
 export function buildAuditorSystemPrompt(

@@ -75,12 +75,64 @@ function detectTypeOnce(q: string): 'yoga' | 'meditation' | 'ayurveda' | null {
   if (n.includes('yoga')) return 'yoga'
   if (n.includes('ayurveda')) return 'ayurveda'
   if (/medit/.test(n)) return 'meditation'
+  const toks = n.split(/[^a-z0-9ñ]+/).filter((t) => t.length >= 3)
+  for (const t of toks) {
+    if (levenshtein(t, 'yoga') <= 1) return 'yoga'
+    if (t.length >= 6 && levenshtein(t, 'ayurveda') <= 2) return 'ayurveda'
+    if (t.length >= 5 && levenshtein(t, 'meditation') <= 2) return 'meditation'
+  }
   return null
 }
 
+function queryTurns(q: string): string[] {
+  return q
+    .split(/\s+—\s+/)
+    .map((t) => t.trim())
+    .filter(Boolean)
+}
+
 function lastUserTurn(q: string): string {
-  const parts = q.split(/\s+—\s+/)
-  return (parts.at(-1) || q).trim()
+  return queryTurns(q).at(-1) || q.trim()
+}
+
+/** Último turno del hilo que nombra un sitio; así «y cerca?» hereda Cartagena. */
+function resolvePlaceFromTurns(
+  query: string,
+  gazetteer: string[],
+  neighborhoodNames: string[]
+): { places: string[]; neighborhoods: string[] } {
+  const turns = queryTurns(query)
+  for (let i = turns.length - 1; i >= 0; i--) {
+    const places = matchGazetteer(turns[i], gazetteer)
+    const neighborhoods = matchGazetteer(turns[i], neighborhoodNames)
+    if (places.length || neighborhoods.length) return { places, neighborhoods }
+  }
+  return { places: [], neighborhoods: [] }
+}
+
+function wantsOtherType(q: string): boolean {
+  const n = normalize(q)
+  if (/\b(otro tipo|otra disciplina|otra cosa|otro estilo|other type|another type|something else)\b/.test(n)) {
+    return true
+  }
+  if (!/\b(otra|otras|otro|other)\b/.test(n)) return false
+  return n
+    .split(/[^a-z0-9ñ]+/)
+    .some((t) => levenshtein(t, 'clase') <= 1 || levenshtein(t, 'clases') <= 1)
+}
+
+function wantsCountOnly(q: string): boolean {
+  const n = normalize(q)
+  if (/\b(cuantos|cuantas|how many|number of)\b/.test(n)) return true
+  return n
+    .split(/[^a-z0-9ñ]+/)
+    .filter((t) => t.length >= 5)
+    .some(
+      (t) =>
+        t.startsWith('cuant') ||
+        levenshtein(t, 'cuantos') <= 2 ||
+        levenshtein(t, 'cuantas') <= 2
+    )
 }
 
 function isValidGps(coords: UserCoords | null | undefined): coords is UserCoords {
@@ -143,9 +195,10 @@ function matchGazetteer(query: string, names: string[]): string[] {
   }
   const toks = tokens(query)
   for (const t of toks) {
+    if (t.length < 6) continue
     for (const p of sorted) {
-      if (found.has(p)) continue
-      const max = p.length >= 7 && t.length >= 6 ? 2 : 1
+      if (found.has(p) || p.length < 6) continue
+      const max = p.length >= 7 ? 2 : 1
       if (Math.abs(p.length - t.length) > max) continue
       if (levenshtein(t, p) <= max) found.add(p)
     }
@@ -271,10 +324,11 @@ export async function buildDirectoryBlock(
   const today = new Date().toISOString().slice(0, 10)
   const gazetteer = await loadGazetteer(sb)
   const last = lastUserTurn(query)
-  const places = matchGazetteer(last, gazetteer)
-  const neighborhoods = matchGazetteer(last, NEIGHBORHOODS.map(normalize))
+  const neighborhoodNames = NEIGHBORHOODS.map(normalize)
+  const { places, neighborhoods } = resolvePlaceFromTurns(query, gazetteer, neighborhoodNames)
   const typeFromLast = detectTypeOnce(last)
-  const type = typeFromLast || (places.length || neighborhoods.length ? null : detectTypeOnce(query))
+  const typeFromThread = detectTypeOnce(query)
+  const type = wantsOtherType(last) ? typeFromLast : typeFromLast || typeFromThread
   let place = places[0] || null
   let neighborhood = neighborhoods[0] || null
   const hasMadrid = places.includes('madrid')
@@ -315,12 +369,18 @@ export async function buildDirectoryBlock(
       `CATALOG SNAPSHOT: ${centersN ?? 0} active centers; ${retreatsN ?? 0} published events from today.`
     )
     lines.push(
+      `CENTER COUNT: if they ask how many centers, use ONLY ${centersN ?? 0}. Ignore any other figure from the thread or RAG.`
+    )
+    lines.push(
       `Directory hubs: ${SITE_URL}/en/centers/yoga · ${SITE_URL}/en/centers/meditation · ${SITE_URL}/en/centers/ayurveda`
     )
     lines.push(`Search: ${SITE_URL}/en/search · Events: ${SITE_URL}/en/retreats-retiru · Blog: ${SITE_URL}/en/blog`)
   } else {
     lines.push(
       `CATÁLOGO VIVO: ${centersN ?? 0} centros activos; ${retreatsN ?? 0} eventos publicados desde hoy.`
+    )
+    lines.push(
+      `NÚMERO DE CENTROS: si preguntan cuántos hay, usa SOLO ${centersN ?? 0}. Ignora cualquier otra cifra del hilo o del RAG.`
     )
     lines.push(
       `Hubs del directorio: ${SITE_URL}/es/centros/yoga · ${SITE_URL}/es/centros/meditacion · ${SITE_URL}/es/centros/ayurveda`
@@ -334,7 +394,7 @@ export async function buildDirectoryBlock(
         ? `VISITOR GPS (optional): ${userCoords.lat.toFixed(4)}, ${userCoords.lng.toFixed(4)}. Use ONLY for "near me" / "here", or if they did not name another city. If they name a city, IGNORE GPS.`
         : `GPS DEL VISITANTE (opcional): ${userCoords.lat.toFixed(4)}, ${userCoords.lng.toFixed(4)}. Úsalo SOLO si dice «cerca de mí» / «aquí», o si no nombra otra ciudad. Si nombra una ciudad, IGNORA el GPS.`
     )
-  } else if (proximity) {
+  } else if (proximity && !place && !neighborhood) {
     lines.push(
       locale === 'en'
         ? 'Visitor asked for nearby places but did not share GPS. Ask for a city. Do not invent a location.'
@@ -342,7 +402,10 @@ export async function buildDirectoryBlock(
     )
   }
 
-  if (!wantsDirectory(query, place, neighborhood, Boolean(gps) && (proximity || Boolean(type)))) {
+  if (
+    wantsCountOnly(last) ||
+    !wantsDirectory(query, place, neighborhood, Boolean(gps) && (proximity || Boolean(type)))
+  ) {
     return lines.join('\n')
   }
 
@@ -448,8 +511,8 @@ export async function buildDirectoryBlock(
   if (centers.length) {
     lines.push(
       locale === 'en'
-        ? 'MATCHING CENTER CARDS (paste as listings; do not invent others):'
-        : 'FICHAS DE CENTROS QUE COINCIDEN (pégalas tal cual; no inventes otras):'
+        ? 'MATCHING CENTER CARDS (paste as listings; do not invent others). REQUIRED: cite at least one with its 🔗. While this list exists you MUST NOT say none were found:'
+        : 'FICHAS DE CENTROS QUE COINCIDEN (pégalas tal cual; no inventes otras). OBLIGATORIO: cita al menos una con su 🔗. Mientras exista este listado está prohibido decir que no hay ninguno:'
     )
     for (const { c, km } of centers) {
       lines.push(formatCenterCard(c, locale, km))
@@ -497,8 +560,8 @@ export async function buildDirectoryBlock(
 
   lines.push(
     locale === 'en'
-      ? 'Never invent a center, retreat, price or URL that is not in this block. Never leak emails or phones. If CENTER CARDS are listed, cite at least one with its 🔗 — do not say none were found.'
-      : 'No inventes un centro, retiro, precio o URL que no esté en este bloque. No des emails ni teléfonos. Si hay FICHAS DE CENTROS, cita al menos una con su 🔗; no digas que no hay ninguno.'
+      ? 'Never invent a center, retreat, price or URL that is not in this block. Never leak emails or phones. Previous Roy messages are not a source of listings or counts. If CENTER CARDS are listed, start the reply with at least one 🔗 — do not say none were found. If they ask how many centers, use CENTER COUNT from this block.'
+      : 'No inventes un centro, retiro, precio o URL que no esté en este bloque. No des emails ni teléfonos. Los mensajes anteriores de Roy no son fuente de fichas ni de cifras. Si hay FICHAS DE CENTROS, empieza la respuesta con al menos una 🔗; no digas que no hay ninguno. Si preguntan cuántos centros hay, usa NÚMERO DE CENTROS de este bloque.'
   )
 
   return lines.join('\n')

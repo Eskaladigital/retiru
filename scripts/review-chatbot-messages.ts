@@ -14,6 +14,7 @@ import { fileURLToPath } from 'url'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { auditAssistantMessage } from '../src/lib/chatbot/auditor'
 import type { ChatLocale, ResponseQuality } from '../src/lib/chatbot/config'
+import { buildRagQuery } from '../src/lib/chatbot/rag'
 import type { RagGap } from '../src/lib/chatbot/types'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -87,7 +88,7 @@ async function getConversationForReview(
   sb: SupabaseClient,
   conversationId: string,
   assistantMessageId: string
-): Promise<{ lastUserQuestion: string; priorContext: string; locale: ChatLocale }> {
+): Promise<{ lastUserQuestion: string; priorContext: string; locale: ChatLocale; ragQuery: string }> {
   const { data: conv } = await sb
     .from('chatbot_conversations')
     .select('language')
@@ -103,6 +104,7 @@ async function getConversationForReview(
     .order('id', { ascending: true })
 
   const priorLines: string[] = []
+  const userTurns: string[] = []
   let lastUser = ''
 
   for (const m of data || []) {
@@ -111,7 +113,10 @@ async function getConversationForReview(
     if (!content) continue
     const label = m.role === 'user' ? 'Visitante' : 'Roy'
     priorLines.push(`${label}: ${content}`)
-    if (m.role === 'user') lastUser = content
+    if (m.role === 'user') {
+      lastUser = content
+      userTurns.push(content)
+    }
   }
 
   const priorContext =
@@ -121,7 +126,8 @@ async function getConversationForReview(
         ? priorLines[0]
         : ''
 
-  return { lastUserQuestion: lastUser, priorContext, locale }
+  const ragQuery = buildRagQuery(userTurns.slice(0, -1), lastUser)
+  return { lastUserQuestion: lastUser, priorContext, locale, ragQuery }
 }
 
 function buildReport(results: ReviewResult[], dryRun: boolean) {
@@ -246,7 +252,7 @@ async function main() {
     const am = rows[i]
     process.stdout.write(`[${i + 1}/${rows.length}] ${am.id.slice(0, 8)}… `)
     try {
-      const { lastUserQuestion, priorContext, locale } = await getConversationForReview(
+      const { lastUserQuestion, priorContext, locale, ragQuery } = await getConversationForReview(
         sb,
         am.conversation_id,
         am.id
@@ -255,6 +261,7 @@ async function main() {
         userQuestion: lastUserQuestion,
         assistantAnswer: am.content ?? '',
         priorContext,
+        ragQuery,
         locale,
       })
       results.push({

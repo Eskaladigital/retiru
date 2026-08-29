@@ -23,7 +23,7 @@ Retiru publica contenido únicamente en **español** (`/es`, campos `*_es`) e **
 
 ## Chatbot Roy (visitante)
 
-Guía con IA del marketplace: directorio de centros, retiros y clases publicados, y consejos del blog. Molde Nora/Laura más un bloque vivo de fichas (no se vuelca el catálogo entero). No es el soporte humano **Andrea** (hace falta login). Modelo `gpt-5.6-terra`.
+Guía con IA del marketplace: directorio de centros, retiros y clases publicados, y consejos del blog. Molde Nora/Laura más un bloque vivo de fichas (no se vuelca el catálogo entero). El follow-up («y cerca?», «y en Murcia?») hereda ciudad y disciplina del hilo; la cifra de centros sale del catálogo vivo de ese turno, no del RAG. No es el soporte humano **Andrea** (hace falta login). Modelo `gpt-5.6-terra`.
 
 ```bash
 npx tsx scripts/ingest-chatbot-kb.ts

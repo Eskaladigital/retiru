@@ -13,6 +13,8 @@ export type AuditTurnInput = {
   userQuestion: string
   assistantAnswer: string
   priorContext?: string
+  /** Misma consulta que `prepareChatContext` (hilo + turno), para el bloque vivo. */
+  ragQuery?: string
   locale?: ChatLocale
 }
 
@@ -36,7 +38,7 @@ export async function auditAssistantMessage(
   input: AuditTurnInput
 ): Promise<AuditorResult> {
   const locale = input.locale ?? 'es'
-  const query = input.userQuestion || input.assistantAnswer.slice(0, 200)
+  const query = input.ragQuery?.trim() || input.userQuestion || input.assistantAnswer.slice(0, 200)
   const chunks = await retrieveContext(sb, query, locale)
   const ragContext = formatRagContext(chunks)
   const directoryLive = await buildDirectoryBlock(sb, query, locale)

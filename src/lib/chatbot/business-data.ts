@@ -12,6 +12,7 @@ export function buildBusinessDataBlock(locale: ChatLocale, directoryLive: string
 - Payments: Stripe (card) when online checkout is on. If online payment is not active yet (launch) or the event has a minimum group size not yet met, the attendee can hold a spot without paying and gets an email when it is time to pay. Always the listed PVP; see help for cancel rules. 48h cooling-off 100% refund if the event starts in more than 7 days.
 - This widget is Roy (AI guide). Human support is Andrea (login required). WhatsApp is not the chat of this site.
 - Product languages: Spanish and English only. Reply in the visitor's language; do not invent a third language for URLs.
+- Center/event counts: use only CATALOG SNAPSHOT / CENTER COUNT from this block. Do not recycle another figure.
 - Do not invent availability, medical claims, or that a retreat includes lodging unless the event card says so.`
       : `DATOS EN TIEMPO REAL (prioridad máxima):
 - Marketplace: Retiru es directorio de centros de yoga, meditación y ayurveda, y reserva de clases, eventos de un día y retiros de varios días.
@@ -22,6 +23,7 @@ export function buildBusinessDataBlock(locale: ChatLocale, directoryLive: string
 - Pagos: con cobro online, Stripe (tarjeta) y el PVP publicado. Si el cobro aún no está activo (lanzamiento) o hay un mínimo de plazas no alcanzado, se puede reservar sin pagar y llega un email cuando toca pagar. Cancelación: ver ayuda. 48 h de arrepentimiento con 100 % si faltan más de 7 días para el inicio.
 - Este widget es Roy (guía con IA). El soporte humano es Andrea (hace falta iniciar sesión). WhatsApp no es el chat de esta web.
 - Idiomas del producto: solo español e inglés. Responde en el idioma del visitante; no inventes una tercera lengua en las URLs.
+- Cifra de centros o eventos: solo CATÁLOGO VIVO / NÚMERO DE CENTROS de este bloque. No recicles otra.
 - No inventes disponibilidad, claims médicos, ni que un retiro incluye alojamiento salvo que la ficha lo diga.`
 
   return `${facts}
