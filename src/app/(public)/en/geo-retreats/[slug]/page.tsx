@@ -11,6 +11,7 @@ import EventosSearch from '@/components/home/EventosSearch';
 import { createStaticSupabase } from '@/lib/supabase/server';
 import { generatePageMetadata, jsonLdItemList, jsonLdBreadcrumb, jsonLdFAQ, jsonLdScript } from '@/lib/seo';
 import { resolveGeoLanding, type GeoNode } from '@/lib/geo-landing';
+import { publicListingStartDate } from '@/lib/series';
 
 // Esta landing depende de jerarquías y se renderiza al vuelo (resolveGeoLanding lee
 // cookies vía layout público). Si pones revalidate + generateStaticParams entrarías en
@@ -47,20 +48,24 @@ export default async function RetreatsInPage({ params }: { params: Promise<{ slu
 
   let retreats: Array<any> = [];
   if (destHijoIds.length) {
-    const today = new Date().toISOString().slice(0, 10);
+    const publicFrom = publicListingStartDate();
     const { data: rs } = await supabase
       .from('retreats')
       .select(
-        'id, slug, title_en, total_price, start_date, end_date, duration_days, available_spots, destinations!destination_id(name_en), retreat_images(url, is_cover)',
+        'id, slug, title_en, total_price, start_date, end_date, duration_days, available_spots, series_id, destinations!destination_id(name_en), retreat_images(url, is_cover)',
       )
       .eq('status', 'published')
-      .eq('is_series_next', true)
-      .gte('end_date', today)
-      .gt('start_date', today)
+      .gte('start_date', publicFrom)
       .in('destination_id', destHijoIds)
       .order('start_date', { ascending: true })
       .limit(60);
-    retreats = (rs || []).map((r: any) => ({
+    const seenSeries = new Set<string>();
+    retreats = (rs || []).filter((r: any) => {
+      if (!r.series_id) return true;
+      if (seenSeries.has(r.series_id)) return false;
+      seenSeries.add(r.series_id);
+      return true;
+    }).map((r: any) => ({
       id: r.id,
       slug: r.slug,
       title_en: r.title_en,

@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
 import { createCheckoutSession } from '@/lib/stripe';
 import { isOnlinePaymentEnabled } from '@/lib/payments';
-import { addDaysIso, SERIES_BOOKING_HORIZON_DAYS } from '@/lib/series';
+import { addDaysIso, SERIES_BOOKING_HORIZON_DAYS, publicListingStartDate, publicDailyEndDate } from '@/lib/series';
 import {
   sendReservationConfirmedEmail,
   sendMinViableReachedEmail,
@@ -316,7 +316,7 @@ async function handleReserveSeries(
 
   const { data: series } = await admin
     .from('retreat_series')
-    .select('id, is_active, organizer_id')
+    .select('id, is_active, organizer_id, interval_days')
     .eq('id', seriesId)
     .maybeSingle();
   if (!series) {
@@ -324,13 +324,16 @@ async function handleReserveSeries(
   }
 
   const today = new Date().toISOString().slice(0, 10);
+  const isDaily = series.interval_days === 1;
+  const from = isDaily ? publicListingStartDate(today) : today;
+  const to = isDaily ? publicDailyEndDate(today) : addDaysIso(today, SERIES_BOOKING_HORIZON_DAYS);
   let occQuery = admin
     .from('retreats')
     .select('id, title_es, title_en, organizer_id, total_price, platform_fee, organizer_amount, currency, confirmation_type, sla_hours, start_date, min_attendees, max_attendees, confirmed_bookings')
     .eq('series_id', seriesId)
     .eq('status', 'published')
-    .gte('start_date', today)
-    .lte('start_date', addDaysIso(today, SERIES_BOOKING_HORIZON_DAYS))
+    .gte('start_date', from)
+    .lte('start_date', to)
     .order('start_date', { ascending: true });
   if (selectedIds && selectedIds.length > 0) {
     occQuery = occQuery.in('id', selectedIds);

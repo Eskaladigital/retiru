@@ -14,11 +14,30 @@ type Admin = SupabaseClient;
  */
 export const SERIES_BOOKING_HORIZON_DAYS = 49;
 
+/** Hoy y mañana no salen en listados ni se ofrecen a reserva en un diario. */
+export const SERIES_PUBLIC_LEAD_DAYS = 2;
+/** Fechas abiertas a la vez en un evento diario (pasado mañana y tres más). */
+export const SERIES_PUBLIC_OPEN_DATES = 4;
+
 /** Suma días a una fecha YYYY-MM-DD sin problemas de zona horaria. */
 export function addDaysIso(iso: string, days: number): string {
   const d = new Date(`${iso}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().slice(0, 10);
+}
+
+export function todayIso(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/** Primera fecha que puede salir en catálogo / chips públicos. */
+export function publicListingStartDate(today = todayIso()): string {
+  return addDaysIso(today, SERIES_PUBLIC_LEAD_DAYS);
+}
+
+/** Última fecha abierta en un diario (lead + 4 días). */
+export function publicDailyEndDate(today = todayIso()): string {
+  return addDaysIso(today, SERIES_PUBLIC_LEAD_DAYS + SERIES_PUBLIC_OPEN_DATES - 1);
 }
 
 function diffDaysIso(startIso: string, endIso: string): number {

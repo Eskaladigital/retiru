@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Search, SlidersHorizontal, X, MapPin, Star, ChevronDown, CalendarDays, Users, Zap, Flame } from 'lucide-react';
 import type { Retreat, Category, Destination } from '@/types';
 import { getOrganizerReviewStats, organizerHasRatingToShow, getSearchTokens, matchesAllTokens } from '@/lib/utils';
+import { SeriesDateChips } from '@/components/retreat/SeriesDateChips';
 
 interface EventosClientProps {
   retreats: Retreat[];
@@ -261,49 +262,59 @@ export default function EventosClient({ retreats, categories, destinations }: Ev
             const isInstant = r.confirmation_type === 'automatic';
             const { avg_rating: orgAvg, review_count: orgReviews } = getOrganizerReviewStats(r);
             const showOrgRating = organizerHasRatingToShow(r);
+            const seriesDates = r.series_dates ?? [];
+            const isDailySeries = Boolean(r.series_id) && (r.duration_days ?? 0) <= 1;
+            const href = `/es/retiro/${r.slug}`;
 
             return (
-              <Link
+              <article
                 key={r.slug}
-                href={`/es/retiro/${r.slug}`}
                 className="group bg-white rounded-2xl overflow-hidden border border-sand-200 transition-all duration-[350ms] hover:shadow-elevated hover:-translate-y-1 hover:border-sand-300"
               >
-                <div className="relative aspect-[16/10] overflow-hidden">
-                  <img
-                    src={coverImg?.url ?? 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=600&q=80'}
-                    alt={coverImg?.alt_text ?? r.title_es}
-                    className="w-full h-full object-cover transition-transform duration-[600ms] group-hover:scale-105"
-                  />
-                  <div className="absolute top-3 left-3 flex gap-1.5">
-                    {categoryLabel && <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground">{categoryLabel}</span>}
-                    {isInstant && (
-                      <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[rgba(92,127,96,0.9)] text-white inline-flex items-center gap-1">
-                        <Zap className="w-3.5 h-3.5 shrink-0" strokeWidth={2.5} aria-hidden />
-                        Inmediata
-                      </span>
-                    )}
+                <Link href={href} className="block">
+                  <div className="relative aspect-[16/10] overflow-hidden">
+                    <img
+                      src={coverImg?.url ?? 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=600&q=80'}
+                      alt={coverImg?.alt_text ?? r.title_es}
+                      className="w-full h-full object-cover transition-transform duration-[600ms] group-hover:scale-105"
+                    />
+                    <div className="absolute top-3 left-3 flex gap-1.5">
+                      {categoryLabel && <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground">{categoryLabel}</span>}
+                      {isInstant && (
+                        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[rgba(92,127,96,0.9)] text-white inline-flex items-center gap-1">
+                          <Zap className="w-3.5 h-3.5 shrink-0" strokeWidth={2.5} aria-hidden />
+                          Inmediata
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
+                </Link>
                 <div className="p-5">
-                  <div className="flex items-center justify-between mb-2.5">
-                    <span className="text-[13px] text-[#7a6b5d] flex items-center gap-1">
-                      <MapPin size={13} /> {r.destination?.name_es ?? 'España'}
-                    </span>
-                    {showOrgRating && (
-                      <span className="text-[13px] font-semibold flex items-center gap-1" title="Valoración del organizador">
-                        <Star size={13} className="text-amber-400 fill-amber-400" />
-                        {orgAvg.toFixed(1)} <span className="font-normal text-[#7a6b5d]">({orgReviews})</span>
+                  <Link href={href} className="block">
+                    <div className="flex items-center justify-between mb-2.5">
+                      <span className="text-[13px] text-[#7a6b5d] flex items-center gap-1">
+                        <MapPin size={13} /> {r.destination?.name_es ?? 'España'}
                       </span>
-                    )}
-                  </div>
-                  <h3 className="font-serif text-lg leading-[1.3] mb-2 line-clamp-2 group-hover:text-terracotta-600 transition-colors">{r.title_es}</h3>
-                  <p className="text-sm text-[#7a6b5d] line-clamp-2 mb-3">{r.summary_es}</p>
-                  <div className="text-sm text-[#7a6b5d] mb-4 flex items-center gap-3">
-                    <span className="flex items-center gap-1"><CalendarDays size={14} /> {formatDateRange(r.start_date, r.end_date)}</span>
-                    <span className="text-[#a09383]">·</span>
-                    <span>{r.duration_days} día{r.duration_days !== 1 ? 's' : ''}</span>
-                  </div>
-                  <div className="flex items-end justify-between pt-4 border-t border-sand-200">
+                      {showOrgRating && (
+                        <span className="text-[13px] font-semibold flex items-center gap-1" title="Valoración del organizador">
+                          <Star size={13} className="text-amber-400 fill-amber-400" />
+                          {orgAvg.toFixed(1)} <span className="font-normal text-[#7a6b5d]">({orgReviews})</span>
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="font-serif text-lg leading-[1.3] mb-2 line-clamp-2 group-hover:text-terracotta-600 transition-colors">{r.title_es}</h3>
+                    <p className="text-sm text-[#7a6b5d] line-clamp-2 mb-3">{r.summary_es}</p>
+                  </Link>
+                  {isDailySeries && seriesDates.length > 1 ? (
+                    <SeriesDateChips dates={seriesDates} currentSlug={r.slug} locale="es" />
+                  ) : (
+                    <div className="text-sm text-[#7a6b5d] mb-4 flex items-center gap-3">
+                      <span className="flex items-center gap-1"><CalendarDays size={14} /> {formatDateRange(r.start_date, r.end_date)}</span>
+                      <span className="text-[#a09383]">·</span>
+                      <span>{r.duration_hours ? `${r.duration_hours} h` : `${r.duration_days} día${r.duration_days !== 1 ? 's' : ''}`}</span>
+                    </div>
+                  )}
+                  <Link href={href} className="flex items-end justify-between pt-4 border-t border-sand-200">
                     <div className="flex flex-col">
                       <span className="text-xs text-[#a09383] uppercase tracking-wider font-semibold">Desde</span>
                       <span className="text-2xl font-bold leading-none mt-0.5">{r.total_price}€ <span className="text-sm font-normal text-[#7a6b5d]">/persona</span></span>
@@ -313,9 +324,9 @@ export default function EventosClient({ retreats, categories, destinations }: Ev
                       {spotsLow && <Flame className="w-3.5 h-3.5 shrink-0" aria-hidden />}
                       {r.available_spots} plazas
                     </span>
-                  </div>
+                  </Link>
                 </div>
-              </Link>
+              </article>
             );
           })}
         </div>

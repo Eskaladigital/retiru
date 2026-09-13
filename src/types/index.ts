@@ -252,6 +252,8 @@ export interface Retreat {
   destination?: Destination;
   categories?: Category[];
   images?: RetreatImage[];
+  /** Próximas fechas públicas de la serie (pasado mañana + hasta 4). */
+  series_dates?: { slug: string; start_date: string }[];
 }
 
 export interface RetreatImage {

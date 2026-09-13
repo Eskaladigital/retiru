@@ -17,6 +17,7 @@ import ShareButton from '@/components/ui/share-button';
 import { getSiteUrl } from '@/lib/site-url';
 import { getCancellationTypeLabel, getFreeCancellationDays } from '@/lib/utils';
 import { isOnlinePaymentEnabledForUi } from '@/lib/payments';
+import { publicListingStartDate, SERIES_PUBLIC_OPEN_DATES } from '@/lib/series';
 
 export const revalidate = 3600;
 
@@ -121,15 +122,20 @@ export default async function RetiroDetailPage({ params }: { params: Promise<{ s
   let seriesDates: { slug: string; start_date: string }[] = [];
   if (r.series_id) {
     const sb = createStaticSupabase();
+    const publicFrom = publicListingStartDate();
     const { data: siblings } = await sb
       .from('retreats')
       .select('slug, start_date')
       .eq('series_id', r.series_id)
       .eq('status', 'published')
-      .gte('start_date', new Date().toISOString().slice(0, 10))
+      .gte('start_date', publicFrom)
       .order('start_date', { ascending: true })
-      .limit(8);
+      .limit(SERIES_PUBLIC_OPEN_DATES);
     seriesDates = siblings || [];
+    if (r.start_date >= publicFrom && !seriesDates.some((d) => d.slug === r.slug)) {
+      seriesDates = [...seriesDates, { slug: r.slug, start_date: r.start_date }]
+        .sort((a, b) => a.start_date.localeCompare(b.start_date));
+    }
   }
 
   // JSON-LD structured data

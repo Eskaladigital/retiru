@@ -7,6 +7,10 @@
 import { createServerSupabase, createStaticSupabase, createAdminSupabase } from '@/lib/supabase/server';
 import type { Locale } from '@/types';
 import type { Category, Destination, Retreat, Center, Product, OrganizerProfile } from '@/types';
+import {
+  publicListingStartDate,
+  SERIES_PUBLIC_OPEN_DATES,
+} from '@/lib/series';
 
 // ─── Categories ───────────────────────────────────────────────────────────
 
@@ -122,6 +126,59 @@ const RETREAT_SELECT = `
   retreat_images(id, url, alt_text, sort_order, is_cover)
 `;
 
+function mapRetreatRow(r: Record<string, unknown>): Retreat {
+  const { organizer_profiles, destinations, retreat_images, ...rest } = r;
+  return {
+    ...rest,
+    organizer: organizer_profiles ?? undefined,
+    destination: destinations ?? undefined,
+    categories: [] as Category[],
+    images: (retreat_images as Retreat['images']) ?? [],
+    series_dates: [],
+  } as unknown as Retreat;
+}
+
+function collapseSeriesToOne(retreats: Retreat[]): Retreat[] {
+  const seen = new Set<string>();
+  const out: Retreat[] = [];
+  for (const r of retreats) {
+    if (r.series_id) {
+      if (seen.has(r.series_id)) continue;
+      seen.add(r.series_id);
+    }
+    out.push(r);
+  }
+  return out;
+}
+
+async function attachPublicSeriesDates(
+  supabase: Awaited<ReturnType<typeof createServerSupabase>>,
+  retreats: Retreat[],
+  publicFrom: string,
+): Promise<void> {
+  const seriesIds = [...new Set(retreats.map((r) => r.series_id).filter(Boolean))] as string[];
+  if (!seriesIds.length) return;
+  const { data } = await supabase
+    .from('retreats')
+    .select('series_id, slug, start_date')
+    .in('series_id', seriesIds)
+    .eq('status', 'published')
+    .gte('start_date', publicFrom)
+    .order('start_date', { ascending: true });
+  const bySeries = new Map<string, { slug: string; start_date: string }[]>();
+  for (const row of data || []) {
+    const sid = row.series_id as string;
+    const arr = bySeries.get(sid) || [];
+    if (arr.length < SERIES_PUBLIC_OPEN_DATES) {
+      arr.push({ slug: row.slug as string, start_date: row.start_date as string });
+    }
+    bySeries.set(sid, arr);
+  }
+  for (const r of retreats) {
+    r.series_dates = r.series_id ? (bySeries.get(r.series_id) || []) : [];
+  }
+}
+
 export async function getPublishedRetreats(filters?: {
   categorySlug?: string;
   destinationSlug?: string;
@@ -131,14 +188,12 @@ export async function getPublishedRetreats(filters?: {
   offset?: number;
 }): Promise<{ retreats: Retreat[]; total: number }> {
   const supabase = await createServerSupabase();
-  const today = new Date().toISOString().slice(0, 10);
+  const publicFrom = publicListingStartDate();
   let query = supabase
     .from('retreats')
-    .select(RETREAT_SELECT, { count: 'exact' })
+    .select(RETREAT_SELECT)
     .eq('status', 'published')
-    .eq('is_series_next', true)
-    .gte('end_date', today)
-    .gt('start_date', today)
+    .gte('start_date', publicFrom)
     .order('start_date', { ascending: true });
 
   if (filters?.durationKind === 'day') {
@@ -179,25 +234,18 @@ export async function getPublishedRetreats(filters?: {
 
   const limit = filters?.limit ?? 12;
   const offset = filters?.offset ?? 0;
-  query = query.range(offset, offset + limit - 1);
+  query = query.range(0, Math.max(199, offset + limit * SERIES_PUBLIC_OPEN_DATES));
 
-  const { data, error, count } = await query;
+  const { data, error } = await query;
 
   if (error) {
     console.error('[getPublishedRetreats]', { filters, message: error.message, code: (error as { code?: string }).code });
     return { retreats: [], total: 0 };
   }
 
-  const retreats = (data || []).map((r: Record<string, unknown>) => {
-    const { organizer_profiles, destinations, retreat_images, ...rest } = r;
-    return {
-      ...rest,
-      organizer: organizer_profiles ?? undefined,
-      destination: destinations ?? undefined,
-      categories: [] as Category[],
-      images: (retreat_images as Retreat['images']) ?? [],
-    } as unknown as Retreat;
-  });
+  const collapsed = collapseSeriesToOne((data || []).map((r: Record<string, unknown>) => mapRetreatRow(r)));
+  const total = collapsed.length;
+  const retreats = collapsed.slice(offset, offset + limit);
 
   if (retreats.length) {
     const retreatIds = retreats.map((r) => r.id);
@@ -238,9 +286,11 @@ export async function getPublishedRetreats(filters?: {
         }
       }
     }
+
+    await attachPublicSeriesDates(supabase, retreats, publicFrom);
   }
 
-  return { retreats, total: count ?? 0 };
+  return { retreats, total };
 }
 
 /**
@@ -558,14 +608,12 @@ export async function getDestinationSlugs(): Promise<string[]> {
  *  `/es/retiros-retiru/[slug]`. */
 export async function getDestinationsWithRetreats(): Promise<{ slug: string; name_es: string; name_en: string }[]> {
   const supabase = createStaticSupabase();
-  const today = new Date().toISOString().slice(0, 10);
+  const publicFrom = publicListingStartDate();
   const { data: retreats, error: rErr } = await supabase
     .from('retreats')
     .select('destination_id')
     .eq('status', 'published')
-    .eq('is_series_next', true)
-    .gte('end_date', today)
-    .gt('start_date', today);
+    .gte('start_date', publicFrom);
   if (rErr) {
     console.error('[getDestinationsWithRetreats] retreats', rErr.message);
     return [];
@@ -849,15 +897,13 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
 /** Categorías con al menos 1 retiro publicado vigente (para generateStaticParams) */
 export async function getCategoriesWithRetreats(): Promise<{ slug: string; name_es: string; name_en: string }[]> {
   const supabase = createStaticSupabase();
-  const today = new Date().toISOString().slice(0, 10);
+  const publicFrom = publicListingStartDate();
 
   const { data: links, error: lErr } = await supabase
     .from('retreat_categories')
-    .select('category_id, retreats!inner(status, end_date, start_date, is_series_next)')
+    .select('category_id, retreats!inner(status, start_date)')
     .eq('retreats.status', 'published')
-    .eq('retreats.is_series_next', true)
-    .gte('retreats.end_date', today)
-    .gt('retreats.start_date', today);
+    .gte('retreats.start_date', publicFrom);
   if (lErr) throw lErr;
 
   const catIds = [...new Set((links || []).map((l: any) => l.category_id).filter(Boolean))];
@@ -876,15 +922,13 @@ export async function getCategoriesWithRetreats(): Promise<{ slug: string; name_
 /** Pares {categorySlug, destinationSlug} con al menos 1 retiro publicado vigente */
 export async function getCategoryDestinationPairs(): Promise<{ category: string; destination: string }[]> {
   const supabase = createStaticSupabase();
-  const today = new Date().toISOString().slice(0, 10);
+  const publicFrom = publicListingStartDate();
 
   const { data: retreats, error: rErr } = await supabase
     .from('retreats')
     .select('id, destination_id')
     .eq('status', 'published')
-    .eq('is_series_next', true)
-    .gte('end_date', today)
-    .gt('start_date', today);
+    .gte('start_date', publicFrom);
   if (rErr) throw rErr;
   if (!retreats?.length) return [];
 
@@ -1196,23 +1240,14 @@ export async function getUpcomingRetreatsForDestinations(
     .from('retreats')
     .select(RETREAT_SELECT)
     .eq('status', 'published')
-    .eq('is_series_next', true)
     .in('destination_id', destIds)
-    .gte('end_date', new Date().toISOString().slice(0, 10))
-    .gt('start_date', new Date().toISOString().slice(0, 10))
+    .gte('start_date', publicListingStartDate())
     .order('start_date', { ascending: true })
-    .limit(limit);
+    .limit(limit * SERIES_PUBLIC_OPEN_DATES);
   if (error) return [];
-  return (data || []).map((r: Record<string, unknown>) => {
-    const { organizer_profiles, destinations, retreat_images, ...rest } = r;
-    return {
-      ...rest,
-      organizer: organizer_profiles ?? undefined,
-      destination: destinations ?? undefined,
-      categories: [],
-      images: (retreat_images as Retreat['images']) ?? [],
-    } as unknown as Retreat;
-  });
+  const retreats = collapseSeriesToOne((data || []).map((r: Record<string, unknown>) => mapRetreatRow(r))).slice(0, limit);
+  await attachPublicSeriesDates(supabase, retreats, publicListingStartDate());
+  return retreats;
 }
 
 /** Artículos de blog publicados que mencionan un término (provincia/ciudad) en
@@ -1279,7 +1314,7 @@ export async function getCitiesForCenterTypeProvince(
 /** Destinos con al menos 1 retiro de la categoría dada */
 export async function getDestinationsForCategory(categorySlug: string): Promise<{ slug: string; name_es: string; name_en: string; count: number }[]> {
   const supabase = await createServerSupabase();
-  const today = new Date().toISOString().slice(0, 10);
+  const publicFrom = publicListingStartDate();
 
   const { data: catRow } = await supabase
     .from('categories')
@@ -1299,9 +1334,7 @@ export async function getDestinationsForCategory(categorySlug: string): Promise<
     .from('retreats')
     .select('destination_id')
     .eq('status', 'published')
-    .eq('is_series_next', true)
-    .gte('end_date', today)
-    .gt('start_date', today)
+    .gte('start_date', publicFrom)
     .in('id', retreatIds);
   if (!retreats?.length) return [];
 

@@ -52,7 +52,10 @@ export default async function OrganizerPageEN({ params }: { params: Promise<{ sl
     .eq('is_series_next', true)
     .order('start_date');
 
-  const retreatList = retreats || [];
+  const retreatList = (retreats || []).filter((r: Record<string, unknown>) => {
+    const start = r.start_date as string | null;
+    return !start || start >= new Date().toISOString().slice(0, 10);
+  });
 
   const fmt = (d: string) =>
     new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });

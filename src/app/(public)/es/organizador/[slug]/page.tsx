@@ -52,7 +52,11 @@ export default async function OrganizadorPage({ params }: { params: Promise<{ sl
     .eq('is_series_next', true)
     .order('start_date');
 
-  const retreatList = retreats || [];
+  const retreatList = (retreats || []).filter((r: Record<string, unknown>) => {
+    const start = r.start_date as string | null;
+    // Serie diaria: la ocurrencia "next" puede ser hoy/ayer; no listarla si ya pasó.
+    return !start || start >= new Date().toISOString().slice(0, 10);
+  });
 
   const fmt = (d: string) =>
     new Date(d).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });

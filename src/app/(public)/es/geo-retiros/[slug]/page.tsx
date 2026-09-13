@@ -12,6 +12,7 @@ import EventosSearch from '@/components/home/EventosSearch';
 import { createStaticSupabase } from '@/lib/supabase/server';
 import { generatePageMetadata, jsonLdItemList, jsonLdBreadcrumb, jsonLdFAQ, jsonLdScript } from '@/lib/seo';
 import { resolveGeoLanding, type GeoNode } from '@/lib/geo-landing';
+import { publicListingStartDate } from '@/lib/series';
 
 // Esta landing depende de jerarquías y se renderiza al vuelo (resolveGeoLanding lee
 // cookies vía layout público). Si pones revalidate + generateStaticParams entrarías en
@@ -62,31 +63,36 @@ export default async function RetirosEnPage({ params }: { params: Promise<{ slug
 
   let retreats: Array<{ id: string; slug: string; title_es: string; total_price: number; start_date: string | null; end_date: string | null; duration_days: number | null; available_spots: number | null; cover_url: string | null; dest_name: string | null; }> = [];
   if (destHijoIds.length) {
-    const today = new Date().toISOString().slice(0, 10);
+    const publicFrom = publicListingStartDate();
     const { data: rs } = await supabase
       .from('retreats')
       .select(
-        'id, slug, title_es, total_price, start_date, end_date, duration_days, available_spots, destinations!destination_id(name_es), retreat_images(url, is_cover)',
+        'id, slug, title_es, total_price, start_date, end_date, duration_days, available_spots, series_id, destinations!destination_id(name_es), retreat_images(url, is_cover)',
       )
       .eq('status', 'published')
-      .eq('is_series_next', true)
-      .gte('end_date', today)
-      .gt('start_date', today)
+      .gte('start_date', publicFrom)
       .in('destination_id', destHijoIds)
       .order('start_date', { ascending: true })
       .limit(60);
-    retreats = (rs || []).map((r: any) => ({
-      id: r.id,
-      slug: r.slug,
-      title_es: r.title_es,
-      total_price: r.total_price,
-      start_date: r.start_date,
-      end_date: r.end_date,
-      duration_days: r.duration_days,
-      available_spots: r.available_spots,
-      cover_url: r.retreat_images?.find((i: any) => i.is_cover)?.url || r.retreat_images?.[0]?.url || null,
-      dest_name: r.destinations?.name_es || null,
-    }));
+    const seenSeries = new Set<string>();
+    retreats = (rs || []).flatMap((r: any) => {
+      if (r.series_id) {
+        if (seenSeries.has(r.series_id)) return [];
+        seenSeries.add(r.series_id);
+      }
+      return [{
+        id: r.id,
+        slug: r.slug,
+        title_es: r.title_es,
+        total_price: r.total_price,
+        start_date: r.start_date,
+        end_date: r.end_date,
+        duration_days: r.duration_days,
+        available_spots: r.available_spots,
+        cover_url: r.retreat_images?.find((i: any) => i.is_cover)?.url || r.retreat_images?.[0]?.url || null,
+        dest_name: r.destinations?.name_es || null,
+      }];
+    });
 
     const retreatIds = retreats.map((r) => r.id);
     if (retreatIds.length) {

@@ -4,7 +4,7 @@
 // (propietario): cerrar una fecha sin reservas (vacaciones) o detener la serie.
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
-import { ensureSeriesOccurrences, reassignSeriesNext, addDaysIso, SERIES_BOOKING_HORIZON_DAYS } from '@/lib/series';
+import { ensureSeriesOccurrences, reassignSeriesNext, addDaysIso, SERIES_BOOKING_HORIZON_DAYS, publicListingStartDate, publicDailyEndDate } from '@/lib/series';
 import { ACTIVE_ENROLLMENT_STATUSES, HOLD_ENROLLMENT_STATUSES, enrolledFromConfirmedAndHolds } from '@/lib/utils';
 
 export async function GET(
@@ -23,13 +23,16 @@ export async function GET(
     if (!series) return NextResponse.json({ error: 'Serie no encontrada' }, { status: 404 });
 
     const today = new Date().toISOString().slice(0, 10);
+    const isDaily = series.interval_days === 1;
+    const from = isDaily ? publicListingStartDate(today) : today;
+    const to = isDaily ? publicDailyEndDate(today) : addDaysIso(today, SERIES_BOOKING_HORIZON_DAYS);
     const { data: occurrences } = await admin
       .from('retreats')
       .select('id, slug, start_date, max_attendees, confirmed_bookings, total_price, currency')
       .eq('series_id', seriesId)
       .eq('status', 'published')
-      .gte('start_date', today)
-      .lte('start_date', addDaysIso(today, SERIES_BOOKING_HORIZON_DAYS))
+      .gte('start_date', from)
+      .lte('start_date', to)
       .order('start_date', { ascending: true });
 
     const occs = occurrences || [];
