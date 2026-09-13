@@ -50,13 +50,13 @@ export function chunksFromPlataforma(): IngestChunk[] {
       'plataforma',
       'es',
       'Contacto y Roy',
-      `Email: ${CONTACT_EMAIL}. Contacto: ${SITE_URL}/es/contacto. Ayuda: ${SITE_URL}/es/ayuda. El chat flotante de la web es Roy (guía con IA sobre directorio, blog y retiros). El soporte humano se llama Andrea y pide iniciar sesión. WhatsApp no es el chat de esta web.`
+      `Email: ${CONTACT_EMAIL}. Contacto: ${SITE_URL}/es/contacto. Ayuda: ${SITE_URL}/es/ayuda. El chat flotante de la web es Roy (guía con IA sobre directorio, blog y retiros). El soporte humano se llama Andrea y pide iniciar sesión. Si el visitante no tiene cuenta, usa el formulario de Contacto; no lo mandes a Andrea. WhatsApp no es el chat de esta web. Roy no tramita reservas: enlaza la ficha o ${SITE_URL}/es/retiros-retiru.`
     ),
     makeChunk(
       'plataforma',
       'en',
       'Contact and Roy',
-      `Email: ${CONTACT_EMAIL}. Contact: ${SITE_URL}/en/contact. Help: ${SITE_URL}/en/help. The floating chat is Roy (AI guide for the directory, blog and retreats). Human support is Andrea and requires login. WhatsApp is not this site's chat.`
+      `Email: ${CONTACT_EMAIL}. Contact: ${SITE_URL}/en/contact. Help: ${SITE_URL}/en/help. The floating chat is Roy (AI guide for the directory, blog and retreats). Human support is Andrea and requires login. If they have no account, use the Contact form; do not send them to Andrea. WhatsApp is not this site's chat. Roy cannot complete a booking: link the listing or ${SITE_URL}/en/retreats-retiru.`
     ),
   ]
 }
@@ -90,6 +90,18 @@ export function chunksFromFaqs(): IngestChunk[] {
     makeChunk(
       'faqs',
       'es',
+      'Publicar un retiro o reclamar un centro',
+      `P: Quiero publicar un retiro o reclamar mi centro. ¿Cómo empiezo?\nR: Dos caminos. Publicar retiro o clase: ${SITE_URL}/es/para-organizadores (sin suscripción; comisión 0/10/20). Reclamar un centro ya listado: ${SITE_URL}/es/buscar → ficha → «Reclamar este centro». Si no aparece, con cuenta: Mis centros. Si no tienes cuenta, ${SITE_URL}/es/contacto; Andrea exige iniciar sesión.`
+    ),
+    makeChunk(
+      'faqs',
+      'en',
+      'Publish a retreat or claim a center',
+      `Q: I want to publish a retreat or claim my center. How do I start?\nA: Two paths. Publish a retreat or class: ${SITE_URL}/en/for-organizers (no subscription; 0/10/20 commission). Claim a listed center: ${SITE_URL}/en/search → listing → Claim this center. If it is missing, My centers (account required). Without an account: ${SITE_URL}/en/contact; Andrea requires login.`
+    ),
+    makeChunk(
+      'faqs',
+      'es',
       '¿Cuánto cuesta publicar retiros?',
       `P: ¿Cuánto cuesta publicar?\nR: Sin suscripción. Primer retiro 0 % de comisión; segundo 10 %; a partir del tercero 20 % del PVP. El asistente paga el PVP sin recargo. Empieza en ${SITE_URL}/es/para-organizadores`
     ),
@@ -103,13 +115,13 @@ export function chunksFromFaqs(): IngestChunk[] {
       'faqs',
       'es',
       '¿Cómo reclamo mi centro?',
-      `P: ¿Cómo reclamo o propongo un centro?\nR: Si ya está, ábrelo y «Reclamar este centro». Si no, Mis centros → Proponer nuevo centro (Google Maps). El equipo revisa. ${SITE_URL}/es/ayuda`
+      `P: ¿Cómo reclamo o propongo un centro?\nR: Localiza la ficha en ${SITE_URL}/es/buscar, ábrela y «Reclamar este centro». Si no aparece, con cuenta: Mis centros → Proponer nuevo centro. Sin cuenta: ${SITE_URL}/es/contacto. No uses ${SITE_URL}/es/para-organizadores para reclamar (eso es publicar retiros). ${SITE_URL}/es/ayuda`
     ),
     makeChunk(
       'faqs',
       'en',
       'How do I claim my center?',
-      `Q: How do I claim or suggest a center?\nA: If it is listed, open it and Claim this center. If not, My centers → Suggest a new center (Google Maps). The team reviews it. ${SITE_URL}/en/help`
+      `Q: How do I claim or suggest a center?\nA: Find the listing at ${SITE_URL}/en/search, open it and Claim this center. If it is missing, with an account: My centers → Suggest a new center. Without an account: ${SITE_URL}/en/contact. Do not use ${SITE_URL}/en/for-organizers to claim (that page is for publishing retreats). ${SITE_URL}/en/help`
     ),
     makeChunk(
       'faqs',

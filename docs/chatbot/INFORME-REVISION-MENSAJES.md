@@ -1,182 +1,73 @@
 # Informe de revisión automática de mensajes de Roy
 
-Generado: 2026-08-29T12:22:22.874Z
+Generado: 2026-09-11T17:26:11.083Z
 Modo: **aplicado** (clasificaciones guardadas)
 
 ## Resumen
 
-- Correctas: 4
-- Mejorables: 0
-- Incorrectas: 10
-- Total revisadas: 14
+- Correctas: 8
+- Mejorables: 5
+- Incorrectas: 0
+- Total revisadas: 13
 
 ## Respuestas a mejorar o incorrectas
 
-### INCORRECTA — 6b1844fc…
+### MEJORABLE — 3bb5b74a…
 
-**Pregunta:** me recomiendas algun centro deyoga en el barrio de salamance de madrid?
+**Pregunta:** Hay alguna actividad en Níjar para el 16 de septiembre?
 
-**Respuesta:** Ahora mismo no tengo una ficha concreta de un centro en el barrio de Salamanca que pueda recomendarte sin inventar datos.
+**Respuesta:** No tengo una actividad publicada en Níjar para el 16 de septiembre en el catálogo actual. Puedes revisar los [eventos disponibles](https://www.retiru.com/es/retiros-retiru) o buscar propuestas por zona en [Retiru](https://www.retiru.com/es/buscar).
 
-Puedes buscar por “Salamanca, Madrid” y filtrar lo que te interese —por ejemplo hatha, vinyasa, yoga suave o meditación— en el [buscador de Retiru](https://www.retiru.com/es/buscar). También puedes explorar el [directorio de centros de yoga](https://www.retiru.com/es/centros/yoga).
+**Notas:** Enlaza correctamente los eventos y el buscador, pero afirma que no hay ninguna actividad en Níjar para esa fecha sin que los DATOS REALES detallen los eventos ni confirmen esa ausencia.
+**Sugerencia:** Indicar que no hay una actividad concreta visible en los datos actuales para confirmar y dirigir a los eventos disponibles o al buscador, sin asegurar que no exista.
 
-**Notas:** Niega que haya una ficha concreta en Salamanca cuando los datos vivos incluyen The Garden Madrid | Yoga Barrio Salamanca. Debía citar al menos esa ficha con su enlace.
-**Sugerencia:** Recomendar **The Garden Madrid | Yoga Barrio Salamanca**
-📍 Madrid, Madrid
-Yoga
-⭐ 4.8 (137)
-🔗 https://www.retiru.com/es/centro/the-garden-madrid-yoga-barrio-salamanca
+### MEJORABLE — df85c945…
 
-### INCORRECTA — c6437a4e…
+**Pregunta:** Quiero publicar un retiro o reclamar mi centro. ¿Cómo empiezo?
 
-**Pregunta:** y tu me èudes recomnda algunoe nurcia?
+**Respuesta:** Para publicar un retiro o gestionar un centro, empieza aquí: [para organizadores](https://www.retiru.com/es/para-organizadores).
 
-**Respuesta:** Ahora mismo no tengo una ficha concreta en Murcia para recomendarte con seguridad.
+- **Publicar un retiro:** no hay suscripción. El primero tiene 0 % de comisión, el segundo 10 % y, desde el tercero, 20 % del PVP publicado.
+- **Reclamar un centro:** busca y abre su ficha; allí verás la opción «Reclamar este centro». Si no aparece, puedes proponerlo desde «Mis centros» para revisión.
 
-Puedes mirar los centros activos y probar con “Murcia” o municipios cercanos en el [buscador de Retiru](https://www.retiru.com/es/buscar), o explorar el [directorio de centros de yoga](https://www.retiru.com/es/centros/yoga), [meditación](https://www.retiru.com/es/centros/meditacion) y [ayurveda](https://www.retiru.com/es/centros/ayurveda).
+Tienes más detalle en [Ayuda](https://www.retiru.com/es/ayuda).
 
-**Notas:** Niega que haya fichas concretas en Murcia cuando los datos vivos listan varios centros de yoga allí, como Söma Salud y Bienestar y Ashima Espacio de Bienestar. Debía recomendar al menos una ficha con su enlace.
-**Sugerencia:** Por ejemplo: «Sí, en Murcia puedes mirar estas opciones: **Söma Salud y Bienestar**\n📍 Murcia, Murcia\nYoga\n⭐ 4.9 (256)\n🔗 https://www.retiru.com/es/centro/soma-salud-y-bienestar\n\n**Ashima Espacio de Bienestar**\n📍 Murcia, Murcia\nYoga\n⭐ 5.0 (92)\n🔗 https://www.retiru.com/es/centro/ashima-espacio-de-bienestar».
-**RAG:** ignored
+**Notas:** La información sobre comisiones y el proceso para reclamar o proponer un centro es correcta. Pero el enlace de «para organizadores» sirve para publicar retiros; para reclamar un centro convendría añadir el buscador o priorizar Ayuda como punto de inicio.
+**Sugerencia:** Separar los dos caminos: enlazar «Para organizadores» para publicar retiros y https://www.retiru.com/es/buscar para localizar la ficha del centro y reclamarlo; mantener Ayuda para el proceso alternativo de proponer un centro.
 
-### INCORRECTA — 73010b44…
+### MEJORABLE — 2bd44904…
 
-**Pregunta:** me recomienas algun centro de yoga en cartagena?
+**Pregunta:** Un plan de yoga para el dia 9 de septiembre
 
-**Respuesta:** No tengo una ficha concreta de Cartagena que pueda recomendarte ahora mismo sin inventar datos.
+**Respuesta:** Para el 9 de septiembre puedes ver los eventos y retiros de yoga publicados en Retiru aquí: [eventos de yoga](https://www.retiru.com/es/retiros-retiru).
 
-Prueba a buscar “Cartagena” en el [buscador de Retiru](https://www.retiru.com/es/buscar) o explora los [centros de yoga](https://www.retiru.com/es/centros/yoga).
+Hay 7 eventos publicados desde hoy; revisa la ficha de cada uno para confirmar horario, ubicación y condiciones de reserva.
 
-**Notas:** Niega que haya fichas en Cartagena cuando los datos vivos listan varias coincidencias, como + alma, Kali Yoga Shala y Omkara Yoga Cartagena. Debía recomendar al menos una ficha real con su enlace.
-**Sugerencia:** Mostrar las fichas reales de Cartagena, por ejemplo: [+ alma](https://www.retiru.com/es/centro/alma), Cartagena, Murcia; Yoga; ⭐ 5.0 (138).
-**RAG:** ignored
+**Notas:** Enlaza correctamente el hub de eventos y no inventa retiros, pero presenta los 7 eventos publicados desde hoy como opción para el 9 de septiembre sin confirmar que coincidan con esa fecha. Además, el 9 de septiembre ya ha pasado respecto a la fecha actual.
+**Sugerencia:** Indicar que el 9 de septiembre ya ha pasado y preguntar por el año o por una fecha próxima; mientras tanto, enlazar el listado de eventos.
 
-### INCORRECTA — 117b5951…
+### MEJORABLE — c960e5c5…
 
-**Pregunta:** y en murcia?
+**Pregunta:** es curioso, porque  no tengo cuenta, no sé quién hizo esta publicación
 
-**Respuesta:** **Centros de yoga en Murcia**
+**Respuesta:** Entiendo. Si no tienes cuenta y la ficha se publicó sin que la crearas tú, escríbenos por [Contacto](https://www.retiru.com/es/contacto) indicando el nombre del espacio, **Oryzae Nutrición**, y los cambios que quieres:
 
-- **[Ya! Yoga & Lifestyle](https://www.retiru.com/es/centro/ya-yoga-lifestyle)**  
-  📍 Murcia, Murcia  
-  Yoga  
-  ⭐ 5.0 (149)
+- Quitar la referencia a Ayurveda.
+- Cambiar “naturopatía” por “salud integrativa”.
+- Solicitar la gestión o reclamación de la ficha.
 
-- **[Salutalia - Centro Holístico y Welness](https://www.retiru.com/es/centro/salutalia-centro-holistico-y-welness)**  
-  📍 Murcia, Murcia  
-  Yoga  
-  ⭐ 5.0 (142)
+También puedes usar la opción de **reclamar centro** dentro de la propia ficha si la ves en el directorio. Para cuestiones de titularidad o cambi…
 
-Si buscas yoga en el agua o por la costa de Murcia, también puedes mirar **[Wimbi Adventures - SUP Yoga, Paddle Surf & Snorkel en Cabo de Palos](https://www.retiru.com/es/cen…
+**Notas:** Orienta bien a Contacto y a la opción de reclamar la ficha, sin inventar datos. Pero, dado que la visitante indica que no tiene cuenta, debería aclarar que Andrea es el soporte humano y requiere iniciar sesión, en lugar de sugerir que podrá atenderla directamente.
+**Sugerencia:** Añadir: “Si quieres hablar con Andrea, necesitarás iniciar sesión; si no tienes cuenta, usa el formulario de Contacto para explicar que no creaste la ficha y pedir la corrección o reclamación.”
 
-**Notas:** La respuesta inventa tres fichas y URLs que no aparecen en los DATOS REALES. Para Murcia debía citar las fichas vivas disponibles, como Söma Salud y Bienestar o Ashima Espacio de Bienestar.
-**Sugerencia:** Sustituir las fichas inventadas por las fichas de Murcia del bloque vivo, conservando exactamente nombre, ubicación, categoría, valoración y enlace.
-**RAG:** ignored
+### MEJORABLE — e0ea2805…
 
-### INCORRECTA — cd01ef92…
+**Pregunta:** Buenos días ☀️ quería reservar dos plazas para meditación el 15.09 en el hotel los patios gracias
 
-**Pregunta:** recomiendame algun centrode yova en murcia?
+**Respuesta:** Buenos días ☀️ No veo publicada esa actividad de meditación en Hotel Los Patios para el 15/09, así que no puedo tramitar la reserva desde aquí.
 
-**Respuesta:** **Centros de yoga en Murcia**
+Puedes comprobar si aparece en [eventos de Retiru](https://www.retiru.com/es/retiros-retiru) o buscar por nombre y ubicación en el [buscador](https://www.retiru.com/es/buscar). Si ya hiciste una reserva o tienes un problema de pago, consulta [Ayuda](https://www.retiru.com/es/ayuda); con sesión iniciada también puedes hablar con Andrea, soporte humano.
 
-**Ya! Yoga & Lifestyle**  
-📍 Murcia, Murcia  
-Yoga  
-⭐ 5.0 (149)  
-🔗 https://www.retiru.com/es/centro/ya-yoga-lifestyle
-
-**Salutalia - Centro Holístico y Welness**  
-📍 Murcia, Murcia  
-Yoga  
-⭐ 5.0 (142)  
-🔗 https://www.retiru.com/es/centro/salutalia-centro-holistico-y-welness
-
-Si me dices si prefieres una práctica más dinámica o suave, te ayudo a decidir entre ambos.
-
-**Notas:** Recomienda dos fichas y URLs que no aparecen en los DATOS REALES de esta pasada. Además, omite las fichas reales disponibles para Murcia, pese a que el catálogo vivo sí las lista.
-**Sugerencia:** Sustituirlas por fichas reales del bloque vivo, por ejemplo Söma Salud y Bienestar, Ashima Espacio de Bienestar o Irene Algar Yoga, manteniendo nombre, ubicación, valoración y enlace exactos.
-
-### INCORRECTA — 9944f302…
-
-**Pregunta:** y en cartagena?
-
-**Respuesta:** No tengo una ficha de Cartagena en los datos disponibles ahora mismo, así que prefiero no recomendarte un centro sin verificarlo.
-
-Puedes buscar “Cartagena” en el [buscador de Retiru](https://www.retiru.com/es/buscar) o ver el directorio de [centros de yoga](https://www.retiru.com/es/centros/yoga).
-
-**Notas:** Niega que haya fichas de Cartagena cuando los datos vivos sí muestran varios centros, incluidos + alma, Kali Yoga Shala y Omkara Yoga Cartagena. Debía citar al menos una ficha con su enlace.
-**Sugerencia:** Ofrecer las fichas reales de Cartagena, por ejemplo: **+ alma**
-📍 Cartagena, Murcia
-Yoga
-⭐ 5.0 (138)
-🔗 https://www.retiru.com/es/centro/alma
-
-Y, si quiere comparar, añadir Kali Yoga Shala y Omkara Yoga Cartagena con sus enlaces vivos.
-
-### INCORRECTA — 1088c79c…
-
-**Pregunta:** y cerca?
-
-**Respuesta:** Cerca de Cartagena, una opción que sí aparece en el directorio es:
-
-**Wimbi Adventures - SUP Yoga, Paddle Surf & Snorkel en Cabo de Palos**  
-📍 Cabo de Palos, Murcia  
-Yoga en el agua y actividades al aire libre.  
-🔗 https://www.retiru.com/es/centro/wimbi-adventures-sup-yoga-paddle-surf-sn
-
-Si buscas un estudio con clases regulares en sala, lo mejor es ampliar la búsqueda a Murcia capital o consultar el [buscador de Retiru](https://www.retiru.com/es/buscar).
-
-**Notas:** Recomienda una ficha concreta y una URL de Wimbi Adventures que no aparecen en los DATOS REALES de esta pasada. El contexto previo no sustituye al catálogo vivo para confirmar centros cercanos.
-**Sugerencia:** Indicar que no hay una ficha concreta verificada en los datos disponibles y ofrecer el buscador de Retiru para Cartagena y alrededores.
-
-### INCORRECTA — 771d509b…
-
-**Pregunta:** y entros de otra calse cerca de cartagena?
-
-**Respuesta:** No tengo más fichas verificadas cerca de Cartagena en este momento. Para no recomendarte centros sin confirmar, prueba ampliando la zona en el [buscador de Retiru](https://www.retiru.com/es/buscar).
-
-En Murcia capital sí aparece esta ficha de ayurveda:
-
-**Fran Barahona Ayurveda Spa**  
-📍 Murcia, Murcia  
-Ayurveda  
-⭐ 5.0 (992)  
-🔗 https://www.retiru.com/es/centro/fran-barahona-ayurveda-spa
-
-**Notas:** Niega que haya más fichas cerca de Cartagena cuando los datos vivos incluyen varios centros de yoga y uno de meditación en Cartagena. Además inventa la ficha «Fran Barahona Ayurveda Spa», que no aparece en los datos reales disponibles.
-**Sugerencia:** Ofrecer las fichas reales de Cartagena, por ejemplo Meditación y mindfulness Serfelicidad.com para otra clase de práctica, y también + alma, Kali Yoga Shala, Omkara Yoga Cartagena, Lola Mayol Yoga Studio o Yoga IYENGAR Cartagena VM, con sus enlaces correspondientes.
-
-### INCORRECTA — a3b9f8f9…
-
-**Pregunta:** pero cauntos centros teiens?
-
-**Respuesta:** Hay **500 centros activos** en el directorio de Retiru, entre yoga, meditación y ayurveda.
-
-Puedes explorar por categoría o zona en el [buscador](https://www.retiru.com/es/buscar).
-
-**Notas:** La respuesta contradice los datos vivos: el directorio tiene 1654 centros activos, no 500. El enlace al buscador es correcto.
-**Sugerencia:** Hay 1654 centros activos en el directorio de Retiru, entre yoga, meditación y ayurveda. Puedes explorar por categoría o zona en el buscador.
-
-### INCORRECTA — 6b55ef27…
-
-**Pregunta:** vaya mierda
-
-**Respuesta:** Tienes razón: no te he sido muy útil para encontrar opciones cerca de Cartagena. Perdón.
-
-Sé que el directorio tiene 500 centros, pero aquí solo puedo recomendar fichas concretas cuando están verificadas en los datos disponibles. Para ampliar por cercanía, el paso más directo es el [buscador](https://www.retiru.com/es/buscar).
-
-**Notas:** Contradice los datos reales al afirmar que el directorio tiene 500 centros: el catálogo vivo indica 1654 centros activos. La disculpa y el enlace al buscador son adecuados, pero la cifra incorrecta no debe publicarse.
-**Sugerencia:** Eliminar la cifra o corregirla: «El directorio reúne 1654 centros activos. Para ampliar por cercanía, puedes usar el buscador».
-
-## Acciones 29 ago (tras la revisión)
-
-Todas las incorrectas eran **ignored** (dato vivo presente; Roy no lo usó o recicló el hilo). No había `missing` ni `not_retrieved`; `INCIDENCIAS-PENDIENTES.csv` sigue vacío; no hace falta `ingest-chatbot-kb`.
-
-| Qué fallaba | Arreglo |
-|---|---|
-| «y cerca?» / «y en Murcia?» perdían la ciudad del turno anterior | `directory.ts`: el sitio se toma del último turno del hilo que nombre uno |
-| «otra clase» seguía filtrando yoga | Sin filtro de tipo si pide otra disciplina |
-| `yova` no era yoga | Fuzzy Levenshtein en `detectTypeOnce` |
-| Decía «no hay ficha» o repetía Ya! Yoga / Wimbi / 500 | Prompt + cierre: solo fichas y cifra de ESTE turno; `NÚMERO DE CENTROS` explícito |
-| El auditor buscaba solo el último mensaje | Misma `ragQuery` que `prepareChatContext` |
-| «pero» ≈ Pego (4 letras) y «cauntos» no era «cuántos» | Fuzzy de sitio solo con 6+ letras; recuento no lista fichas |
+**Notas:** La respuesta no inventa actividades ni enlaces y deriva correctamente a eventos y buscador. Sin embargo, repite los mismos siguientes pasos que ya se ofrecieron en los dos turnos previos y afirma que no está publicada una actividad concreta sin que los DATOS REALES aporten una consulta viva de eventos para Hotel Los Patios y esa fecha.
+**Sugerencia:** Indicar de forma breve que desde el chat no se pueden gestionar reservas y remitir al buscador o listado de eventos para localizar la actividad por hotel, fecha y zona, sin asegurar que no existe.

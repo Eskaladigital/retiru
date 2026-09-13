@@ -11,7 +11,7 @@ const STATIC_PLACES = [
   'gijon', 'cantabria', 'santander', 'navarra', 'pamplona', 'zaragoza', 'huesca', 'teruel', 'badajoz',
   'caceres', 'palma', 'mallorca', 'ibiza', 'tenerife', 'lanzarote', 'fuerteventura', 'cartagena',
   'lorca', 'elche', 'marbella', 'jerez', 'vitoria', 'logrono', 'portugal', 'lisboa', 'marruecos',
-  'bullas', 'mazarron', 'canarias',
+  'bullas', 'mazarron', 'canarias', 'nijar', 'rodalquilar',
 ]
 
 const NEIGHBORHOODS = [
@@ -42,6 +42,86 @@ const GAZETTEER_TTL_MS = 10 * 60 * 1000
 
 function normalize(s: string): string {
   return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+}
+
+const MONTHS_ES: Record<string, number> = {
+  enero: 1,
+  febrero: 2,
+  marzo: 3,
+  abril: 4,
+  mayo: 5,
+  junio: 6,
+  julio: 7,
+  agosto: 8,
+  septiembre: 9,
+  setiembre: 9,
+  octubre: 10,
+  noviembre: 11,
+  diciembre: 12,
+}
+
+function pad2(n: number): string {
+  return String(n).padStart(2, '0')
+}
+
+function isoDate(year: number, month: number, day: number): string | null {
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null
+  const dt = new Date(Date.UTC(year, month - 1, day))
+  if (dt.getUTCFullYear() !== year || dt.getUTCMonth() !== month - 1 || dt.getUTCDate() !== day) {
+    return null
+  }
+  return `${year}-${pad2(month)}-${pad2(day)}`
+}
+
+function parseAskedDate(q: string, todayIso: string): string | null {
+  const n = normalize(q)
+  const yearNow = Number(todayIso.slice(0, 4))
+  const numeric = n.match(/\b(\d{1,2})[./-](\d{1,2})(?:[./-](\d{2,4}))?\b/)
+  if (numeric) {
+    const day = Number(numeric[1])
+    const month = Number(numeric[2])
+    const rawY = numeric[3]
+    const year = rawY ? (rawY.length === 2 ? 2000 + Number(rawY) : Number(rawY)) : yearNow
+    return isoDate(year, month, day)
+  }
+  const named = n.match(
+    /\b(\d{1,2})\s+de\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre)(?:\s+(?:de\s+)?(\d{4}))?/
+  )
+  if (named) {
+    const day = Number(named[1])
+    const month = MONTHS_ES[named[2]] || 0
+    const year = named[3] ? Number(named[3]) : yearNow
+    return isoDate(year, month, day)
+  }
+  return null
+}
+
+function detectVenue(q: string): string | null {
+  const m = q.match(
+    /\b(?:hotel|alojamiento|hostal|spa|casa rural)\s+([A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9][A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9'’\s-]{1,40})/i
+  )
+  if (!m) return null
+  let name = m[1].trim()
+  name = name.replace(/\s+(?:para|el|la|los|las|en|del|de la|de)\s+\d[\s\S]*$/i, '').trim()
+  name = name.replace(/\s+(?:gracias|por favor|thanks)[\s\S]*$/i, '').trim()
+  return name.length >= 3 ? name : null
+}
+
+function eventOverlapsDate(
+  start: string | null | undefined,
+  end: string | null | undefined,
+  date: string
+): boolean {
+  if (!start) return false
+  const until = end && end >= start ? end : start
+  return start <= date && until >= date
+}
+
+function wantsEventSearch(q: string, askedDate: string | null, venue: string | null): boolean {
+  if (askedDate || venue) return true
+  return /\b(retiro|retiros|clase|clases|evento|eventos|reserv|retreat|class|book|actividad|actividades|plan|plaza|plazas|taller|talleres)\b/.test(
+    normalize(q)
+  )
 }
 
 function sanitizeIlike(s: string): string {
@@ -198,7 +278,7 @@ function wantsDirectory(
   if (n.length < 6) return false
   if (/^(hola|hey|hi|hello|ok|vale|gracias|thanks)[\s!.?]*$/.test(n)) return false
   if (place || neighborhood || gpsNear) return true
-  return /\b(centro|centros|estudio|ashram|retiro|retiros|clase|clases|taller|yoga|medit|ayurveda|center|retreat|class)\b/.test(
+  return /\b(centro|centros|estudio|ashram|retiro|retiros|clase|clases|taller|yoga|medit|ayurveda|center|retreat|class|actividad|actividades|plan)\b/.test(
     n
   )
 }
@@ -348,6 +428,9 @@ export async function buildDirectoryBlock(
   userCoords?: UserCoords | null
 ): Promise<string> {
   const today = new Date().toISOString().slice(0, 10)
+  const askedDate = parseAskedDate(query, today)
+  const venue = detectVenue(query)
+  const dateIsPast = Boolean(askedDate && askedDate < today)
   const gazetteer = await loadGazetteer(sb)
   const last = lastUserTurn(query)
   const neighborhoodNames = NEIGHBORHOODS.map(normalize)
@@ -379,9 +462,7 @@ export async function buildDirectoryBlock(
   }
 
   const cityIntent = /\b(ciudad|city)\b/.test(normalize(query)) && !barrioCue
-  const wantsEvents = /\b(retiro|retiros|clase|clases|evento|eventos|reserv|retreat|class|book)\b/.test(
-    normalize(query)
-  )
+  const wantsEvents = wantsEventSearch(query, askedDate, venue)
   const proximity = hasProximityIntent(query)
   const gpsOk = isValidGps(userCoords)
   // Molde casi cinco: si nombra ciudad, el GPS no manda.
@@ -399,6 +480,7 @@ export async function buildDirectoryBlock(
 
   const lines: string[] = []
   if (locale === 'en') {
+    lines.push(`TODAY: ${today}`)
     lines.push(
       `CATALOG SNAPSHOT: ${centersN ?? 0} active centers; ${retreatsN ?? 0} published events from today.`
     )
@@ -410,6 +492,7 @@ export async function buildDirectoryBlock(
     )
     lines.push(`Search: ${SITE_URL}/en/search · Events: ${SITE_URL}/en/retreats-retiru · Blog: ${SITE_URL}/en/blog`)
   } else {
+    lines.push(`HOY: ${today}`)
     lines.push(
       `CATÁLOGO VIVO: ${centersN ?? 0} centros activos; ${retreatsN ?? 0} eventos publicados desde hoy.`
     )
@@ -420,6 +503,22 @@ export async function buildDirectoryBlock(
       `Hubs del directorio: ${SITE_URL}/es/centros/yoga · ${SITE_URL}/es/centros/meditacion · ${SITE_URL}/es/centros/ayurveda`
     )
     lines.push(`Buscar: ${SITE_URL}/es/buscar · Eventos: ${SITE_URL}/es/retiros-retiru · Blog: ${SITE_URL}/es/blog`)
+  }
+
+  if (askedDate) {
+    if (dateIsPast) {
+      lines.push(
+        locale === 'en'
+          ? `ASKED DATE: ${askedDate} — already past vs TODAY. Say so. Ask for the year or a coming date. Do NOT present «events from today» as if they were that day.`
+          : `FECHA PEDIDA: ${askedDate} — YA PASÓ respecto a HOY. Dilo. Pregunta el año o una fecha próxima. NO presentes los «eventos publicados desde hoy» como si fueran de ese día.`
+      )
+    } else {
+      lines.push(
+        locale === 'en'
+          ? `ASKED DATE: ${askedDate}. Only list events whose dates overlap that day. Do not use the «events from today» count as the answer.`
+          : `FECHA PEDIDA: ${askedDate}. Lista solo eventos cuya fecha cubra ese día. No uses el recuento «eventos publicados desde hoy» como respuesta.`
+      )
+    }
   }
 
   if (gpsOk) {
@@ -454,7 +553,10 @@ export async function buildDirectoryBlock(
 
   if (
     wantsCountOnly(last) ||
-    !wantsDirectory(query, place, neighborhood, Boolean(gps) && (proximity || Boolean(type)))
+    !(
+      wantsDirectory(query, place, neighborhood, Boolean(gps) && (proximity || Boolean(type))) ||
+      wantsEvents
+    )
   ) {
     return lines.join('\n')
   }
@@ -497,18 +599,23 @@ export async function buildDirectoryBlock(
       'title_es, title_en, slug, start_date, end_date, total_price, currency, address, duration_days, duration_hours, summary_es, summary_en'
     )
     .eq('status', 'published')
-    .gte('start_date', today)
     .order('start_date', { ascending: true })
     .limit(24)
 
-  if (place) {
-    retreatsQuery = retreatsQuery.or(
-      ilikeOr(['title_es', 'title_en', 'address', 'summary_es', 'summary_en'], place)
-    )
-  } else if (wantsEvents) {
-    retreatsQuery = retreatsQuery.limit(6)
-  } else {
+  if (dateIsPast) {
     retreatsQuery = retreatsQuery.limit(0)
+  } else {
+    retreatsQuery = retreatsQuery.gte('start_date', today)
+    const eventNeedle = venue || place
+    if (eventNeedle) {
+      retreatsQuery = retreatsQuery.or(
+        ilikeOr(['title_es', 'title_en', 'address', 'summary_es', 'summary_en'], eventNeedle)
+      )
+    } else if (wantsEvents) {
+      retreatsQuery = retreatsQuery.limit(6)
+    } else {
+      retreatsQuery = retreatsQuery.limit(0)
+    }
   }
 
   const [{ data: centerRows, error: centersErr }, { data: retreatRows }] = await Promise.all([
@@ -562,11 +669,47 @@ export async function buildDirectoryBlock(
 
   const retreats = (retreatRows || [])
     .filter((r) => {
+      if (askedDate && !dateIsPast && !eventOverlapsDate(r.start_date, r.end_date, askedDate)) return false
+      if (venue) {
+        const h = normalize(
+          [r.title_es, r.title_en, r.address, r.summary_es, r.summary_en].filter(Boolean).join(' ')
+        )
+        return h.includes(normalize(venue))
+      }
       if (!place) return wantsEvents
       const h = normalize([r.title_es, r.title_en, r.address, r.summary_es, r.summary_en].filter(Boolean).join(' '))
       return h.includes(place)
     })
     .slice(0, 6)
+
+  if (wantsEvents || askedDate || venue) {
+    const scope = [
+      askedDate ? (locale === 'en' ? `date=${askedDate}` : `fecha=${askedDate}`) : '',
+      venue ? (locale === 'en' ? `venue=${venue}` : `alojamiento=${venue}`) : '',
+      place && !venue ? (locale === 'en' ? `place=${place}` : `sitio=${place}`) : '',
+    ]
+      .filter(Boolean)
+      .join(' · ')
+    if (dateIsPast) {
+      lines.push(
+        locale === 'en'
+          ? 'EVENT LOOKUP THIS TURN: the asked date is past. Do not treat upcoming events as matches for that day. Roy cannot complete a booking.'
+          : 'CONSULTA DE EVENTOS ESTE TURNO: la fecha pedida ya pasó. No trates los eventos próximos como coincidencias de ese día. Roy no tramita la reserva.'
+      )
+    } else if (retreats.length === 0) {
+      lines.push(
+        locale === 'en'
+          ? `EVENT LOOKUP THIS TURN: 0 published matches${scope ? ` (${scope})` : ''}. Do not swear they do not exist outside Retiru. Say they are not listed now. Link Events and Search. Roy cannot complete a booking.`
+          : `CONSULTA DE EVENTOS ESTE TURNO: 0 coincidencias publicadas${scope ? ` (${scope})` : ''}. No jures que no existen fuera de Retiru. Di que no aparecen publicados ahora. Enlaza Eventos y Buscar. Roy no tramita la reserva.`
+      )
+    } else {
+      lines.push(
+        locale === 'en'
+          ? `EVENT LOOKUP THIS TURN: ${retreats.length} published match(es)${scope ? ` (${scope})` : ''}. Cite these; do not invent others.`
+          : `CONSULTA DE EVENTOS ESTE TURNO: ${retreats.length} coincidencia(s) publicada(s)${scope ? ` (${scope})` : ''}. Cítalas; no inventes otras.`
+      )
+    }
+  }
 
   if (centers.length) {
     lines.push(
@@ -625,8 +768,8 @@ export async function buildDirectoryBlock(
 
   lines.push(
     locale === 'en'
-      ? 'Never invent a center, retreat, price or URL that is not in this block. Never leak emails or phones. Previous Roy messages are not a source of listings or counts. If CENTER CARDS are listed, start the reply with at least one 🔗 — do not say none were found. If they ask how many centers, use CENTER COUNT from this block.'
-      : 'No inventes un centro, retiro, precio o URL que no esté en este bloque. No des emails ni teléfonos. Los mensajes anteriores de Roy no son fuente de fichas ni de cifras. Si hay FICHAS DE CENTROS, empieza la respuesta con al menos una 🔗; no digas que no hay ninguno. Si preguntan cuántos centros hay, usa NÚMERO DE CENTROS de este bloque.'
+      ? 'Never invent a center, retreat, price or URL that is not in this block. Never leak emails or phones. Previous Roy messages are not a source of listings or counts. If CENTER CARDS are listed, start the reply with at least one 🔗 — do not say none were found. If they ask how many centers, use CENTER COUNT from this block. If EVENT LOOKUP is present, use it: 0 matches = «not listed now», not «does not exist»; a past date = say so. Roy cannot complete a booking from chat.'
+      : 'No inventes un centro, retiro, precio o URL que no esté en este bloque. No des emails ni teléfonos. Los mensajes anteriores de Roy no son fuente de fichas ni de cifras. Si hay FICHAS DE CENTROS, empieza la respuesta con al menos una 🔗; no digas que no hay ninguno. Si preguntan cuántos centros hay, usa NÚMERO DE CENTROS de este bloque. Si hay CONSULTA DE EVENTOS, úsala: 0 coincidencias = «no aparece publicada ahora», no «no existe»; fecha pasada = dilo. Roy no reserva plazas desde el chat.'
   )
 
   return lines.join('\n')
