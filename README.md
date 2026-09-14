@@ -548,13 +548,16 @@ Sistema de emails automáticos enviados por la plataforma en eventos clave. **Sa
 | `sendMinViableReachedToOrganizerEmail` | Organizador | Mínimo alcanzado: el evento se confirma en cuanto paguen los inscritos | Misma ruta |
 | `sendPaymentDeadlineReminderEmail` | Asistente | Recordatorio tras vencer el primer deadline (+24 h de gracia) | `POST /api/cron/payment-deadlines` |
 | `sendPaymentReminderEmail` | ~~Desactivado~~ | ~~Modelo anterior (pago 80% al organizador)~~ | ~~Cron diario~~ |
-| `sendClaimApprovedEmail` | Usuario (propietario) | Admin aprueba claim de centro | `/api/admin/center-claims` |
+| `sendClaimReceivedEmail` | Usuario / organizador (quien reclama) | Claim de centro enviado, pendiente de revisión | `/api/centers/claim` |
+| `sendClaimApprovedEmail` | Usuario (propietario) | Admin aprueba claim de centro (o auto-aprobación por email) | `/api/admin/center-claims` · `/api/centers/claim` |
 | `sendClaimRejectedEmail` | Usuario (propietario) | Admin rechaza claim de centro | `/api/admin/center-claims` |
 | `sendRetreatApprovedEmail` | Organizador | Admin aprueba retiro (se publica) | `POST /api/admin/retreats` · `PATCH /api/admin/retreats/[id]` (solo `pending_review` → `published`) |
 | `sendRetreatRejectedEmail` | Organizador | Admin rechaza retiro (necesita cambios) | `POST /api/admin/retreats` |
+| `sendOrganizerPendingVerificationEmail` | Organizador | Acepta el contrato: perfil pendiente de verificación | `POST /api/organizer/contract` |
+| `sendNewOrganizerPendingEmail` | Admin | Mismo momento: hay un organizador que revisar | `POST /api/organizer/contract` |
 | `sendOrganizerVerifiedEmail` | Organizador | Admin verifica el perfil/KYC del organizador | `POST /api/admin/organizers/[id]` (`verify` o último paso aprobado) |
 | `sendOrganizerRejectedEmail` | Organizador | Admin rechaza el perfil de organizador | `POST /api/admin/organizers/[id]` (`reject`) |
-| `sendNewMessageEmail` | Usuario / Organizador | Nuevo mensaje en conversación o soporte | `/api/messages/conversations/[id]` |
+| `sendNewMessageEmail` | Usuario / Organizador | Aviso **sin el texto** («Tienes un mensaje en la plataforma»). También al escribir soporte y en el aviso a inscritos del organizador | `/api/messages/conversations/[id]` · broadcast |
 | `sendBookingRejectedEmail` | Asistente | Organizador rechaza su reserva | `/api/bookings/[id]` |
 | `sendBookingCancelledEmail` | Asistente + Organizador | Reserva cancelada / reembolso | `POST /api/bookings/[id]` (cancelación por el asistente) + Webhook Stripe (charge.refunded, si el reembolso no lo inició un flujo de cancelación propio) |
 | Recordatorio pre-evento | Asistente | 7 y 2 días antes del retiro | Cron diario (10:00) |
@@ -575,7 +578,7 @@ Hay **una** bienvenida genérica al verificar el email (`sendWelcomeEmail`). Com
 |------|----------|----------------|
 | Usuario habitual | Explorar, reservar, favoritos | `sendWelcomeEmail` |
 | Centro (propietario) | Tras reclamo exitoso del directorio | `sendClaimApprovedEmail` cuando admin aprueba el claim |
-| Organizador | Homologación KYC y retiros | Aún no hay correo específico solo al **aceptar contrato** (`POST /api/organizer/contract`); sí al verificar perfil (`sendOrganizerVerifiedEmail`), al enviar a revisión (`sendRetreatPendingReviewEmail`) y al publicar (`sendRetreatApprovedEmail`). |
+| Organizador | Homologación KYC y retiros | Al **aceptar contrato** (`POST /api/organizer/contract`): aviso al organizador (`sendOrganizerPendingVerificationEmail`) + ping al admin (`sendNewOrganizerPendingEmail`). Luego al verificar (`sendOrganizerVerifiedEmail`), al enviar retiro a revisión (`sendRetreatPendingReviewEmail`) y al publicar (`sendRetreatApprovedEmail`). |
 
 Plantillas HTML de referencia: carpeta `mailing/` (`mailing/README.md`). Envío efectivo (`sendTransactionalMail`): `src/lib/email/index.ts` + `src/lib/mailing/transport.ts`.
 

@@ -1,6 +1,6 @@
 // POST /api/admin/center-claims — Aprobar o rechazar un claim (solo admin)
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
+import { createServerSupabase, createAdminSupabase, resolveUserEmail } from '@/lib/supabase/server';
 import { sendClaimApprovedEmail, sendClaimRejectedEmail } from '@/lib/email';
 import { assignRole } from '@/lib/roles';
 
@@ -88,11 +88,7 @@ export async function POST(request: NextRequest) {
   // Enviar email al usuario sobre el resultado del claim
   if (action === 'approve' || action === 'reject') {
     try {
-      const { data: claimUser } = await admin
-        .from('profiles')
-        .select('email, preferred_locale')
-        .eq('id', claim.user_id)
-        .single();
+      const recipient = await resolveUserEmail(admin, claim.user_id);
 
       const { data: center } = await admin
         .from('centers')
@@ -100,18 +96,18 @@ export async function POST(request: NextRequest) {
         .eq('id', claim.center_id)
         .single();
 
-      if (claimUser?.email && center) {
-        const locale = (claimUser.preferred_locale || 'es') as 'es' | 'en';
+      if (recipient?.email && center) {
+        const { locale } = recipient;
         if (action === 'approve') {
           await sendClaimApprovedEmail({
-            to: claimUser.email,
+            to: recipient.email,
             locale,
             centerName: center.name,
             centerSlug: center.slug,
           });
         } else {
           await sendClaimRejectedEmail({
-            to: claimUser.email,
+            to: recipient.email,
             locale,
             centerName: center.name,
             adminNotes: adminNotes || undefined,

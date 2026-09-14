@@ -1,7 +1,7 @@
 // GET  /api/admin/organizers/[id] — Detalle de verificación del organizador
 // POST /api/admin/organizers/[id] — Aprobar/rechazar paso o todo el organizador
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
+import { createServerSupabase, createAdminSupabase, resolveUserEmail } from '@/lib/supabase/server';
 import { sendOrganizerRejectedEmail, sendOrganizerVerifiedEmail } from '@/lib/email';
 import { assignRole } from '@/lib/roles';
 
@@ -21,7 +21,7 @@ async function requireAdmin() {
 
 /** Notifica una sola vez al pasar a verified + refuerzo rol organizer (idempotente). */
 async function trySendOrganizerVerifiedEmail(
-  admin: { from: (table: string) => any },
+  admin: ReturnType<typeof createAdminSupabase>,
   organizerId: string,
 ) {
   try {
@@ -33,19 +33,13 @@ async function trySendOrganizerVerifiedEmail(
 
     if (!row?.user_id) return;
 
-    const { data: profile } = await admin
-      .from('profiles')
-      .select('email, preferred_locale')
-      .eq('id', row.user_id)
-      .maybeSingle();
+    const recipient = await resolveUserEmail(admin, row.user_id);
+    if (!recipient?.email) return;
 
-    if (!profile?.email) return;
-
-    const locale = (profile.preferred_locale || 'es') as 'es' | 'en';
     await assignRole(admin, row.user_id, 'organizer');
     await sendOrganizerVerifiedEmail({
-      to: profile.email,
-      locale,
+      to: recipient.email,
+      locale: recipient.locale,
       businessName: row.business_name || 'Organizador',
       organizerSlug: row.slug,
     });
@@ -55,7 +49,7 @@ async function trySendOrganizerVerifiedEmail(
 }
 
 async function trySendOrganizerRejectedEmail(
-  admin: { from: (table: string) => any },
+  admin: ReturnType<typeof createAdminSupabase>,
   organizerId: string,
   reason: string | null | undefined,
 ) {
@@ -68,18 +62,12 @@ async function trySendOrganizerRejectedEmail(
 
     if (!row?.user_id) return;
 
-    const { data: profile } = await admin
-      .from('profiles')
-      .select('email, preferred_locale')
-      .eq('id', row.user_id)
-      .maybeSingle();
+    const recipient = await resolveUserEmail(admin, row.user_id);
+    if (!recipient?.email) return;
 
-    if (!profile?.email) return;
-
-    const locale = (profile.preferred_locale || 'es') as 'es' | 'en';
     await sendOrganizerRejectedEmail({
-      to: profile.email,
-      locale,
+      to: recipient.email,
+      locale: recipient.locale,
       businessName: row.business_name || 'Organizador',
       rejectionReason: reason?.trim() || undefined,
     });

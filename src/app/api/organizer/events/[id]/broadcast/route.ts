@@ -1,7 +1,7 @@
 // POST /api/organizer/events/[id]/broadcast — Send message to all attendees
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
-import { buildBroadcastHtml, sendTransactionalMail } from '@/lib/email';
+import { createServerSupabase, createAdminSupabase, resolveUserEmail } from '@/lib/supabase/server';
+import { buildBroadcastHtml, sendNewMessageEmail, sendTransactionalMail } from '@/lib/email';
 
 export async function POST(
   request: NextRequest,
@@ -112,11 +112,32 @@ export async function POST(
         messagesSent++;
       }
 
-      if (sendEmail) {
-        const attendee = b.profiles as any;
-        if (attendee?.email) {
+      const recipient = await resolveUserEmail(admin, b.attendee_id);
+      const attendeeRaw = b.profiles as any;
+      const attendee = Array.isArray(attendeeRaw) ? attendeeRaw[0] : attendeeRaw;
+      const to = recipient?.email || attendee?.email;
+      if (to) {
+        const locale = recipient?.locale || ((attendee?.preferred_locale || 'es') as 'es' | 'en');
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.retiru.com';
+        try {
+          if (convId) {
+            await sendNewMessageEmail({
+              to,
+              locale,
+              senderName: orgProfile.business_name || 'Organizador',
+              conversationUrl: `${appUrl}/${locale === 'es' ? 'es/mensajes' : 'en/messages'}/${convId}`,
+              context: locale === 'es'
+                ? `Mensaje sobre ${retreat.title_es}`
+                : `Message about ${retreat.title_es}`,
+            });
+            emailsSent++;
+          }
+        } catch {
+          // continue
+        }
+
+        if (sendEmail) {
           try {
-            const locale = (attendee.preferred_locale || 'es') as 'es' | 'en';
             const html = buildBroadcastHtml({
               locale,
               organizerName: orgProfile.business_name || 'Organizador',
@@ -124,11 +145,10 @@ export async function POST(
               message: message.trim(),
             });
             await sendTransactionalMail({
-              to: attendee.email,
+              to,
               subject: `${locale === 'es' ? 'Mensaje de' : 'Message from'} ${orgProfile.business_name} — ${retreat.title_es}`,
               html,
             });
-            emailsSent++;
           } catch {
             // continue
           }

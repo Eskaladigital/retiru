@@ -1,6 +1,7 @@
 // POST /api/organizer/contract — Aceptar contrato de organizador
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
+import { createServerSupabase, createAdminSupabase, resolveUserEmail } from '@/lib/supabase/server';
+import { sendOrganizerPendingVerificationEmail, sendNewOrganizerPendingEmail } from '@/lib/email';
 import { assignRole } from '@/lib/roles';
 
 function slugify(text: string): string {
@@ -10,6 +11,31 @@ function slugify(text: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
     .slice(0, 80);
+}
+
+async function notifyOrganizerPending(
+  admin: ReturnType<typeof createAdminSupabase>,
+  opts: { userId: string; fallbackEmail: string; businessName: string; organizerId: string },
+) {
+  try {
+    const recipient = await resolveUserEmail(admin, opts.userId);
+    const to = recipient?.email || opts.fallbackEmail;
+    const locale = recipient?.locale || 'es';
+    if (to) {
+      await sendOrganizerPendingVerificationEmail({
+        to,
+        locale,
+        businessName: opts.businessName,
+      });
+    }
+    await sendNewOrganizerPendingEmail({
+      organizerName: opts.businessName,
+      userEmail: to,
+      organizerId: opts.organizerId,
+    });
+  } catch (emailErr) {
+    console.error('Failed to send organizer pending emails:', emailErr);
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -30,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     const { data: existing } = await admin
       .from('organizer_profiles')
-      .select('id, contract_accepted_at')
+      .select('id, contract_accepted_at, business_name')
       .eq('user_id', user.id)
       .single();
 
@@ -45,6 +71,12 @@ export async function POST(request: NextRequest) {
         .eq('id', existing.id);
 
       await assignRole(admin, user.id, 'organizer');
+      await notifyOrganizerPending(admin, {
+        userId: user.id,
+        fallbackEmail: user.email || '',
+        businessName: existing.business_name || 'Organizador',
+        organizerId: existing.id,
+      });
       return NextResponse.json({ message: 'Contrato aceptado', organizer_id: existing.id });
     }
 
@@ -75,6 +107,12 @@ export async function POST(request: NextRequest) {
     }
 
     await assignRole(admin, user.id, 'organizer');
+    await notifyOrganizerPending(admin, {
+      userId: user.id,
+      fallbackEmail: user.email || '',
+      businessName,
+      organizerId: newOrg!.id,
+    });
 
     return NextResponse.json({ message: 'Contrato aceptado', organizer_id: newOrg!.id });
   } catch (err) {

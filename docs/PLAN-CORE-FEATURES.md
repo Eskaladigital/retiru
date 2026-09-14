@@ -472,7 +472,7 @@ Al terminar este sprint:
 7. ✅ `sendBookingRejectedEmail` → al asistente con motivo (`/api/bookings/[id]`)
 8. ✅ `sendClaimApprovedEmail` / `sendClaimRejectedEmail` → al usuario (`/api/admin/center-claims`)
 9. ✅ `sendRetreatApprovedEmail` / `sendRetreatRejectedEmail` → al organizador (`/api/admin/retreats`)
-10. ✅ `sendNewMessageEmail` → notificación al destinatario de mensajes y soporte (`/api/messages/conversations/[id]`)
+10. ✅ `sendNewMessageEmail` → aviso al destinatario **sin el texto** («Tienes un mensaje en la plataforma») para que entre a leerlo (`/api/messages/conversations/[id]`)
 
 **Emails pendientes (fase 2):**
 - **Instrucciones del organizador** → cuando el organizador las envía manualmente

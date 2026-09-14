@@ -1,8 +1,60 @@
 // POST /api/centers/claim — Reclamar un centro
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
-import { sendNewClaimPendingEmail } from '@/lib/email';
+import { createServerSupabase, createAdminSupabase, resolveUserEmail } from '@/lib/supabase/server';
+import { sendNewClaimPendingEmail, sendClaimReceivedEmail, sendClaimApprovedEmail } from '@/lib/email';
 import { assignRole } from '@/lib/roles';
+
+async function notifyClaimEmails(
+  admin: ReturnType<typeof createAdminSupabase>,
+  opts: {
+    userId: string;
+    fallbackEmail: string;
+    centerName: string;
+    centerSlug: string;
+    centerId: string;
+    autoApproved: boolean;
+  },
+) {
+  try {
+    const recipient = await resolveUserEmail(admin, opts.userId);
+    const to = recipient?.email || opts.fallbackEmail;
+    const locale = recipient?.locale || 'es';
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('full_name')
+      .eq('id', opts.userId)
+      .maybeSingle();
+    const userName = profile?.full_name || 'Usuario';
+
+    if (opts.autoApproved) {
+      if (to) {
+        await sendClaimApprovedEmail({
+          to,
+          locale,
+          centerName: opts.centerName,
+          centerSlug: opts.centerSlug,
+        });
+      }
+      return;
+    }
+
+    if (to) {
+      await sendClaimReceivedEmail({
+        to,
+        locale,
+        centerName: opts.centerName,
+      });
+    }
+    await sendNewClaimPendingEmail({
+      userName,
+      userEmail: to,
+      centerName: opts.centerName,
+      centerId: opts.centerId,
+    });
+  } catch (emailErr) {
+    console.error('Failed to send claim notification email:', emailErr);
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,7 +73,7 @@ export async function POST(request: NextRequest) {
 
     const { data: center } = await admin
       .from('centers')
-      .select('id, name, email, claimed_by')
+      .select('id, name, email, claimed_by, slug')
       .eq('id', centerId)
       .single();
 
@@ -75,24 +127,15 @@ export async function POST(request: NextRequest) {
             .update({ claimed_by: user.id, updated_at: now })
             .eq('id', centerId);
           await assignRole(admin, user.id, 'center');
-        } else {
-          try {
-            const { data: profile } = await admin
-              .from('profiles')
-              .select('full_name')
-              .eq('id', user.id)
-              .single();
-
-            await sendNewClaimPendingEmail({
-              userName: profile?.full_name || 'Usuario',
-              userEmail: user.email || '',
-              centerName: center.name || 'Centro',
-              centerId,
-            });
-          } catch (emailErr) {
-            console.error('Failed to send claim pending email:', emailErr);
-          }
         }
+        await notifyClaimEmails(admin, {
+          userId: user.id,
+          fallbackEmail: user.email || '',
+          centerName: center.name || 'Centro',
+          centerSlug: center.slug || '',
+          centerId,
+          autoApproved: emailMatch,
+        });
 
         return NextResponse.json({
           claim,
@@ -132,24 +175,15 @@ export async function POST(request: NextRequest) {
         .update({ claimed_by: user.id, updated_at: new Date().toISOString() })
         .eq('id', centerId);
       await assignRole(admin, user.id, 'center');
-    } else {
-      try {
-        const { data: profile } = await admin
-          .from('profiles')
-          .select('full_name')
-          .eq('id', user.id)
-          .single();
-
-        await sendNewClaimPendingEmail({
-          userName: profile?.full_name || 'Usuario',
-          userEmail: user.email || '',
-          centerName: center.name || 'Centro',
-          centerId,
-        });
-      } catch (emailErr) {
-        console.error('Failed to send claim pending email:', emailErr);
-      }
     }
+    await notifyClaimEmails(admin, {
+      userId: user.id,
+      fallbackEmail: user.email || '',
+      centerName: center.name || 'Centro',
+      centerSlug: center.slug || '',
+      centerId,
+      autoApproved: emailMatch,
+    });
 
     return NextResponse.json({
       claim,

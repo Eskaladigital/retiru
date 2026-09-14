@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
+import { createServerSupabase, createAdminSupabase, resolveUserEmail } from '@/lib/supabase/server';
 import { sendNewMessageEmail } from '@/lib/email';
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -26,7 +26,8 @@ export async function GET(req: NextRequest, ctx: Ctx) {
   if (!conv) return NextResponse.json({ error: 'Conversación no encontrada' }, { status: 404 });
 
   const isSupport = !!(conv as any).is_support;
-  const orgUserId = (conv as any).organizer_profiles?.user_id;
+  const orgRel = (conv as any).organizer_profiles;
+  const orgUserId = (Array.isArray(orgRel) ? orgRel[0] : orgRel)?.user_id as string | undefined;
   const isOrganizer = !isSupport && orgUserId === user.id;
   const isUser = conv.user_id === user.id;
   const { data: adminRoleRow } = await supabase.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').maybeSingle();
@@ -121,7 +122,8 @@ export async function POST(req: NextRequest, ctx: Ctx) {
   if (!conv) return NextResponse.json({ error: 'Conversación no encontrada' }, { status: 404 });
 
   const isSupport = !!(conv as any).is_support;
-  const orgUserId = (conv as any).organizer_profiles?.user_id;
+  const orgRel = (conv as any).organizer_profiles;
+  const orgUserId = (Array.isArray(orgRel) ? orgRel[0] : orgRel)?.user_id as string | undefined;
   const isOrganizer = !isSupport && orgUserId === user.id;
   const isUser = conv.user_id === user.id;
 
@@ -192,27 +194,32 @@ export async function POST(req: NextRequest, ctx: Ctx) {
       if (isAdmin) {
         recipientUserId = conv.user_id;
       }
-      // Users messaging support: no email to admin (admin checks dashboard)
     } else {
+      let organizerUserId = orgUserId || null;
+      if (!organizerUserId && conv.organizer_id) {
+        const { data: orgRow } = await adminClient
+          .from('organizer_profiles')
+          .select('user_id')
+          .eq('id', conv.organizer_id)
+          .maybeSingle();
+        organizerUserId = orgRow?.user_id || null;
+      }
+
       if (isUser) {
-        const orgP = (conv as any).organizer_profiles;
-        recipientUserId = orgP?.user_id || null;
+        recipientUserId = organizerUserId;
       } else if (isOrganizer) {
         recipientUserId = conv.user_id;
       }
     }
 
+    const threadPath = (locale: 'es' | 'en') =>
+      `${appUrl}/${locale === 'es' ? 'es/mensajes' : 'en/messages'}/${id}`;
+
     if (recipientUserId) {
-      const { data: recipient } = await adminClient
-        .from('profiles')
-        .select('email, preferred_locale')
-        .eq('id', recipientUserId)
-        .single();
+      const recipient = await resolveUserEmail(adminClient, recipientUserId);
 
       if (recipient?.email) {
-        const locale = (recipient.preferred_locale || 'es') as 'es' | 'en';
-        const convUrl = `${appUrl}/${locale === 'es' ? 'es' : 'en'}/${locale === 'es' ? 'mensajes' : 'messages'}/${id}`;
-
+        const { locale } = recipient;
         let context: string | undefined;
         if (isSupport) {
           context = locale === 'es' ? 'Chat de soporte — Retiru' : 'Support chat — Retiru';
@@ -222,11 +229,19 @@ export async function POST(req: NextRequest, ctx: Ctx) {
           to: recipient.email,
           locale,
           senderName: isAdmin ? 'Retiru — Soporte' : senderName,
-          messagePreview: content.trim(),
-          conversationUrl: convUrl,
+          conversationUrl: threadPath(locale),
           context,
         });
       }
+    } else if (isSupport && isUser) {
+      const adminEmail = process.env.ADMIN_EMAIL || 'contacto@retiru.com';
+      await sendNewMessageEmail({
+        to: adminEmail,
+        locale: 'es',
+        senderName,
+        conversationUrl: `${appUrl}/administrator/mensajes?open=${id}`,
+        context: 'Chat de soporte — Retiru',
+      });
     }
   } catch (emailErr) {
     console.error('Failed to send message notification email:', emailErr);

@@ -95,6 +95,14 @@ function t(locale: 'es' | 'en', es: string, en: string) {
   return locale === 'es' ? es : en;
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 interface CtaButton {
   href: string;
   label: string;
@@ -581,6 +589,48 @@ export async function sendOrganizerVerifiedEmail(
   return sendTransactionalMail({ to, subject, html });
 }
 
+// ─── Organizer profile pending verification (→ organizer) ───────────────────
+
+export async function sendOrganizerPendingVerificationEmail(
+  options: EmailOptions & { businessName: string }
+) {
+  const { to, locale, businessName } = options;
+  const safeName = escapeHtml(businessName);
+
+  const subject = t(locale,
+    'Tu perfil de organizador está pendiente de verificación',
+    'Your organizer profile is pending verification'
+  );
+
+  const body = [
+    paragraph(t(locale,
+      `Hemos registrado el perfil de <strong>${safeName}</strong> en Retiru. Queda pendiente de verificaci&oacute;n.`,
+      `We have registered the <strong>${safeName}</strong> profile on Retiru. It is pending verification.`
+    )),
+    paragraph(t(locale,
+      'Entra en la plataforma para completar la documentaci&oacute;n y seguir el estado. Te avisaremos cuando el equipo lo revise.',
+      'Open the platform to complete your documents and check the status. We will email you when the team reviews it.'
+    )),
+  ].join('');
+
+  const html = emailLayout({
+    locale,
+    preheader: t(locale, 'Tu perfil queda pendiente de verificaci&oacute;n', 'Your profile is pending verification'),
+    title: t(locale, 'Perfil pendiente de verificaci&oacute;n', 'Profile pending verification'),
+    body,
+    cta: {
+      href: `${APP_URL}/${t(locale, 'es/panel/verificacion', 'en/panel/verificacion')}`,
+      label: t(locale, 'Ir a verificaci&oacute;n', 'Go to verification'),
+    },
+  });
+
+  return sendTransactionalMail({
+    to,
+    subject,
+    html,
+  });
+}
+
 // ─── Organizer profile rejected (KYC / admin) ─────────────────────────────
 // Preview / edición HTML: mailing/app/21-organizer-rejected.html
 
@@ -632,39 +682,42 @@ export async function sendOrganizerRejectedEmail(
 export async function sendNewMessageEmail(
   options: EmailOptions & {
     senderName: string;
-    messagePreview: string;
     conversationUrl: string;
     context?: string;
   }
 ) {
-  const { to, locale, senderName, messagePreview, conversationUrl, context } = options;
+  const { to, locale, senderName, conversationUrl, context } = options;
+  const safeName = escapeHtml(senderName);
 
   const subject = t(locale,
-    `Nuevo mensaje de ${senderName} en Retiru`,
-    `New message from ${senderName} on Retiru`
+    'Tienes un mensaje en la plataforma',
+    'You have a message on the platform'
   );
 
   const contextLine = context
-    ? `<p style="margin: 0 0 14px 0; font-size: 13px; color: #999999; font-family: Arial, sans-serif;">${context}</p>`
+    ? `<p style="margin: 0 0 14px 0; font-size: 13px; color: #999999; font-family: Arial, sans-serif;">${escapeHtml(context)}</p>`
     : '';
-
-  const preview = messagePreview.length > 200 ? messagePreview.slice(0, 200) + '&hellip;' : messagePreview;
 
   const body = [
     contextLine,
-    infoBox([
-      `<p style="margin: 0 0 8px 0; font-size: 14px; font-weight: 700; color: #1a1a1a; font-family: Arial, sans-serif;">${senderName}</p>`,
-      `<p style="margin: 0; font-size: 14px; color: #555555; line-height: 1.6; font-family: Arial, sans-serif; white-space: pre-line;">${preview}</p>`,
-    ].join('')),
+    paragraph(t(locale,
+      `Tienes un mensaje de <strong>${safeName}</strong> en Retiru.`,
+      `You have a message from <strong>${safeName}</strong> on Retiru.`
+    )),
+    paragraph(t(locale,
+      'Entra en la plataforma para leerlo y responder. El contenido solo est&aacute; visible all&iacute;.',
+      'Open the platform to read it and reply. The content is only visible there.'
+    )),
   ].join('');
 
   const html = emailLayout({
-    locale, preheader: `${senderName}: ${messagePreview.slice(0, 80)}`,
-    title: t(locale, 'Tienes un nuevo mensaje', 'You have a new message'),
+    locale,
+    preheader: subject,
+    title: subject,
     body,
     cta: {
       href: conversationUrl,
-      label: t(locale, 'Responder', 'Reply'),
+      label: t(locale, 'Leer mensaje', 'Read message'),
     },
   });
 
@@ -1045,6 +1098,82 @@ export async function sendRetreatCancelledToAttendeeEmail(
   });
 
   return sendTransactionalMail({ to, subject, html });
+}
+
+// ─── Claim received (→ claimant / organizer) ────────────────────────────────
+
+export async function sendClaimReceivedEmail(
+  options: EmailOptions & { centerName: string }
+) {
+  const { to, locale, centerName } = options;
+  const safeCenter = escapeHtml(centerName);
+
+  const body = [
+    paragraph(t(locale,
+      `Hemos recibido tu solicitud para gestionar <strong>${safeCenter}</strong>.`,
+      `We have received your request to manage <strong>${safeCenter}</strong>.`
+    )),
+    paragraph(t(locale,
+      'Est&aacute; pendiente de revisi&oacute;n. Entra en la plataforma para ver el estado; te avisaremos cuando el equipo la resuelva.',
+      'It is pending review. Open the platform to check the status; we will email you when the team decides.'
+    )),
+  ].join('');
+
+  const html = emailLayout({
+    locale,
+    preheader: t(locale, `Solicitud de ${centerName} recibida`, `Claim for ${centerName} received`),
+    title: t(locale, 'Solicitud de centro recibida', 'Center claim received'),
+    body,
+    cta: {
+      href: `${APP_URL}/${t(locale, 'es/mis-centros', 'en/my-centers')}`,
+      label: t(locale, 'Ver mis centros', 'View my centers'),
+    },
+  });
+
+  return sendTransactionalMail({
+    to,
+    subject: t(locale,
+      `Hemos recibido tu solicitud de centro — ${centerName}`,
+      `We received your center claim — ${centerName}`
+    ),
+    html,
+  });
+}
+
+// ─── New organizer pending verification → admin ─────────────────────────────
+
+export async function sendNewOrganizerPendingEmail(
+  options: { organizerName: string; userEmail: string; organizerId: string }
+) {
+  const { organizerName, userEmail, organizerId } = options;
+  const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'contacto@retiru.com';
+
+  const body = [
+    paragraph(`Un organizador ha aceptado el contrato y queda <strong>pendiente de verificaci&oacute;n</strong>.`),
+    infoBox([
+      infoLine('Organizador', escapeHtml(organizerName)),
+      infoLine('Email', escapeHtml(userEmail || '—')),
+      infoLine('ID', organizerId),
+    ].join('')),
+    paragraph('Entra al panel de administraci&oacute;n para revisar la documentaci&oacute;n.'),
+  ].join('');
+
+  const html = emailLayout({
+    locale: 'es',
+    preheader: `Organizador pendiente: ${organizerName}`,
+    title: 'Organizador pendiente de verificaci&oacute;n',
+    body,
+    cta: {
+      href: `${APP_URL}/administrator/organizadores`,
+      label: 'Revisar organizadores',
+    },
+  });
+
+  return sendTransactionalMail({
+    to: ADMIN_EMAIL,
+    subject: `🔔 Organizador pendiente de verificación: ${organizerName}`,
+    html,
+  });
 }
 
 // ─── New Claim Pending → admin ──────────────────────────────────────────────

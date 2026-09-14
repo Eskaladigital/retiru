@@ -110,3 +110,23 @@ export function createAdminSupabase() {
     }
   );
 }
+
+/** Email y locale de un usuario: `profiles` y, si falta, Auth. */
+export async function resolveUserEmail(
+  admin: { from: (table: string) => any; auth: { admin: { getUserById: (id: string) => Promise<any> } } },
+  userId: string,
+): Promise<{ email: string; locale: 'es' | 'en' } | null> {
+  const { data: profile } = await admin
+    .from('profiles')
+    .select('email, preferred_locale')
+    .eq('id', userId)
+    .maybeSingle();
+
+  let email = String(profile?.email || '').trim();
+  if (!email) {
+    const { data } = await admin.auth.admin.getUserById(userId);
+    email = String(data?.user?.email || '').trim();
+  }
+  if (!email) return null;
+  return { email, locale: profile?.preferred_locale === 'en' ? 'en' : 'es' };
+}
