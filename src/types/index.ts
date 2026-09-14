@@ -532,6 +532,8 @@ export interface Center {
   quality_ia: string | null;
   search_terms: string | null;
   price_level: string | null;
+  /** Centro/profesional sin sede física fija (zona de servicio). Derivado del array `categories` (marcador 'service_area'). */
+  service_area: boolean;
 }
 
 /** Reseña de Google Places guardada en centers.google_reviews (migración 048) */

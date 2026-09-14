@@ -1,6 +1,7 @@
 // POST /api/admin/centers — Crear centro nuevo desde el admin (Google Places)
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase/server';
+import { geocodeCity } from '@/lib/geocode';
 
 const CENTER_TYPES_ALLOWED = new Set(['yoga', 'meditation', 'ayurveda']);
 const MAX_CENTER_IMAGE_BYTES = 4 * 1024 * 1024;
@@ -89,6 +90,7 @@ export async function POST(request: NextRequest) {
   const { name, address, city, province, postal_code, latitude, longitude, website, phone, type,
     google_place_id, google_types, google_maps_url, google_status, avg_rating, review_count,
     country, price_level, description_es } = body;
+  const serviceArea = body.service_area === true;
   const servicesEs = normalizeServices(body.services_es);
   const coverUpload = body.cover_upload as ImageUploadPayload | undefined;
   const imageUploads = Array.isArray(body.images_uploads)
@@ -156,6 +158,17 @@ export async function POST(request: NextRequest) {
     if (img?.dataUrl) images.push(await uploadCenterImage(admin, slug, img, 'gallery'));
   }
 
+  // Sin sede fija y sin coordenadas: pin aproximado en el centroide de la ciudad.
+  let finalLat = latitude || null;
+  let finalLng = longitude || null;
+  if (serviceArea && (finalLat == null || finalLng == null) && city) {
+    const geo = await geocodeCity(city, province, country);
+    if (geo) {
+      finalLat = geo.lat;
+      finalLng = geo.lng;
+    }
+  }
+
   const { data: center, error } = await admin.from('centers').insert({
     name,
     slug,
@@ -167,8 +180,9 @@ export async function POST(request: NextRequest) {
     city,
     province,
     postal_code: postal_code || null,
-    latitude: latitude || null,
-    longitude: longitude || null,
+    latitude: finalLat,
+    longitude: finalLng,
+    categories: serviceArea ? ['service_area'] : [],
     website: website || null,
     phone: phone || null,
     type: normalizeCenterType(type),

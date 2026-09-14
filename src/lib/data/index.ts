@@ -450,10 +450,21 @@ const CENTER_SELECT = `
   address, city, province, country, postal_code, latitude, longitude,
   services_es, services_en, schedule_summary_es, schedule_summary_en,
   price_range_es, price_range_en, avg_rating, review_count, status, claimed_by,
-  google_place_id, google_maps_url
+  google_place_id, google_maps_url, categories
 `;
 
 const SUPABASE_PAGE = 1000;
+
+/** Marcador de centro sin sede física fija, guardado en el array `categories`. */
+export const SERVICE_AREA_TAG = 'service_area';
+
+/** Añade el booleano `service_area` (derivado de `categories`) a una fila de centro. */
+function mapCenterRow<T extends { categories?: string[] | null }>(row: T): T & { service_area: boolean } {
+  return {
+    ...row,
+    service_area: Array.isArray(row.categories) && row.categories.includes(SERVICE_AREA_TAG),
+  };
+}
 
 export async function getActiveCenters(filters?: {
   province?: string;
@@ -484,7 +495,7 @@ export async function getActiveCenters(filters?: {
       const { data, error, count } = await build().range(from, from + SUPABASE_PAGE - 1);
       if (error) throw error;
       total = count ?? total;
-      const batch = (data || []) as Center[];
+      const batch = (data || []).map(mapCenterRow) as unknown as Center[];
       centers.push(...batch);
       if (batch.length < SUPABASE_PAGE) break;
       from += SUPABASE_PAGE;
@@ -496,7 +507,7 @@ export async function getActiveCenters(filters?: {
   const offset = filters?.offset ?? 0;
   const { data, error, count } = await build().range(offset, offset + limit - 1);
   if (error) throw error;
-  return { centers: (data || []) as Center[], total: count ?? 0 };
+  return { centers: (data || []).map(mapCenterRow) as unknown as Center[], total: count ?? 0 };
 }
 
 /** Usar solo en generateStaticParams (build time, sin cookies) */
@@ -749,7 +760,7 @@ export async function getCenterBySlug(slug: string): Promise<Center | null> {
     if (error.code === 'PGRST116') return null;
     throw error;
   }
-  return data as Center;
+  return mapCenterRow(data as Record<string, unknown> & { categories?: string[] | null }) as unknown as Center;
 }
 
 // ─── Organizers ───────────────────────────────────────────────────────────

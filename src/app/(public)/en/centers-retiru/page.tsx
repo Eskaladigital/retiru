@@ -20,6 +20,7 @@ export default async function CentersPageEN() {
     review_count: c.review_count,
     description_es: c.description_es?.slice(0, 180) ?? null,
     description_en: c.description_en?.slice(0, 180) ?? null,
+    service_area: c.service_area ?? false,
   }));
 
   return (

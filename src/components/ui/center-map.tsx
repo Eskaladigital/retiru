@@ -14,11 +14,13 @@ interface CenterMapProps {
   name: string;
   address?: string | null;
   className?: string;
+  /** Zona de servicio: ubicación aproximada (círculo), no dirección exacta. */
+  approximate?: boolean;
 }
 
 const DEFAULT_CENTER: [number, number] = [40.4168, -3.7038]; // Madrid
 
-export function CenterMap({ latitude, longitude, name, address, className = '' }: CenterMapProps) {
+export function CenterMap({ latitude, longitude, name, address, className = '', approximate = false }: CenterMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [inView, setInView] = useState(false);
@@ -58,13 +60,24 @@ export function CenterMap({ latitude, longitude, name, address, className = '' }
       try {
         const L = (await import('leaflet')).default;
 
-        map = L.map(containerRef.current!).setView([lat, lon], hasCoords ? 16 : 6);
+        map = L.map(containerRef.current!).setView([lat, lon], hasCoords ? (approximate ? 12 : 16) : 6);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         }).addTo(map);
 
-        if (hasCoords) {
+        if (hasCoords && approximate) {
+          // Zona de servicio: círculo aproximado, sin pin de dirección exacta.
+          L.circle([lat, lon], {
+            radius: 2500,
+            color: '#c85a30',
+            weight: 1.5,
+            fillColor: '#c85a30',
+            fillOpacity: 0.12,
+          })
+            .addTo(map)
+            .bindPopup(`<strong>${name}</strong><br/><small>Zona aproximada · atiende en la zona</small>`);
+        } else if (hasCoords) {
           const icon = L.divIcon({
             className: 'custom-marker',
             html: '<span style="background:#c85a30;width:12px;height:12px;border-radius:50%;display:block;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,.3)"/>',
@@ -82,7 +95,7 @@ export function CenterMap({ latitude, longitude, name, address, className = '' }
     return () => {
       map?.remove();
     };
-  }, [inView, latitude, longitude, name, address]);
+  }, [inView, latitude, longitude, name, address, approximate]);
 
   if (error) {
     return (

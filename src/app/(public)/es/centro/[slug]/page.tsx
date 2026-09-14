@@ -217,9 +217,11 @@ export default async function CentroDetailPage({ params }: Props) {
           <div className="bg-white border border-sand-200 rounded-2xl p-6 sticky top-24">
             <h3 className="font-serif text-lg mb-4">Información de contacto</h3>
             <div className="space-y-3">
-              {C.address && (
+              {C.service_area ? (
+                <div className="text-sm"><span className="text-[#a09383] block text-xs uppercase tracking-wider font-semibold mb-0.5">Modalidad</span><p className="text-foreground">Sin sede fija · atiende en {C.city || 'la zona'}{C.province ? ` (${C.province})` : ''} y alrededores / online</p></div>
+              ) : C.address ? (
                 <div className="text-sm"><span className="text-[#a09383] block text-xs uppercase tracking-wider font-semibold mb-0.5">Dirección</span><p className="text-foreground">{C.address}</p></div>
-              )}
+              ) : null}
               {C.phone && (
                 <div className="text-sm"><span className="text-[#a09383] block text-xs uppercase tracking-wider font-semibold mb-0.5">Teléfono</span><a href={`tel:${C.phone}`} className="text-foreground hover:text-terracotta-600 transition-colors">{C.phone}</a></div>
               )}
@@ -277,6 +279,7 @@ export default async function CentroDetailPage({ params }: Props) {
                 longitude={C.longitude}
                 name={C.name}
                 address={C.address}
+                approximate={C.service_area}
                 className="h-48"
               />
             </div>

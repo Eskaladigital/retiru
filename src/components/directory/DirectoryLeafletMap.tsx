@@ -23,6 +23,7 @@ export type DirectoryCenter = {
   description_en?: string | null;
   services_es?: string[] | null;
   services_en?: string[] | null;
+  service_area?: boolean | null;
 };
 
 type PointProps = { centerId: string };
@@ -33,10 +34,11 @@ function isClusterProps(
   return 'cluster' in props && Boolean(props.cluster);
 }
 
-function pinHtml(type: string | null, selected: boolean) {
+function pinHtml(type: string | null, selected: boolean, serviceArea = false) {
   const color = getCenterTypeColor(type);
   const icon = getCenterTypeIcon(type);
-  return `<span class="dir-pin${selected ? ' is-on' : ''}" style="--c:${color}"><span class="dir-pin-icon">${icon}</span></span>`;
+  const cls = `dir-pin${selected ? ' is-on' : ''}${serviceArea ? ' is-area' : ''}`;
+  return `<span class="${cls}" style="--c:${color}"><span class="dir-pin-icon">${icon}</span></span>`;
 }
 
 function clusterHtml(count: number) {
@@ -188,7 +190,7 @@ export default function DirectoryLeafletMap({
       const size = selected ? 34 : 26;
       const icon = L.divIcon({
         className: 'dir-marker',
-        html: pinHtml(center.type, selected),
+        html: pinHtml(center.type, selected, Boolean(center.service_area)),
         iconSize: [size, size],
         iconAnchor: [size / 2, size / 2],
       });
@@ -349,6 +351,7 @@ export default function DirectoryLeafletMap({
       <style>{`
         .dir-marker { background: none !important; border: none !important; }
         .dir-pin {
+          position: relative;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -358,6 +361,18 @@ export default function DirectoryLeafletMap({
           background: var(--c);
           border: 2px solid #fff;
           box-shadow: 0 2px 4px rgba(45, 35, 25, 0.35);
+        }
+        /* Sin sede fija: pin en «gota» + halo punteado = ubicación aproximada. */
+        .dir-pin.is-area {
+          border-radius: 999px 999px 999px 4px;
+        }
+        .dir-pin.is-area::after {
+          content: '';
+          position: absolute;
+          inset: -5px;
+          border-radius: inherit;
+          border: 1.5px dashed var(--c);
+          opacity: 0.55;
         }
         .dir-pin-icon {
           font-size: 13px;

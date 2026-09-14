@@ -28,7 +28,33 @@ type PlaceData = {
   review_count: number;
   price_level: string;
   type: CenterType;
+  /** true = alta manual sin ficha de Google (profesional / zona de servicio). */
+  service_area: boolean;
 };
+
+function emptyManualPlace(): PlaceData {
+  return {
+    name: '',
+    address: '',
+    city: '',
+    province: '',
+    postal_code: '',
+    country: 'España',
+    latitude: 0,
+    longitude: 0,
+    website: '',
+    phone: '',
+    google_place_id: '',
+    google_types: '',
+    google_maps_url: '',
+    google_status: '',
+    avg_rating: 0,
+    review_count: 0,
+    price_level: '—',
+    type: 'yoga',
+    service_area: true,
+  };
+}
 
 type ImageUploadPayload = {
   filename: string;
@@ -199,6 +225,7 @@ export function AddCenterFromMapsModal({
         review_count: p.user_ratings_total || 0,
         price_level: priceLevelLabel(p.price_level),
         type: guessType(p.types || []),
+        service_area: false,
       });
       setStep('preview');
     });
@@ -288,6 +315,10 @@ export function AddCenterFromMapsModal({
 
   const handleSave = async () => {
     if (!place) return;
+    if (place.service_area && (!place.name.trim() || !place.city.trim() || !place.province.trim())) {
+      setError('Para un alta manual necesitas al menos nombre, ciudad y provincia.');
+      return;
+    }
     if (!hasRequiredProfileContent) {
       setError('Antes de enviar el centro, añade una descripción de al menos 80 caracteres y una actividad o servicio.');
       return;
@@ -366,70 +397,151 @@ export function AddCenterFromMapsModal({
                 : 'Escribe el nombre del centro y selecciona de la lista de sugerencias.'}
             </p>
             <div ref={attrRef}></div>
+
+            <div className="mt-5 rounded-xl border border-dashed border-gray-200 bg-gray-50/60 p-4">
+              <p className="text-sm font-semibold text-gray-900">¿No aparece en la lista?</p>
+              <p className="mt-1 text-xs text-gray-500">
+                Muchos profesionales (profes de yoga a domicilio, online…) no tienen ficha de lugar en
+                Google Maps. Puedes darlos de alta a mano como centro sin sede fija.
+              </p>
+              <button
+                type="button"
+                onClick={() => { setError(''); setPlace(emptyManualPlace()); setStep('preview'); }}
+                className="mt-3 inline-flex items-center gap-2 rounded-xl border border-terracotta-300 bg-white px-3 py-2 text-sm font-semibold text-terracotta-700 hover:bg-terracotta-50"
+              >
+                <MapPin className="h-4 w-4" />
+                Darla de alta a mano
+              </button>
+            </div>
           </div>
         )}
 
         {step === 'preview' && place && (
           <div className="p-6 space-y-5">
-            <div>
-              <p className="text-xl font-bold text-gray-900">{place.name}</p>
-              <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
-                <MapPin className="w-3.5 h-3.5" />
-                {place.address}
-              </p>
-            </div>
+            {place.service_area ? (
+              <>
+                <div className="rounded-xl border border-sage-200 bg-sage-50/60 px-3 py-2 text-xs text-sage-800">
+                  Alta manual · centro sin sede física fija. El mapa lo ubicará de forma
+                  aproximada en la ciudad que indiques.
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Nombre del centro / profesional *</label>
+                  <input
+                    type="text"
+                    value={place.name}
+                    onChange={(e) => setPlace({ ...place, name: e.target.value })}
+                    placeholder="Ej: Isabel Cantero Yoga"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-terracotta-500/30 focus:border-terracotta-500"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Ciudad *</label>
+                    <input
+                      type="text"
+                      value={place.city}
+                      onChange={(e) => setPlace({ ...place, city: e.target.value })}
+                      placeholder="La Manga"
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-terracotta-500/30 focus:border-terracotta-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Provincia *</label>
+                    <input
+                      type="text"
+                      value={place.province}
+                      onChange={(e) => setPlace({ ...place, province: e.target.value })}
+                      placeholder="Murcia"
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-terracotta-500/30 focus:border-terracotta-500"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Web (opcional)</label>
+                    <input
+                      type="url"
+                      value={place.website}
+                      onChange={(e) => setPlace({ ...place, website: e.target.value })}
+                      placeholder="https://…"
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-terracotta-500/30 focus:border-terracotta-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Teléfono (opcional)</label>
+                    <input
+                      type="tel"
+                      value={place.phone}
+                      onChange={(e) => setPlace({ ...place, phone: e.target.value })}
+                      placeholder="600 000 000"
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-terracotta-500/30 focus:border-terracotta-500"
+                    />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <p className="text-xl font-bold text-gray-900">{place.name}</p>
+                  <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5" />
+                    {place.address}
+                  </p>
+                </div>
 
-            {place.avg_rating > 0 && (
-              <div className="flex items-center gap-2">
-                <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                <span className="text-sm font-semibold text-gray-900">{place.avg_rating}</span>
-                <span className="text-sm text-gray-400">({place.review_count} reseñas)</span>
-              </div>
+                {place.avg_rating > 0 && (
+                  <div className="flex items-center gap-2">
+                    <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                    <span className="text-sm font-semibold text-gray-900">{place.avg_rating}</span>
+                    <span className="text-sm text-gray-400">({place.review_count} reseñas)</span>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <p className="text-xs text-gray-400 mb-0.5">Ciudad</p>
+                    <p className="font-medium text-gray-900">{place.city || '—'}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <p className="text-xs text-gray-400 mb-0.5">Provincia</p>
+                    <p className="font-medium text-gray-900">{place.province || '—'}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <p className="text-xs text-gray-400 mb-0.5">CP</p>
+                    <p className="font-medium text-gray-900">{place.postal_code || '—'}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <p className="text-xs text-gray-400 mb-0.5">Nivel de precio</p>
+                    <p className="font-medium text-gray-900">{place.price_level}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2 text-sm">
+                  {place.website && (
+                    <a href={place.website} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-gray-600 hover:text-terracotta-600 transition">
+                      <Globe className="w-4 h-4 text-gray-400" />
+                      <span className="truncate">{place.website}</span>
+                      <ExternalLink className="w-3 h-3 text-gray-300" />
+                    </a>
+                  )}
+                  {place.phone && (
+                    <p className="flex items-center gap-2 text-gray-600">
+                      <Phone className="w-4 h-4 text-gray-400" />
+                      {place.phone}
+                    </p>
+                  )}
+                  {place.google_maps_url && (
+                    <a href={place.google_maps_url} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-gray-600 hover:text-terracotta-600 transition">
+                      <MapPin className="w-4 h-4 text-gray-400" />
+                      <span>Ver en Google Maps</span>
+                      <ExternalLink className="w-3 h-3 text-gray-300" />
+                    </a>
+                  )}
+                </div>
+              </>
             )}
-
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-xs text-gray-400 mb-0.5">Ciudad</p>
-                <p className="font-medium text-gray-900">{place.city || '—'}</p>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-xs text-gray-400 mb-0.5">Provincia</p>
-                <p className="font-medium text-gray-900">{place.province || '—'}</p>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-xs text-gray-400 mb-0.5">CP</p>
-                <p className="font-medium text-gray-900">{place.postal_code || '—'}</p>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-xs text-gray-400 mb-0.5">Nivel de precio</p>
-                <p className="font-medium text-gray-900">{place.price_level}</p>
-              </div>
-            </div>
-
-            <div className="space-y-2 text-sm">
-              {place.website && (
-                <a href={place.website} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-gray-600 hover:text-terracotta-600 transition">
-                  <Globe className="w-4 h-4 text-gray-400" />
-                  <span className="truncate">{place.website}</span>
-                  <ExternalLink className="w-3 h-3 text-gray-300" />
-                </a>
-              )}
-              {place.phone && (
-                <p className="flex items-center gap-2 text-gray-600">
-                  <Phone className="w-4 h-4 text-gray-400" />
-                  {place.phone}
-                </p>
-              )}
-              {place.google_maps_url && (
-                <a href={place.google_maps_url} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-gray-600 hover:text-terracotta-600 transition">
-                  <MapPin className="w-4 h-4 text-gray-400" />
-                  <span>Ver en Google Maps</span>
-                  <ExternalLink className="w-3 h-3 text-gray-300" />
-                </a>
-              )}
-            </div>
 
             <div>
               <label className="block text-xs text-gray-400 mb-1.5">Tipo de centro</label>
@@ -548,15 +660,17 @@ export function AddCenterFromMapsModal({
               )}
             </div>
 
-            <details className="text-xs text-gray-400">
-              <summary className="cursor-pointer hover:text-gray-600">Datos de Google</summary>
-              <div className="mt-2 space-y-1 bg-gray-50 rounded-lg p-3">
-                <p><span className="font-medium">Place ID:</span> {place.google_place_id}</p>
-                <p><span className="font-medium">Tipos:</span> {place.google_types}</p>
-                <p><span className="font-medium">Estado:</span> {place.google_status}</p>
-                <p><span className="font-medium">Lat/Lng:</span> {place.latitude}, {place.longitude}</p>
-              </div>
-            </details>
+            {!place.service_area && (
+              <details className="text-xs text-gray-400">
+                <summary className="cursor-pointer hover:text-gray-600">Datos de Google</summary>
+                <div className="mt-2 space-y-1 bg-gray-50 rounded-lg p-3">
+                  <p><span className="font-medium">Place ID:</span> {place.google_place_id}</p>
+                  <p><span className="font-medium">Tipos:</span> {place.google_types}</p>
+                  <p><span className="font-medium">Estado:</span> {place.google_status}</p>
+                  <p><span className="font-medium">Lat/Lng:</span> {place.latitude}, {place.longitude}</p>
+                </div>
+              </details>
+            )}
 
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
